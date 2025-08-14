@@ -1,0 +1,28 @@
+{
+  "realm": "argo-status-pages",
+  "enabled": true,
+  "accessTokenLifespan": 7200,             
+  "ssoSessionIdleTimeout": 7200,           
+  "ssoSessionMaxLifespan": 28800,          
+  "clients": [
+    {
+      "clientId": "argo-status-pages-web",
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "redirectUris": ["http://localhost:5173/*"],
+      "webOrigins": ["http://localhost:5173"],
+      "attributes": { "pkce.code.challenge.method": "S256" },
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false
+    }
+  ],
+  "users": [
+    {
+      "username": "demo",
+      "enabled": true,
+      "emailVerified": true,
+      "credentials": [{ "type": "password", "value": "demo", "temporary": false }]
+    }
+  ]
+}
