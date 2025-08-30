@@ -1,12 +1,19 @@
-import { CircleStackIcon, Cog6ToothIcon, CubeIcon } from '@heroicons/react/16/solid'
+import { CircleStackIcon, Cog6ToothIcon, CubeIcon, } from '@heroicons/react/16/solid'
 import { useEffect, useState, type ChangeEvent } from 'react'
 import { useReportsMutation } from '../hooks/useReports'
 import { useGroupsMutation } from '../hooks/useGroups'
 
+
 export const Build = () => {
   type DataSource = {
-    api: string
-    secret: string
+    api: string;
+    secret: string;
+  }
+
+  type StatusGroup = {
+    name: string;
+    list: string[];
+
   }
 
   const [dataSource, setDataSource] = useState<DataSource>({
@@ -14,11 +21,19 @@ export const Build = () => {
     secret: '',
   })
 
+  const [statusGroups, setStatusGroups] = useState<StatusGroup[]>([]);
+
   const [report, setReport] = useState("");
 
   const groupsMutation = useGroupsMutation();
   const [filterItems, setFilterItems] = useState("");
   const reportsMutation = useReportsMutation();
+
+  const handleAddStatusGroup = () => {
+    setStatusGroups([...statusGroups, {
+      name: `group-${statusGroups.length + 1}`, list: []
+    }]);
+  }
 
   const handleReportChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setReport(event.target.value);
@@ -62,119 +77,148 @@ export const Build = () => {
     : groupsMutation.data ?? []
 
 
+
   return (
     <div>
-      <h1 className="text-2xl font-semibold">Build</h1>
+      <div className="flex flex-row justify-between">
+        <h1 className="text-2xl font-semibold">Build</h1>
+        <button className="btn btn-outline btn-neutral" onClick={handleAddStatusGroup}>Add Group</button></div>
       <div className="grid grid-cols-[auto_1fr] gap-4 mt-4">
 
         <div className="w-[370px]">
-         
-            <div className="tabs tabs-lift">
-              <label className="tab">
-                <input type="radio" name="build_tabs" defaultChecked />
-                <Cog6ToothIcon className="size-4 me-2" />
-                Config
-              </label>
-              <div className="tab-content bg-base-100 border-base-300 p-6">
 
-                <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
-                  <legend className="fieldset-legend">
-                    <CircleStackIcon className="size-4" />
-                    Data Source
-                  </legend>
+          <div className="tabs tabs-lift">
+            <label className="tab">
+              <input type="radio" name="build_tabs" defaultChecked />
+              <Cog6ToothIcon className="size-4 me-2" />
+              Config
+            </label>
+            <div className="tab-content bg-base-100 border-base-300 p-6">
 
-                  <label className="label">Argo-web-api endpoint (URL):</label>
-                  <input
-                    type="text"
-                    className="input"
-                    placeholder="https://"
-                    name="api"
-                    value={dataSource.api}
-                    onChange={handleInputChange}
-                  />
+              <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+                <legend className="fieldset-legend">
+                  <CircleStackIcon className="size-4" />
+                  Data Source
+                </legend>
 
-                  <label className="label">Access Token:</label>
-                  <input
-                    type="password"
-                    className="input"
-                    placeholder="s3cr3t"
-                    name="secret"
-                    value={dataSource.secret}
-                    onChange={handleInputChange}
-                  />
+                <label className="label">Argo-web-api endpoint (URL):</label>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="https://"
+                  name="api"
+                  value={dataSource.api}
+                  onChange={handleInputChange}
+                />
 
-                  <button className="btn btn-light mt-2" onClick={handleSubmit}>
-                    {reportsMutation.data ? 'Connected' : 'Connect'}
-                  </button>
+                <label className="label">Access Token:</label>
+                <input
+                  type="password"
+                  className="input"
+                  placeholder="s3cr3t"
+                  name="secret"
+                  value={dataSource.secret}
+                  onChange={handleInputChange}
+                />
+
+                <button className="btn btn-light mt-2" onClick={handleSubmit}>
+                  {reportsMutation.data ? 'Connected' : 'Connect'}
+                </button>
 
 
-                </fieldset>
+              </fieldset>
 
-                {reportsMutation.error && (
-                  <div className="mt-4 p-4 bg-red-100 rounded">
-                    Error: {reportsMutation.error.message}
-                  </div>
-                )}
+              {reportsMutation.error && (
+                <div className="mt-4 p-4 bg-red-100 rounded">
+                  Error: {reportsMutation.error.message}
+                </div>
+              )}
 
-              </div>
-
-              <label className="tab">
-                <input type="radio" name="build_tabs" />
-                <CubeIcon className="size-4 me-2" />
-                Items
-              </label>
-              <div className="tab-content bg-base-100 border-base-300 p-6">
-
-                {reportsMutation.data && (
-                  <>
-                    <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
-                      <label className="label">Report:</label>
-
-                      <select defaultValue="Select a report" className="select" onChange={handleReportChange}>
-                        <option disabled={true}>Select a report</option>
-                        {reportsMutation.data.map((item) => (
-                          <option>{item.name}</option>
-                        ))}
-                      </select>
-
-                      {groupsMutation.data && (
-                        <>
-                          <label className="label mt-2">Items:</label>
-
-                          <input
-                            type="text"
-                            className="input"
-                            placeholder="Search..."
-                            name="filter"
-                            value={filterItems}
-                            onChange={(e) => { setFilterItems(e.target.value) }}
-                          />
-
-                          <div className="mt-2 max-h-[500px] overflow-x-scroll">
-                            {groupsFiltered && groupsFiltered.map(group => <div key={group.name} className="border rounded p-2 my-2 shadow">
-                              <div className="flex flex-row items-center justify-between">
-                                <div>{group.name}</div>
-                                <div className="tooltip tooltip-left" data-tip={group.status}><div aria-label="status" className={getStatusClass(group.status)}></div></div>
-                              </div>
-                            </div>)}
-
-                          </div>
-                        </>
-                      )}
-                    </fieldset>
-                  </>
-                )}
-
-              </div>
             </div>
 
+            <label className="tab">
+              <input type="radio" name="build_tabs" />
+              <CubeIcon className="size-4 me-2" />
+              Items
+            </label>
+            <div className="tab-content bg-base-100 border-base-300 p-6">
 
-          
+              {reportsMutation.data && (
+                <>
+                  <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+                    <label className="label">Report:</label>
+
+                    <select defaultValue="Select a report" className="select" onChange={handleReportChange}>
+                      <option disabled={true}>Select a report</option>
+                      {reportsMutation.data.map((item) => (
+                        <option>{item.name}</option>
+                      ))}
+                    </select>
+
+                    {groupsMutation.data && (
+                      <>
+                        <label className="label mt-2">Items:</label>
+
+                        <input
+                          type="text"
+                          className="input"
+                          placeholder="Search..."
+                          name="filter"
+                          value={filterItems}
+                          onChange={(e) => { setFilterItems(e.target.value) }}
+                        />
+
+                        <div className="mt-2 max-h-[500px] overflow-x-scroll">
+                          {groupsFiltered && groupsFiltered.map(group => <div key={group.name} className="border rounded p-2 my-2 shadow">
+                            <div className="flex flex-row items-center justify-between">
+                              <div>{group.name}</div>
+                              <div className="tooltip tooltip-left" data-tip={group.status}><div aria-label="status" className={getStatusClass(group.status)}></div></div>
+                            </div>
+                          </div>)}
+
+                        </div>
+                      </>
+                    )}
+                  </fieldset>
+                </>
+              )}
+
+            </div>
+          </div>
+
+
+
         </div>
 
         {/* Status page under construction */}
         <div className="border-dashed border border-neutral-300 rounded-xl p-4">
-          Right Content
+          {statusGroups.map((item, index) =>
+            <div className="border-neutral-200 border-2 m-2 rounded">
+
+
+
+              <div className="flex flex-row justify-between align-middle bg-neutral-100 p-2 rounded-t">
+                <div>
+                <input
+                  value={item.name}
+                  onChange={
+                    (e) => setStatusGroups(
+                      (prev) => prev.map(
+                        (g, i) => (i === index ? { ...g, name: e.target.value ?? "" } : g)
+                      )
+                    )
+                  }
+                />
+                </div>
+                <div>
+                <button className="btn btn-dash"
+                onClick={()=>{setStatusGroups((prev) => prev.filter((_, i) => i !== index));}}
+                >Remove</button>
+                </div>
+              </div>
+              <div className="min-h-[100px]"></div>
+            </div>
+          )}
         </div>
       </div>
 
