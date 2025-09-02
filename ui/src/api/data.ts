@@ -1,25 +1,9 @@
+import type { GroupStatus, ReqApi, ReqReport } from "../types/common"
+
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
-type ReqApi = {
-  api: string
-  secret: string
-}
 
-type Report = {
-  name: string
-  description: string
-}
 
-type ReqReport = {
-  api: string
-  secret: string
-  report: string
-}
-
-type GroupStatus = {
-  name: string
-  status: string
-}
 
 export const fetchReportsApi = async (
   data: ReqApi,
