@@ -4,7 +4,7 @@ export type AuthContextType = {
   initialized: boolean
   authenticated: boolean
   token?: string
-  profile?: { username?: string; email?: string; name?: string }
+  profile?: { sub?: string; username?: string; email?: string; name?: string }
   login: () => void
   logout: () => void
 }

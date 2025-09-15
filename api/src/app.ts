@@ -1,7 +1,6 @@
-import Fastify, { FastifyBaseLogger, FastifyInstance, FastifyTypeProvider, RawServerDefault } from 'fastify';
+import Fastify, { FastifyInstance } from 'fastify';
 import swagger from "@fastify/swagger";
 import swaggerUI from "@fastify/swagger-ui";
-import cors from "@fastify/cors";
 
 import corsPlugin from '@/plugins/cors';
 
@@ -9,11 +8,11 @@ import corsPlugin from '@/plugins/cors';
 import healthRoutes from '@/routes/health';
 import profileRoutes from '@/routes/profile';
 import reportRoutes from '@/routes/reports';
-import groupRoutes from './routes/groups';
-import pageRoutes from './routes/pages';
-import postgres from './plugins/postgres';
-import { IncomingMessage, ServerResponse } from 'http';
-//import cors from '@/plugins/cors';
+import groupRoutes from '@/routes/groups';
+import pageRoutes from '@/routes/pages';
+import postgres from '@/plugins/postgres';
+import encryptRoutes from '@/routes/encrypt';
+import statusRoutes from '@/routes/status';
 
 export const createApp = async (): Promise<FastifyInstance> => {
   const app = Fastify({
@@ -52,6 +51,8 @@ export const createApp = async (): Promise<FastifyInstance> => {
   await app.register(reportRoutes, { prefix: '/v1' });
   await app.register(groupRoutes, { prefix: '/v1' });
   await app.register(pageRoutes, { prefix: '/v1' });
+  await app.register(encryptRoutes, {prefix: '/v1'}); 
+   await app.register(statusRoutes, {prefix: '/v1'}); 
 
 
 

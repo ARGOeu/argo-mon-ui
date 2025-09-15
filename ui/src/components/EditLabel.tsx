@@ -3,6 +3,7 @@ import { useState } from 'react';
 
 type EditLabelProps = {
   label: string;
+  size?: string;
   onChange: (newLabel: string) => void;
 }
 
@@ -61,7 +62,7 @@ const EditLabel = (props: EditLabelProps) => {
           <div className="flex flex-row items-center">
            
            <div className="tooltip tooltip-right" data-tip="edit">
-            <span className="font-semibold text-gray-800 cursor-pointer border-b border-transparent hover:border-black hover:border-dashed" onClick={handleEdit}>
+            <span className={` ${props.size ? props.size : ""} font-semibold text-gray-800 cursor-pointer border-b border-transparent hover:border-black hover:border-dashed`} onClick={handleEdit}>
              {props.label}
             </span>
             </div>

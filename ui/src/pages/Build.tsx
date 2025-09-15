@@ -15,24 +15,35 @@ import { getStatusClass } from '@/utils/status'
 import { StatusItem } from '@/components/StatusItem'
 import { CheckBadgeIcon } from '@heroicons/react/24/solid'
 import EditLabel from '@/components/EditLabel'
-
-
+import { useAuth } from '@/auth/useAuth'
+import { fetchEncrypted } from '@/api/data'
+import { useSavePageMutation } from '@/hooks/usePages'
 
 
 export const Build = () => {
+
+  const { token } = useAuth();
+
   const [dataSource, setDataSource] = useState<DataSource>({
     api: "",
     secret: "",
   })
 
+  const [isEncrypted, setIsEncrypted] = useState(false);
   const [name, setName] = useState<string>("Untitled");
   const [slug, setSlug] = useState<string>("untitled");
   const [statusGroups, setStatusGroups] = useState<StatusGroupType[]>([]);
   const [report, setReport] = useState("");
+  const [title, setTitle] = useState("Title");
+  const [desc,setDesc] = useState("add description");
 
+
+  const savePageMutation = useSavePageMutation();
   const groupsMutation = useGroupsMutation();
   const [filterItems, setFilterItems] = useState("");
   const reportsMutation = useReportsMutation();
+
+
 
   const handleAddStatusGroup = () => {
     setStatusGroups(prev => [
@@ -45,21 +56,40 @@ export const Build = () => {
     setReport(event.target.value);
   };
 
-
-
-
+  const handlePageSave = () => {
+    savePageMutation.mutate(
+      {
+        name: name,
+        slug: slug,
+        api: dataSource.api,
+        secret: dataSource.secret,
+        report: report,
+        groups: statusGroups
+      });
+    if (savePageMutation.isSuccess) {
+      console.log("saved!");
+    }
+  }
 
   useEffect(() => {
     groupsMutation.mutate({ ...dataSource, report: report })
   }, [report])
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (reportsMutation.isSuccess) {
       reportsMutation.reset();
       setDataSource({ api: "", secret: "" });
+      setIsEncrypted(false);
     } else {
-      reportsMutation.mutate(dataSource)
+      if (!isEncrypted) {
+        const encrypted = await fetchEncrypted(dataSource.secret, token || "");
+        setDataSource({ ...dataSource, secret: encrypted || "" })
+        setIsEncrypted(true);
+        reportsMutation.mutate({ api: dataSource.api, secret: encrypted })
+      } else {
+        reportsMutation.mutate(dataSource)
+      }
     }
   }
 
@@ -187,11 +217,13 @@ export const Build = () => {
     <div>
       <div className="flex flex-row justify-between">
         <h1 className="text-2xl font-semibold">Build</h1>
-        <div className="flex flex-row items-baseline"><div className="me-2">title:</div><EditLabel label={name} onChange={(e) => { setName(e); setSlug(e.toLowerCase().replaceAll(" ","-")) }} /></div>
-        <div className="flex flex-row items-baseline"><div className="me-2">path:</div><EditLabel label={slug} onChange={(e) => { setSlug(e.toLowerCase().replaceAll(" ","-")) }} /></div>
-        <button className="btn btn-outline btn-neutral" onClick={handleAddStatusGroup}>
-          Add Group
-        </button>
+        <div className="flex flew-row px-2 items-center gap-2">
+          <div className="flex flex-row items-baseline"><div className="me-2">name:</div><EditLabel label={name} onChange={(e) => { setName(e); setSlug(e.toLowerCase().replaceAll(" ", "-")) }} /></div>
+          <div className="flex flex-row items-baseline px-2 py-1text-sm "><div className="me-2">path:</div><EditLabel label={slug} onChange={(e) => { setSlug(e.toLowerCase().replaceAll(" ", "-")) }} /></div>
+
+        </div>
+        <div><div><button className="btn btn-success btn-outline" disabled={!reportsMutation.isSuccess} onClick={handlePageSave}>Save</button></div></div>
+
       </div>
 
       <div className="grid grid-cols-[auto_1fr] gap-4 mt-4">
@@ -274,9 +306,9 @@ export const Build = () => {
                     }
 
                     {groupsMutation.data && (
-                      (groupsFiltered ?? []).length === 0 ? (
+                      groupsMutation.data.length === 0 ? (
                         <div className="text-sm text-red-600 p-2 mt-2 bg-red-100 border-red-600 border text-center rounded">
-                         <ExclamationTriangleIcon className="size-4 me-2 inline-block" />Report empty!
+                          <ExclamationTriangleIcon className="size-4 me-2 inline-block" />Report empty!
                         </div>
                       ) :
                         <>
@@ -312,39 +344,44 @@ export const Build = () => {
 
         {/* Dynamic Status Columns */}
         <div className="border-dashed border border-neutral-300 rounded-xl p-4">
-          {statusGroups.length == 0
-            ?
-            <div className="flex flex-row justify-end">
-              <div className=" bg-amber-50 p-4 text-right">
-                <p className="text-3xl">☝️</p>
-                <p>click here to add a group and begin placing items</p>
-              </div>
+          <div className="flex flex-row justify-between mb-2">
+            <div></div>
+            <EditLabel label={title} onChange={(title) => setTitle(title)} size="text-3xl" />
+            <div></div>
+          </div>
+          <div className="flex flex-row justify-between mb-6">
+            <div></div>
+            <EditLabel label={desc} onChange={(desc) => setDesc(desc)} size="text-1xl" />
+            <div></div>
+          </div>
+          <div>
+            {statusGroups.map((col, index) => (
+              <StatusGroup
+                key={col.name}
+                name={col.name}
+                alias={col.alias || ""}
+                items={col.list}
+                group={groupName}
+                getStatusClass={getStatusClass}
+                onItemsChange={(next) => updateGroup(index, next)}
+                onRename={(nextName) => renameGroup(index, nextName)}
+                onRemove={() => removeGroup(index)}
+                onChangeAlias={handleChangeItemAlias}
+              />
+            ))}
+          </div>
+          <div>
+            <div className="text-center">
+              <button className="btn btn-outline btn-neutral" onClick={handleAddStatusGroup}>
+                Click here to Add a new Group
+              </button>
             </div>
-            :
-            <div>
-              {statusGroups.map((col, index) => (
-                <StatusGroup
-                  key={col.name}
-                  name={col.name}
-                  alias={col.alias || ""}
-                  items={col.list}
-                  group={groupName}
-                  getStatusClass={getStatusClass}
-                  onItemsChange={(next) => updateGroup(index, next)}
-                  onRename={(nextName) => renameGroup(index, nextName)}
-                  onRemove={() => removeGroup(index)}
-                  onChangeAlias={handleChangeItemAlias}
-                />
-              ))}
-            </div>
-          }
+          </div>
         </div>
 
       </div>
       <div>
-        <pre>
-          {JSON.stringify({ name: name, slug: slug, api: dataSource.api, secret: dataSource.secret, report: report, groups: statusGroups, }, null, "  ")}
-        </pre>
+
       </div>
     </div>
   )

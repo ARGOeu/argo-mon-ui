@@ -6,6 +6,7 @@ import {
   PaintBrushIcon,
   UserIcon,
 } from '@heroicons/react/16/solid'
+import { squishEmail } from './utils/profile'
 
 function NavItem({
   to,
@@ -16,6 +17,9 @@ function NavItem({
   end?: boolean
   children: React.ReactNode
 }) {
+
+
+
   return (
     <NavLink
       to={to}
@@ -35,8 +39,10 @@ function NavItem({
 export default function Layout() {
   const { authenticated, profile, login, logout } = useAuth()
 
+    console.log(profile);
+
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col dot-pattern">
       <header className="navbar bg-base-100 sticky  top-0 z-40">
         <div className="flex-1 flex items-center gap-6">
           <Link to="/" className="btn btn-ghost text-xl">
@@ -50,7 +56,7 @@ export default function Layout() {
           <nav className="flex items-center gap-2">
             {authenticated && (
               <>
-                <NavItem to="/status">
+                <NavItem to="/build">
                   <PaintBrushIcon className="size-4" aria-hidden />
                   Build
                 </NavItem>
@@ -64,10 +70,10 @@ export default function Layout() {
         </div>
 
         <div className="flex-none gap-2 pr-3 flex items-center">
-          {authenticated && profile?.username && (
+          {authenticated && (profile?.username || profile?.sub) && (
             <NavItem to="/about">
               <UserIcon className="size-4" aria-hidden />
-              {profile.username}
+              {profile.username || squishEmail(profile.sub || "") || "unknown"}
             </NavItem>
           )}
 

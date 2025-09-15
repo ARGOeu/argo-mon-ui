@@ -7,6 +7,7 @@ type KeycloakUserInfo = {
   preferred_username: string;
   email: string;
   name: string;
+  sub: string;
 };
 
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) => {
@@ -19,15 +20,16 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
   const refreshTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (startedRef.current) return; 
+    if (startedRef.current) return;
     startedRef.current = true;
 
-    const redirectBase = import.meta.env.VITE_REDIRECT_URI || window.location.origin;
+    //const redirectBase = import.meta.env.VITE_REDIRECT_URI || window.location.origin;
 
     initKeycloak({
       onLoad: "check-sso",
       pkceMethod: "S256",
-      silentCheckSsoRedirectUri: `${new URL(redirectBase).origin}/silent-check-sso.html`,
+      redirectUri: window.location.origin,
+      //silentCheckSsoRedirectUri: `${new URL(redirectBase).origin}/silent-check-sso.html`,
       checkLoginIframe: false,
     })
       .then(async (auth) => {
@@ -42,18 +44,19 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({ children }) =>
             username: userInfo.preferred_username,
             name: userInfo.name,
             email: userInfo.email,
+            sub: userInfo.sub,
           });
 
-          // Refresh token every 30s; keep at least 60s of validity.
-          refreshTimerRef.current = window.setInterval(async () => {
-            try {
-              const refreshed = await keycloak.updateToken(60);
-              if (refreshed) setToken(keycloak.token);
-            } catch {
-              setAuthenticated(false);
-              setToken(undefined);
-            }
-          }, 30_000);
+          // // Refresh token every 30s; keep at least 60s of validity.
+          // refreshTimerRef.current = window.setInterval(async () => {
+          //   try {
+          //     const refreshed = await keycloak.updateToken(60);
+          //     if (refreshed) setToken(keycloak.token);
+          //   } catch {
+          //     setAuthenticated(false);
+          //     setToken(undefined);
+          //   }
+          // }, 30_000);
         }
 
         setInitialized(true);

@@ -7,6 +7,7 @@ import { Profile } from './pages/Profile'
 import { Build } from './pages/Build'
 import { View } from './pages/View'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { Status } from './pages/Status'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -35,6 +36,9 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Routes>
+            <Route path="status/:slug"
+            element={<Status />}
+            />
             <Route element={<Layout />}>
               <Route index element={<Home />} />
               <Route
@@ -46,7 +50,7 @@ function App() {
                 }
               />
               <Route
-                path="status"
+                path="build"
                 element={
                   <AuthProtected>
                     <Build />

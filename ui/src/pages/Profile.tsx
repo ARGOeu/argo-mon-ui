@@ -1,5 +1,6 @@
 import { UserCircleIcon } from '@heroicons/react/16/solid'
 import { useAuth } from '../auth/useAuth'
+import { squishEmail } from '@/utils/profile'
 
 export const Profile = () => {
   const { profile } = useAuth()
@@ -12,7 +13,7 @@ export const Profile = () => {
           <div className="card-body">
             <h2 className="card-title">
               <UserCircleIcon className="size-8" aria-hidden />
-              {profile.username}
+              {profile.username || squishEmail(profile.sub || "")} 
             </h2>
             <p>{profile.name}</p>
             <p>{profile.email}</p>

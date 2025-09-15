@@ -8,7 +8,7 @@ background-size: 55px 55px, 55px 55px, 11px 11px, 11px 11px;
 background-position: -2.2px -2.2px, -2.2px -2.2px, -1.1px -1.1px, -1.1px -1.1px;
 } */
 
-body {
+.dot-pattern {
   background: white;
   background-image: radial-gradient(rgb(196, 196, 196) 1px, transparent 0);
   background-size: 12px 12px;

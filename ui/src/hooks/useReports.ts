@@ -1,22 +1,14 @@
 import { useMutation } from '@tanstack/react-query'
-import { useAuth } from '../auth/useAuth'
-import { fetchReportsApi } from '../api/data'
+import { useAuth } from '@/auth/useAuth'
+import { fetchReportsApi } from '@/api/data'
+import type { DataSource, ItemDesc } from '@/types/common'
 
-type ApiData = {
-  api: string
-  secret: string
-}
-
-type Report = {
-  name: string
-  description: string
-}
 
 export const useReportsMutation = () => {
   const { token } = useAuth() // Get token from your auth context
 
-  return useMutation<Report[], Error, ApiData>({
-    mutationFn: (data: ApiData) => {
+  return useMutation<ItemDesc[], Error, DataSource>({
+    mutationFn: (data: DataSource) => {
       if (!token) {
         throw new Error('No authentication token available')
       }

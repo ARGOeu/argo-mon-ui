@@ -5,11 +5,14 @@ export type DataSource = {
   secret: string;
 }
 
+export type DataSourceReport = DataSource & {
+  report: string;
+}
+
 export type StatusGroupType = {
   name: string;
   alias?: string;
   list: StatusItemType[];
-
 }
 
 export type StatusItemType = {
@@ -18,19 +21,19 @@ export type StatusItemType = {
   status: string;
 }
 
-export type ReqApi = {
-  api: string
-  secret: string
-}
 
-export type Report = {
+export type ItemDesc = {
   name: string
   description: string
 }
 
-export type ReqReport = {
-  api: string
-  secret: string
-  report: string
-}
 
+export type Pages = {
+  id: number;
+  name: string;
+  slug: string;
+  report: string;
+  api: string;
+  
+
+}

@@ -7,5 +7,5 @@ export const getStatusClass = (status: string): string => {
         "UNKNOWN": "status-unknown",
         "CRITICAL": "status-error"
     }
-    return statusMap[status] ?? "status status-neutral status-lg";
+    return statusMap[status] ?? "status-neutral";
 }
