@@ -9,7 +9,13 @@ export type Page = {
     secret?: string;
     created_at?: string;
     updated_at?: string;
+    config?: PageConfig;
+}
+
+export type PageConfig = {
     groups?: StatusGroupType[];
+    title?: string;
+    description?: string;
 }
 
 export type PageGroup = {

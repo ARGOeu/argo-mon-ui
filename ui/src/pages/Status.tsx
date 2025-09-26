@@ -20,7 +20,7 @@ export const Status = () => {
                   <div className="me-2"><ArrowPathIcon className="size-6 animate-spin"/></div><div className="text-3lg"> Loading ... </div>
                 </div>
                 :
-                status.isSuccess && status.data ?
+                status.isSuccess && status.data && status.data.config ?
                     <>
                         <header className="text-center">
                             <h1 className="text-2xl text-center font-semibold">{status.data.name}</h1>
@@ -30,8 +30,8 @@ export const Status = () => {
                         </div>
                         <main className="mt-">
 
-                            {status.data.groups &&
-                                status.data.groups.map(group =>
+                            {status.data.config.groups &&
+                                status.data.config.groups.map(group =>
                                     <div className="mt-4">
                                         <ViewGroup
                                             key={group.name}

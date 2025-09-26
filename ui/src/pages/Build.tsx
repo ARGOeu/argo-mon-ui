@@ -64,7 +64,7 @@ export const Build = () => {
         api: dataSource.api,
         secret: dataSource.secret,
         report: report,
-        groups: statusGroups
+        config: { groups: statusGroups}
       });
     if (savePageMutation.isSuccess) {
       console.log("saved!");
@@ -104,7 +104,6 @@ export const Build = () => {
   }
 
   const handleChangeItemAlias = (groupName: string, itemName: string, newAlias: string) => {
-    console.log("handleChangeAlias called!", groupName, itemName, newAlias);
     if (groupName !== "") {
       setStatusGroups(prevStatusGroups =>
         prevStatusGroups.map(group =>

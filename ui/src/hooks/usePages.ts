@@ -1,10 +1,11 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/auth/useAuth'
 import { fetchPage, fetchPages, fetchSavePage } from '@/api/pages'
 import type { Page } from '@/types/pages'
 
 
 export const useSavePageMutation = () => {
+  const queryClient = useQueryClient();
   const { token } = useAuth() // Get token from your auth context
 
   return useMutation<Page, Error, Page>({
@@ -16,6 +17,7 @@ export const useSavePageMutation = () => {
     },
     onSuccess: (data) => {
       console.log('Page save success:', data)
+      queryClient.invalidateQueries({ queryKey: ['all-pages'] });
     },
     onError: (error) => {
       console.error('Page save error:', error)

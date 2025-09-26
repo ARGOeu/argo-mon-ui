@@ -16,7 +16,7 @@ const statusRoutes: FastifyPluginAsync = async (fastify) => {
       const { slug } = request.params as { slug: string };
       const client = await (fastify as any).pg.connect();
 
-      let page: PageData;
+      let page: PageRecord;
 
       try {
         const result = await client.query(
@@ -32,7 +32,7 @@ const statusRoutes: FastifyPluginAsync = async (fastify) => {
           };
         }
 
-        page = result.rows[0] as PageData;
+        page = result.rows[0] as PageRecord;
 
       } finally {
         client.release();
@@ -52,8 +52,8 @@ const statusRoutes: FastifyPluginAsync = async (fastify) => {
         ...page,
         api:"",
         secret:"",
-        groups: page.groups.map(g => ({
-          ...g, list:g.list.map(item=>({...item,status:statusMap[item.name]}))}))
+        config: {...page.config, groups: page.config.groups.map(g => ({
+          ...g, list:g.list.map(item=>({...item,status:statusMap[item.name]}))}))}
       }
 
       

@@ -14,35 +14,41 @@ const pageRoutes: FastifyPluginAsync = async (fastify) => {
     schema: {
       body: {
         type: 'object',
-        required: ['name', 'api', 'secret', 'report', 'groups'],
+        required: ['name', 'api', 'secret', 'report', 'config'],
         properties: {
           name: { type: 'string' },
           api: { type: 'string', format: 'uri' },
           secret: { type: 'string' },
           report: { type: 'string' },
-          groups: {
-            type: 'array',
-            items: {
-              type: 'object',
-              required: ['name', 'alias', 'list'],
-              properties: {
-                name: { type: 'string' },
-                alias: { type: 'string' },
-                list: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    required: ['name', 'status'],
-                    properties: {
-                      name: { type: 'string' },
-                      status: { type: 'string' },
-                      alias: { type: 'string' }
+          config: {
+            type: 'object',
+            properties: {
+              groups: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  required: ['name', 'alias', 'list'],
+                  properties: {
+                    name: { type: 'string' },
+                    alias: { type: 'string' },
+                    list: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        required: ['name', 'status'],
+                        properties: {
+                          name: { type: 'string' },
+                          status: { type: 'string' },
+                          alias: { type: 'string' }
+                        }
+                      }
                     }
                   }
                 }
               }
             }
           }
+
         }
       }
     }
@@ -50,24 +56,16 @@ const pageRoutes: FastifyPluginAsync = async (fastify) => {
 
     try {
 
-      const { name, slug, api, secret, report, groups } = request.body as CreatePageRequest;
+      const { name, slug, api, secret, report, config } = request.body as CreatePageRequest;
 
       const { user } = request as AuthenticatedRequest;
 
       // Basic validation
-      if (!name || !api || !user?.sub || !secret || !report || !groups) {
+      if (!name || !api || !user?.sub || !secret || !report || !config) {
         reply.code(400);
         return {
           success: false,
           error: 'Missing required fields'
-        };
-      }
-
-      if (!Array.isArray(groups) || groups.length === 0) {
-        reply.code(400);
-        return {
-          success: false,
-          error: 'Groups must be a non-empty array'
         };
       }
 
@@ -76,10 +74,10 @@ const pageRoutes: FastifyPluginAsync = async (fastify) => {
 
       try {
         const result = await client.query(
-          `INSERT INTO pages (name, slug, user_id, api, secret, report, groups, created_at, updated_at) 
+          `INSERT INTO pages (name, slug, user_id, api, secret, report, config, created_at, updated_at) 
            VALUES ($1, $2, $3, $4, $5, $6, $7, NOW(), NOW()) 
            RETURNING *`,
-          [name, slug, user?.sub, api, secret, report, JSON.stringify(groups)]
+          [name, slug, user?.sub, api, secret, report, JSON.stringify(config)]
         );
 
         reply.code(201);
@@ -120,35 +118,41 @@ const pageRoutes: FastifyPluginAsync = async (fastify) => {
     schema: {
       body: {
         type: 'object',
-        required: ['name', 'api', 'secret', 'report', 'groups'],
+        required: ['name', 'api', 'secret', 'report', 'config'],
         properties: {
           name: { type: 'string' },
           api: { type: 'string', format: 'uri' },
           secret: { type: 'string' },
           report: { type: 'string' },
-          groups: {
-            type: 'array',
-            items: {
-              type: 'object',
-              required: ['name', 'alias', 'list'],
-              properties: {
-                name: { type: 'string' },
-                alias: { type: 'string' },
-                list: {
-                  type: 'array',
-                  items: {
-                    type: 'object',
-                    required: ['name', 'status'],
-                    properties: {
-                      name: { type: 'string' },
-                      status: { type: 'string' },
-                      alias: { type: 'string' }
+          config: {
+            type: 'object',
+            properties: {
+              groups: {
+                type: 'array',
+                items: {
+                  type: 'object',
+                  required: ['name', 'alias', 'list'],
+                  properties: {
+                    name: { type: 'string' },
+                    alias: { type: 'string' },
+                    list: {
+                      type: 'array',
+                      items: {
+                        type: 'object',
+                        required: ['name', 'status'],
+                        properties: {
+                          name: { type: 'string' },
+                          status: { type: 'string' },
+                          alias: { type: 'string' }
+                        }
+                      }
                     }
                   }
                 }
               }
             }
           }
+
         }
       }
     }
@@ -156,12 +160,12 @@ const pageRoutes: FastifyPluginAsync = async (fastify) => {
 
     try {
 
-      const { name, slug, api, secret, report, groups } = request.body as CreatePageRequest;
+      const { name, slug, api, secret, report, config } = request.body as CreatePageRequest;
       const { id } = request.params as { id: string };
       const { user } = request as AuthenticatedRequest;
 
       // Basic validation
-      if (!name || !api || !user?.sub || !secret || !report || !groups) {
+      if (!name || !api || !user?.sub || !secret || !report || !config) {
         reply.code(400);
         return {
           success: false,
@@ -169,13 +173,6 @@ const pageRoutes: FastifyPluginAsync = async (fastify) => {
         };
       }
 
-      if (!Array.isArray(groups) || groups.length === 0) {
-        reply.code(400);
-        return {
-          success: false,
-          error: 'Groups must be a non-empty array'
-        };
-      }
 
       const client = await (fastify as any).pg.connect();
 
@@ -197,10 +194,10 @@ const pageRoutes: FastifyPluginAsync = async (fastify) => {
         // Update the page
         const result = await client.query(
           `UPDATE pages 
-           SET name = $1, slug = $2, api = $3, secret = $4, report = $5, groups = $6, updated_at = NOW()
+           SET name = $1, slug = $2, api = $3, secret = $4, report = $5, config = $6, updated_at = NOW()
            WHERE id = $7 AND user_id = $8
            RETURNING *`,
-          [name, slug, api, secret, report, JSON.stringify(groups), id, user?.sub]
+          [name, slug, api, secret, report, JSON.stringify(config), id, user?.sub]
         );
 
         return result.rows[0];
@@ -316,10 +313,10 @@ const pageRoutes: FastifyPluginAsync = async (fastify) => {
         );
 
         return {
-          
-            slug: slug,
-            available: result.rows.length === 0
-          
+
+          slug: slug,
+          available: result.rows.length === 0
+
         };
       } finally {
         client.release();

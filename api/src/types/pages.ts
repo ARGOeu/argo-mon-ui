@@ -10,13 +10,19 @@ export interface Group {
   list: ServiceStatus[];
 }
 
+export interface Config {
+  title?: string;
+  description?: string;
+  groups: Group[];
+}
+
 export interface PageData {
   name: string;
   slug: string;
   api: string;
   secret: string;
   report: string;
-  groups: Group[];
+  config: string;
 }
 
 export interface CreatePageRequest extends PageData {
@@ -30,7 +36,7 @@ export interface PageRecord {
   api: string;
   secret: string;
   report: string;
-  groups: Group[];
+  config: Config;
   created_at: Date;
   updated_at: Date;
 }
