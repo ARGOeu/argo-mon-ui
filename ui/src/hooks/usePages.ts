@@ -3,9 +3,8 @@ import { useAuth } from '@/auth/useAuth'
 import { fetchPage, fetchPages, fetchSavePage } from '@/api/pages'
 import type { Page } from '@/types/pages'
 
-
 export const useSavePageMutation = () => {
-  const queryClient = useQueryClient();
+  const queryClient = useQueryClient()
   const { token } = useAuth() // Get token from your auth context
 
   return useMutation<Page, Error, Page>({
@@ -13,11 +12,11 @@ export const useSavePageMutation = () => {
       if (!token) {
         throw new Error('No authentication token available')
       }
-      return fetchSavePage(data, token);
+      return fetchSavePage(data, token)
     },
     onSuccess: (data) => {
       console.log('Page save success:', data)
-      queryClient.invalidateQueries({ queryKey: ['all-pages'] });
+      queryClient.invalidateQueries({ queryKey: ['all-pages'] })
     },
     onError: (error) => {
       console.error('Page save error:', error)
@@ -37,7 +36,6 @@ export const useGetAllPagesQuery = () => {
       return fetchPages(token)
     },
     enabled: !!token,
-    
   })
 }
 

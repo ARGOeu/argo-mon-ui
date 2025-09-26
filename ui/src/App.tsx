@@ -36,9 +36,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Routes>
-            <Route path="status/:slug"
-            element={<Status />}
-            />
+            <Route path="status/:slug" element={<Status />} />
             <Route element={<Layout />}>
               <Route index element={<Home />} />
               <Route

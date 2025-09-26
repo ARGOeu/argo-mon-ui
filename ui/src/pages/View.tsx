@@ -1,12 +1,9 @@
-import { useGetAllPagesQuery } from "@/hooks/usePages";
-import { DocumentIcon } from "@heroicons/react/24/outline";
-import { Link } from "react-router-dom";
-
+import { useGetAllPagesQuery } from '@/hooks/usePages'
+import { DocumentIcon } from '@heroicons/react/24/outline'
+import { Link } from 'react-router-dom'
 
 export const View = () => {
-
-  const { data } = useGetAllPagesQuery();
-
+  const { data } = useGetAllPagesQuery()
 
   return (
     <div>
@@ -24,30 +21,24 @@ export const View = () => {
             </tr>
           </thead>
           <tbody>
-            {data?.map(item =>
-              <tr>
+            {data?.map((item) => (
+              <tr key={item.id}>
                 <td>
-                  <div className="flex flex-row items-center"><DocumentIcon className="text-green-500 size-6 me-2" />
+                  <div className="flex flex-row items-center">
+                    <DocumentIcon className="text-green-500 size-6 me-2" />
                     <strong>
-                      <Link to={`/status/${item.slug}`}>{item.name}
-                      </Link>
+                      <Link to={`/status/${item.slug}`}>{item.name}</Link>
                     </strong>
                   </div>
                 </td>
                 <td>
                   <code>{item.slug}</code>
                 </td>
-                <td>
-                  {item.report}
-                </td>
-                <td>
-                  { }
-                </td>
-                <td>
-                  {item.updated_at}
-                </td>
+                <td>{item.report}</td>
+                <td>{}</td>
+                <td>{item.updated_at}</td>
               </tr>
-            )}
+            ))}
           </tbody>
         </table>
       </div>

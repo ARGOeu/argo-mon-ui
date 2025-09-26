@@ -8,8 +8,12 @@ import {
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useReportsMutation } from '@/hooks/useReports'
 import { useGroupsMutation } from '@/hooks/useGroups'
-import type { DataSource, StatusItemType, StatusGroupType } from '@/types/common'
-import { useDragAndDrop } from "@formkit/drag-and-drop/react";
+import type {
+  DataSource,
+  StatusItemType,
+  StatusGroupType,
+} from '@/types/common'
+import { useDragAndDrop } from '@formkit/drag-and-drop/react'
 import StatusGroup from '@/components/StatusGroup'
 import { getStatusClass } from '@/utils/status'
 import { StatusItem } from '@/components/StatusItem'
@@ -18,74 +22,82 @@ import EditLabel from '@/components/EditLabel'
 import { useAuth } from '@/auth/useAuth'
 import { fetchEncrypted } from '@/api/data'
 import { useSavePageMutation } from '@/hooks/usePages'
-
+import { toast, Toaster } from 'sonner'
+import { Link } from 'react-router-dom'
 
 export const Build = () => {
-
-  const { token } = useAuth();
+  const { token } = useAuth()
 
   const [dataSource, setDataSource] = useState<DataSource>({
-    api: "",
-    secret: "",
+    api: '',
+    secret: '',
   })
 
-  const [isEncrypted, setIsEncrypted] = useState(false);
-  const [name, setName] = useState<string>("Untitled");
-  const [slug, setSlug] = useState<string>("untitled");
-  const [statusGroups, setStatusGroups] = useState<StatusGroupType[]>([]);
-  const [report, setReport] = useState("");
-  const [title, setTitle] = useState("Title");
-  const [desc,setDesc] = useState("add description");
+  const [isEncrypted, setIsEncrypted] = useState(false)
+  const [name, setName] = useState<string>('Untitled')
+  const [slug, setSlug] = useState<string>('untitled')
+  const [statusGroups, setStatusGroups] = useState<StatusGroupType[]>([])
+  const [report, setReport] = useState('')
+  const [title, setTitle] = useState('Title')
+  const [desc, setDesc] = useState('add description')
+  const [saved,setSaved] = useState(false);
 
-
-  const savePageMutation = useSavePageMutation();
-  const groupsMutation = useGroupsMutation();
-  const [filterItems, setFilterItems] = useState("");
-  const reportsMutation = useReportsMutation();
-
-
+  const savePageMutation = useSavePageMutation()
+  const groupsMutation = useGroupsMutation()
+  const [filterItems, setFilterItems] = useState('')
+  const reportsMutation = useReportsMutation()
 
   const handleAddStatusGroup = () => {
-    setStatusGroups(prev => [
+    setStatusGroups((prev) => [
       ...prev,
-      { name: `group-${prev.length + 1}`, alias: `group-${prev.length + 1}`, list: [] }
-    ]);
+      {
+        name: `group-${prev.length + 1}`,
+        alias: `group-${prev.length + 1}`,
+        list: [],
+      },
+    ])
   }
 
   const handleReportChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setReport(event.target.value);
-  };
+    setReport(event.target.value)
+  }
 
   const handlePageSave = () => {
-    savePageMutation.mutate(
-      {
-        name: name,
-        slug: slug,
-        api: dataSource.api,
-        secret: dataSource.secret,
-        report: report,
-        config: { groups: statusGroups}
-      });
-    if (savePageMutation.isSuccess) {
-      console.log("saved!");
-    }
+    savePageMutation.mutate({
+      name: name,
+      slug: slug,
+      api: dataSource.api,
+      secret: dataSource.secret,
+      report: report,
+      config: { groups: statusGroups },
+    }, {
+      onSuccess: () => {
+        toast.success("Page Saved!");
+        setSaved(true);
+      },
+      onError: (error) => {
+        toast.error(`Error: ${error}`)
+      }
+    })
+
   }
 
   useEffect(() => {
-    groupsMutation.mutate({ ...dataSource, report: report })
-  }, [report])
+    if (report != "")
+      groupsMutation.mutate({ ...dataSource, report: report })
+  }, [report, dataSource])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (reportsMutation.isSuccess) {
-      reportsMutation.reset();
-      setDataSource({ api: "", secret: "" });
-      setIsEncrypted(false);
+      reportsMutation.reset()
+      setDataSource({ api: '', secret: '' })
+      setIsEncrypted(false)
     } else {
       if (!isEncrypted) {
-        const encrypted = await fetchEncrypted(dataSource.secret, token || "");
-        setDataSource({ ...dataSource, secret: encrypted || "" })
-        setIsEncrypted(true);
+        const encrypted = await fetchEncrypted(dataSource.secret, token || '')
+        setDataSource({ ...dataSource, secret: encrypted || '' })
+        setIsEncrypted(true)
         reportsMutation.mutate({ api: dataSource.api, secret: encrypted })
       } else {
         reportsMutation.mutate(dataSource)
@@ -103,126 +115,154 @@ export const Build = () => {
     }))
   }
 
-  const handleChangeItemAlias = (groupName: string, itemName: string, newAlias: string) => {
-    if (groupName !== "") {
-      setStatusGroups(prevStatusGroups =>
-        prevStatusGroups.map(group =>
+  const handleChangeItemAlias = (
+    groupName: string,
+    itemName: string,
+    newAlias: string,
+  ) => {
+    if (groupName !== '') {
+      setStatusGroups((prevStatusGroups) =>
+        prevStatusGroups.map((group) =>
           group.name === groupName
             ? {
               ...group,
-              list: group.list.map(item =>
-                item.name === itemName
-                  ? { ...item, alias: newAlias }
-                  : item
-              )
+              list: group.list.map((item) =>
+                item.name === itemName ? { ...item, alias: newAlias } : item,
+              ),
             }
-            : group
-        )
-      );
+            : group,
+        ),
+      )
     }
-  };
+  }
 
-
-  const fl = filterItems.trim().toLowerCase();
+  const fl = filterItems.trim().toLowerCase()
 
   // this is the left column of loaded api items
-  const groupName = "status-board";
-  const [parent, items, setItems] = useDragAndDrop<HTMLUListElement, StatusItemType>([], { group: groupName, dragHandle: '.dnd-handle' });
-
-
+  const groupName = 'status-board'
+  const [parent, items, setItems] = useDragAndDrop<
+    HTMLUListElement,
+    StatusItemType
+  >([], { group: groupName, dragHandle: '.dnd-handle' })
 
   useEffect(() => {
-    if (groupsMutation.data) setItems(groupsMutation.data);
-  }, [groupsMutation.data, setItems]);
-
-
+    if (groupsMutation.data) setItems(groupsMutation.data)
+  }, [groupsMutation.data, setItems])
 
   const groupsFiltered =
-    fl !== ""
-      ? items.filter(item =>
-        `${item.name} ${item.status}`.toLowerCase().includes(fl)
+    fl !== ''
+      ? items.filter((item) =>
+        `${item.name} ${item.status}`.toLowerCase().includes(fl),
       )
-      : items;
+      : items
 
   // update column
   const updateGroup = (groupIndex: number, nextItems: StatusItemType[]) => {
-    setStatusGroups(prev => {
-      const movedNames = new Set(nextItems.map(it => it.name));
+    setStatusGroups((prev) => {
+      const movedNames = new Set(nextItems.map((it) => it.name))
 
       const next = prev.map((g, i) =>
         i === groupIndex
-          ? { ...g, list: nextItems }                   // keep original status
-          : { ...g, list: g.list.filter(it => !movedNames.has(it.name)) }
-      );
+          ? { ...g, list: nextItems } // keep original status
+          : { ...g, list: g.list.filter((it) => !movedNames.has(it.name)) },
+      )
 
       // remove moved items from the left list
-      setItems(curr => curr.filter(it => !movedNames.has(it.name)));
+      setItems((curr) => curr.filter((it) => !movedNames.has(it.name)))
 
-      return next;
-    });
-  };
-
+      return next
+    })
+  }
 
   const renameGroup = (groupIndex: number, nextAlias: string) => {
-    setStatusGroups(prev =>
-      prev.map((g, i) =>
-        i === groupIndex ? { ...g, alias: nextAlias } : g
-      )
-    );
-  };
+    setStatusGroups((prev) =>
+      prev.map((g, i) => (i === groupIndex ? { ...g, alias: nextAlias } : g)),
+    )
+  }
 
   const removeGroup = (groupIndex: number) => {
-    setStatusGroups(prev => {
-      const removed = prev[groupIndex]?.list ?? [];
+    setStatusGroups((prev) => {
+      const removed = prev[groupIndex]?.list ?? []
 
       if (removed.length) {
-        setItems(curr => {
-          const leftIndex = leftIndexRef.current;
+        setItems((curr) => {
+          const leftIndex = leftIndexRef.current
 
           // avoid duplicates
-          const currNames = new Set(curr.map(x => x.name));
-          const toReturn = removed.filter(it => !currNames.has(it.name));
+          const currNames = new Set(curr.map((x) => x.name))
+          const toReturn = removed.filter((it) => !currNames.has(it.name))
 
           // merge with current left list
-          const merged = [...curr, ...toReturn];
+          const merged = [...curr, ...toReturn]
 
           // sort by previously recorded index; unknowns go to the end (stable tiebreaker by name)
-          const FALLBACK = Number.MAX_SAFE_INTEGER / 2;
+          const FALLBACK = Number.MAX_SAFE_INTEGER / 2
           merged.sort((a, b) => {
-            const ia = leftIndex.get(a.name) ?? FALLBACK;
-            const ib = leftIndex.get(b.name) ?? FALLBACK;
-            if (ia !== ib) return ia - ib;
-            return a.name.localeCompare(b.name);
-          });
+            const ia = leftIndex.get(a.name) ?? FALLBACK
+            const ib = leftIndex.get(b.name) ?? FALLBACK
+            if (ia !== ib) return ia - ib
+            return a.name.localeCompare(b.name)
+          })
 
-          return merged;
-        });
+          return merged
+        })
       }
 
       // finally remove the column
-      return prev.filter((_, i) => i !== groupIndex);
-    });
-  };
+      return prev.filter((_, i) => i !== groupIndex)
+    })
+  }
 
   /** remembers each item's last position in the LEFT list */
-  const leftIndexRef = useRef<Map<string, number>>(new Map());
+  const leftIndexRef = useRef<Map<string, number>>(new Map())
 
   /** whenever LEFT list order changes, record indices for items currently present */
   useEffect(() => {
-    items.forEach((it, idx) => leftIndexRef.current.set(it.name, idx));
-  }, [items]);
+    items.forEach((it, idx) => leftIndexRef.current.set(it.name, idx))
+  }, [items])
 
   return (
     <div>
+      <Toaster richColors position="top-center" />
       <div className="flex flex-row justify-between">
         <h1 className="text-2xl font-semibold">Build</h1>
         <div className="flex flew-row px-2 items-center gap-2">
-          <div className="flex flex-row items-baseline"><div className="me-2">name:</div><EditLabel label={name} onChange={(e) => { setName(e); setSlug(e.toLowerCase().replaceAll(" ", "-")) }} /></div>
-          <div className="flex flex-row items-baseline px-2 py-1text-sm "><div className="me-2">path:</div><EditLabel label={slug} onChange={(e) => { setSlug(e.toLowerCase().replaceAll(" ", "-")) }} /></div>
-
+          <div className="flex flex-row items-baseline">
+            <div className="me-2">name:</div>
+            <EditLabel
+              label={name}
+              onChange={(e) => {
+                setName(e)
+                setSlug(e.toLowerCase().replaceAll(' ', '-'))
+              }}
+            />
+          </div>
+          <div className="flex flex-row items-baseline px-2 py-1text-sm ">
+            <div className="me-2">path:</div>
+            <EditLabel
+              label={slug}
+              onChange={(e) => {
+                setSlug(e.toLowerCase().replaceAll(' ', '-'))
+              }}
+            />
+          </div>
+          <div>
+            {saved &&
+              <Link target="_blank" rel="noopener noreferrer" to={`status/${slug}`}>View Page</Link>
+            }
+          </div>
         </div>
-        <div><div><button className="btn btn-success btn-outline" disabled={!reportsMutation.isSuccess} onClick={handlePageSave}>Save</button></div></div>
-
+        <div>
+          <div>
+            <button
+              className="btn btn-success btn-outline"
+              disabled={!reportsMutation.isSuccess}
+              onClick={handlePageSave}
+            >
+              Save
+            </button>
+          </div>
+        </div>
       </div>
 
       <div className="grid grid-cols-[auto_1fr] gap-4 mt-4">
@@ -263,10 +303,16 @@ export const Build = () => {
                 />
 
                 <button className="btn btn-light mt-2" onClick={handleSubmit}>
-
-                  {reportsMutation.isPending ?
-                    <><ArrowPathIcon className="animate-spin size-4" /><span>Connecting ...</span></>
-                    : reportsMutation.data ? 'Clear Connection' : 'Connect'}
+                  {reportsMutation.isPending ? (
+                    <>
+                      <ArrowPathIcon className="animate-spin size-4" />
+                      <span>Connecting ...</span>
+                    </>
+                  ) : reportsMutation.data ? (
+                    'Clear Connection'
+                  ) : (
+                    'Connect'
+                  )}
                 </button>
               </fieldset>
 
@@ -277,12 +323,15 @@ export const Build = () => {
               )}
               {reportsMutation.isSuccess && (
                 <div className="mt-4 p-4 bg-green-100 rounded">
-                  <CheckBadgeIcon className="size-6 inline-block me-2" /> Connected succesfully
+                  <CheckBadgeIcon className="size-6 inline-block me-2" />{' '}
+                  Connected succesfully
                 </div>
               )}
             </div>
 
-            <label className={`tab ${reportsMutation.isSuccess ? "" : "tab-disabled"}`}>
+            <label
+              className={`tab ${reportsMutation.isSuccess ? '' : 'tab-disabled'}`}
+            >
               <input type="radio" name="build_tabs" />
               <CubeIcon className="size-4 me-2" />
               Items
@@ -293,23 +342,31 @@ export const Build = () => {
                 <>
                   <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
                     <label className="label">Report:</label>
-                    <select defaultValue="Select a report" className="select" onChange={handleReportChange}>
+                    <select
+                      defaultValue="Select a report"
+                      className="select"
+                      onChange={handleReportChange}
+                    >
                       <option disabled={true}>Select a report</option>
                       {reportsMutation.data.map((item) => (
                         <option key={item.name}>{item.name}</option>
                       ))}
                     </select>
 
-                    {groupsMutation.isPending &&
-                      <div className="p-2 text-base mt-2 mx-auto"><ArrowPathIcon className="size-4 animate-spin inline-block me-2" /> Loading items...</div>
-                    }
+                    {groupsMutation.isPending && (
+                      <div className="p-2 text-base mt-2 mx-auto">
+                        <ArrowPathIcon className="size-4 animate-spin inline-block me-2" />{' '}
+                        Loading items...
+                      </div>
+                    )}
 
-                    {groupsMutation.data && (
-                      groupsMutation.data.length === 0 ? (
+                    {groupsMutation.data &&
+                      (groupsMutation.data.length === 0 ? (
                         <div className="text-sm text-red-600 p-2 mt-2 bg-red-100 border-red-600 border text-center rounded">
-                          <ExclamationTriangleIcon className="size-4 me-2 inline-block" />Report empty!
+                          <ExclamationTriangleIcon className="size-4 me-2 inline-block" />
+                          Report empty!
                         </div>
-                      ) :
+                      ) : (
                         <>
                           <label className="label mt-2">Items:</label>
 
@@ -319,21 +376,32 @@ export const Build = () => {
                             placeholder="Search..."
                             name="filter"
                             value={filterItems}
-                            onChange={(e) => { setFilterItems(e.target.value) }}
+                            onChange={(e) => {
+                              setFilterItems(e.target.value)
+                            }}
                           />
 
                           <div className="mt-2 max-h-[500px] overflow-x-scroll">
                             <ul ref={parent}>
-                              {(groupsFiltered ?? []).map(group => (
+                              {(groupsFiltered ?? []).map((group) => (
                                 <li key={group.name}>
-                                  <StatusItem group="" drag={true} dragHandle="dnd-handle" name={group.name} alias={group.alias || ""} status={group.status} onChangeAlias={(v) => { console.log(v) }} />
+                                  <StatusItem
+                                    group=""
+                                    drag={true}
+                                    dragHandle="dnd-handle"
+                                    name={group.name}
+                                    alias={group.alias || ''}
+                                    status={group.status}
+                                    onChangeAlias={(v) => {
+                                      console.log(v)
+                                    }}
+                                  />
                                 </li>
                               ))}
-
                             </ul>
                           </div>
                         </>
-                    )}
+                      ))}
                   </fieldset>
                 </>
               )}
@@ -345,12 +413,20 @@ export const Build = () => {
         <div className="border-dashed border border-neutral-300 rounded-xl p-4">
           <div className="flex flex-row justify-between mb-2">
             <div></div>
-            <EditLabel label={title} onChange={(title) => setTitle(title)} size="text-3xl" />
+            <EditLabel
+              label={title}
+              onChange={(title) => setTitle(title)}
+              size="text-3xl"
+            />
             <div></div>
           </div>
           <div className="flex flex-row justify-between mb-6">
             <div></div>
-            <EditLabel label={desc} onChange={(desc) => setDesc(desc)} size="text-1xl" />
+            <EditLabel
+              label={desc}
+              onChange={(desc) => setDesc(desc)}
+              size="text-1xl"
+            />
             <div></div>
           </div>
           <div>
@@ -358,7 +434,7 @@ export const Build = () => {
               <StatusGroup
                 key={col.name}
                 name={col.name}
-                alias={col.alias || ""}
+                alias={col.alias || ''}
                 items={col.list}
                 group={groupName}
                 getStatusClass={getStatusClass}
@@ -371,17 +447,17 @@ export const Build = () => {
           </div>
           <div>
             <div className="text-center">
-              <button className="btn btn-outline btn-neutral" onClick={handleAddStatusGroup}>
+              <button
+                className="btn btn-outline btn-neutral"
+                onClick={handleAddStatusGroup}
+              >
                 Click here to Add a new Group
               </button>
             </div>
           </div>
         </div>
-
       </div>
-      <div>
-
-      </div>
+      <div></div>
     </div>
   )
 }

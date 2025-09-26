@@ -13,7 +13,7 @@ export const Profile = () => {
           <div className="card-body">
             <h2 className="card-title">
               <UserCircleIcon className="size-8" aria-hidden />
-              {profile.username || squishEmail(profile.sub || "")} 
+              {profile.username || squishEmail(profile.sub || '')}
             </h2>
             <p>{profile.name}</p>
             <p>{profile.email}</p>

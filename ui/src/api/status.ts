@@ -1,16 +1,13 @@
-import type { Page } from "@/types/pages"
+import type { Page } from '@/types/pages'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
-
-export const fetchStatus= async (
-  slug: string,
-): Promise<Page> => {
+export const fetchStatus = async (slug: string): Promise<Page> => {
   const response = await fetch(`${BACKEND_API}/v1/status/${slug}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
-    }
+    },
   })
 
   if (!response.ok) {
@@ -23,15 +20,13 @@ export const fetchStatus= async (
   return response.json()
 }
 
-export const fetchPages = async (
-  token: string,
-): Promise<Page[]> => {
+export const fetchPages = async (token: string): Promise<Page[]> => {
   const response = await fetch(`${BACKEND_API}/v1/pages`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
-    }
+    },
   })
 
   if (!response.ok) {

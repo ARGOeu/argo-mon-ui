@@ -17,9 +17,6 @@ function NavItem({
   end?: boolean
   children: React.ReactNode
 }) {
-
-
-
   return (
     <NavLink
       to={to}
@@ -39,7 +36,7 @@ function NavItem({
 export default function Layout() {
   const { authenticated, profile, login, logout } = useAuth()
 
-    console.log(profile);
+  console.log(profile)
 
   return (
     <div className="min-h-screen flex flex-col dot-pattern">
@@ -73,7 +70,7 @@ export default function Layout() {
           {authenticated && (profile?.username || profile?.sub) && (
             <NavItem to="/about">
               <UserIcon className="size-4" aria-hidden />
-              {profile.username || squishEmail(profile.sub || "") || "unknown"}
+              {profile.username || squishEmail(profile.sub || '') || 'unknown'}
             </NavItem>
           )}
 

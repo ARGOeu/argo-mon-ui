@@ -1,9 +1,11 @@
-import type { DataSource, DataSourceReport, ItemDesc, StatusItemType } from "@/types/common"
+import type {
+  DataSource,
+  DataSourceReport,
+  ItemDesc,
+  StatusItemType,
+} from '@/types/common'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
-
-
-
 
 export const fetchReportsApi = async (
   data: DataSource,
@@ -51,7 +53,10 @@ export const fetchGroupsApi = async (
   return response.json()
 }
 
-export const fetchEncrypted = async (secret: string, token: string): Promise<string> => {
+export const fetchEncrypted = async (
+  secret: string,
+  token: string,
+): Promise<string> => {
   const response = await fetch(`${BACKEND_API}/v1/encrypt`, {
     method: 'POST',
     headers: {
@@ -59,12 +64,12 @@ export const fetchEncrypted = async (secret: string, token: string): Promise<str
       Authorization: `Bearer ${token}`,
     },
     body: JSON.stringify({ secret: secret }),
-  });
+  })
 
   if (!response.ok) {
-    throw new Error('Failed to encrypt');
+    throw new Error('Failed to encrypt')
   }
 
-  const data = await response.json();
-  return data.secret;
-};
+  const data = await response.json()
+  return data.secret
+}

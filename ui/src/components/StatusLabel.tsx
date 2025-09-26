@@ -1,52 +1,48 @@
-
-import { useState } from 'react';
+import { useState } from 'react'
 
 type StatusLabelProps = {
-  group: string;
-  label: string;
-  alias: string;
-  onChangeAlias: (newAlias: string) => void;
+  group: string
+  label: string
+  alias: string
+  onChangeAlias: (newAlias: string) => void
 }
 
 const StatusLabel = (props: StatusLabelProps) => {
-  const [editMode, setEditMode] = useState(false);
-  const [tempLabel, setTempLabel] = useState('');
+  const [editMode, setEditMode] = useState(false)
+  const [tempLabel, setTempLabel] = useState('')
 
   const handleEdit = () => {
     if (props.alias) {
-      setTempLabel(props.alias);
+      setTempLabel(props.alias)
     } else {
-      setTempLabel(props.label);
+      setTempLabel(props.label)
     }
 
-    setEditMode(true);
-  };
+    setEditMode(true)
+  }
 
   const handleSave = () => {
-    props.onChangeAlias(tempLabel);
-    setEditMode(false);
-  };
+    props.onChangeAlias(tempLabel)
+    setEditMode(false)
+  }
 
   const handleCancel = () => {
-    setTempLabel("");
-    setEditMode(false);
-  };
-
+    setTempLabel('')
+    setEditMode(false)
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {
-      handleSave();
+      handleSave()
     } else if (e.key === 'Escape') {
-      handleCancel();
+      handleCancel()
     }
-  };
+  }
 
   return (
-
     <div className="flex items-center gap-3">
       {editMode ? (
         <>
-          
           <input
             type="text"
             value={tempLabel}
@@ -59,24 +55,26 @@ const StatusLabel = (props: StatusLabelProps) => {
         </>
       ) : (
         <>
-
           <div className="flex flex-row items-center">
-            {props.group
-           ? <div className="tooltip tooltip-right" data-tip="edit">
-            <span className="font-semibold text-gray-800 cursor-pointer border-b border-transparent hover:border-black hover:border-dashed" onClick={handleEdit}>
-              {props.alias ? props.alias : props.label}
-            </span>
-            </div>
-            : <span className="font-semibold text-gray-800 border-b border-transparent" >
-              {props.label}
-            </span>
-             }
+            {props.group ? (
+              <div className="tooltip tooltip-right" data-tip="edit">
+                <span
+                  className="font-semibold text-gray-800 cursor-pointer border-b border-transparent hover:border-black hover:border-dashed"
+                  onClick={handleEdit}
+                >
+                  {props.alias ? props.alias : props.label}
+                </span>
+              </div>
+            ) : (
+              <span className="font-semibold text-gray-800 border-b border-transparent">
+                {props.label}
+              </span>
+            )}
           </div>
         </>
       )}
-
     </div>
-  );
-};
+  )
+}
 
-export default StatusLabel;
+export default StatusLabel

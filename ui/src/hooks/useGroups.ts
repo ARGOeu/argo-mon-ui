@@ -3,7 +3,6 @@ import { useAuth } from '@/auth/useAuth'
 import { fetchGroupsApi } from '@/api/data'
 import type { DataSourceReport, StatusItemType } from '@/types/common'
 
-
 export const useGroupsMutation = () => {
   const { token } = useAuth() // Get token from your auth context
 
