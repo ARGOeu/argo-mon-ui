@@ -1,13 +1,13 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
 import Layout from './Layout'
 import { Home } from './pages/Home'
-import { AuthProvider } from './auth/AuthProvider'
 import AuthProtected from './routing/AuthProtected'
 import { Profile } from './pages/Profile'
 import { Build } from './pages/Build'
 import { View } from './pages/View'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Status } from './pages/Status'
+import { AuthProvider } from './auth/AuthProvider'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -30,13 +30,23 @@ const queryClient = new QueryClient({
   },
 })
 
-function App() {
+export function AuthLayout() {
   return (
     <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <Routes>
-            <Route path="status/:slug" element={<Status />} />
+      <Outlet />
+    </AuthProvider>
+  )
+}
+
+function App() {
+  return (
+
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <Routes>
+          <Route path="status/:slug" element={<Status />} />
+          <Route element={<AuthLayout />} >
+
             <Route element={<Layout />}>
               <Route index element={<Home />} />
               <Route
@@ -65,10 +75,13 @@ function App() {
               />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
-          </Routes>
-        </BrowserRouter>
-      </QueryClientProvider>
-    </AuthProvider>
+
+          </Route>
+
+        </Routes>
+      </BrowserRouter>
+    </QueryClientProvider>
+
   )
 }
 

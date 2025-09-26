@@ -36,7 +36,6 @@ function NavItem({
 export default function Layout() {
   const { authenticated, profile, login, logout } = useAuth()
 
-  console.log(profile)
 
   return (
     <div className="min-h-screen flex flex-col dot-pattern">

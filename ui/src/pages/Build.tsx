@@ -23,7 +23,6 @@ import { useAuth } from '@/auth/useAuth'
 import { fetchEncrypted } from '@/api/data'
 import { useSavePageMutation } from '@/hooks/usePages'
 import { toast, Toaster } from 'sonner'
-import { Link } from 'react-router-dom'
 
 export const Build = () => {
   const { token } = useAuth()
@@ -40,7 +39,7 @@ export const Build = () => {
   const [report, setReport] = useState('')
   const [title, setTitle] = useState('Title')
   const [desc, setDesc] = useState('add description')
-  const [saved,setSaved] = useState(false);
+  const [saved, setSaved] = useState(false);
 
   const savePageMutation = useSavePageMutation()
   const groupsMutation = useGroupsMutation()
@@ -248,7 +247,13 @@ export const Build = () => {
           </div>
           <div>
             {saved &&
-              <Link target="_blank" rel="noopener noreferrer" to={`status/${slug}`}>View Page</Link>
+              <a
+                href={`/status/${slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                View Page
+              </a>
             }
           </div>
         </div>
