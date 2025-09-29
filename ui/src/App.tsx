@@ -1,4 +1,10 @@
-import { BrowserRouter, Navigate, Outlet, Route, Routes } from 'react-router-dom'
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+} from 'react-router-dom'
 import Layout from './Layout'
 import { Home } from './pages/Home'
 import AuthProtected from './routing/AuthProtected'
@@ -40,13 +46,11 @@ export function AuthLayout() {
 
 function App() {
   return (
-
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
           <Route path="status/:slug" element={<Status />} />
-          <Route element={<AuthLayout />} >
-
+          <Route element={<AuthLayout />}>
             <Route element={<Layout />}>
               <Route index element={<Home />} />
               <Route
@@ -54,6 +58,14 @@ function App() {
                 element={
                   <AuthProtected>
                     <Profile />
+                  </AuthProtected>
+                }
+              />
+              <Route
+                path="build/:id"
+                element={
+                  <AuthProtected>
+                    <Build />
                   </AuthProtected>
                 }
               />
@@ -75,13 +87,10 @@ function App() {
               />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
-
           </Route>
-
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>
-
   )
 }
 

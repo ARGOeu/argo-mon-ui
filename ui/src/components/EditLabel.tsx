@@ -4,6 +4,7 @@ type EditLabelProps = {
   label: string
   size?: string
   onChange: (newLabel: string) => void
+  textArea?: boolean
 }
 
 const EditLabel = (props: EditLabelProps) => {
@@ -30,7 +31,9 @@ const EditLabel = (props: EditLabelProps) => {
     setEditMode(false)
   }
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ) => {
     if (e.key === 'Enter') {
       handleSave()
     } else if (e.key === 'Escape') {
@@ -39,18 +42,29 @@ const EditLabel = (props: EditLabelProps) => {
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center">
       {editMode ? (
         <>
-          <input
-            type="text"
-            value={tempLabel}
-            onChange={(e) => setTempLabel(e.target.value)}
-            onKeyDown={handleKeyDown}
-            className="flex-1 font-semibold bg-gray-50 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
-            autoFocus
-            onBlur={handleSave}
-          />
+          {props.textArea ? (
+            <textarea
+              value={tempLabel}
+              onChange={(e) => setTempLabel(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="flex-1 min-w-[500px] font-semibold bg-gray-50 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+              autoFocus
+              onBlur={handleSave}
+            />
+          ) : (
+            <input
+              type="text"
+              value={tempLabel}
+              onChange={(e) => setTempLabel(e.target.value)}
+              onKeyDown={handleKeyDown}
+              className="flex-1 font-semibold bg-gray-50 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+              autoFocus
+              onBlur={handleSave}
+            />
+          )}
         </>
       ) : (
         <>

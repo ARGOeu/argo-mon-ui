@@ -12,5 +12,5 @@ export default function AuthProtected({ children }: { children: JSX.Element }) {
     return <Navigate to="/" state={{ from: location }} replace />
   }
 
-  return    children
+  return children
 }

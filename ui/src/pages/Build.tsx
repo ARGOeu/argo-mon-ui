@@ -1,11 +1,13 @@
 import {
   ArrowPathIcon,
+  ArrowTopRightOnSquareIcon,
   CircleStackIcon,
   Cog6ToothIcon,
   CubeIcon,
   ExclamationTriangleIcon,
 } from '@heroicons/react/16/solid'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useParams } from 'react-router-dom'
 import { useReportsMutation } from '@/hooks/useReports'
 import { useGroupsMutation } from '@/hooks/useGroups'
 import type {
@@ -21,11 +23,17 @@ import { CheckBadgeIcon } from '@heroicons/react/24/solid'
 import EditLabel from '@/components/EditLabel'
 import { useAuth } from '@/auth/useAuth'
 import { fetchEncrypted } from '@/api/data'
-import { useSavePageMutation } from '@/hooks/usePages'
+import {
+  useSavePageMutation,
+  useGetPageQuery,
+  useUpdatePageMutation,
+} from '@/hooks/usePages'
 import { toast, Toaster } from 'sonner'
 
 export const Build = () => {
   const { token } = useAuth()
+  const { id: editId } = useParams<{ id?: string }>()
+  const isEditMode = Boolean(editId)
 
   const [dataSource, setDataSource] = useState<DataSource>({
     api: '',
@@ -39,12 +47,42 @@ export const Build = () => {
   const [report, setReport] = useState('')
   const [title, setTitle] = useState('Title')
   const [desc, setDesc] = useState('add description')
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(false)
 
   const savePageMutation = useSavePageMutation()
+  const updatePageMutation = useUpdatePageMutation(editId || '')
+  const getPageQuery = useGetPageQuery(editId || '')
   const groupsMutation = useGroupsMutation()
   const [filterItems, setFilterItems] = useState('')
   const reportsMutation = useReportsMutation()
+
+  // Load existing page data in edit mode
+  useEffect(() => {
+    if (isEditMode && getPageQuery.data) {
+      const pageData = getPageQuery.data
+      // Populate form with existing data
+      setName(pageData.name || 'Untitled')
+      setSlug(pageData.slug || 'untitled')
+      setTitle(pageData.config?.title || 'Title')
+      setDesc(pageData.config?.description || 'add description')
+      setDataSource({
+        api: pageData.api || '',
+        secret: pageData.secret || '',
+      })
+      setReport(pageData.report || '')
+      setStatusGroups(pageData.config?.groups || [])
+      setSaved(true) // Already saved since we're editing
+
+      // If we have data source info, automatically connect
+      if (pageData.api && pageData.secret) {
+        setIsEncrypted(true) // Assume stored secrets are encrypted
+        reportsMutation.mutate({
+          api: pageData.api,
+          secret: pageData.secret,
+        })
+      }
+    }
+  }, [isEditMode, getPageQuery.data])
 
   const handleAddStatusGroup = () => {
     setStatusGroups((prev) => [
@@ -62,28 +100,52 @@ export const Build = () => {
   }
 
   const handlePageSave = () => {
-    savePageMutation.mutate({
+    const pageData = {
       name: name,
       slug: slug,
       api: dataSource.api,
       secret: dataSource.secret,
       report: report,
-      config: { groups: statusGroups },
-    }, {
-      onSuccess: () => {
-        toast.success("Page Saved!");
-        setSaved(true);
-      },
-      onError: (error) => {
-        toast.error(`Error: ${error}`)
-      }
-    })
 
+      config: {
+        groups: statusGroups,
+        title: title,
+        description: desc,
+      },
+    }
+
+    if (isEditMode && editId) {
+      // Update existing page
+      updatePageMutation.mutate(
+        {
+          ...pageData,
+        },
+        {
+          onSuccess: () => {
+            toast.success('Page Updated!')
+            setSaved(true)
+          },
+          onError: (error) => {
+            toast.error(`Update Error: ${error}`)
+          },
+        },
+      )
+    } else {
+      // Create new page
+      savePageMutation.mutate(pageData, {
+        onSuccess: () => {
+          toast.success('Page Saved!')
+          setSaved(true)
+        },
+        onError: (error) => {
+          toast.error(`Error: ${error}`)
+        },
+      })
+    }
   }
 
   useEffect(() => {
-    if (report != "")
-      groupsMutation.mutate({ ...dataSource, report: report })
+    if (report != '') groupsMutation.mutate({ ...dataSource, report: report })
   }, [report, dataSource])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -124,11 +186,11 @@ export const Build = () => {
         prevStatusGroups.map((group) =>
           group.name === groupName
             ? {
-              ...group,
-              list: group.list.map((item) =>
-                item.name === itemName ? { ...item, alias: newAlias } : item,
-              ),
-            }
+                ...group,
+                list: group.list.map((item) =>
+                  item.name === itemName ? { ...item, alias: newAlias } : item,
+                ),
+              }
             : group,
         ),
       )
@@ -151,8 +213,8 @@ export const Build = () => {
   const groupsFiltered =
     fl !== ''
       ? items.filter((item) =>
-        `${item.name} ${item.status}`.toLowerCase().includes(fl),
-      )
+          `${item.name} ${item.status}`.toLowerCase().includes(fl),
+        )
       : items
 
   // update column
@@ -220,11 +282,34 @@ export const Build = () => {
     items.forEach((it, idx) => leftIndexRef.current.set(it.name, idx))
   }, [items])
 
+  // Show loading spinner while loading page data
+  if (isEditMode && getPageQuery.isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <ArrowPathIcon className="animate-spin size-8" />
+        <span className="ml-2">Loading page data...</span>
+      </div>
+    )
+  }
+
+  // Show error if page failed to load
+  if (isEditMode && getPageQuery.isError) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-red-600">
+          Failed to load page: {getPageQuery.error?.message}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div>
       <Toaster richColors position="top-center" />
       <div className="flex flex-row justify-between">
-        <h1 className="text-2xl font-semibold">Build</h1>
+        <h1 className="text-2xl font-semibold">
+          {isEditMode ? 'Edit Page' : 'Build New Page'}
+        </h1>
         <div className="flex flew-row px-2 items-center gap-2">
           <div className="flex flex-row items-baseline">
             <div className="me-2">name:</div>
@@ -232,7 +317,10 @@ export const Build = () => {
               label={name}
               onChange={(e) => {
                 setName(e)
-                setSlug(e.toLowerCase().replaceAll(' ', '-'))
+                if (!isEditMode) {
+                  // Only auto-generate slug for new pages
+                  setSlug(e.toLowerCase().replaceAll(' ', '-'))
+                }
               }}
             />
           </div>
@@ -246,25 +334,27 @@ export const Build = () => {
             />
           </div>
           <div>
-            {saved &&
+            {saved && (
               <a
                 href={`/status/${slug}`}
                 target="_blank"
                 rel="noopener noreferrer"
+                className="btn"
               >
                 View Page
+                <ArrowTopRightOnSquareIcon className="size-4 inline-block ms-1" />
               </a>
-            }
+            )}
           </div>
         </div>
         <div>
           <div>
             <button
               className="btn btn-success btn-outline"
-              disabled={!reportsMutation.isSuccess}
+              disabled={!reportsMutation.isSuccess && !isEditMode}
               onClick={handlePageSave}
             >
-              Save
+              {isEditMode ? 'Update' : 'Save'}
             </button>
           </div>
         </div>
@@ -348,13 +438,18 @@ export const Build = () => {
                   <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
                     <label className="label">Report:</label>
                     <select
-                      defaultValue="Select a report"
+                      value={report}
                       className="select"
                       onChange={handleReportChange}
+                      disabled={statusGroups.length > 0}
                     >
-                      <option disabled={true}>Select a report</option>
+                      <option value="" disabled={true}>
+                        Select a report
+                      </option>
                       {reportsMutation.data.map((item) => (
-                        <option key={item.name}>{item.name}</option>
+                        <option key={item.name} value={item.name}>
+                          {item.name}
+                        </option>
                       ))}
                     </select>
 
@@ -431,6 +526,7 @@ export const Build = () => {
               label={desc}
               onChange={(desc) => setDesc(desc)}
               size="text-1xl"
+              textArea={true}
             />
             <div></div>
           </div>

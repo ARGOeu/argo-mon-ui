@@ -1,12 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/auth/useAuth'
-import { fetchPage, fetchPages, fetchSavePage } from '@/api/pages'
+import {
+  fetchPage,
+  fetchPages,
+  fetchSavePage,
+  fetchUpdatePage,
+} from '@/api/pages'
 import type { Page } from '@/types/pages'
 
 export const useSavePageMutation = () => {
   const queryClient = useQueryClient()
-  const { token } = useAuth() // Get token from your auth context
-
+  const { token } = useAuth()
   return useMutation<Page, Error, Page>({
     mutationFn: (data: Page) => {
       if (!token) {
@@ -20,6 +24,27 @@ export const useSavePageMutation = () => {
     },
     onError: (error) => {
       console.error('Page save error:', error)
+    },
+  })
+}
+
+export const useUpdatePageMutation = (id: string) => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+  return useMutation<Page, Error, Page>({
+    mutationFn: (data: Page) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchUpdatePage(id, data, token)
+    },
+    onSuccess: (data) => {
+      console.log('Page update success:', data)
+      queryClient.invalidateQueries({ queryKey: ['all-pages'] })
+      queryClient.invalidateQueries({ queryKey: ['page', id] })
+    },
+    onError: (error) => {
+      console.error('Page update error:', error)
     },
   })
 }

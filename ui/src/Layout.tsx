@@ -36,7 +36,6 @@ function NavItem({
 export default function Layout() {
   const { authenticated, profile, login, logout } = useAuth()
 
-
   return (
     <div className="min-h-screen flex flex-col dot-pattern">
       <header className="navbar bg-base-100 sticky  top-0 z-40">

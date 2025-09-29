@@ -1,5 +1,6 @@
-import { getStatusClass } from '@/utils/status'
 import StatusLabel from '@/components/StatusLabel'
+import { GripVertical } from 'lucide-react'
+import { StatusIcon } from './StatusIcon'
 
 interface StatusItemProps {
   group: string
@@ -21,7 +22,9 @@ export const StatusItem = (props: StatusItemProps) => {
     <div className="flex flex-row justify-between border rounded p-2 my-2 shadow align-middle">
       <div>
         {props.dragHandle && (
-          <div className={`${props.dragHandle} cursor-grab`}>::</div>
+          <div className={`${props.dragHandle} cursor-grab`}>
+            <GripVertical className="text-gray-400 h-4 w-4 inline-block" />
+          </div>
         )}
       </div>
       <div>
@@ -35,10 +38,7 @@ export const StatusItem = (props: StatusItemProps) => {
       <div>
         {props.status && (
           <div className="tooltip tooltip-left" data-tip={props.status}>
-            <div
-              aria-label="status"
-              className={`status status-lg ${getStatusClass(props.status)}`}
-            ></div>
+            <StatusIcon status={props.status} iconMode="icon" textMode="text" />
           </div>
         )}
       </div>

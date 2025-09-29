@@ -25,6 +25,30 @@ export const fetchSavePage = async (
   return response.json()
 }
 
+export const fetchUpdatePage = async (
+  id: string,
+  data: Page,
+  token: string,
+): Promise<Page> => {
+  const response = await fetch(`${BACKEND_API}/v1/pages/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
 export const fetchPage = async (id: string, token: string): Promise<Page> => {
   const response = await fetch(`${BACKEND_API}/v1/pages/${id}`, {
     method: 'GET',

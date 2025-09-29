@@ -21,8 +21,11 @@ export const Status = () => {
         <>
           <header className="text-center">
             <h1 className="text-2xl text-center font-semibold">
-              {status.data.name}
+              {status.data.config.title || status.data.name}
             </h1>
+            <h2 className="text-center">
+              {status.data.config.description || ''}
+            </h2>
           </header>
           <div className="min-h-[60px]"></div>
           <main className="mt-">
