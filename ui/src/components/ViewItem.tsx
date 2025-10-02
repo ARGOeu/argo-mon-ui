@@ -1,10 +1,12 @@
-import { getStatusClass } from '@/utils/status'
+import { StatusIcon } from './StatusIcon'
 
 interface ViewItemProps {
   name: string
   status?: string
   type?: string
   alias?: string
+  iconMode: string
+  textMode: string
 }
 
 export const ViewItem = (props: ViewItemProps) => {
@@ -17,11 +19,11 @@ export const ViewItem = (props: ViewItemProps) => {
         <div>
           {props.status && (
             <div className="tooltip tooltip-left" data-tip={props.status}>
-              <div></div>
-              <div
-                aria-label="status"
-                className={`status status-lg ${getStatusClass(props.status)}`}
-              ></div>
+              <StatusIcon
+                status={props.status}
+                iconMode={props.iconMode}
+                textMode={props.textMode}
+              />
             </div>
           )}
         </div>

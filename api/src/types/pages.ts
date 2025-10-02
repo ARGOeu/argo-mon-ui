@@ -14,6 +14,16 @@ export interface Config {
   title?: string;
   description?: string;
   groups: Group[];
+  theming: Theming;
+}
+
+export interface Theming {
+  status: ThemingStatus
+}
+
+export interface ThemingStatus {
+  icon: string;
+  text: string;
 }
 
 export interface PageData {

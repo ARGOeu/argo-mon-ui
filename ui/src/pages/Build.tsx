@@ -1,10 +1,12 @@
 import {
   ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
+  CheckCircleIcon,
   CircleStackIcon,
   Cog6ToothIcon,
   CubeIcon,
   ExclamationTriangleIcon,
+  PaintBrushIcon,
 } from '@heroicons/react/16/solid'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useParams } from 'react-router-dom'
@@ -30,6 +32,9 @@ import {
 } from '@/hooks/usePages'
 import { toast, Toaster } from 'sonner'
 
+import SelectGroup from '@/components/SelectGroup'
+import { BanIcon, Columns2Icon, SquareIcon } from 'lucide-react'
+
 export const Build = () => {
   const { token } = useAuth()
   const { id: editId } = useParams<{ id?: string }>()
@@ -48,6 +53,11 @@ export const Build = () => {
   const [title, setTitle] = useState('Title')
   const [desc, setDesc] = useState('add description')
   const [saved, setSaved] = useState(false)
+  const [selectIcon, setSelectIcon] = useState('led')
+  const [selectText, setSelectText] = useState('none')
+  const [color, setColor] = useState('#ffffff')
+  const [logo, setLogo] = useState('')
+  const [columns, setColumns] = useState('one')
 
   const savePageMutation = useSavePageMutation()
   const updatePageMutation = useUpdatePageMutation(editId || '')
@@ -72,9 +82,14 @@ export const Build = () => {
       setReport(pageData.report || '')
       setStatusGroups(pageData.config?.groups || [])
       setSaved(true) // Already saved since we're editing
+      setSelectIcon(pageData.config?.theming?.status.icon || 'led')
+      setSelectText(pageData.config?.theming?.status.icon || 'none')
+      setColor(pageData.config?.theming?.color || '')
+      setLogo(pageData.config?.theming?.logo || '')
+      setColumns(pageData.config?.theming?.columns || 'one')
 
       // If we have data source info, automatically connect
-      if (pageData.api && pageData.secret) {
+      if (pageData.api && pageData.secret && !reportsMutation.isPending) {
         setIsEncrypted(true) // Assume stored secrets are encrypted
         reportsMutation.mutate({
           api: pageData.api,
@@ -82,7 +97,7 @@ export const Build = () => {
         })
       }
     }
-  }, [isEditMode, getPageQuery.data])
+  }, [isEditMode, getPageQuery.data, reportsMutation])
 
   const handleAddStatusGroup = () => {
     setStatusGroups((prev) => [
@@ -111,6 +126,15 @@ export const Build = () => {
         groups: statusGroups,
         title: title,
         description: desc,
+        theming: {
+          status: {
+            icon: selectIcon,
+            text: selectText,
+          },
+          logo: logo,
+          color: color,
+          columns: columns,
+        },
       },
     }
 
@@ -145,7 +169,9 @@ export const Build = () => {
   }
 
   useEffect(() => {
-    if (report != '') groupsMutation.mutate({ ...dataSource, report: report })
+    if (report !== '' && !groupsMutation.isPending)
+      groupsMutation.mutate({ ...dataSource, report: report })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [report, dataSource])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -319,6 +345,7 @@ export const Build = () => {
                 setName(e)
                 if (!isEditMode) {
                   // Only auto-generate slug for new pages
+                  setTitle(e)
                   setSlug(e.toLowerCase().replaceAll(' ', '-'))
                 }
               }}
@@ -484,8 +511,10 @@ export const Build = () => {
                           <div className="mt-2 max-h-[500px] overflow-x-scroll">
                             <ul ref={parent}>
                               {(groupsFiltered ?? []).map((group) => (
-                                <li key={group.name}>
+                                <li key={group.name} className="my-1">
                                   <StatusItem
+                                    iconMode={selectIcon}
+                                    textMode={selectText}
                                     group=""
                                     drag={true}
                                     dragHandle="dnd-handle"
@@ -506,30 +535,113 @@ export const Build = () => {
                 </>
               )}
             </div>
+
+            <label className="tab">
+              <input type="radio" name="build_tabs" />
+              <PaintBrushIcon className="size-4 me-2" />
+              Theming
+            </label>
+            <div className="tab-content bg-base-100 border-base-300 p-6">
+              <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+                <label className="label mt-2">Color:</label>
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="rounded cursor-pointer border-2 border-gray-300"
+                />
+                <label className="lab2l mt-2">Logo:</label>
+                <div className="border p-2 rounded border-gray-300">
+                  <EditLabel
+                    label={logo}
+                    placeholder="add logo url"
+                    onChange={(logo) => setLogo(logo)}
+                  />
+                </div>
+
+                <label className="label">Status Icon:</label>
+                <SelectGroup selected={selectIcon} onChange={setSelectIcon}>
+                  <SelectGroup.Item value="led">
+                    <div
+                      aria-label="status"
+                      className="status status-lg status-success"
+                    ></div>
+                    <div>Led</div>
+                  </SelectGroup.Item>
+                  <SelectGroup.Item value="icon">
+                    <CheckCircleIcon className="text-green-500 size-4" />
+                    <div>Icon</div>
+                  </SelectGroup.Item>
+                  <SelectGroup.Item value="none">
+                    <BanIcon className="w-4" />
+                    <div>None</div>
+                  </SelectGroup.Item>
+                </SelectGroup>
+                <label className="label mt-2">Status Text:</label>
+                <SelectGroup selected={selectText} onChange={setSelectText}>
+                  <SelectGroup.Item value="text">
+                    <div className="text-green-500">
+                      <small>OK</small>
+                    </div>
+                    <div>Text</div>
+                  </SelectGroup.Item>
+                  <SelectGroup.Item value="badge">
+                    <div className="badge badge-success text-white">
+                      <small>OK</small>
+                    </div>
+                    <div>Badge</div>
+                  </SelectGroup.Item>
+                  <SelectGroup.Item value="none">
+                    <BanIcon className="w-4" />
+                    <div>None</div>
+                  </SelectGroup.Item>
+                </SelectGroup>
+                <label className="label mt-2">Status Columns:</label>
+                <SelectGroup selected={columns} onChange={setColumns}>
+                  <SelectGroup.Item value="one">
+                    <SquareIcon className="w-4" />
+                    <div>One</div>
+                  </SelectGroup.Item>
+                  <SelectGroup.Item value="two">
+                    <Columns2Icon className="w-4" />
+                    <div>Two</div>
+                  </SelectGroup.Item>
+                </SelectGroup>
+              </fieldset>
+            </div>
           </div>
         </div>
 
         {/* Dynamic Status Columns */}
         <div className="border-dashed border border-neutral-300 rounded-xl p-4">
-          <div className="flex flex-row justify-between mb-2">
-            <div></div>
-            <EditLabel
-              label={title}
-              onChange={(title) => setTitle(title)}
-              size="text-3xl"
-            />
-            <div></div>
-          </div>
-          <div className="flex flex-row justify-between mb-6">
-            <div></div>
-            <EditLabel
-              label={desc}
-              onChange={(desc) => setDesc(desc)}
-              size="text-1xl"
-              textArea={true}
-            />
-            <div></div>
-          </div>
+          <header
+            style={{ backgroundColor: color }}
+            className="p-2 mb-4 rounded-t-lg"
+          >
+            <div className="flex flex-row justify-between">
+              <div></div>
+              <div className="flex flex-row items-baseline gap-2 mb-2">
+                {logo !== '' && <img src={logo} className="me-4" />}
+
+                <EditLabel
+                  label={title}
+                  onChange={(title) => setTitle(title)}
+                  size="text-3xl"
+                />
+              </div>
+              <div></div>
+            </div>
+            <div className="flex flex-row justify-between">
+              <div></div>
+              <EditLabel
+                label={desc}
+                onChange={(desc) => setDesc(desc)}
+                size="text-1xl"
+                textArea={true}
+              />
+              <div></div>
+            </div>
+          </header>
           <div>
             {statusGroups.map((col, index) => (
               <StatusGroup
@@ -538,11 +650,14 @@ export const Build = () => {
                 alias={col.alias || ''}
                 items={col.list}
                 group={groupName}
+                columns={columns}
                 getStatusClass={getStatusClass}
                 onItemsChange={(next) => updateGroup(index, next)}
                 onRename={(nextName) => renameGroup(index, nextName)}
                 onRemove={() => removeGroup(index)}
                 onChangeAlias={handleChangeItemAlias}
+                iconMode={selectIcon}
+                textMode={selectText}
               />
             ))}
           </div>

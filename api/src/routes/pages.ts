@@ -22,7 +22,10 @@ const pageRoutes: FastifyPluginAsync = async (fastify) => {
           report: { type: 'string' },
           config: {
             type: 'object',
+            required: ['groups'],
             properties: {
+              title: { type: 'string' },
+              description: { type: 'string' },
               groups: {
                 type: 'array',
                 items: {
@@ -126,7 +129,10 @@ const pageRoutes: FastifyPluginAsync = async (fastify) => {
           report: { type: 'string' },
           config: {
             type: 'object',
+            required: ['groups'],
             properties: {
+              title: { type: 'string' },
+              description: { type: 'string' },
               groups: {
                 type: 'array',
                 items: {

@@ -19,10 +19,27 @@ export const Status = () => {
         </div>
       ) : status.isSuccess && status.data && status.data.config ? (
         <>
-          <header className="text-center">
-            <h1 className="text-2xl text-center font-semibold">
-              {status.data.config.title || status.data.name}
-            </h1>
+          <header
+            className="text-center rounded-t-lg p-2 "
+            style={{
+              backgroundColor: status.data.config.theming?.color || '#ffffff',
+            }}
+          >
+            <div className="flex flex-row justify-between">
+              <div></div>
+              <div className="flex flex-row gap-2 mb-2 items-baseline">
+                {status.data.config.theming?.logo && (
+                  <img
+                    src={status.data.config.theming?.logo}
+                    className="me-4"
+                  />
+                )}
+                <h1 className="text-2xl font-semibold">
+                  {status.data.config.title || status.data.name}
+                </h1>
+              </div>
+              <div></div>
+            </div>
             <h2 className="text-center">
               {status.data.config.description || ''}
             </h2>
@@ -33,10 +50,15 @@ export const Status = () => {
               status.data.config.groups.map((group) => (
                 <div className="mt-4">
                   <ViewGroup
+                    columns={status.data.config?.theming?.columns || 'one'}
                     key={group.name}
                     name={group.name}
                     alias={group.alias || ''}
                     items={group.list}
+                    iconMode={status.data.config?.theming?.status.icon || 'led'}
+                    textMode={
+                      status.data.config?.theming?.status.text || 'none'
+                    }
                   />
                 </div>
               ))}

@@ -11,6 +11,9 @@ type StatusGroupProps = {
   items: StatusItemType[]
   alias: string
   group: string
+  iconMode: string
+  textMode: string
+  columns: string
   getStatusClass: (s: string) => string
   onItemsChange: (nextItems: StatusItemType[]) => void
   onRename: (nextName: string) => void
@@ -61,7 +64,11 @@ export default function StatusGroup(props: StatusGroupProps) {
         </button>
       </div>
       <div className="min-h-[100px] p-4">
-        <ul key={props.name} ref={listRef}>
+        <ul
+          key={props.name}
+          ref={listRef}
+          className={`grid gap-1 ${props.columns === 'two' ? 'grid-cols-2' : 'grid-cols-1'}`}
+        >
           {orderedItems.map((sitem) => (
             <li key={sitem.name}>
               <StatusItem
@@ -72,6 +79,8 @@ export default function StatusGroup(props: StatusGroupProps) {
                 alias={sitem.alias || ''}
                 status={sitem.status}
                 onChangeAlias={handleLocalAliasChange}
+                iconMode={props.iconMode}
+                textMode={props.textMode}
               />
             </li>
           ))}

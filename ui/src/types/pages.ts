@@ -16,6 +16,19 @@ export type PageConfig = {
   groups?: StatusGroupType[]
   title?: string
   description?: string
+  theming?: PageTheming
+}
+
+export type PageThemingStatus = {
+  icon: string
+  text: string
+}
+
+export type PageTheming = {
+  status: PageThemingStatus
+  color?: string
+  logo?: string
+  columns?: string
 }
 
 export type PageGroup = {

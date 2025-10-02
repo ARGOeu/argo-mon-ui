@@ -5,6 +5,9 @@ type ViewGroupProps = {
   name: string
   items: StatusItemType[]
   alias: string
+  iconMode: string
+  textMode: string
+  columns: string
 }
 
 export default function ViewGroup(props: ViewGroupProps) {
@@ -18,15 +21,21 @@ export default function ViewGroup(props: ViewGroupProps) {
       </div>
       <div className="min-h-[100px]">
         <div key={props.name} className="flex flex-col gap-0">
-          {props.items.map((item) => (
-            <div className="border-gray-100 border" key={item.name}>
-              <ViewItem
-                name={item.name}
-                alias={item.alias || ''}
-                status={item.status}
-              />
-            </div>
-          ))}
+          <ul
+            className={`grid gap-0 ${props.columns === 'two' ? 'grid-cols-2' : 'grid-cols-1'}`}
+          >
+            {props.items.map((item) => (
+              <li className="border-gray-100 border" key={item.name}>
+                <ViewItem
+                  name={item.name}
+                  alias={item.alias || ''}
+                  status={item.status}
+                  iconMode={props.iconMode}
+                  textMode={props.textMode}
+                />
+              </li>
+            ))}
+          </ul>
           {props.items.length === 0 && (
             <li className="text-xs text-neutral-500 max-h-[300px] px-2 py-3 rounded border border-dashed m-2">
               Nothing to see here...

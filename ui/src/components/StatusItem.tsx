@@ -10,6 +10,8 @@ interface StatusItemProps {
   drag?: boolean
   dragHandle?: string
   alias?: string
+  textMode: string
+  iconMode: string
   onChangeAlias: (itemName: string, newAlias: string) => void
 }
 
@@ -19,7 +21,7 @@ export const StatusItem = (props: StatusItemProps) => {
   }
 
   return (
-    <div className="flex flex-row justify-between border rounded p-2 my-2 shadow align-middle">
+    <div className="flex flex-row justify-between border rounded p-2 shadow align-middle bg-gray-50">
       <div>
         {props.dragHandle && (
           <div className={`${props.dragHandle} cursor-grab`}>
@@ -38,7 +40,11 @@ export const StatusItem = (props: StatusItemProps) => {
       <div>
         {props.status && (
           <div className="tooltip tooltip-left" data-tip={props.status}>
-            <StatusIcon status={props.status} iconMode="icon" textMode="text" />
+            <StatusIcon
+              status={props.status}
+              iconMode={props.iconMode}
+              textMode={props.textMode}
+            />
           </div>
         )}
       </div>

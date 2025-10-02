@@ -5,6 +5,7 @@ type EditLabelProps = {
   size?: string
   onChange: (newLabel: string) => void
   textArea?: boolean
+  placeholder?: string
 }
 
 const EditLabel = (props: EditLabelProps) => {
@@ -74,7 +75,7 @@ const EditLabel = (props: EditLabelProps) => {
                 className={` ${props.size ? props.size : ''} font-semibold text-gray-800 cursor-pointer border-b border-transparent hover:border-black hover:border-dashed`}
                 onClick={handleEdit}
               >
-                {props.label}
+                {props.label || props.placeholder || ''}
               </span>
             </div>
           </div>
