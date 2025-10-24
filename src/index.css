@@ -1,0 +1,16 @@
+@import 'tailwindcss';
+@plugin "daisyui";
+
+/* body {
+background-color: #000000;
+background-image:  linear-gradient(#ebebeb 2.2px, transparent 2.2px), linear-gradient(90deg, #ebebeb 2.2px, transparent 2.2px), linear-gradient(#ededed 1.1px, transparent 1.1px), linear-gradient(90deg, #ededed 1.1px, #ffffff 1.1px);
+background-size: 55px 55px, 55px 55px, 11px 11px, 11px 11px;
+background-position: -2.2px -2.2px, -2.2px -2.2px, -1.1px -1.1px, -1.1px -1.1px;
+} */
+
+.dot-pattern {
+  background: white;
+  background-image: radial-gradient(rgb(196, 196, 196) 1px, transparent 0);
+  background-size: 12px 12px;
+  background-position: -19px -19px;
+}

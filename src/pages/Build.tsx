@@ -1,0 +1,679 @@
+import {
+  ArrowPathIcon,
+  ArrowTopRightOnSquareIcon,
+  CheckCircleIcon,
+  CircleStackIcon,
+  Cog6ToothIcon,
+  CubeIcon,
+  ExclamationTriangleIcon,
+  PaintBrushIcon,
+} from '@heroicons/react/16/solid'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useParams } from 'react-router-dom'
+import { useReportsMutation } from '@/hooks/useReports'
+import { useGroupsMutation } from '@/hooks/useGroups'
+import type {
+  DataSource,
+  StatusItemType,
+  StatusGroupType,
+} from '@/types/common'
+import { useDragAndDrop } from '@formkit/drag-and-drop/react'
+import StatusGroup from '@/components/StatusGroup'
+import { getStatusClass } from '@/utils/status'
+import { StatusItem } from '@/components/StatusItem'
+import { CheckBadgeIcon } from '@heroicons/react/24/solid'
+import EditLabel from '@/components/EditLabel'
+import { useAuth } from '@/auth/useAuth'
+import { fetchEncrypted } from '@/api/data'
+import {
+  useSavePageMutation,
+  useGetPageQuery,
+  useUpdatePageMutation,
+} from '@/hooks/usePages'
+import { toast, Toaster } from 'sonner'
+
+import SelectGroup from '@/components/SelectGroup'
+import { BanIcon, Columns2Icon, SquareIcon } from 'lucide-react'
+
+export const Build = () => {
+  const { token } = useAuth()
+  const { id: editId } = useParams<{ id?: string }>()
+  const isEditMode = Boolean(editId)
+
+  const [dataSource, setDataSource] = useState<DataSource>({
+    api: '',
+    secret: '',
+  })
+
+  const [isEncrypted, setIsEncrypted] = useState(false)
+  const [name, setName] = useState<string>('Untitled')
+  const [slug, setSlug] = useState<string>('untitled')
+  const [statusGroups, setStatusGroups] = useState<StatusGroupType[]>([])
+  const [report, setReport] = useState('')
+  const [title, setTitle] = useState('Title')
+  const [desc, setDesc] = useState('add description')
+  const [saved, setSaved] = useState(false)
+  const [selectIcon, setSelectIcon] = useState('led')
+  const [selectText, setSelectText] = useState('none')
+  const [color, setColor] = useState('#ffffff')
+  const [logo, setLogo] = useState('')
+  const [columns, setColumns] = useState('one')
+
+  const savePageMutation = useSavePageMutation()
+  const updatePageMutation = useUpdatePageMutation(editId || '')
+  const getPageQuery = useGetPageQuery(editId || '')
+  const groupsMutation = useGroupsMutation()
+  const [filterItems, setFilterItems] = useState('')
+  const reportsMutation = useReportsMutation()
+
+  // Load existing page data in edit mode
+  useEffect(() => {
+    if (isEditMode && getPageQuery.data) {
+      const pageData = getPageQuery.data
+      // Populate form with existing data
+      setName(pageData.name || 'Untitled')
+      setSlug(pageData.slug || 'untitled')
+      setTitle(pageData.config?.title || 'Title')
+      setDesc(pageData.config?.description || 'add description')
+      setDataSource({
+        api: pageData.api || '',
+        secret: pageData.secret || '',
+      })
+      setReport(pageData.report || '')
+      setStatusGroups(pageData.config?.groups || [])
+      setSaved(true) // Already saved since we're editing
+      setSelectIcon(pageData.config?.theming?.status.icon || 'led')
+      setSelectText(pageData.config?.theming?.status.icon || 'none')
+      setColor(pageData.config?.theming?.color || '')
+      setLogo(pageData.config?.theming?.logo || '')
+      setColumns(pageData.config?.theming?.columns || 'one')
+
+      // If we have data source info, automatically connect
+      if (pageData.api && pageData.secret && !reportsMutation.isPending) {
+        setIsEncrypted(true) // Assume stored secrets are encrypted
+        reportsMutation.mutate({
+          api: pageData.api,
+          secret: pageData.secret,
+        })
+      }
+    }
+  }, [isEditMode, getPageQuery.data, reportsMutation])
+
+  const handleAddStatusGroup = () => {
+    setStatusGroups((prev) => [
+      ...prev,
+      {
+        name: `group-${prev.length + 1}`,
+        alias: `group-${prev.length + 1}`,
+        list: [],
+      },
+    ])
+  }
+
+  const handleReportChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setReport(event.target.value)
+  }
+
+  const handlePageSave = () => {
+    const pageData = {
+      name: name,
+      slug: slug,
+      api: dataSource.api,
+      secret: dataSource.secret,
+      report: report,
+
+      config: {
+        groups: statusGroups,
+        title: title,
+        description: desc,
+        theming: {
+          status: {
+            icon: selectIcon,
+            text: selectText,
+          },
+          logo: logo,
+          color: color,
+          columns: columns,
+        },
+      },
+    }
+
+    if (isEditMode && editId) {
+      // Update existing page
+      updatePageMutation.mutate(
+        {
+          ...pageData,
+        },
+        {
+          onSuccess: () => {
+            toast.success('Page Updated!')
+            setSaved(true)
+          },
+          onError: (error) => {
+            toast.error(`Update Error: ${error}`)
+          },
+        },
+      )
+    } else {
+      // Create new page
+      savePageMutation.mutate(pageData, {
+        onSuccess: () => {
+          toast.success('Page Saved!')
+          setSaved(true)
+        },
+        onError: (error) => {
+          toast.error(`Error: ${error}`)
+        },
+      })
+    }
+  }
+
+  useEffect(() => {
+    if (report !== '' && !groupsMutation.isPending)
+      groupsMutation.mutate({ ...dataSource, report: report })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [report, dataSource])
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (reportsMutation.isSuccess) {
+      reportsMutation.reset()
+      setDataSource({ api: '', secret: '' })
+      setIsEncrypted(false)
+    } else {
+      if (!isEncrypted) {
+        const encrypted = await fetchEncrypted(dataSource.secret, token || '')
+        setDataSource({ ...dataSource, secret: encrypted || '' })
+        setIsEncrypted(true)
+        reportsMutation.mutate({ api: dataSource.api, secret: encrypted })
+      } else {
+        reportsMutation.mutate(dataSource)
+      }
+    }
+  }
+
+  const handleInputChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+  ): void => {
+    const { name, value } = e.target
+    setDataSource((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+  }
+
+  const handleChangeItemAlias = (
+    groupName: string,
+    itemName: string,
+    newAlias: string,
+  ) => {
+    if (groupName !== '') {
+      setStatusGroups((prevStatusGroups) =>
+        prevStatusGroups.map((group) =>
+          group.name === groupName
+            ? {
+                ...group,
+                list: group.list.map((item) =>
+                  item.name === itemName ? { ...item, alias: newAlias } : item,
+                ),
+              }
+            : group,
+        ),
+      )
+    }
+  }
+
+  const fl = filterItems.trim().toLowerCase()
+
+  // this is the left column of loaded api items
+  const groupName = 'status-board'
+  const [parent, items, setItems] = useDragAndDrop<
+    HTMLUListElement,
+    StatusItemType
+  >([], { group: groupName, dragHandle: '.dnd-handle' })
+
+  useEffect(() => {
+    if (groupsMutation.data) setItems(groupsMutation.data)
+  }, [groupsMutation.data, setItems])
+
+  const groupsFiltered =
+    fl !== ''
+      ? items.filter((item) =>
+          `${item.name} ${item.status}`.toLowerCase().includes(fl),
+        )
+      : items
+
+  // update column
+  const updateGroup = (groupIndex: number, nextItems: StatusItemType[]) => {
+    setStatusGroups((prev) => {
+      const movedNames = new Set(nextItems.map((it) => it.name))
+
+      const next = prev.map((g, i) =>
+        i === groupIndex
+          ? { ...g, list: nextItems } // keep original status
+          : { ...g, list: g.list.filter((it) => !movedNames.has(it.name)) },
+      )
+
+      // remove moved items from the left list
+      setItems((curr) => curr.filter((it) => !movedNames.has(it.name)))
+
+      return next
+    })
+  }
+
+  const renameGroup = (groupIndex: number, nextAlias: string) => {
+    setStatusGroups((prev) =>
+      prev.map((g, i) => (i === groupIndex ? { ...g, alias: nextAlias } : g)),
+    )
+  }
+
+  const removeGroup = (groupIndex: number) => {
+    setStatusGroups((prev) => {
+      const removed = prev[groupIndex]?.list ?? []
+
+      if (removed.length) {
+        setItems((curr) => {
+          const leftIndex = leftIndexRef.current
+
+          // avoid duplicates
+          const currNames = new Set(curr.map((x) => x.name))
+          const toReturn = removed.filter((it) => !currNames.has(it.name))
+
+          // merge with current left list
+          const merged = [...curr, ...toReturn]
+
+          // sort by previously recorded index; unknowns go to the end (stable tiebreaker by name)
+          const FALLBACK = Number.MAX_SAFE_INTEGER / 2
+          merged.sort((a, b) => {
+            const ia = leftIndex.get(a.name) ?? FALLBACK
+            const ib = leftIndex.get(b.name) ?? FALLBACK
+            if (ia !== ib) return ia - ib
+            return a.name.localeCompare(b.name)
+          })
+
+          return merged
+        })
+      }
+
+      // finally remove the column
+      return prev.filter((_, i) => i !== groupIndex)
+    })
+  }
+
+  /** remembers each item's last position in the LEFT list */
+  const leftIndexRef = useRef<Map<string, number>>(new Map())
+
+  /** whenever LEFT list order changes, record indices for items currently present */
+  useEffect(() => {
+    items.forEach((it, idx) => leftIndexRef.current.set(it.name, idx))
+  }, [items])
+
+  // Show loading spinner while loading page data
+  if (isEditMode && getPageQuery.isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <ArrowPathIcon className="animate-spin size-8" />
+        <span className="ml-2">Loading page data...</span>
+      </div>
+    )
+  }
+
+  // Show error if page failed to load
+  if (isEditMode && getPageQuery.isError) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <div className="text-red-600">
+          Failed to load page: {getPageQuery.error?.message}
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div>
+      <Toaster richColors position="top-center" />
+      <div className="flex flex-row justify-between">
+        <h1 className="text-2xl font-semibold">
+          {isEditMode ? 'Edit Page' : 'Build New Page'}
+        </h1>
+        <div className="flex flew-row px-2 items-center gap-2">
+          <div className="flex flex-row items-baseline">
+            <div className="me-2">name:</div>
+            <EditLabel
+              label={name}
+              onChange={(e) => {
+                setName(e)
+                if (!isEditMode) {
+                  // Only auto-generate slug for new pages
+                  setTitle(e)
+                  setSlug(e.toLowerCase().replaceAll(' ', '-'))
+                }
+              }}
+            />
+          </div>
+          <div className="flex flex-row items-baseline px-2 py-1text-sm ">
+            <div className="me-2">path:</div>
+            <EditLabel
+              label={slug}
+              onChange={(e) => {
+                setSlug(e.toLowerCase().replaceAll(' ', '-'))
+              }}
+            />
+          </div>
+          <div>
+            {saved && (
+              <a
+                href={`/status/${slug}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn"
+              >
+                View Page
+                <ArrowTopRightOnSquareIcon className="size-4 inline-block ms-1" />
+              </a>
+            )}
+          </div>
+        </div>
+        <div>
+          <div>
+            <button
+              className="btn btn-success btn-outline"
+              disabled={!reportsMutation.isSuccess && !isEditMode}
+              onClick={handlePageSave}
+            >
+              {isEditMode ? 'Update' : 'Save'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-[auto_1fr] gap-4 mt-4">
+        <div className="w-[370px]">
+          <div className="tabs tabs-lift">
+            <label className="tab">
+              <input type="radio" name="build_tabs" defaultChecked />
+              <Cog6ToothIcon className="size-4 me-2" />
+              Config
+            </label>
+            <div className="tab-content bg-base-100 border-base-300 p-6">
+              <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+                <legend className="fieldset-legend">
+                  <CircleStackIcon className="size-4" />
+                  Data Source
+                </legend>
+
+                <label className="label">Argo-web-api endpoint (URL):</label>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="https://"
+                  name="api"
+                  value={dataSource.api}
+                  onChange={handleInputChange}
+                  disabled={reportsMutation.isSuccess}
+                />
+
+                <label className="label">Access Token:</label>
+                <input
+                  type="password"
+                  className="input"
+                  placeholder="s3cr3t"
+                  name="secret"
+                  value={dataSource.secret}
+                  onChange={handleInputChange}
+                  disabled={reportsMutation.isSuccess}
+                />
+
+                <button className="btn btn-light mt-2" onClick={handleSubmit}>
+                  {reportsMutation.isPending ? (
+                    <>
+                      <ArrowPathIcon className="animate-spin size-4" />
+                      <span>Connecting ...</span>
+                    </>
+                  ) : reportsMutation.data ? (
+                    'Clear Connection'
+                  ) : (
+                    'Connect'
+                  )}
+                </button>
+              </fieldset>
+
+              {reportsMutation.error && (
+                <div className="mt-4 p-4 bg-red-100 rounded">
+                  Error: {reportsMutation.error.message}
+                </div>
+              )}
+              {reportsMutation.isSuccess && (
+                <div className="mt-4 p-4 bg-green-100 rounded">
+                  <CheckBadgeIcon className="size-6 inline-block me-2" />{' '}
+                  Connected succesfully
+                </div>
+              )}
+            </div>
+
+            <label
+              className={`tab ${reportsMutation.isSuccess ? '' : 'tab-disabled'}`}
+            >
+              <input type="radio" name="build_tabs" />
+              <CubeIcon className="size-4 me-2" />
+              Items
+            </label>
+
+            <div className="tab-content bg-base-100 border-base-300 p-6">
+              {reportsMutation.data && (
+                <>
+                  <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+                    <label className="label">Report:</label>
+                    <select
+                      value={report}
+                      className="select"
+                      onChange={handleReportChange}
+                      disabled={statusGroups.length > 0}
+                    >
+                      <option value="" disabled={true}>
+                        Select a report
+                      </option>
+                      {reportsMutation.data.map((item) => (
+                        <option key={item.name} value={item.name}>
+                          {item.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    {groupsMutation.isPending && (
+                      <div className="p-2 text-base mt-2 mx-auto">
+                        <ArrowPathIcon className="size-4 animate-spin inline-block me-2" />{' '}
+                        Loading items...
+                      </div>
+                    )}
+
+                    {groupsMutation.data &&
+                      (groupsMutation.data.length === 0 ? (
+                        <div className="text-sm text-red-600 p-2 mt-2 bg-red-100 border-red-600 border text-center rounded">
+                          <ExclamationTriangleIcon className="size-4 me-2 inline-block" />
+                          Report empty!
+                        </div>
+                      ) : (
+                        <>
+                          <label className="label mt-2">Items:</label>
+
+                          <input
+                            type="text"
+                            className="input"
+                            placeholder="Search..."
+                            name="filter"
+                            value={filterItems}
+                            onChange={(e) => {
+                              setFilterItems(e.target.value)
+                            }}
+                          />
+
+                          <div className="mt-2 max-h-[500px] overflow-x-scroll">
+                            <ul ref={parent}>
+                              {(groupsFiltered ?? []).map((group) => (
+                                <li key={group.name} className="my-1">
+                                  <StatusItem
+                                    iconMode={selectIcon}
+                                    textMode={selectText}
+                                    group=""
+                                    drag={true}
+                                    dragHandle="dnd-handle"
+                                    name={group.name}
+                                    alias={group.alias || ''}
+                                    status={group.status}
+                                    onChangeAlias={(v) => {
+                                      console.log(v)
+                                    }}
+                                  />
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </>
+                      ))}
+                  </fieldset>
+                </>
+              )}
+            </div>
+
+            <label className="tab">
+              <input type="radio" name="build_tabs" />
+              <PaintBrushIcon className="size-4 me-2" />
+              Theming
+            </label>
+            <div className="tab-content bg-base-100 border-base-300 p-6">
+              <fieldset className="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+                <label className="label mt-2">Color:</label>
+                <input
+                  type="color"
+                  value={color}
+                  onChange={(e) => setColor(e.target.value)}
+                  className="rounded cursor-pointer border-2 border-gray-300"
+                />
+                <label className="lab2l mt-2">Logo:</label>
+                <div className="border p-2 rounded border-gray-300">
+                  <EditLabel
+                    label={logo}
+                    placeholder="add logo url"
+                    onChange={(logo) => setLogo(logo)}
+                  />
+                </div>
+
+                <label className="label">Status Icon:</label>
+                <SelectGroup selected={selectIcon} onChange={setSelectIcon}>
+                  <SelectGroup.Item value="led">
+                    <div
+                      aria-label="status"
+                      className="status status-lg status-success"
+                    ></div>
+                    <div>Led</div>
+                  </SelectGroup.Item>
+                  <SelectGroup.Item value="icon">
+                    <CheckCircleIcon className="text-green-500 size-4" />
+                    <div>Icon</div>
+                  </SelectGroup.Item>
+                  <SelectGroup.Item value="none">
+                    <BanIcon className="w-4" />
+                    <div>None</div>
+                  </SelectGroup.Item>
+                </SelectGroup>
+                <label className="label mt-2">Status Text:</label>
+                <SelectGroup selected={selectText} onChange={setSelectText}>
+                  <SelectGroup.Item value="text">
+                    <div className="text-green-500">
+                      <small>OK</small>
+                    </div>
+                    <div>Text</div>
+                  </SelectGroup.Item>
+                  <SelectGroup.Item value="badge">
+                    <div className="badge badge-success text-white">
+                      <small>OK</small>
+                    </div>
+                    <div>Badge</div>
+                  </SelectGroup.Item>
+                  <SelectGroup.Item value="none">
+                    <BanIcon className="w-4" />
+                    <div>None</div>
+                  </SelectGroup.Item>
+                </SelectGroup>
+                <label className="label mt-2">Status Columns:</label>
+                <SelectGroup selected={columns} onChange={setColumns}>
+                  <SelectGroup.Item value="one">
+                    <SquareIcon className="w-4" />
+                    <div>One</div>
+                  </SelectGroup.Item>
+                  <SelectGroup.Item value="two">
+                    <Columns2Icon className="w-4" />
+                    <div>Two</div>
+                  </SelectGroup.Item>
+                </SelectGroup>
+              </fieldset>
+            </div>
+          </div>
+        </div>
+
+        {/* Dynamic Status Columns */}
+        <div className="border-dashed border border-neutral-300 rounded-xl p-4">
+          <header
+            style={{ backgroundColor: color }}
+            className="p-2 mb-4 rounded-t-lg"
+          >
+            <div className="flex flex-row justify-between">
+              <div></div>
+              <div className="flex flex-row items-baseline gap-2 mb-2">
+                {logo !== '' && <img src={logo} className="me-4" />}
+
+                <EditLabel
+                  label={title}
+                  onChange={(title) => setTitle(title)}
+                  size="text-3xl"
+                />
+              </div>
+              <div></div>
+            </div>
+            <div className="flex flex-row justify-between">
+              <div></div>
+              <EditLabel
+                label={desc}
+                onChange={(desc) => setDesc(desc)}
+                size="text-1xl"
+                textArea={true}
+              />
+              <div></div>
+            </div>
+          </header>
+          <div>
+            {statusGroups.map((col, index) => (
+              <StatusGroup
+                key={col.name}
+                name={col.name}
+                alias={col.alias || ''}
+                items={col.list}
+                group={groupName}
+                columns={columns}
+                getStatusClass={getStatusClass}
+                onItemsChange={(next) => updateGroup(index, next)}
+                onRename={(nextName) => renameGroup(index, nextName)}
+                onRemove={() => removeGroup(index)}
+                onChangeAlias={handleChangeItemAlias}
+                iconMode={selectIcon}
+                textMode={selectText}
+              />
+            ))}
+          </div>
+          <div>
+            <div className="text-center">
+              <button
+                className="btn btn-outline btn-neutral"
+                onClick={handleAddStatusGroup}
+              >
+                Click here to Add a new Group
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div></div>
+    </div>
+  )
+}
