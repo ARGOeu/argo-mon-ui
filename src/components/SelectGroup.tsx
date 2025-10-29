@@ -39,7 +39,7 @@ const SelectGroup = ({ children, selected, onChange }: SelectGroupProps) => {
   }
 
   return (
-    <div className="flex flex-row gap-1">
+    <div className="flex flex-row gap-2">
       {items.map((item: SelectItemData) => {
         const isSelected = selected === item.value
 
@@ -47,7 +47,11 @@ const SelectGroup = ({ children, selected, onChange }: SelectGroupProps) => {
           <button
             key={item.value}
             onClick={() => handleClick(item.value)}
-            className={`btn ${isSelected ? 'btn-primary' : 'btn-dash'}`}
+            className={`btn ${
+              isSelected
+                ? 'bg-gray-200 border-gray-400 hover:bg-gray-300'
+                : 'btn'
+            }`}
           >
             {item.children}
           </button>
