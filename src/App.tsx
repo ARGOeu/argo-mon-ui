@@ -69,22 +69,8 @@ function App() {
                   </AuthProtected>
                 }
               />
-              <Route
-                path="build"
-                element={
-                  <AuthProtected>
-                    <Build />
-                  </AuthProtected>
-                }
-              />
-              <Route
-                path="view"
-                element={
-                  <AuthProtected>
-                    <View />
-                  </AuthProtected>
-                }
-              />
+              <Route path="build" element={<Build />} />
+              <Route path="view" element={<View />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Route>

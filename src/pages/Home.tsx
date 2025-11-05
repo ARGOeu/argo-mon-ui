@@ -1,13 +1,24 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
+import { LoginPrompt } from '@/components/LoginPrompt'
 
-export const Home = () => {
-  const { profile } = useAuth()
+export function Home() {
+  const { authenticated, login, profile } = useAuth()
+
+  if (!authenticated) {
+    return (
+      <LoginPrompt
+        title="Welcome to Status Pages"
+        description="Sign in to create and manage your status pages"
+        onLogin={login}
+      />
+    )
+  }
 
   return (
     <div>
-      <h1 className="text-2xl font-semibold">
-        Welcome
+      <h1 className="text-2xl font-semibold text-gray-900 mb-4">
+        Welcome to Status Pages
         {profile?.username && (
           <span>
             ,{' '}
@@ -18,6 +29,10 @@ export const Home = () => {
           </span>
         )}
       </h1>
+
+      <p className="text-gray-600 mb-6">
+        Create and manage your status pages to monitor your services
+      </p>
     </div>
   )
 }

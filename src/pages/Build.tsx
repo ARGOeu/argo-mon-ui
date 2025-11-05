@@ -35,9 +35,11 @@ import { toast, Toaster } from 'sonner'
 import SelectGroup from '@/components/SelectGroup'
 import { BanIcon, Columns2Icon, SquareIcon } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
+import { Button } from '@/components/Button'
+import { LoginPrompt } from '@/components/LoginPrompt'
 
 export const Build = () => {
-  const { token } = useAuth()
+  const { token, authenticated, login } = useAuth()
   const { id: editId } = useParams<{ id?: string }>()
   const isEditMode = Boolean(editId)
 
@@ -47,16 +49,16 @@ export const Build = () => {
   })
 
   const [isEncrypted, setIsEncrypted] = useState(false)
-  const [name, setName] = useState<string>('Untitled')
-  const [slug, setSlug] = useState<string>('untitled')
+  const [name, setName] = useState<string>('')
+  const [slug, setSlug] = useState<string>('')
   const [statusGroups, setStatusGroups] = useState<StatusGroupType[]>([])
   const [report, setReport] = useState('')
-  const [title, setTitle] = useState('Title')
-  const [desc, setDesc] = useState('add description')
+  const [title, setTitle] = useState('')
+  const [desc, setDesc] = useState('')
   const [saved, setSaved] = useState(false)
   const [selectIcon, setSelectIcon] = useState('led')
   const [selectText, setSelectText] = useState('none')
-  const [color, setColor] = useState('#ffffff')
+  const [color, setColor] = useState('#F9FAFB')
   const [logo, setLogo] = useState('')
   const [columns, setColumns] = useState('one')
   const [activeTab, setActiveTab] = useState<'config' | 'items' | 'theming'>(
@@ -77,8 +79,8 @@ export const Build = () => {
       // Populate form with existing data
       setName(pageData.name || 'Untitled')
       setSlug(pageData.slug || 'untitled')
-      setTitle(pageData.config?.title || 'Title')
-      setDesc(pageData.config?.description || 'add description')
+      setTitle(pageData.config?.title || '')
+      setDesc(pageData.config?.description || '')
       setDataSource({
         api: pageData.api || '',
         secret: pageData.secret || '',
@@ -101,7 +103,8 @@ export const Build = () => {
         })
       }
     }
-  }, [isEditMode, getPageQuery.data, reportsMutation])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isEditMode, JSON.stringify(getPageQuery.data)])
 
   const handleAddStatusGroup = () => {
     setStatusGroups((prev) => [
@@ -144,20 +147,15 @@ export const Build = () => {
 
     if (isEditMode && editId) {
       // Update existing page
-      updatePageMutation.mutate(
-        {
-          ...pageData,
+      updatePageMutation.mutate(pageData, {
+        onSuccess: () => {
+          toast.success('Page Updated!')
+          setSaved(true)
         },
-        {
-          onSuccess: () => {
-            toast.success('Page Updated!')
-            setSaved(true)
-          },
-          onError: (error) => {
-            toast.error(`Update Error: ${error}`)
-          },
+        onError: (error) => {
+          toast.error(`Update Error: ${error}`)
         },
-      )
+      })
     } else {
       // Create new page
       savePageMutation.mutate(pageData, {
@@ -353,501 +351,515 @@ export const Build = () => {
     )
   }
 
+  if (!authenticated) {
+    return (
+      <LoginPrompt
+        title="Build Status Pages"
+        description="Login to create and customize your status pages"
+        onLogin={login}
+      />
+    )
+  }
+
   return (
     <div>
       <Toaster richColors position="top-center" />
-
-      <div className="flex flex-row justify-between items-center pb-4">
-        <h1 className="text-2xl font-semibold">
-          {isEditMode ? 'Edit Page' : 'Build New Page'}
-        </h1>
-        <div className="flex gap-2">
-          {saved && (
-            <a
-              href={`/status/${slug}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn btn-outline"
-            >
-              View Page
-              <ArrowTopRightOnSquareIcon className="size-4 inline-block ms-1" />
-            </a>
-          )}
-          <button
-            className="btn btn-success"
-            disabled={!reportsMutation.isSuccess && !isEditMode}
-            onClick={handlePageSave}
-          >
-            {isEditMode ? 'Update' : 'Save'}
-          </button>
-        </div>
-      </div>
-
-      <div
-        className={
-          activeTab === 'config'
-            ? ''
-            : 'grid grid-cols-[minmax(400px,500px)_1fr] gap-6'
-        }
-      >
-        <div className={activeTab === 'config' ? 'max-w-5xl w-full' : 'w-full'}>
-          <div className="custom-tabs">
-            <button
-              className={`custom-tab ${activeTab === 'config' ? 'active' : ''}`}
-              onClick={() => setActiveTab('config')}
-            >
-              <Cog6ToothIcon className="size-4" />
-              Config
-            </button>
-            <button
-              className={`custom-tab ${activeTab === 'items' ? 'active' : ''}`}
-              onClick={() => setActiveTab('items')}
-            >
-              <CubeIcon className="size-4" />
-              Items
-            </button>
-            <button
-              className={`custom-tab ${activeTab === 'theming' ? 'active' : ''}`}
-              onClick={() => setActiveTab('theming')}
-            >
-              <PaintBrushIcon className="size-4" />
-              Theming
-            </button>
-          </div>
-
-          <div
-            className={`custom-tab-content ${activeTab === 'config' ? 'active' : ''}`}
-          >
-            <div className="space-y-8">
-              <div className="grid grid-cols-[320px_1fr] gap-6 items-center">
-                <div>
-                  <h3 className="text-base font-semibold mb-1">
-                    Page Settings
-                  </h3>
-                  <p className="text-sm text-gray-500">
-                    Basic information for your status page.
-                  </p>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Name <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className="input w-full"
-                      value={name}
-                      onChange={(e) => {
-                        setName(e.target.value)
-                        if (!isEditMode) {
-                          setTitle(e.target.value)
-                          setSlug(
-                            e.target.value.toLowerCase().replaceAll(' ', '-'),
-                          )
-                        }
-                      }}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Path <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="text"
-                      className="input w-full"
-                      value={slug}
-                      onChange={(e) => {
-                        setSlug(
-                          e.target.value.toLowerCase().replaceAll(' ', '-'),
-                        )
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-[320px_1fr] gap-6 items-center">
-                <div>
-                  <h3 className="text-base font-semibold mb-1">Data Source</h3>
-                  <p className="text-sm text-gray-500">
-                    Connect to your Argo-web-api endpoint.
-                  </p>
-                </div>
-
-                <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Argo-web-api endpoint (URL):
-                    </label>
-                    <input
-                      type="text"
-                      className="input w-full"
-                      placeholder="https://"
-                      name="api"
-                      value={dataSource.api}
-                      onChange={handleInputChange}
-                      disabled={reportsMutation.isSuccess}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Access Token:
-                    </label>
-                    <input
-                      type="password"
-                      className="input w-full"
-                      placeholder="s3cr3t"
-                      name="secret"
-                      value={dataSource.secret}
-                      onChange={handleInputChange}
-                      disabled={reportsMutation.isSuccess}
-                    />
-                  </div>
-
-                  <button
-                    className="btn btn-outline w-full mt-2"
-                    onClick={handleSubmit}
-                  >
-                    {reportsMutation.isPending ? (
-                      <>
-                        <ArrowPathIcon className="animate-spin size-4" />
-                        <span>Connecting ...</span>
-                      </>
-                    ) : reportsMutation.data ? (
-                      'Clear Connection'
-                    ) : (
-                      'Connect'
-                    )}
-                  </button>
-
-                  {reportsMutation.error && (
-                    <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
-                      Error: {reportsMutation.error.message}
-                    </div>
-                  )}
-                  {reportsMutation.isSuccess && (
-                    <div className="p-3 bg-green-50 border border-green-200 rounded text-sm text-green-700 flex items-center">
-                      <CheckBadgeIcon className="size-5 inline-block me-2" />
-                      Connected successfully
-                    </div>
-                  )}
-                </div>
-              </div>
+      <div className="flex flex-col justify-center items-center">
+        <div className="max-w-7xl w-full">
+          <div className="pb-1 mb-3">
+            <div>
+              <h1 className="text-3xl font-semibold text-gray-800">
+                {isEditMode ? 'Edit Page' : 'Build New Page'}
+              </h1>
+              <p className="text-md text-gray-500">
+                {isEditMode
+                  ? 'Update your status page configuration and content'
+                  : 'Create a new status page to monitor your services'}
+              </p>
             </div>
           </div>
 
-          {/* Items Tab Content */}
           <div
-            className={`custom-tab-content ${activeTab === 'items' ? 'active' : ''}`}
+            className={
+              activeTab === 'config'
+                ? 'flex flex-row justify-between items-center max-w-4xl'
+                : 'grid grid-cols-[minmax(400px,600px)_1fr] gap-6 items-center'
+            }
           >
-            <div className="space-y-4">
-              <div>
-                <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-                  <h3 className="text-lg font-semibold mb-1">
-                    Report Selection
-                  </h3>
-                  <p className="text-sm text-gray-500 mb-4">
-                    Choose a report and manage items.
-                  </p>
-                  {!reportsMutation.data && (
-                    <div className="text-sm text-gray-500 p-4 text-center bg-gray-50 rounded mt-6">
-                      Connect to a data source in the Config tab to load reports
-                    </div>
-                  )}
+            <div className="custom-tabs">
+              <button
+                className={`custom-tab ${activeTab === 'config' ? 'active' : ''}`}
+                onClick={() => setActiveTab('config')}
+              >
+                <Cog6ToothIcon className="size-5" />
+                Config
+              </button>
+              <button
+                className={`custom-tab ${activeTab === 'items' ? 'active' : ''}`}
+                onClick={() => setActiveTab('items')}
+              >
+                <CubeIcon className="size-5" />
+                Items
+              </button>
+              <button
+                className={`custom-tab ${activeTab === 'theming' ? 'active' : ''}`}
+                onClick={() => setActiveTab('theming')}
+              >
+                <PaintBrushIcon className="size-5" />
+                Theming
+              </button>
+            </div>
 
-                  {reportsMutation.data && (
-                    <>
+            <div className="flex justify-end gap-4 max-w-xl">
+              {saved && (
+                <Button
+                  variant="outline-primary"
+                  size="md"
+                  onClick={() => window.open(`/status/${slug}`, '_blank')}
+                >
+                  View Page
+                  <ArrowTopRightOnSquareIcon className="size-4" />
+                </Button>
+              )}
+              <Button variant="primary" size="md" onClick={handlePageSave}>
+                {isEditMode ? 'Update' : 'Save'}
+              </Button>
+            </div>
+          </div>
+
+          <div
+            className={
+              activeTab === 'config'
+                ? ''
+                : 'grid grid-cols-[minmax(400px,600px)_1fr] gap-8'
+            }
+          >
+            <div
+              className={activeTab === 'config' ? 'max-w-4xl w-full' : 'w-full'}
+            >
+              <div
+                className={`custom-tab-content ${activeTab === 'config' ? 'active' : ''}`}
+              >
+                <div className="space-y-6">
+                  <div className="grid grid-cols-[320px_1fr] gap-6 items-center">
+                    <div>
+                      <h3 className="text-lg font-semibold">Page Settings</h3>
+                      <p className="text-sm text-gray-500">
+                        Basic information for your status page.
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Report:
+                          Name <span className="text-red-500">*</span>
                         </label>
-                        <select
-                          value={report}
-                          className="select w-full"
-                          onChange={handleReportChange}
-                          disabled={statusGroups.length > 0}
-                        >
-                          <option value="" disabled={true}>
-                            Select a report
-                          </option>
-                          {reportsMutation.data.map((item) => (
-                            <option key={item.name} value={item.name}>
-                              {item.name}
-                            </option>
-                          ))}
-                        </select>
+                        <input
+                          type="text"
+                          className="input w-full"
+                          placeholder="Enter page name"
+                          value={name}
+                          onChange={(e) => {
+                            setName(e.target.value)
+                            if (!isEditMode) {
+                              setTitle(e.target.value)
+                              setSlug(
+                                e.target.value
+                                  .toLowerCase()
+                                  .replaceAll(' ', '-'),
+                              )
+                            }
+                          }}
+                        />
                       </div>
 
-                      {groupsMutation.isPending && (
-                        <div className="p-2 text-base mt-2 mx-auto">
-                          <ArrowPathIcon className="size-4 animate-spin inline-block me-2" />{' '}
-                          Loading items...
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Path <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          className="input w-full"
+                          placeholder="Enter page path"
+                          value={slug}
+                          onChange={(e) => {
+                            setSlug(
+                              e.target.value.toLowerCase().replaceAll(' ', '-'),
+                            )
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-[320px_1fr] gap-6 items-center">
+                    <div>
+                      <h3 className="text-lg font-semibold">Data Source</h3>
+                      <p className="text-sm text-gray-500">
+                        Connect to your Argo-web-api endpoint.
+                      </p>
+                    </div>
+
+                    <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Argo-web-api endpoint (URL):
+                        </label>
+                        <input
+                          type="text"
+                          className="input w-full"
+                          placeholder="https://"
+                          name="api"
+                          value={dataSource.api}
+                          onChange={handleInputChange}
+                          disabled={reportsMutation.isSuccess}
+                        />
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Access Token:
+                        </label>
+                        <input
+                          type="password"
+                          className="input w-full"
+                          placeholder="s3cr3t"
+                          name="secret"
+                          value={dataSource.secret}
+                          onChange={handleInputChange}
+                          disabled={reportsMutation.isSuccess}
+                        />
+                      </div>
+
+                      <button
+                        className="btn btn-outline w-full mt-2"
+                        onClick={handleSubmit}
+                      >
+                        {reportsMutation.isPending ? (
+                          <>
+                            <ArrowPathIcon className="animate-spin size-4" />
+                            <span>Connecting ...</span>
+                          </>
+                        ) : reportsMutation.data ? (
+                          'Clear Connection'
+                        ) : (
+                          'Connect'
+                        )}
+                      </button>
+
+                      {reportsMutation.error && (
+                        <div className="p-3 bg-red-50 border border-red-200 rounded text-sm text-red-600">
+                          Error: {reportsMutation.error.message}
+                        </div>
+                      )}
+                      {reportsMutation.isSuccess && (
+                        <div className="p-3 bg-green-50 border border-green-200 rounded text-sm text-green-700 flex items-center">
+                          <CheckBadgeIcon className="size-5 inline-block me-2" />
+                          Connected successfully
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Items Tab Content */}
+              <div
+                className={`custom-tab-content ${activeTab === 'items' ? 'active ' : ''}`}
+              >
+                <div className="space-y-4">
+                  <div>
+                    <div className="border border-gray-200 rounded-lg px-5 py-4 space-y-3">
+                      <h3 className="text-lg font-semibold mb-0">
+                        Report Selection
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-2">
+                        Choose a report and manage items.
+                      </p>
+                      {!reportsMutation.data && (
+                        <div className="text-sm text-gray-500 p-4 text-center bg-gray-50 rounded mt-6">
+                          Connect to a data source in the Config tab to load
+                          reports
                         </div>
                       )}
 
-                      {groupsMutation.data &&
-                        (groupsMutation.data.length === 0 ? (
-                          <div className="text-sm text-red-600 p-2 mt-2 bg-red-100 border-red-600 border text-center rounded">
-                            <ExclamationTriangleIcon className="size-4 me-2 inline-block" />
-                            Report empty!
+                      {reportsMutation.data && (
+                        <>
+                          <div>
+                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                              Report:
+                            </label>
+                            <select
+                              value={report}
+                              className="select w-full"
+                              onChange={handleReportChange}
+                              disabled={statusGroups.length > 0}
+                            >
+                              <option value="" disabled={true}>
+                                Select a report
+                              </option>
+                              {reportsMutation.data.map((item) => (
+                                <option key={item.name} value={item.name}>
+                                  {item.name}
+                                </option>
+                              ))}
+                            </select>
                           </div>
-                        ) : (
-                          <>
-                            <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                                Search Items:
-                              </label>
-                              <input
-                                type="text"
-                                className="input w-full"
-                                placeholder="Search..."
-                                name="filter"
-                                value={filterItems}
-                                onChange={(e) => {
-                                  setFilterItems(e.target.value)
-                                }}
-                              />
-                            </div>
 
-                            <div className="mt-2 max-h-[500px] overflow-y-auto border border-gray-200 rounded p-2">
-                              <ul ref={parent}>
-                                {(groupsFiltered ?? []).map((group) => (
-                                  <li key={group.name} className="my-1">
-                                    <StatusItem
-                                      iconMode={selectIcon}
-                                      textMode={selectText}
-                                      group=""
-                                      drag={true}
-                                      dragHandle="dnd-handle"
-                                      name={group.name}
-                                      alias={group.alias || ''}
-                                      status={group.status}
-                                      onChangeAlias={(v) => {
-                                        console.log(v)
-                                      }}
-                                    />
-                                  </li>
-                                ))}
-                              </ul>
+                          {groupsMutation.isPending && (
+                            <div className="p-2 text-base mt-2 mx-auto">
+                              <ArrowPathIcon className="size-4 animate-spin inline-block me-2" />{' '}
+                              Loading items...
                             </div>
-                          </>
-                        ))}
-                    </>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
+                          )}
 
-          {/* Theming Tab Content */}
-          <div
-            className={`custom-tab-content ${activeTab === 'theming' ? 'active' : ''}`}
-          >
-            <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Color:
-                </label>
-                <div className="flex items-center gap-3">
-                  <input
-                    type="color"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    className="w-12 h-10 rounded cursor-pointer border-2 border-gray-300"
-                  />
-                  <input
-                    type="text"
-                    value={color}
-                    onChange={(e) => setColor(e.target.value)}
-                    className="input flex-1"
-                    placeholder="#000000"
-                  />
+                          {groupsMutation.data &&
+                            (groupsMutation.data.length === 0 ? (
+                              <div className="text-sm text-red-600 p-2 mt-2 bg-red-100 border-red-600 border text-center rounded">
+                                <ExclamationTriangleIcon className="size-4 me-2 inline-block" />
+                                Report empty!
+                              </div>
+                            ) : (
+                              <>
+                                <div>
+                                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Search Items:
+                                  </label>
+                                  <input
+                                    type="text"
+                                    className="input w-full"
+                                    placeholder="Search..."
+                                    name="filter"
+                                    value={filterItems}
+                                    onChange={(e) => {
+                                      setFilterItems(e.target.value)
+                                    }}
+                                  />
+                                </div>
+
+                                <div className="max-h-[500px] overflow-y-auto border border-gray-200 rounded px-2 py-1">
+                                  <ul ref={parent}>
+                                    {(groupsFiltered ?? []).map((group) => (
+                                      <li key={group.name} className="my-2">
+                                        <StatusItem
+                                          iconMode={selectIcon}
+                                          textMode={selectText}
+                                          group=""
+                                          drag={true}
+                                          dragHandle="dnd-handle"
+                                          name={group.name}
+                                          alias={group.alias || ''}
+                                          status={group.status}
+                                          onChangeAlias={(v) => {
+                                            console.log(v)
+                                          }}
+                                        />
+                                      </li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </>
+                            ))}
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Logo:
-                </label>
-                <div
-                  {...getRootProps()}
-                  className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors ${
-                    isDragActive
-                      ? 'border-blue-400 bg-blue-50'
-                      : 'border-gray-300 bg-gray-50 hover:border-gray-400'
-                  }`}
-                >
-                  <input {...getInputProps()} />
-                  {logo ? (
-                    <div className="flex flex-col items-center gap-2">
-                      <img
-                        src={logo}
-                        alt="Logo preview"
-                        className="h-12 w-auto object-contain"
+              {/* Theming Tab Content */}
+              <div
+                className={`custom-tab-content ${activeTab === 'theming' ? 'active' : ''}`}
+              >
+                <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Color:
+                    </label>
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="color"
+                        value={color}
+                        onChange={(e) => setColor(e.target.value)}
+                        className="w-12 h-10 rounded cursor-pointer border-2 border-gray-300"
                       />
-                      <p className="text-xs text-gray-500">
-                        Click or drag to change
-                      </p>
+                      <input
+                        type="text"
+                        value={color}
+                        onChange={(e) => setColor(e.target.value)}
+                        className="input flex-1"
+                        placeholder="#000000"
+                      />
                     </div>
-                  ) : (
-                    <>
-                      <div className="text-gray-400 mb-1">
-                        <PhotoIcon className="mx-auto h-10 w-10" />
-                      </div>
-                      <p className="text-sm text-gray-500">
-                        {isDragActive
-                          ? 'Drop logo here'
-                          : 'Drop logo here or click to upload'}
-                      </p>
-                    </>
-                  )}
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Logo:
+                    </label>
+                    <div
+                      {...getRootProps()}
+                      className={`border-2 border-dashed rounded-lg p-2 text-center cursor-pointer transition-colors ${
+                        isDragActive
+                          ? 'border-blue-400 bg-blue-50'
+                          : 'border-gray-300 bg-gray-50 hover:border-gray-400'
+                      }`}
+                    >
+                      <input {...getInputProps()} />
+                      {logo ? (
+                        <div className="flex flex-col items-center gap-2">
+                          <img
+                            src={logo}
+                            alt="Logo preview"
+                            className="h-12 w-auto object-contain"
+                          />
+                          <p className="text-xs text-gray-500">
+                            Click or drag to change
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="text-gray-400 mb-1">
+                            <PhotoIcon className="mx-auto h-10 w-10" />
+                          </div>
+                          <p className="text-sm text-gray-500">
+                            {isDragActive
+                              ? 'Drop logo here'
+                              : 'Drop logo here or click to upload'}
+                          </p>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status Icon:
+                    </label>
+                    <SelectGroup selected={selectIcon} onChange={setSelectIcon}>
+                      <SelectGroup.Item value="led">
+                        <div
+                          aria-label="status"
+                          className="status status-lg status-success"
+                        ></div>
+                        <div>Led</div>
+                      </SelectGroup.Item>
+                      <SelectGroup.Item value="icon">
+                        <CheckCircleIcon className="text-green-500 size-4" />
+                        <div>Icon</div>
+                      </SelectGroup.Item>
+                      <SelectGroup.Item value="none">
+                        <BanIcon className="w-4" />
+                        <div>None</div>
+                      </SelectGroup.Item>
+                    </SelectGroup>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status Text:
+                    </label>
+                    <SelectGroup selected={selectText} onChange={setSelectText}>
+                      <SelectGroup.Item value="text">
+                        <div className="text-green-500">
+                          <small>OK</small>
+                        </div>
+                        <div>Text</div>
+                      </SelectGroup.Item>
+                      <SelectGroup.Item value="badge">
+                        <div className="badge badge-success text-white">
+                          <small>OK</small>
+                        </div>
+                        <div>Badge</div>
+                      </SelectGroup.Item>
+                      <SelectGroup.Item value="none">
+                        <BanIcon className="w-4" />
+                        <div>None</div>
+                      </SelectGroup.Item>
+                    </SelectGroup>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Status Columns:
+                    </label>
+                    <SelectGroup selected={columns} onChange={setColumns}>
+                      <SelectGroup.Item value="one">
+                        <SquareIcon className="w-4" />
+                        <div>One</div>
+                      </SelectGroup.Item>
+                      <SelectGroup.Item value="two">
+                        <Columns2Icon className="w-4" />
+                        <div>Two</div>
+                      </SelectGroup.Item>
+                    </SelectGroup>
+                  </div>
                 </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status Icon:
-                </label>
-                <SelectGroup selected={selectIcon} onChange={setSelectIcon}>
-                  <SelectGroup.Item value="led">
-                    <div
-                      aria-label="status"
-                      className="status status-lg status-success"
-                    ></div>
-                    <div>Led</div>
-                  </SelectGroup.Item>
-                  <SelectGroup.Item value="icon">
-                    <CheckCircleIcon className="text-green-500 size-4" />
-                    <div>Icon</div>
-                  </SelectGroup.Item>
-                  <SelectGroup.Item value="none">
-                    <BanIcon className="w-4" />
-                    <div>None</div>
-                  </SelectGroup.Item>
-                </SelectGroup>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status Text:
-                </label>
-                <SelectGroup selected={selectText} onChange={setSelectText}>
-                  <SelectGroup.Item value="text">
-                    <div className="text-green-500">
-                      <small>OK</small>
-                    </div>
-                    <div>Text</div>
-                  </SelectGroup.Item>
-                  <SelectGroup.Item value="badge">
-                    <div className="badge badge-success text-white">
-                      <small>OK</small>
-                    </div>
-                    <div>Badge</div>
-                  </SelectGroup.Item>
-                  <SelectGroup.Item value="none">
-                    <BanIcon className="w-4" />
-                    <div>None</div>
-                  </SelectGroup.Item>
-                </SelectGroup>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Status Columns:
-                </label>
-                <SelectGroup selected={columns} onChange={setColumns}>
-                  <SelectGroup.Item value="one">
-                    <SquareIcon className="w-4" />
-                    <div>One</div>
-                  </SelectGroup.Item>
-                  <SelectGroup.Item value="two">
-                    <Columns2Icon className="w-4" />
-                    <div>Two</div>
-                  </SelectGroup.Item>
-                </SelectGroup>
-              </div>
             </div>
+
+            {activeTab !== 'config' && (
+              <div className="border border-gray-200 rounded-lg p-4 shadow-md w-full max-w-xl self-start bg-gray-50">
+                <header
+                  style={{ backgroundColor: color }}
+                  className="p-2 mb-2 rounded-lg"
+                >
+                  <div className="flex flex-col items-center">
+                    <div className="flex flex-row items-center gap-3 mb-1">
+                      {logo !== '' && (
+                        <img src={logo} className="h-8" alt="Logo" />
+                      )}
+                      <EditLabel
+                        label={title}
+                        onChange={(title) => setTitle(title)}
+                        size="text-3xl"
+                        placeholder="Add a title"
+                      />
+                    </div>
+                    <EditLabel
+                      label={desc}
+                      onChange={(desc) => setDesc(desc)}
+                      size="text-base"
+                      textArea={true}
+                      placeholder="Add a description"
+                      color="#6a7282"
+                    />
+                  </div>
+                </header>
+                <div>
+                  {statusGroups.map((col, index) => (
+                    <StatusGroup
+                      key={col.name}
+                      name={col.name}
+                      alias={col.alias || ''}
+                      items={col.list}
+                      group={groupName}
+                      columns={columns}
+                      getStatusClass={getStatusClass}
+                      onItemsChange={(next) => updateGroup(index, next)}
+                      onRename={(nextName) => renameGroup(index, nextName)}
+                      onRemove={() => removeGroup(index)}
+                      onChangeAlias={handleChangeItemAlias}
+                      iconMode={selectIcon}
+                      textMode={selectText}
+                    />
+                  ))}
+                </div>
+                <div>
+                  <div className="text-center mt-6">
+                    <Button
+                      onClick={handleAddStatusGroup}
+                      variant="outline-secondary"
+                    >
+                      Click here to Add a new Group
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
-
-        {activeTab !== 'config' && (
-          <div className="bg-white border border-gray-200 rounded-lg p-6 shadow-sm w-full max-w-2xl mt-16 self-start">
-            <div className="flex justify-end mb-4">
-              {saved && (
-                <a
-                  href={`/status/${slug}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn btn-sm btn-outline"
-                >
-                  View Page
-                  <ArrowTopRightOnSquareIcon className="size-4 inline-block ms-1" />
-                </a>
-              )}
-            </div>
-
-            <header
-              style={{ backgroundColor: color }}
-              className="p-6 mb-6 rounded-lg"
-            >
-              <div className="flex flex-row justify-center">
-                <div className="flex flex-row items-baseline gap-2 mb-2">
-                  {logo !== '' && (
-                    <img src={logo} className="me-4 h-8" alt="Logo" />
-                  )}
-
-                  <EditLabel
-                    label={title}
-                    onChange={(title) => setTitle(title)}
-                    size="text-3xl"
-                  />
-                </div>
-              </div>
-              <div className="flex flex-row justify-center">
-                <EditLabel
-                  label={desc}
-                  onChange={(desc) => setDesc(desc)}
-                  size="text-base"
-                  textArea={true}
-                />
-              </div>
-            </header>
-            <div>
-              {statusGroups.map((col, index) => (
-                <StatusGroup
-                  key={col.name}
-                  name={col.name}
-                  alias={col.alias || ''}
-                  items={col.list}
-                  group={groupName}
-                  columns={columns}
-                  getStatusClass={getStatusClass}
-                  onItemsChange={(next) => updateGroup(index, next)}
-                  onRename={(nextName) => renameGroup(index, nextName)}
-                  onRemove={() => removeGroup(index)}
-                  onChangeAlias={handleChangeItemAlias}
-                  iconMode={selectIcon}
-                  textMode={selectText}
-                />
-              ))}
-            </div>
-            <div>
-              <div className="text-center mt-6">
-                <button
-                  className="btn btn-outline btn-add-group"
-                  onClick={handleAddStatusGroup}
-                >
-                  Click here to Add a new Group
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
-      <div></div>
     </div>
   )
 }

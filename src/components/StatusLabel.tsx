@@ -5,6 +5,7 @@ type StatusLabelProps = {
   label: string
   alias: string
   onChangeAlias: (newAlias: string) => void
+  isGroupLabel?: boolean
 }
 
 const StatusLabel = (props: StatusLabelProps) => {
@@ -48,7 +49,7 @@ const StatusLabel = (props: StatusLabelProps) => {
             value={tempLabel}
             onChange={(e) => setTempLabel(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="flex-1 font-semibold bg-gray-50 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+            className="flex-1 font-medium bg-gray-50 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
             autoFocus
             onBlur={handleSave}
           />
@@ -59,14 +60,14 @@ const StatusLabel = (props: StatusLabelProps) => {
             {props.group ? (
               <div className="tooltip tooltip-right" data-tip="edit">
                 <span
-                  className="font-semibold text-gray-800 cursor-pointer border-b border-transparent hover:border-black hover:border-dashed"
+                  className={`${props.isGroupLabel ? 'font-semibold text-lg' : 'font-medium text-sm'} text-gray-600 cursor-pointer border-b border-transparent hover:border-black hover:border-dashed tracking-wide`}
                   onClick={handleEdit}
                 >
                   {props.alias ? props.alias : props.label}
                 </span>
               </div>
             ) : (
-              <span className="font-semibold text-gray-800 border-b border-transparent">
+              <span className="font-medium text-gray-600 border-b border-transparent text-sm tracking-wide">
                 {props.label}
               </span>
             )}

@@ -1,11 +1,11 @@
-import type { Page } from '@/types/pages'
+import type { Page, PageContent } from '@/types/pages'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
 export const fetchSavePage = async (
-  data: Page,
+  data: PageContent,
   token: string,
-): Promise<Page> => {
+): Promise<PageContent> => {
   const response = await fetch(`${BACKEND_API}/v1/pages`, {
     method: 'POST',
     headers: {
@@ -27,9 +27,9 @@ export const fetchSavePage = async (
 
 export const fetchUpdatePage = async (
   id: string,
-  data: Page,
+  data: PageContent,
   token: string,
-): Promise<Page> => {
+): Promise<PageContent> => {
   const response = await fetch(`${BACKEND_API}/v1/pages/${id}`, {
     method: 'PUT',
     headers: {
@@ -49,7 +49,10 @@ export const fetchUpdatePage = async (
   return response.json()
 }
 
-export const fetchPage = async (id: string, token: string): Promise<Page> => {
+export const fetchPage = async (
+  id: string,
+  token: string,
+): Promise<PageContent> => {
   const response = await fetch(`${BACKEND_API}/v1/pages/${id}`, {
     method: 'GET',
     headers: {
@@ -68,7 +71,7 @@ export const fetchPage = async (id: string, token: string): Promise<Page> => {
   return response.json()
 }
 
-export const fetchPages = async (token: string): Promise<Page[]> => {
+export const fetchPages = async (token: string): Promise<Page> => {
   const response = await fetch(`${BACKEND_API}/v1/pages`, {
     method: 'GET',
     headers: {

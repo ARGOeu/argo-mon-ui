@@ -1,9 +1,9 @@
 .custom-tabs {
   display: flex;
   gap: 2rem;
-  border-bottom: 1px solid #e5e7eb;
+  border-bottom: 1px solid #d1d3d6;
   margin-bottom: 1.5rem;
-  width: 290px;
+  width: fit-content;
 }
 
 .custom-tab {
@@ -12,7 +12,7 @@
   align-items: center;
   gap: 0.5rem;
   padding: 0.75rem 0 0.25rem 0;
-  font-size: 0.875rem;
+  font-size: 1rem;
   font-weight: 500;
   color: #6b7280;
   cursor: pointer;
@@ -22,11 +22,11 @@
 }
 
 .custom-tab:hover {
-  color: #374151;
+  color: #2563eb;
 }
 
 .custom-tab.active {
-  color: #111827;
+  color: #1d4ed8;
 }
 
 .custom-tab.active::after {
@@ -36,8 +36,8 @@
   left: 0;
   right: 0;
   height: 2px;
-  width: calc(100% + 10px);
-  background-color: #111827;
+  width: calc(100% + 4px);
+  background-color: #2563eb;
 }
 
 .custom-tab:disabled {
@@ -56,12 +56,4 @@
 
 .custom-tab-content.active {
   display: block;
-}
-
-.btn-add-group {
-  transition: background-color 0.2s;
-}
-
-.btn-add-group:hover {
-  background-color: #f3f4f6;
 }

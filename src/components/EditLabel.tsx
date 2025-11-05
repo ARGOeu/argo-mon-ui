@@ -6,6 +6,7 @@ type EditLabelProps = {
   onChange: (newLabel: string) => void
   textArea?: boolean
   placeholder?: string
+  color?: string
 }
 
 const EditLabel = (props: EditLabelProps) => {
@@ -72,8 +73,9 @@ const EditLabel = (props: EditLabelProps) => {
           <div className="flex flex-row items-center">
             <div className="tooltip tooltip-right" data-tip="edit">
               <span
-                className={` ${props.size ? props.size : ''} font-semibold text-gray-800 cursor-pointer border-b border-transparent hover:border-black hover:border-dashed`}
+                className={` ${props.size ? props.size : ''} font-medium text-gray-800 cursor-pointer border-b border-transparent hover:border-black hover:border-dashed`}
                 onClick={handleEdit}
+                style={{ color: props.color ? props.color : 'inherit' }}
               >
                 {props.label || props.placeholder || ''}
               </span>

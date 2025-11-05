@@ -21,14 +21,12 @@ export const StatusItem = (props: StatusItemProps) => {
   }
 
   return (
-    <div className="flex flex-row justify-between border rounded p-2 shadow align-middle bg-gray-50">
-      <div>
-        {props.dragHandle && (
-          <div className={`${props.dragHandle} cursor-grab`}>
-            <GripVertical className="text-gray-400 h-4 w-4 inline-block" />
-          </div>
-        )}
-      </div>
+    <div
+      className={`${props.dragHandle} cursor-grab flex flex-row justify-between items-center border rounded-lg p-2 shadow align-middle bg-white hover:bg-gray-50 transition-colors`}
+    >
+      {props.dragHandle && (
+        <GripVertical className="text-gray-500 h-4 w-4 inline-block" />
+      )}
       <div>
         <StatusLabel
           group={props.group}

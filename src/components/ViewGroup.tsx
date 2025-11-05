@@ -12,7 +12,7 @@ type ViewGroupProps = {
 
 export default function ViewGroup(props: ViewGroupProps) {
   return (
-    <div className="border-neutral-200 border-2 m-2 rounded">
+    <div className="border-neutral-200 border-2 rounded">
       <div className="flex flex-row justify-between align-middle bg-neutral-100 p-2 rounded-t">
         <div></div>
         <h6 className="font-bold">{props.alias ?? props.name}</h6>

@@ -1,8 +1,8 @@
-import type { Page } from '@/types/pages'
+import type { Page, PageConfig } from '@/types/pages'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
-export const fetchStatus = async (slug: string): Promise<Page> => {
+export const fetchStatus = async (slug: string): Promise<PageConfig> => {
   const response = await fetch(`${BACKEND_API}/v1/status/${slug}`, {
     method: 'GET',
     headers: {
