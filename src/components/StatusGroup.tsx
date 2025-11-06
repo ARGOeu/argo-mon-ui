@@ -5,6 +5,7 @@ import { TrashIcon } from '@heroicons/react/16/solid'
 import type { StatusItemType } from '@/types/common'
 import { StatusItem } from './StatusItem'
 import StatusLabel from './StatusLabel'
+import { Button } from './Button'
 
 type StatusGroupProps = {
   name: string
@@ -31,7 +32,6 @@ export default function StatusGroup(props: StatusGroupProps) {
   const prev = useRef<StatusItemType[] | null>(null)
 
   const handleLocalAliasChange = (itemName: string, newAlias: string) => {
-    // console
     setOrderedItems((prevOrderedItems) =>
       prevOrderedItems.map((item) =>
         item.name === itemName ? { ...item, alias: newAlias } : item,
@@ -50,24 +50,29 @@ export default function StatusGroup(props: StatusGroupProps) {
   }, [orderedItems, onItemsChange])
 
   return (
-    <div className="border-neutral-200 border-2 m-2 rounded">
-      <div className="flex flex-row justify-between align-middle bg-neutral-100 p-2 rounded-t">
-        <div className="drag-group-handle"></div>
+    <div className="mb-5">
+      <div className="flex flex-row justify-center items-center px-0 py-2 relative">
         <StatusLabel
           group={props.name}
           label={props.name}
           alias={props.alias}
           onChangeAlias={props.onRename}
+          isGroupLabel
         />
-        <button className="btn btn-outline btn-error" onClick={props.onRemove}>
-          <TrashIcon className="size-4" />
-        </button>
+        <Button
+          className="p-0 absolute right-0"
+          size="sm"
+          variant="outline-secondary"
+          onClick={props.onRemove}
+        >
+          <TrashIcon className="size-4 text-gray-400 hover:text-gray-600" />
+        </Button>
       </div>
-      <div className="min-h-[100px] p-4">
+      <div className="min-h-[50px]">
         <ul
           key={props.name}
           ref={listRef}
-          className={`grid gap-1 ${props.columns === 'two' ? 'grid-cols-2' : 'grid-cols-1'}`}
+          className={`grid gap-2 ${props.columns === 'two' ? 'grid-cols-2' : 'grid-cols-1'}`}
         >
           {orderedItems.map((sitem) => (
             <li key={sitem.name}>
@@ -85,7 +90,7 @@ export default function StatusGroup(props: StatusGroupProps) {
             </li>
           ))}
           {orderedItems.length === 0 && (
-            <li className="text-xs text-neutral-500 max-h-[300px] px-2 py-3 rounded border border-dashed m-2">
+            <li className="text-xs text-gray-400 max-h-[300px] px-3 py-4 rounded border border-dashed border-gray-300 text-center">
               Drop items here
             </li>
           )}

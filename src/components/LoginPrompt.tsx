@@ -1,0 +1,29 @@
+import { Button } from './Button'
+import { LockClosedIcon } from '@heroicons/react/24/outline'
+
+interface LoginPromptProps {
+  title?: string
+  description?: string
+  onLogin: () => void
+}
+
+export function LoginPrompt({
+  title = 'Authentication Required',
+  description = 'Please login to access this page and manage your status pages',
+  onLogin,
+}: LoginPromptProps) {
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[60vh]">
+      <div className="text-center max-w-md">
+        <div className="mb-6">
+          <LockClosedIcon className="mx-auto h-16 w-16 text-gray-400" />
+        </div>
+        <h2 className="text-2xl font-semibold text-gray-900 mb-1">{title}</h2>
+        <p className="text-gray-600 mb-4">{description}</p>
+        <Button variant="primary" size="md" onClick={onLogin}>
+          Login
+        </Button>
+      </div>
+    </div>
+  )
+}

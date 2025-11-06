@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import type { Page } from '@/types/pages'
+import type { PageConfig } from '@/types/pages'
 import { fetchStatus } from '@/api/status'
 
 export const useGetStatusQuery = (slug: string) => {
-  return useQuery<Page, Error>({
+  return useQuery<PageConfig, Error>({
     queryKey: ['status', slug],
     queryFn: () => {
       if (!slug) {

@@ -6,13 +6,13 @@ import {
   fetchSavePage,
   fetchUpdatePage,
 } from '@/api/pages'
-import type { Page } from '@/types/pages'
+import type { Page, PageContent } from '@/types/pages'
 
 export const useSavePageMutation = () => {
   const queryClient = useQueryClient()
   const { token } = useAuth()
-  return useMutation<Page, Error, Page>({
-    mutationFn: (data: Page) => {
+  return useMutation<PageContent, Error, PageContent>({
+    mutationFn: (data: PageContent) => {
       if (!token) {
         throw new Error('No authentication token available')
       }
@@ -31,8 +31,8 @@ export const useSavePageMutation = () => {
 export const useUpdatePageMutation = (id: string) => {
   const queryClient = useQueryClient()
   const { token } = useAuth()
-  return useMutation<Page, Error, Page>({
-    mutationFn: (data: Page) => {
+  return useMutation<PageContent, Error, PageContent>({
+    mutationFn: (data: PageContent) => {
       if (!token) {
         throw new Error('No authentication token available')
       }
@@ -52,7 +52,7 @@ export const useUpdatePageMutation = (id: string) => {
 export const useGetAllPagesQuery = () => {
   const { token } = useAuth()
 
-  return useQuery<Page[], Error>({
+  return useQuery<Page, Error>({
     queryKey: ['all-pages'],
     queryFn: () => {
       if (!token) {
@@ -67,7 +67,7 @@ export const useGetAllPagesQuery = () => {
 export const useGetPageQuery = (id: string) => {
   const { token } = useAuth()
 
-  return useQuery<Page, Error>({
+  return useQuery<PageContent, Error>({
     queryKey: ['page', id],
     queryFn: () => {
       if (!token) {

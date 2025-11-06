@@ -1,6 +1,15 @@
 import type { StatusGroupType, StatusItemType } from '@/types/common'
 
 export type Page = {
+  content: PageContent[]
+  size_of_page: number
+  number_of_page: number
+  total_elements: number
+  total_pages: number
+  links: string[]
+}
+
+export type PageContent = {
   id?: number
   name: string
   slug: string

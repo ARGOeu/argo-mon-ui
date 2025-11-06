@@ -1,4 +1,4 @@
-import { NavLink, Outlet } from 'react-router'
+import { Link, NavLink, Outlet } from 'react-router'
 import { useAuth } from './auth/useAuth'
 import {
   EyeIcon,
@@ -6,6 +6,7 @@ import {
   ArrowLeftStartOnRectangleIcon,
 } from '@heroicons/react/16/solid'
 import { squishEmail } from './utils/profile'
+import { Button } from './components/Button'
 
 function SidebarNavItem({
   to,
@@ -22,10 +23,10 @@ function SidebarNavItem({
       end={end}
       className={({ isActive }) =>
         [
-          'flex items-center gap-3 px-4 py-3 text-sm transition-colors',
+          'flex items-center gap-3 px-4 py-3 text-sm transition-colors rounded-md mx-2',
           isActive
-            ? 'bg-gray-200 text-gray-900 font-medium'
-            : 'text-gray-700 hover:bg-gray-100',
+            ? 'bg-blue-50 text-blue-700 font-medium border-l-4 border-blue-600'
+            : 'text-gray-700 hover:bg-gray-100 hover:text-blue-600',
         ].join(' ')
       }
     >
@@ -40,17 +41,20 @@ export default function Layout() {
   return (
     <div className="min-h-screen flex">
       <aside className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
-        <div className="px-3 py-4 border-b border-gray-200">
-          <div className="flex items-center gap-2">
+        <div className="px-3 border-b border-gray-200">
+          <div
+            className="flex items-center gap-2 cursor-pointer"
+            onClick={() => window.location.replace('/')}
+          >
             <img
-              src="/ARGO_LOGO_b&w_ENG.svg"
+              src="/ARGO_LOGO_b&w_ENG_TITLE.png"
               alt="ARGO Logo"
-              className="h-10 w-auto"
+              className="h-18 w-auto"
             />
           </div>
         </div>
 
-        <nav className="flex-1 py-4">
+        <nav className="flex-1 py-4 flex flex-col gap-y-1">
           <SidebarNavItem to="/build">
             <PencilSquareIcon className="size-5" aria-hidden />
             Build
@@ -65,16 +69,18 @@ export default function Layout() {
           {authenticated && (profile?.username || profile?.sub) ? (
             <div className="p-4">
               <div className="flex items-center justify-between text-sm text-gray-700">
-                <div className="flex items-center gap-2 min-w-0 flex-1">
-                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                    {(profile.username || profile.sub || 'U')
-                      .charAt(0)
-                      .toUpperCase()}
+                <Link to="/about">
+                  <div className="flex items-center gap-2 min-w-0 flex-1 hover:opacity-90">
+                    <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0">
+                      {(profile.username || profile.sub || 'U')
+                        .charAt(0)
+                        .toUpperCase()}
+                    </div>
+                    <div className="truncate font-medium">
+                      {profile.username || squishEmail(profile.sub || '')}
+                    </div>
                   </div>
-                  <div className="truncate font-medium">
-                    {profile.username || squishEmail(profile.sub || '')}
-                  </div>
-                </div>
+                </Link>
                 <button
                   type="button"
                   className="p-2 hover:bg-gray-100 rounded transition-colors flex-shrink-0 cursor-pointer"
@@ -87,13 +93,14 @@ export default function Layout() {
             </div>
           ) : (
             <div className="p-4">
-              <button
-                type="button"
-                className="w-full btn btn-neutral btn-sm"
+              <Button
+                variant="primary"
+                size="sm"
                 onClick={login}
+                className="w-full"
               >
                 Login
-              </button>
+              </Button>
             </div>
           )}
         </div>
