@@ -19,9 +19,6 @@ export const View = () => {
     )
   }
 
-  console.log('View component data:', data)
-  console.log('Pages data:', data)
-
   return (
     <div>
       <h1 className="text-2xl font-semibold">View</h1>
