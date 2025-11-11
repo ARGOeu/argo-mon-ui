@@ -6,6 +6,7 @@ type StatusLabelProps = {
   alias: string
   onChangeAlias: (newAlias: string) => void
   isGroupLabel?: boolean
+  readOnly?: boolean
 }
 
 const StatusLabel = (props: StatusLabelProps) => {
@@ -42,7 +43,7 @@ const StatusLabel = (props: StatusLabelProps) => {
 
   return (
     <div className="flex items-center gap-3">
-      {editMode ? (
+      {editMode && !props.readOnly ? (
         <>
           <input
             type="text"
@@ -58,10 +59,13 @@ const StatusLabel = (props: StatusLabelProps) => {
         <>
           <div className="flex flex-row items-center">
             {props.group ? (
-              <div className="tooltip tooltip-right" data-tip="edit">
+              <div
+                className={props.readOnly ? '' : 'tooltip tooltip-right'}
+                data-tip={props.readOnly ? '' : 'edit'}
+              >
                 <span
-                  className={`${props.isGroupLabel ? 'font-semibold text-lg' : 'font-medium text-sm'} text-gray-600 cursor-pointer border-b border-transparent hover:border-black hover:border-dashed tracking-wide`}
-                  onClick={handleEdit}
+                  className={`${props.isGroupLabel ? 'font-bold text-xl' : 'font-medium text-sm'} ${props.readOnly ? 'text-gray-700' : 'text-gray-600'} ${!props.readOnly ? 'cursor-pointer border-b border-transparent hover:border-black hover:border-dashed' : ''} tracking-wide`}
+                  onClick={props.readOnly ? undefined : handleEdit}
                 >
                   {props.alias ? props.alias : props.label}
                 </span>

@@ -4,7 +4,6 @@ import {
   CheckCircleIcon,
   Cog6ToothIcon,
   CubeIcon,
-  ExclamationTriangleIcon,
   PaintBrushIcon,
   PhotoIcon,
 } from '@heroicons/react/16/solid'
@@ -37,6 +36,8 @@ import { BanIcon, Columns2Icon, SquareIcon } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { Button } from '@/components/Button'
 import { LoginPrompt } from '@/components/LoginPrompt'
+
+const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
 export const Build = () => {
   const { token, authenticated, login } = useAuth()
@@ -89,7 +90,7 @@ export const Build = () => {
       setStatusGroups(pageData.config?.groups || [])
       setSaved(true) // Already saved since we're editing
       setSelectIcon(pageData.config?.theming?.status.icon || 'led')
-      setSelectText(pageData.config?.theming?.status.icon || 'none')
+      setSelectText(pageData.config?.theming?.status.text || 'none')
       setColor(pageData.config?.theming?.color || '')
       setLogo(pageData.config?.theming?.logo || '')
       setColumns(pageData.config?.theming?.columns || 'one')
@@ -138,7 +139,11 @@ export const Build = () => {
             icon: selectIcon,
             text: selectText,
           },
-          logo: logo,
+          logo:
+            logo &&
+            (logo?.startsWith('http') || logo?.startsWith('data:')
+              ? logo
+              : `${BACKEND_API}${logo}`),
           color: color,
           columns: columns,
         },
@@ -153,7 +158,7 @@ export const Build = () => {
           setSaved(true)
         },
         onError: (error) => {
-          toast.error(`Update Error: ${error}`)
+          toast.error(`${error}`)
         },
       })
     } else {
@@ -164,7 +169,7 @@ export const Build = () => {
           setSaved(true)
         },
         onError: (error) => {
-          toast.error(`Error: ${error}`)
+          toast.error(`${error}`)
         },
       })
     }
@@ -313,10 +318,23 @@ export const Build = () => {
   const onDrop = (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0]
+
+      if (file.type !== 'image/png' && file.type !== 'image/jpeg') {
+        toast.error('Only PNG and JPEG image formats are supported')
+        return
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size must be less than 5MB')
+        return
+      }
+
       const reader = new FileReader()
-      reader.onload = () => {
-        const result = reader.result as string
-        setLogo(result)
+      reader.onload = (event) => {
+        if (event.target?.result) {
+          const base64String = event.target.result as string
+          setLogo(base64String)
+        }
       }
       reader.readAsDataURL(file)
     }
@@ -325,7 +343,8 @@ export const Build = () => {
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
     accept: {
-      'image/*': ['.png', '.jpg', '.jpeg', '.svg'],
+      'image/png': ['.png'],
+      'image/jpeg': ['.jpg', '.jpeg'],
     },
     maxFiles: 1,
   })
@@ -410,7 +429,7 @@ export const Build = () => {
               </button>
             </div>
 
-            <div className="flex justify-end gap-4 max-w-xl">
+            <div className="flex justify-end gap-4 max-w-2xl">
               {saved && (
                 <Button
                   variant="outline-primary"
@@ -615,13 +634,12 @@ export const Build = () => {
 
                           {groupsMutation.data &&
                             (groupsMutation.data.length === 0 ? (
-                              <div className="text-sm text-red-600 p-2 mt-2 bg-red-100 border-red-600 border text-center rounded">
-                                <ExclamationTriangleIcon className="size-4 me-2 inline-block" />
-                                Report empty!
+                              <div className="text-sm text-red-500 p-2 mt-2 bg-red-50 border-red-400 border text-center rounded">
+                                Report is empty!
                               </div>
                             ) : (
                               <>
-                                <div>
+                                <div className="mb-2">
                                   <label className="block text-sm font-medium text-gray-700 mb-1">
                                     Search Items:
                                   </label>
@@ -636,8 +654,11 @@ export const Build = () => {
                                     }}
                                   />
                                 </div>
-
-                                <div className="max-h-[500px] overflow-y-auto border border-gray-200 rounded px-2 py-1">
+                                <div className="text-sm text-gray-400 rounded-lg p-1 mt-2 mb-1">
+                                  Drag and drop items to the preview panel to
+                                  add them to a group
+                                </div>
+                                <div className="max-h-[500px] overflow-y-auto border border-gray-200 rounded px-4 py-1">
                                   <ul ref={parent}>
                                     {(groupsFiltered ?? []).map((group) => (
                                       <li key={group.name} className="my-2">
@@ -650,9 +671,7 @@ export const Build = () => {
                                           name={group.name}
                                           alias={group.alias || ''}
                                           status={group.status}
-                                          onChangeAlias={(v) => {
-                                            console.log(v)
-                                          }}
+                                          onChangeAlias={() => {}}
                                         />
                                       </li>
                                     ))}
@@ -671,144 +690,171 @@ export const Build = () => {
               <div
                 className={`custom-tab-content ${activeTab === 'theming' ? 'active' : ''}`}
               >
-                <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
+                <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Color:
-                    </label>
-                    <div className="flex items-center gap-3">
-                      <input
-                        type="color"
-                        value={color}
-                        onChange={(e) => setColor(e.target.value)}
-                        className="w-12 h-10 rounded cursor-pointer border-2 border-gray-300"
-                      />
-                      <input
-                        type="text"
-                        value={color}
-                        onChange={(e) => setColor(e.target.value)}
-                        className="input flex-1"
-                        placeholder="#000000"
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Logo:
-                    </label>
-                    <div
-                      {...getRootProps()}
-                      className={`border-2 border-dashed rounded-lg p-2 text-center cursor-pointer transition-colors ${
-                        isDragActive
-                          ? 'border-blue-400 bg-blue-50'
-                          : 'border-gray-300 bg-gray-50 hover:border-gray-400'
-                      }`}
-                    >
-                      <input {...getInputProps()} />
-                      {logo ? (
-                        <div className="flex flex-col items-center gap-2">
-                          <img
-                            src={logo}
-                            alt="Logo preview"
-                            className="h-12 w-auto object-contain"
-                          />
-                          <p className="text-xs text-gray-500">
-                            Click or drag to change
-                          </p>
-                        </div>
-                      ) : (
-                        <>
-                          <div className="text-gray-400 mb-1">
-                            <PhotoIcon className="mx-auto h-10 w-10" />
+                    <div className="border border-gray-200 rounded-lg px-5 py-4 space-y-3">
+                      <h3 className="text-lg font-semibold mb-0">
+                        Customize Appearance
+                      </h3>
+                      <p className="text-sm text-gray-500 mb-2">
+                        Customize colors, logo, and status display options.
+                      </p>
+                      <div className="bg-white rounded-lg py-2 space-y-4 mt-4">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Color:
+                          </label>
+                          <div className="flex items-center gap-3">
+                            <input
+                              type="color"
+                              value={color}
+                              onChange={(e) => setColor(e.target.value)}
+                              className="w-12 h-10 rounded cursor-pointer border-2 border-gray-300"
+                            />
+                            <input
+                              type="text"
+                              value={color}
+                              onChange={(e) => setColor(e.target.value)}
+                              className="input flex-1"
+                              placeholder="#000000"
+                            />
                           </div>
-                          <p className="text-sm text-gray-500">
-                            {isDragActive
-                              ? 'Drop logo here'
-                              : 'Drop logo here or click to upload'}
-                          </p>
-                        </>
-                      )}
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Logo:
+                          </label>
+                          <div
+                            {...getRootProps()}
+                            className={`border-2 border-dashed rounded-lg p-2 text-center cursor-pointer transition-colors ${
+                              isDragActive
+                                ? 'border-blue-400 bg-blue-50'
+                                : 'border-gray-300 bg-gray-50 hover:border-gray-400'
+                            }`}
+                          >
+                            <input {...getInputProps()} />
+                            {logo ? (
+                              <div className="flex flex-col items-center gap-2">
+                                <img
+                                  alt="Logo"
+                                  className="h-12 w-auto object-contain"
+                                  src={
+                                    logo?.startsWith('http') ||
+                                    logo?.startsWith('data:')
+                                      ? logo
+                                      : `${BACKEND_API}${logo}`
+                                  }
+                                />
+                                <p className="text-xs text-gray-500">
+                                  Click or drag to change
+                                </p>
+                              </div>
+                            ) : (
+                              <>
+                                <div className="text-gray-400 mb-1">
+                                  <PhotoIcon className="mx-auto h-10 w-10" />
+                                </div>
+                                <p className="text-sm text-gray-500">
+                                  {isDragActive
+                                    ? 'Drop logo here'
+                                    : 'Drop logo here or click to upload'}
+                                </p>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Status Icon:
+                          </label>
+                          <SelectGroup
+                            selected={selectIcon}
+                            onChange={setSelectIcon}
+                          >
+                            <SelectGroup.Item value="led">
+                              <div
+                                aria-label="status"
+                                className="status status-lg status-success"
+                              ></div>
+                              <div>Led</div>
+                            </SelectGroup.Item>
+                            <SelectGroup.Item value="icon">
+                              <CheckCircleIcon className="text-green-500 size-4" />
+                              <div>Icon</div>
+                            </SelectGroup.Item>
+                          </SelectGroup>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Status Text:
+                          </label>
+                          <SelectGroup
+                            selected={selectText}
+                            onChange={setSelectText}
+                          >
+                            <SelectGroup.Item value="text">
+                              <div className="text-green-500">
+                                <small>OK</small>
+                              </div>
+                              <div>Text</div>
+                            </SelectGroup.Item>
+                            <SelectGroup.Item value="badge">
+                              <div className="badge badge-success text-white">
+                                <small>OK</small>
+                              </div>
+                              <div>Badge</div>
+                            </SelectGroup.Item>
+                            <SelectGroup.Item value="none">
+                              <BanIcon className="w-4" />
+                              <div>None</div>
+                            </SelectGroup.Item>
+                          </SelectGroup>
+                        </div>
+
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">
+                            Status Columns:
+                          </label>
+                          <SelectGroup selected={columns} onChange={setColumns}>
+                            <SelectGroup.Item value="one">
+                              <SquareIcon className="w-4" />
+                              <div>One</div>
+                            </SelectGroup.Item>
+                            <SelectGroup.Item value="two">
+                              <Columns2Icon className="w-4" />
+                              <div>Two</div>
+                            </SelectGroup.Item>
+                          </SelectGroup>
+                        </div>
+                      </div>
                     </div>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Status Icon:
-                    </label>
-                    <SelectGroup selected={selectIcon} onChange={setSelectIcon}>
-                      <SelectGroup.Item value="led">
-                        <div
-                          aria-label="status"
-                          className="status status-lg status-success"
-                        ></div>
-                        <div>Led</div>
-                      </SelectGroup.Item>
-                      <SelectGroup.Item value="icon">
-                        <CheckCircleIcon className="text-green-500 size-4" />
-                        <div>Icon</div>
-                      </SelectGroup.Item>
-                      <SelectGroup.Item value="none">
-                        <BanIcon className="w-4" />
-                        <div>None</div>
-                      </SelectGroup.Item>
-                    </SelectGroup>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Status Text:
-                    </label>
-                    <SelectGroup selected={selectText} onChange={setSelectText}>
-                      <SelectGroup.Item value="text">
-                        <div className="text-green-500">
-                          <small>OK</small>
-                        </div>
-                        <div>Text</div>
-                      </SelectGroup.Item>
-                      <SelectGroup.Item value="badge">
-                        <div className="badge badge-success text-white">
-                          <small>OK</small>
-                        </div>
-                        <div>Badge</div>
-                      </SelectGroup.Item>
-                      <SelectGroup.Item value="none">
-                        <BanIcon className="w-4" />
-                        <div>None</div>
-                      </SelectGroup.Item>
-                    </SelectGroup>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Status Columns:
-                    </label>
-                    <SelectGroup selected={columns} onChange={setColumns}>
-                      <SelectGroup.Item value="one">
-                        <SquareIcon className="w-4" />
-                        <div>One</div>
-                      </SelectGroup.Item>
-                      <SelectGroup.Item value="two">
-                        <Columns2Icon className="w-4" />
-                        <div>Two</div>
-                      </SelectGroup.Item>
-                    </SelectGroup>
                   </div>
                 </div>
               </div>
             </div>
 
             {activeTab !== 'config' && (
-              <div className="border border-gray-200 rounded-lg p-4 shadow-md w-full max-w-xl self-start bg-gray-50">
+              <div className="border border-gray-200 rounded-lg p-4 shadow-md w-full max-w-2xl self-start bg-gray-50">
                 <header
                   style={{ backgroundColor: color }}
-                  className="p-2 mb-2 rounded-lg"
+                  className="p-3 mb-2 rounded-lg"
                 >
                   <div className="flex flex-col items-center">
+                    {logo && (
+                      <img
+                        src={
+                          logo?.startsWith('http') || logo?.startsWith('data:')
+                            ? logo
+                            : `${BACKEND_API}${logo}`
+                        }
+                        className="my-2 h-20 w-auto object-contain"
+                        alt="Logo"
+                      />
+                    )}
                     <div className="flex flex-row items-center gap-3 mb-1">
-                      {logo !== '' && (
-                        <img src={logo} className="h-8" alt="Logo" />
-                      )}
                       <EditLabel
                         label={title}
                         onChange={(title) => setTitle(title)}
@@ -847,12 +893,22 @@ export const Build = () => {
                 </div>
                 <div>
                   <div className="text-center mt-6">
-                    <Button
-                      onClick={handleAddStatusGroup}
-                      variant="outline-secondary"
+                    <div
+                      className={!report ? 'tooltip' : ''}
+                      data-tip={
+                        !report
+                          ? 'Please select a report first to add groups'
+                          : ''
+                      }
                     >
-                      Click here to Add a new Group
-                    </Button>
+                      <Button
+                        disabled={!report || reportsMutation.isPending}
+                        onClick={handleAddStatusGroup}
+                        variant="outline-secondary"
+                      >
+                        Click here to Add a new Group
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </div>

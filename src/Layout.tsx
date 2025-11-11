@@ -47,7 +47,7 @@ export default function Layout() {
             onClick={() => window.location.replace('/')}
           >
             <img
-              src="/ARGO_LOGO_b&w_ENG_TITLE.png"
+              src="/ARGO_LOGO_COLOR_ENG_TITLE.png"
               alt="ARGO Logo"
               className="h-18 w-auto"
             />

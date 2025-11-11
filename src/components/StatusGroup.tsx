@@ -20,6 +20,7 @@ type StatusGroupProps = {
   onRename: (nextName: string) => void
   onRemove: () => void
   onChangeAlias: (groupName: string, itemName: string, newAlias: string) => void
+  readOnly?: boolean
 }
 
 export default function StatusGroup(props: StatusGroupProps) {
@@ -58,38 +59,42 @@ export default function StatusGroup(props: StatusGroupProps) {
           alias={props.alias}
           onChangeAlias={props.onRename}
           isGroupLabel
+          readOnly={props.readOnly}
         />
-        <Button
-          className="p-0 absolute right-0"
-          size="sm"
-          variant="outline-secondary"
-          onClick={props.onRemove}
-        >
-          <TrashIcon className="size-4 text-gray-400 hover:text-gray-600" />
-        </Button>
+        {!props.readOnly && (
+          <Button
+            className="p-0 absolute right-0"
+            size="sm"
+            variant="outline-secondary"
+            onClick={props.onRemove}
+          >
+            <TrashIcon className="size-4 text-gray-400 hover:text-gray-600" />
+          </Button>
+        )}
       </div>
       <div className="min-h-[50px]">
         <ul
           key={props.name}
           ref={listRef}
-          className={`grid gap-2 ${props.columns === 'two' ? 'grid-cols-2' : 'grid-cols-1'}`}
+          className={`grid ${props.columns === 'two' ? 'grid-cols-2 gap-4' : 'grid-cols-1 gap-2'}`}
         >
           {orderedItems.map((sitem) => (
             <li key={sitem.name}>
               <StatusItem
                 group={props.name}
-                drag={true}
-                dragHandle="dnd-handle"
+                drag={!props.readOnly}
+                dragHandle={props.readOnly ? undefined : 'dnd-handle'}
                 name={sitem.name}
                 alias={sitem.alias || ''}
                 status={sitem.status}
                 onChangeAlias={handleLocalAliasChange}
                 iconMode={props.iconMode}
                 textMode={props.textMode}
+                readOnly={props.readOnly}
               />
             </li>
           ))}
-          {orderedItems.length === 0 && (
+          {orderedItems.length === 0 && !props.readOnly && (
             <li className="text-xs text-gray-400 max-h-[300px] px-3 py-4 rounded border border-dashed border-gray-300 text-center">
               Drop items here
             </li>
