@@ -54,7 +54,7 @@ function App() {
             <Route element={<Layout />}>
               <Route index element={<Home />} />
               <Route
-                path="about"
+                path="profile"
                 element={
                   <AuthProtected>
                     <Profile />
