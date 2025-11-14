@@ -7,6 +7,8 @@ type KeycloakUserInfo = {
   preferred_username: string
   email: string
   name: string
+  given_name: string
+  family_name: string
   sub: string
 }
 
@@ -45,6 +47,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
           setProfile({
             username: userInfo.preferred_username,
             name: userInfo.name,
+            given_name: userInfo.given_name,
+            family_name: userInfo.family_name,
             email: userInfo.email,
             sub: userInfo.sub,
           })

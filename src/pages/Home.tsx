@@ -23,7 +23,7 @@ export function Home() {
           <span>
             ,{' '}
             <span className="text-amber-700">
-              <Link to="/about">{profile.username}</Link>
+              <Link to="/profile">{profile.username}</Link>
             </span>
             !
           </span>

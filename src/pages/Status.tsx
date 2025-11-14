@@ -1,5 +1,13 @@
 import { useParams } from 'react-router-dom'
-import { ArrowPathIcon } from '@heroicons/react/16/solid'
+import {
+  ArrowPathIcon,
+  ArrowDownCircleIcon,
+  CheckCircleIcon,
+  ExclamationCircleIcon,
+  ExclamationTriangleIcon,
+  QuestionMarkCircleIcon,
+  XCircleIcon,
+} from '@heroicons/react/16/solid'
 import { useGetStatusQuery } from '@/hooks/useStatus'
 import ViewGroup from '@/components/ViewGroup'
 
@@ -11,8 +19,8 @@ export const Status = () => {
   const { data: statusData, isLoading } = useGetStatusQuery(slug || '')
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8">
-      <div className="container mx-auto max-w-4xl px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6">
+      <div className="container mx-auto max-w-5xl">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center mt-32">
             <ArrowPathIcon className="size-10 animate-spin text-blue-500 mb-4" />
@@ -20,40 +28,120 @@ export const Status = () => {
           </div>
         ) : statusData ? (
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
-            <header
-              className="p-6 border-b border-gray-200"
-              style={{
-                backgroundColor: statusData.theming?.color || '#F9FAFB',
-              }}
-            >
-              <div className="flex flex-col items-center text-center space-y-4">
-                {statusData.theming?.logo && (
-                  <img
-                    alt="Logo"
-                    className="h-20 w-auto object-contain"
-                    src={
-                      statusData.theming?.logo?.startsWith('http') ||
-                      statusData.theming?.logo?.startsWith('data:')
-                        ? statusData.theming?.logo
-                        : `${BACKEND_API}${statusData.theming?.logo}`
-                    }
-                  />
-                )}
-                <div className="space-y-2">
-                  <h1 className="text-4xl font-bold text-gray-900">
+            <header className="relative">
+              <div className="relative h-64">
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    backgroundImage:
+                      'url(/background-image-public-status-pages.png)',
+                    backgroundSize: 'cover',
+                    backgroundPosition: 'center',
+                    backgroundRepeat: 'no-repeat',
+                  }}
+                />
+              </div>
+
+              {statusData.theming?.logo ? (
+                <div className="relative flex justify-center -mt-20">
+                  <div className="bg-white rounded-full p-2 shadow-xl">
+                    <img
+                      alt="Logo"
+                      className="h-32 w-32 object-contain"
+                      src={
+                        statusData.theming?.logo?.startsWith('http') ||
+                        statusData.theming?.logo?.startsWith('data:')
+                          ? statusData.theming?.logo
+                          : `${BACKEND_API}${statusData.theming?.logo}`
+                      }
+                      style={{
+                        borderRadius: '50%',
+                        backgroundSize: 'contain',
+                        backgroundPosition: 'center',
+                      }}
+                    />
+                  </div>
+                </div>
+              ) : null}
+
+              <div
+                className={`text-center pt-2 pb-3 px-24 ${statusData.theming?.logo ? 'mt-4' : 'mt-8'}`}
+                style={{
+                  backgroundColor: statusData.theming?.color || '#FFFFFF',
+                }}
+              >
+                <div className="space-y-3">
+                  <h1 className="text-4xl font-semibold text-gray-600 mb-1">
                     {statusData.title}
                   </h1>
                   {statusData.description && (
-                    <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                    <p className="text-lg text-gray-700 max-w-2xl mx-auto">
                       {statusData.description}
                     </p>
                   )}
                 </div>
               </div>
+
+              <div className="px-16 mt-6 mb-2 flex justify-center">
+                <div className="flex flex-wrap items-center justify-center gap-6 text-sm">
+                  <div className="flex items-center gap-2">
+                    {statusData?.theming?.status.icon === 'icon' ? (
+                      <CheckCircleIcon className="size-4 text-success" />
+                    ) : (
+                      <div className="status status-lg status-success"></div>
+                    )}
+                    <span className="text-gray-600 font-medium">
+                      Operational
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {statusData?.theming?.status.icon === 'icon' ? (
+                      <XCircleIcon className="size-4 text-error" />
+                    ) : (
+                      <div className="status status-lg status-error"></div>
+                    )}
+                    <span className="text-gray-600 font-medium">Critical</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {statusData?.theming?.status.icon === 'icon' ? (
+                      <ExclamationTriangleIcon className="size-4 text-warning" />
+                    ) : (
+                      <div className="status status-lg status-warning"></div>
+                    )}
+                    <span className="text-gray-600 font-medium">Warning</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {statusData?.theming?.status.icon === 'icon' ? (
+                      <ExclamationCircleIcon className="size-4 text-info" />
+                    ) : (
+                      <div className="status status-lg status-info"></div>
+                    )}
+                    <span className="text-gray-600 font-medium">Missing</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {statusData?.theming?.status.icon === 'icon' ? (
+                      <ArrowDownCircleIcon className="size-4 text-black" />
+                    ) : (
+                      <div className="status status-lg status-neutral"></div>
+                    )}
+                    <span className="text-gray-600 font-medium">Downtime</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {statusData?.theming?.status.icon === 'icon' ? (
+                      <QuestionMarkCircleIcon className="size-4 text-gray-400" />
+                    ) : (
+                      <div className="status status-lg status-unknown"></div>
+                    )}
+                    <span className="text-gray-600 font-medium">Unknown</span>
+                  </div>
+                </div>
+              </div>
             </header>
-            <main className="py-6 px-16">
+            <main
+              className={`py-2 ${statusData?.theming?.columns === 'one' ? 'px-36' : 'px-18'}`}
+            >
               {statusData.groups && statusData.groups.length > 0 ? (
-                <div className="space-y-8">
+                <div className="space-y-4">
                   {statusData.groups.map((group) => (
                     <div key={group.name}>
                       <ViewGroup
@@ -73,7 +161,7 @@ export const Status = () => {
                 </div>
               )}
             </main>
-            <footer className="p-8 mt-10 bg-gray-50 border-t border-gray-200">
+            <footer className="p-8 mt-8 bg-gray-50 border-t border-gray-200">
               <div className="text-center text-sm font-medium text-gray-500 tracking-wide">
                 Last updated:{' '}
                 {new Date().toLocaleDateString('en-GB', {

@@ -69,7 +69,7 @@ export default function Layout() {
           {authenticated && (profile?.username || profile?.sub) ? (
             <div className="p-4">
               <div className="flex items-center justify-between text-sm text-gray-700">
-                <Link to="/about">
+                <Link to="/profile">
                   <div className="flex items-center gap-2 min-w-0 flex-1 hover:opacity-90">
                     <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0">
                       {(profile.username || profile.sub || 'U')
