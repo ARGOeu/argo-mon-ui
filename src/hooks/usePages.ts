@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/auth/useAuth'
 import {
+  fetchDeletePage,
   fetchPage,
   fetchPages,
   fetchSavePage,
@@ -29,7 +30,6 @@ export const useSavePageMutation = () => {
 }
 
 export const useUpdatePageMutation = (id: string) => {
-  const queryClient = useQueryClient()
   const { token } = useAuth()
   return useMutation<PageContent, Error, PageContent>({
     mutationFn: (data: PageContent) => {
@@ -38,27 +38,22 @@ export const useUpdatePageMutation = (id: string) => {
       }
       return fetchUpdatePage(id, data, token)
     },
-    onSuccess: (data) => {
-      console.log('Page update success:', data)
-      queryClient.invalidateQueries({ queryKey: ['all-pages'] })
-      queryClient.invalidateQueries({ queryKey: ['page', id] })
-    },
     onError: (error) => {
       console.error('Page update error:', error)
     },
   })
 }
 
-export const useGetAllPagesQuery = () => {
+export const useGetAllPagesQuery = (page: number = 1, size: number = 10) => {
   const { token } = useAuth()
 
   return useQuery<Page, Error>({
-    queryKey: ['all-pages'],
+    queryKey: ['all-pages', page, size],
     queryFn: () => {
       if (!token) {
         throw new Error('No authentication token available')
       }
-      return fetchPages(token)
+      return fetchPages(token, page, size)
     },
     enabled: !!token,
   })
@@ -79,5 +74,28 @@ export const useGetPageQuery = (id: string) => {
       return fetchPage(id, token)
     },
     enabled: !!token && !!id,
+  })
+}
+
+export const useDeletePageMutation = () => {
+  const { token } = useAuth()
+  const queryClient = useQueryClient()
+
+  return useMutation<string, Error, string>({
+    mutationFn: (id: string) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      if (!id) {
+        throw new Error('Page ID is required')
+      }
+      return fetchDeletePage(id, token)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['all-pages'] })
+    },
+    onError: (error) => {
+      console.error('Page delete error:', error)
+    },
   })
 }

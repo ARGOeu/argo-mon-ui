@@ -63,10 +63,11 @@ export default function StatusGroup(props: StatusGroupProps) {
         />
         {!props.readOnly && (
           <Button
-            className="p-0 absolute right-0"
+            className="p-0 absolute right-0 tooltip"
             size="sm"
             variant="outline-secondary"
             onClick={props.onRemove}
+            data-tip="Remove group"
           >
             <TrashIcon className="size-4 text-gray-400 hover:text-gray-600" />
           </Button>

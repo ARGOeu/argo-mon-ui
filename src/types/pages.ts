@@ -10,7 +10,7 @@ export type Page = {
 }
 
 export type PageContent = {
-  id?: number
+  id?: string
   name: string
   slug: string
   report: string
