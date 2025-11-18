@@ -30,7 +30,6 @@ import {
   useUpdatePageMutation,
 } from '@/hooks/usePages'
 import { toast, Toaster } from 'sonner'
-
 import SelectGroup from '@/components/SelectGroup'
 import { BanIcon, Columns2Icon, SquareIcon } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
@@ -59,7 +58,7 @@ export const Build = () => {
   const [saved, setSaved] = useState(false)
   const [selectIcon, setSelectIcon] = useState('led')
   const [selectText, setSelectText] = useState('none')
-  const [color, setColor] = useState('#F9FAFB')
+  const [color, setColor] = useState('#FFFFFF')
   const [logo, setLogo] = useState('')
   const [columns, setColumns] = useState('one')
   const [activeTab, setActiveTab] = useState<'config' | 'items' | 'theming'>(
@@ -481,7 +480,6 @@ export const Build = () => {
                           onChange={(e) => {
                             setName(e.target.value)
                             if (!isEditMode) {
-                              setTitle(e.target.value)
                               setSlug(
                                 e.target.value
                                   .toLowerCase()
@@ -716,7 +714,7 @@ export const Build = () => {
                               value={color}
                               onChange={(e) => setColor(e.target.value)}
                               className="input flex-1"
-                              placeholder="#000000"
+                              placeholder="#ffffff"
                             />
                           </div>
                         </div>
@@ -837,7 +835,7 @@ export const Build = () => {
             </div>
 
             {activeTab !== 'config' && (
-              <div className="border border-gray-200 rounded-lg p-4 shadow-md w-full max-w-2xl self-start bg-gray-50">
+              <div className="border border-gray-200 rounded-lg p-4 shadow-md w-full max-w-2xl self-start">
                 <header
                   style={{ backgroundColor: color }}
                   className="p-3 mb-2 rounded-lg"

@@ -71,9 +71,38 @@ export const fetchPage = async (
   return response.json()
 }
 
-export const fetchPages = async (token: string): Promise<Page> => {
-  const response = await fetch(`${BACKEND_API}/v1/pages`, {
-    method: 'GET',
+export const fetchPages = async (
+  token: string,
+  page: number = 1,
+  size: number = 10,
+): Promise<Page> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/pages?page=${page}&size=${size}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchDeletePage = async (
+  id: string,
+  token: string,
+): Promise<string> => {
+  const response = await fetch(`${BACKEND_API}/v1/pages/${id}`, {
+    method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,

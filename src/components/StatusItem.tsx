@@ -28,7 +28,7 @@ export const StatusItem = (props: StatusItemProps) => {
       {props.dragHandle && !props.readOnly && (
         <GripVertical className="text-gray-400 h-4 w-4 inline-block mr-2" />
       )}
-      <div className="flex-1 cursor-text">
+      <div className="flex-1">
         <StatusLabel
           group={props.group}
           label={props.name}
