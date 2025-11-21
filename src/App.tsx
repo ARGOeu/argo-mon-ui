@@ -11,6 +11,8 @@ import AuthProtected from './routing/AuthProtected'
 import { Profile } from './pages/Profile'
 import { Build } from './pages/Build'
 import { View } from './pages/View'
+import { Tenants } from './pages/Tenants'
+import { CreateTenant } from './pages/CreateTenant'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { Status } from './pages/Status'
 import { AuthProvider } from './auth/AuthProvider'
@@ -53,6 +55,8 @@ function App() {
           <Route element={<AuthLayout />}>
             <Route element={<Layout />}>
               <Route index element={<Home />} />
+              <Route path="tenants/view" element={<Tenants />} />
+              <Route path="tenants/create" element={<CreateTenant />} />
               <Route
                 path="profile"
                 element={
@@ -69,8 +73,8 @@ function App() {
                   </AuthProtected>
                 }
               />
-              <Route path="build" element={<Build />} />
-              <Route path="view" element={<View />} />
+              <Route path="status-pages/build" element={<Build />} />
+              <Route path="status-pages/view" element={<View />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Route>

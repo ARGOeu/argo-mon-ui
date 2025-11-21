@@ -382,14 +382,14 @@ export const Build = () => {
   return (
     <div>
       <Toaster richColors position="top-center" />
-      <div className="flex flex-col justify-center items-center">
+      <div className="flex flex-col justify-center items-center px-6">
         <div className="max-w-7xl w-full">
           <div className="pb-1 mb-3">
             <div>
-              <h1 className="text-3xl font-semibold text-gray-800">
+              <h1 className="page-title">
                 {isEditMode ? 'Edit Page' : 'Build New Page'}
               </h1>
-              <p className="text-md text-gray-500">
+              <p className="page-subtitle">
                 {isEditMode
                   ? 'Update your status page configuration and content'
                   : 'Create a new status page to monitor your services'}
@@ -461,8 +461,8 @@ export const Build = () => {
                 <div className="space-y-6">
                   <div className="grid grid-cols-[320px_1fr] gap-6 items-center">
                     <div>
-                      <h3 className="text-lg font-semibold">Page Settings</h3>
-                      <p className="text-sm text-gray-500">
+                      <h3 className="section-title">Page Settings</h3>
+                      <p className="section-description">
                         Basic information for your status page.
                       </p>
                     </div>
@@ -470,7 +470,7 @@ export const Build = () => {
                     <div className="bg-white border border-gray-200 rounded-lg p-6 space-y-4">
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Name <span className="text-red-500">*</span>
+                          Name <span className="required">*</span>
                         </label>
                         <input
                           type="text"
@@ -492,7 +492,7 @@ export const Build = () => {
 
                       <div>
                         <label className="block text-sm font-medium text-gray-700 mb-2">
-                          Path <span className="text-red-500">*</span>
+                          Path <span className="required">*</span>
                         </label>
                         <input
                           type="text"
@@ -511,8 +511,8 @@ export const Build = () => {
 
                   <div className="grid grid-cols-[320px_1fr] gap-6 items-center">
                     <div>
-                      <h3 className="text-lg font-semibold">Data Source</h3>
-                      <p className="text-sm text-gray-500">
+                      <h3 className="section-title">Data Source</h3>
+                      <p className="section-description">
                         Connect to your Argo-web-api endpoint.
                       </p>
                     </div>
@@ -587,10 +587,8 @@ export const Build = () => {
                 <div className="space-y-4">
                   <div>
                     <div className="border border-gray-200 rounded-lg px-5 py-4 space-y-3">
-                      <h3 className="text-lg font-semibold mb-0">
-                        Report Selection
-                      </h3>
-                      <p className="text-sm text-gray-500 mb-2">
+                      <h3 className="section-title mb-0">Report Selection</h3>
+                      <p className="section-description mb-2">
                         Choose a report and manage items.
                       </p>
                       {!reportsMutation.data && (
@@ -632,7 +630,7 @@ export const Build = () => {
 
                           {groupsMutation.data &&
                             (groupsMutation.data.length === 0 ? (
-                              <div className="text-sm text-red-500 p-2 mt-2 bg-red-50 border-red-400 border text-center rounded">
+                              <div className="text-sm required p-2 mt-2 bg-red-50 border-red-400 border text-center rounded">
                                 Report is empty!
                               </div>
                             ) : (
@@ -691,10 +689,10 @@ export const Build = () => {
                 <div className="space-y-4">
                   <div>
                     <div className="border border-gray-200 rounded-lg px-5 py-4 space-y-3">
-                      <h3 className="text-lg font-semibold mb-0">
+                      <h3 className="section-title mb-0">
                         Customize Appearance
                       </h3>
-                      <p className="text-sm text-gray-500 mb-2">
+                      <p className="section-description mb-2">
                         Customize colors, logo, and status display options.
                       </p>
                       <div className="bg-white rounded-lg py-2 space-y-4 mt-4">
@@ -707,7 +705,8 @@ export const Build = () => {
                               type="color"
                               value={color}
                               onChange={(e) => setColor(e.target.value)}
-                              className="w-12 h-10 rounded cursor-pointer border-2 border-gray-300"
+                              className="w-14 h-10 rounded cursor-pointer border-2 border-gray-300"
+                              style={{ padding: '0.3rem' }}
                             />
                             <input
                               type="text"
