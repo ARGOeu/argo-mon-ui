@@ -1,9 +1,11 @@
 import { Link, NavLink, Outlet } from 'react-router'
 import { useAuth } from './auth/useAuth'
 import {
-  EyeIcon,
-  PencilSquareIcon,
   ArrowLeftStartOnRectangleIcon,
+  ServerStackIcon,
+  WrenchScrewdriverIcon,
+  RectangleStackIcon,
+  DocumentPlusIcon,
 } from '@heroicons/react/16/solid'
 import { squishEmail } from './utils/profile'
 import { Button } from './components/Button'
@@ -55,13 +57,21 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 py-4 flex flex-col gap-y-1">
-          <SidebarNavItem to="/build">
-            <PencilSquareIcon className="size-5" aria-hidden />
-            Build
+          <SidebarNavItem to="/tenants/view">
+            <ServerStackIcon className="size-5" aria-hidden />
+            Tenants
           </SidebarNavItem>
-          <SidebarNavItem to="/view">
-            <EyeIcon className="size-5" aria-hidden />
-            View
+          <SidebarNavItem to="/tenants/create">
+            <DocumentPlusIcon className="size-5" aria-hidden />
+            Create a Tenant
+          </SidebarNavItem>
+          <SidebarNavItem to="/status-pages/view">
+            <RectangleStackIcon className="size-5" aria-hidden />
+            Status Pages
+          </SidebarNavItem>
+          <SidebarNavItem to="/status-pages/build">
+            <WrenchScrewdriverIcon className="size-5" aria-hidden />
+            Build a Status Page
           </SidebarNavItem>
         </nav>
 
