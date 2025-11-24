@@ -8,6 +8,7 @@ import {
 import Layout from './Layout'
 import { Home } from './pages/Home'
 import AuthProtected from './routing/AuthProtected'
+import ProtectedRoute from './routing/ProtectedRoute'
 import { Profile } from './pages/Profile'
 import { Build } from './pages/Build'
 import { View } from './pages/View'
@@ -55,8 +56,30 @@ function App() {
           <Route element={<AuthLayout />}>
             <Route element={<Layout />}>
               <Route index element={<Home />} />
-              <Route path="tenants/view" element={<Tenants />} />
-              <Route path="tenants/create" element={<CreateTenant />} />
+              <Route
+                path="tenants/view"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin']}>
+                    <Tenants />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="tenants/create"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin']}>
+                    <CreateTenant />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="tenants/edit/:id"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin']}>
+                    <CreateTenant />
+                  </ProtectedRoute>
+                }
+              />
               <Route
                 path="profile"
                 element={
@@ -73,8 +96,22 @@ function App() {
                   </AuthProtected>
                 }
               />
-              <Route path="status-pages/build" element={<Build />} />
-              <Route path="status-pages/view" element={<View />} />
+              <Route
+                path="status-pages/build"
+                element={
+                  <AuthProtected>
+                    <Build />
+                  </AuthProtected>
+                }
+              />
+              <Route
+                path="status-pages/view"
+                element={
+                  <AuthProtected>
+                    <View />
+                  </AuthProtected>
+                }
+              />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Route>
           </Route>

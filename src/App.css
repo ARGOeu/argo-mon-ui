@@ -129,3 +129,10 @@ textarea:focus {
 textarea::placeholder {
   color: #9ca3af;
 }
+
+.loading-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 16rem;
+}

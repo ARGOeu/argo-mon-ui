@@ -7,27 +7,21 @@ import {
   ChevronRightIcon,
 } from '@heroicons/react/16/solid'
 import { useNavigate } from 'react-router-dom'
-import { useAuth } from '@/auth/useAuth'
-import { LoginPrompt } from '@/components/LoginPrompt'
+import { ConfirmDialog } from '@/components/ConfirmDialog'
+import { toast, Toaster } from 'sonner'
 import { useState } from 'react'
 
 export const View = () => {
-  const { authenticated, login } = useAuth()
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 10
   const { data } = useGetAllPagesQuery(currentPage, pageSize)
   const deleteMutation = useDeletePageMutation()
   const navigate = useNavigate()
-
-  if (!authenticated) {
-    return (
-      <LoginPrompt
-        title="View Your Status Pages"
-        description="Login to view and manage all your status pages"
-        onLogin={login}
-      />
-    )
-  }
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [pageToDelete, setPageToDelete] = useState<{
+    id: string
+    name: string
+  } | null>(null)
 
   const handlePageView = (slug: string) => {
     window.open(`/status/${slug}`, '_blank')
@@ -39,14 +33,45 @@ export const View = () => {
     }
   }
 
-  const handlePageDelete = (id: string | undefined) => {
+  const handlePageDeleteClick = (id: string | undefined, name: string) => {
     if (id) {
-      deleteMutation.mutate(id)
+      setPageToDelete({ id, name })
+      setDeleteDialogOpen(true)
     }
+  }
+
+  const handleDeleteConfirm = () => {
+    if (!pageToDelete) return
+
+    deleteMutation.mutate(pageToDelete.id, {
+      onSuccess: () => {
+        toast.success('Status page deleted successfully!')
+        setDeleteDialogOpen(false)
+        setPageToDelete(null)
+      },
+      onError: (error) => {
+        toast.error(`Failed to delete page: ${error.message}`)
+      },
+    })
+  }
+
+  const handleDeleteCancel = () => {
+    setDeleteDialogOpen(false)
+    setPageToDelete(null)
   }
 
   return (
     <div className="flex flex-col justify-center items-center">
+      <Toaster richColors position="top-center" duration={2000} />
+      <ConfirmDialog
+        isOpen={deleteDialogOpen}
+        title="Delete Status Page"
+        message={`Are you sure you want to delete the status page "${pageToDelete?.name}"? This action cannot be undone.`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        onConfirm={handleDeleteConfirm}
+        onCancel={handleDeleteCancel}
+      />
       <div className="max-w-full md:max-w-5xl lg:max-w-6xl w-full">
         <div className="pb-1 mb-4 md:mb-6 px-2 md:px-0">
           <h1 className="page-title">Status Pages</h1>
@@ -138,7 +163,9 @@ export const View = () => {
                             <PencilSquareIcon className="size-4 md:size-5" />
                           </button>
                           <button
-                            onClick={() => handlePageDelete(item.id)}
+                            onClick={() =>
+                              handlePageDeleteClick(item.id, item.name)
+                            }
                             className="tooltip p-1 md:p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
                             data-tip="Delete"
                             aria-label="Delete Page"
@@ -163,7 +190,7 @@ export const View = () => {
         )}
 
         {data?.content && data.content?.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-1 border border-gray-200 rounded-lg mt-2">
+          <div className="flex items-center justify-between px-4 py-1 border border-gray-200 rounded-lg mt-3">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-700">
                 Page {currentPage} of {data.total_pages}

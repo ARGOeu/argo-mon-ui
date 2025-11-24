@@ -38,44 +38,50 @@ export const Profile = () => {
                     Account Details
                   </h3>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-500 mb-1">
+                    <label className="text-sm font-medium text-gray-500">
                       First Name
                     </label>
-                    <p className="text-base text-gray-900">
-                      {profile?.given_name}
+                    <p
+                      className={`text-sm ${profile?.given_name ? 'text-gray-800 font-medium' : 'text-gray-400 italic'}`}
+                    >
+                      {profile?.given_name || 'Not available'}
                     </p>
                   </div>
 
                   <div className="flex flex-col">
-                    <label className="text-sm font-medium text-gray-500 mb-1">
+                    <label className="text-sm font-medium text-gray-500">
                       Last Name
                     </label>
-                    <p className="text-base text-gray-900">
-                      {profile?.family_name}
+                    <p
+                      className={`text-sm ${profile?.family_name ? 'text-gray-800 font-medium' : 'text-gray-400 italic'}`}
+                    >
+                      {profile?.family_name || 'Not available'}
                     </p>
                   </div>
 
-                  {profile.email && (
-                    <div className="flex flex-col">
-                      <label className="text-sm font-medium text-gray-500 mb-1">
-                        Email
-                      </label>
-                      <p className="text-base text-gray-900">{profile.email}</p>
-                    </div>
-                  )}
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-gray-500">
+                      Email
+                    </label>
+                    <p
+                      className={`text-sm ${profile?.email ? 'text-gray-800 font-medium' : 'text-gray-400 italic'}`}
+                    >
+                      {profile?.email || 'Not available'}
+                    </p>
+                  </div>
 
-                  {profile.sub && (
-                    <div className="flex flex-col">
-                      <label className="text-sm font-medium text-gray-500 mb-1">
-                        User ID
-                      </label>
-                      <p className="text-base text-gray-900 font-mono text-sm">
-                        {profile.sub}
-                      </p>
-                    </div>
-                  )}
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-gray-500">
+                      User ID
+                    </label>
+                    <p
+                      className={`text-sm ${profile?.sub ? 'text-gray-800 font-medium' : 'text-gray-400 italic'}`}
+                    >
+                      {profile?.sub || 'Not available'}
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

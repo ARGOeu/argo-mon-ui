@@ -10,6 +10,7 @@ type KeycloakUserInfo = {
   given_name: string
   family_name: string
   sub: string
+  entitlements: string[]
 }
 
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({
@@ -42,8 +43,25 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         if (auth) {
           setToken(keycloak.token)
 
+          console.log('keycloak', keycloak)
+
           // Load minimal profile
           const userInfo = (await keycloak.loadUserInfo()) as KeycloakUserInfo
+
+          console.log('userInfo', userInfo)
+
+          // Extract roles from entitlements
+          const roles =
+            userInfo.entitlements
+              ?.filter((entitlement) =>
+                entitlement.includes('group:status-pages'),
+              )
+              .map((entitlement) => {
+                const rolePart = entitlement.split('role=')[1]
+                return rolePart || null
+              })
+              .filter((role): role is string => role !== null) || []
+
           setProfile({
             username: userInfo.preferred_username,
             name: userInfo.name,
@@ -51,6 +69,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
             family_name: userInfo.family_name,
             email: userInfo.email,
             sub: userInfo.sub,
+            entitlements: userInfo.entitlements,
+            roles: roles,
           })
 
           // // Refresh token every 30s; keep at least 60s of validity.

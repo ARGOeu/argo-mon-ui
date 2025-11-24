@@ -9,6 +9,7 @@ import {
 } from '@heroicons/react/16/solid'
 import { squishEmail } from './utils/profile'
 import { Button } from './components/Button'
+import { LoginPrompt } from './components/LoginPrompt'
 
 function SidebarNavItem({
   to,
@@ -40,6 +41,8 @@ function SidebarNavItem({
 export default function Layout() {
   const { authenticated, profile, login, logout } = useAuth()
 
+  const isSuperAdmin = profile?.roles?.includes('super_admin')
+
   return (
     <div className="min-h-screen flex">
       <aside className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
@@ -57,14 +60,18 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 py-4 flex flex-col gap-y-1">
-          <SidebarNavItem to="/tenants/view">
-            <ServerStackIcon className="size-5" aria-hidden />
-            Tenants
-          </SidebarNavItem>
-          <SidebarNavItem to="/tenants/create">
-            <DocumentPlusIcon className="size-5" aria-hidden />
-            Create a Tenant
-          </SidebarNavItem>
+          {isSuperAdmin && (
+            <>
+              <SidebarNavItem to="/tenants/view">
+                <ServerStackIcon className="size-5" aria-hidden />
+                Tenants
+              </SidebarNavItem>
+              <SidebarNavItem to="/tenants/create">
+                <DocumentPlusIcon className="size-5" aria-hidden />
+                Create a Tenant
+              </SidebarNavItem>
+            </>
+          )}
           <SidebarNavItem to="/status-pages/view">
             <RectangleStackIcon className="size-5" aria-hidden />
             Status Pages
@@ -78,9 +85,9 @@ export default function Layout() {
         <div className="border-t border-gray-200">
           {authenticated && (profile?.username || profile?.sub) ? (
             <div className="p-4">
-              <div className="flex items-center justify-between text-sm text-gray-700">
+              <div className="flex items-center justify-between gap-1 text-sm text-gray-700">
                 <Link to="/profile">
-                  <div className="flex items-center gap-2 min-w-0 flex-1 hover:opacity-90">
+                  <div className="flex items-center gap-2 min-w-0 flex-1 hover:opacity-90 w-50">
                     <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0">
                       {(profile.username || profile.sub || 'U')
                         .charAt(0)
@@ -119,7 +126,15 @@ export default function Layout() {
       {/* Page content */}
       <main className="flex-1 bg-white overflow-auto">
         <div className="container mx-auto p-6">
-          <Outlet />
+          {!authenticated ? (
+            <LoginPrompt
+              title="Authentication Required"
+              description="Please login to access the status pages management"
+              onLogin={login}
+            />
+          ) : (
+            <Outlet />
+          )}
         </div>
       </main>
     </div>

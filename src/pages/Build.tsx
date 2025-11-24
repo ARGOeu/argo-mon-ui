@@ -34,12 +34,12 @@ import SelectGroup from '@/components/SelectGroup'
 import { BanIcon, Columns2Icon, SquareIcon } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { Button } from '@/components/Button'
-import { LoginPrompt } from '@/components/LoginPrompt'
+import styles from './Build.module.css'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
 export const Build = () => {
-  const { token, authenticated, login } = useAuth()
+  const { token } = useAuth()
   const { id: editId } = useParams<{ id?: string }>()
   const isEditMode = Boolean(editId)
 
@@ -153,22 +153,42 @@ export const Build = () => {
       // Update existing page
       updatePageMutation.mutate(pageData, {
         onSuccess: () => {
-          toast.success('Page Updated!')
+          toast.success('Page updated successfully!')
           setSaved(true)
         },
-        onError: (error) => {
-          toast.error(`${error}`)
+        onError: (error: Error & { errors?: string[] }) => {
+          if (error.errors && error.errors.length > 0) {
+            toast.error(
+              <div>
+                {error.errors?.map((err, idx) => (
+                  <div key={idx}>{err}</div>
+                ))}
+              </div>,
+            )
+          } else {
+            toast.error(`Failed to update status page: ${error.message}`)
+          }
         },
       })
     } else {
       // Create new page
       savePageMutation.mutate(pageData, {
         onSuccess: () => {
-          toast.success('Page Saved!')
+          toast.success('Page created successfully!')
           setSaved(true)
         },
-        onError: (error) => {
-          toast.error(`${error}`)
+        onError: (error: Error & { errors?: string[] }) => {
+          if (error.errors && error.errors.length > 0) {
+            toast.error(
+              <div>
+                {error.errors?.map((err, idx) => (
+                  <div key={idx}>{err}</div>
+                ))}
+              </div>,
+            )
+          } else {
+            toast.error(`Failed to create status page: ${error.message}`)
+          }
         },
       })
     }
@@ -352,7 +372,7 @@ export const Build = () => {
   if (isEditMode && getPageQuery.isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <ArrowPathIcon className="animate-spin size-8" />
+        <ArrowPathIcon className="animate-spin size-8 text-blue-400" />
         <span className="ml-2">Loading page data...</span>
       </div>
     )
@@ -369,19 +389,9 @@ export const Build = () => {
     )
   }
 
-  if (!authenticated) {
-    return (
-      <LoginPrompt
-        title="Build Status Pages"
-        description="Login to create and customize your status pages"
-        onLogin={login}
-      />
-    )
-  }
-
   return (
     <div>
-      <Toaster richColors position="top-center" />
+      <Toaster richColors position="top-center" duration={2000} />
       <div className="flex flex-col justify-center items-center px-6">
         <div className="max-w-7xl w-full">
           <div className="pb-1 mb-3">
@@ -404,23 +414,23 @@ export const Build = () => {
                 : 'grid grid-cols-[minmax(400px,600px)_1fr] gap-6 items-center'
             }
           >
-            <div className="custom-tabs">
+            <div className={styles['custom-tabs']}>
               <button
-                className={`custom-tab ${activeTab === 'config' ? 'active' : ''}`}
+                className={`${styles['custom-tab']} ${activeTab === 'config' ? styles['active'] : ''}`}
                 onClick={() => setActiveTab('config')}
               >
                 <Cog6ToothIcon className="size-5" />
                 Config
               </button>
               <button
-                className={`custom-tab ${activeTab === 'items' ? 'active' : ''}`}
+                className={`${styles['custom-tab']} ${activeTab === 'items' ? styles['active'] : ''}`}
                 onClick={() => setActiveTab('items')}
               >
                 <CubeIcon className="size-5" />
                 Items
               </button>
               <button
-                className={`custom-tab ${activeTab === 'theming' ? 'active' : ''}`}
+                className={`${styles['custom-tab']} ${activeTab === 'theming' ? styles['active'] : ''}`}
                 onClick={() => setActiveTab('theming')}
               >
                 <PaintBrushIcon className="size-5" />
@@ -456,7 +466,7 @@ export const Build = () => {
               className={activeTab === 'config' ? 'max-w-4xl w-full' : 'w-full'}
             >
               <div
-                className={`custom-tab-content ${activeTab === 'config' ? 'active' : ''}`}
+                className={`${styles['custom-tab-content']} ${activeTab === 'config' ? styles['active'] : ''}`}
               >
                 <div className="space-y-6">
                   <div className="grid grid-cols-[320px_1fr] gap-6 items-center">
@@ -554,7 +564,7 @@ export const Build = () => {
                       >
                         {reportsMutation.isPending ? (
                           <>
-                            <ArrowPathIcon className="animate-spin size-4" />
+                            <ArrowPathIcon className="animate-spin size-4 text-blue-400" />
                             <span>Connecting ...</span>
                           </>
                         ) : reportsMutation.data ? (
@@ -582,7 +592,7 @@ export const Build = () => {
 
               {/* Items Tab Content */}
               <div
-                className={`custom-tab-content ${activeTab === 'items' ? 'active ' : ''}`}
+                className={`${styles['custom-tab-content']} ${activeTab === 'items' ? styles['active'] : ''}`}
               >
                 <div className="space-y-4">
                   <div>
@@ -623,7 +633,7 @@ export const Build = () => {
 
                           {groupsMutation.isPending && (
                             <div className="p-2 text-base mt-2 mx-auto">
-                              <ArrowPathIcon className="size-4 animate-spin inline-block me-2" />{' '}
+                              <ArrowPathIcon className="size-4 animate-spin inline-block me-2 text-blue-400" />{' '}
                               Loading items...
                             </div>
                           )}
@@ -684,7 +694,7 @@ export const Build = () => {
 
               {/* Theming Tab Content */}
               <div
-                className={`custom-tab-content ${activeTab === 'theming' ? 'active' : ''}`}
+                className={`${styles['custom-tab-content']} ${activeTab === 'theming' ? styles['active'] : ''}`}
               >
                 <div className="space-y-4">
                   <div>
@@ -851,13 +861,16 @@ export const Build = () => {
                         alt="Logo"
                       />
                     )}
-                    <div className="flex flex-row items-center gap-3 mb-1">
+                    <div className="flex flex-row items-center gap-1 mb-1">
                       <EditLabel
                         label={title}
                         onChange={(title) => setTitle(title)}
                         size="text-3xl"
                         placeholder="Add a title"
                       />
+                      <span className="required" style={{ height: '2rem' }}>
+                        *
+                      </span>
                     </div>
                     <EditLabel
                       label={desc}

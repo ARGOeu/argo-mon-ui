@@ -1,19 +1,8 @@
 import { Link } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
-import { LoginPrompt } from '@/components/LoginPrompt'
 
 export function Home() {
-  const { authenticated, login, profile } = useAuth()
-
-  if (!authenticated) {
-    return (
-      <LoginPrompt
-        title="Welcome to Status Pages"
-        description="Sign in to create and manage your status pages"
-        onLogin={login}
-      />
-    )
-  }
+  const { profile } = useAuth()
 
   return (
     <div>

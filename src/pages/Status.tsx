@@ -23,7 +23,7 @@ export const Status = () => {
       <div className="container mx-auto max-w-5xl">
         {isLoading ? (
           <div className="flex flex-col items-center justify-center mt-32">
-            <ArrowPathIcon className="size-10 animate-spin text-blue-500 mb-4" />
+            <ArrowPathIcon className="size-10 animate-spin text-blue-400 mb-4" />
             <div className="text-lg text-gray-600">Loading status page...</div>
           </div>
         ) : statusData ? (
