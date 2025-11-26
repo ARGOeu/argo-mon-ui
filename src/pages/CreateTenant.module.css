@@ -56,6 +56,11 @@
   cursor: pointer;
   transition: all 0.2s;
   background: #fafafa;
+  min-height: 120px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .dropzone:hover {
@@ -86,11 +91,41 @@
   flex-direction: column;
   align-items: center;
   gap: 0.2rem;
+  width: 100%;
+  position: relative;
+}
+
+.remove-image-button {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background-color: #4b5563;
+  border: 2px solid white;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.remove-image-button:hover {
+  background-color: #374151;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.remove-icon {
+  width: 20px;
+  height: 20px;
+  color: white;
 }
 
 .preview-image {
-  max-width: 120px;
-  max-height: 120px;
+  width: 80px;
+  height: 80px;
   border-radius: 0.5rem;
   object-fit: contain;
 }

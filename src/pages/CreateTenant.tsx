@@ -1,13 +1,20 @@
-import { useState, useCallback } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useCallback, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
-import { PhotoIcon } from '@heroicons/react/16/solid'
-import { useCreateTenantMutation } from '@/hooks/useTenants'
+import { ArrowPathIcon, PhotoIcon, XMarkIcon } from '@heroicons/react/16/solid'
+import {
+  useCreateTenantMutation,
+  useUpdateTenantMutation,
+  useGetTenantById,
+} from '@/hooks/useTenants'
 import { toast, Toaster } from 'sonner'
 import { Button } from '../components/Button'
 import styles from './CreateTenant.module.css'
 
 export const CreateTenant = () => {
+  const { id: tenantId } = useParams<{ id?: string }>()
+  const isEditMode = Boolean(tenantId)
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -22,7 +29,26 @@ export const CreateTenant = () => {
   const [websiteError, setWebsiteError] = useState('')
 
   const createMutation = useCreateTenantMutation()
-  const navigate = useNavigate()
+  const updateMutation = useUpdateTenantMutation()
+  const { data: tenantData, isLoading: isTenantLoading } = useGetTenantById(
+    tenantId || '',
+  )
+
+  // Load tenant data in edit mode
+  useEffect(() => {
+    if (isEditMode && tenantData) {
+      setFormData({
+        name: tenantData.info.name || '',
+        email: tenantData.info.email || '',
+        description: tenantData.info.description || '',
+        website: tenantData.info.website || '',
+        image: tenantData.info.image || '',
+      })
+      if (tenantData.info.image) {
+        setImagePreview(tenantData.info.image)
+      }
+    }
+  }, [isEditMode, tenantData])
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     const file = acceptedFiles[0]
@@ -71,20 +97,53 @@ export const CreateTenant = () => {
       image: formData.image || imageUrl || undefined,
     }
 
-    createMutation.mutate(
-      { info: submitData },
-      {
-        onSuccess: () => {
-          toast.success('Tenant created successfully!')
-          setTimeout(() => {
-            navigate('/tenants')
-          }, 2000)
+    if (isEditMode && tenantId) {
+      // Update existing tenant
+      updateMutation.mutate(
+        { id: tenantId, data: { info: submitData } },
+        {
+          onSuccess: () => {
+            toast.success('Tenant updated successfully!')
+          },
+          onError: (error: Error & { errors?: string[] }) => {
+            if (error.errors && error.errors.length > 0) {
+              toast.error(
+                <div>
+                  {error.errors?.map((err, idx) => (
+                    <div key={idx}>{err}</div>
+                  ))}
+                </div>,
+              )
+            } else {
+              toast.error(`Failed to update tenant: ${error.message}`)
+            }
+          },
         },
-        onError: (error) => {
-          toast.error(`Failed to create tenant: ${error.message}`)
+      )
+    } else {
+      // Create new tenant
+      createMutation.mutate(
+        { info: submitData },
+        {
+          onSuccess: () => {
+            toast.success('Tenant created successfully!')
+          },
+          onError: (error: Error & { errors?: string[] }) => {
+            if (error.errors && error.errors.length > 0) {
+              toast.error(
+                <div>
+                  {error.errors?.map((err, idx) => (
+                    <div key={idx}>{err}</div>
+                  ))}
+                </div>,
+              )
+            } else {
+              toast.error(`Failed to create tenant: ${error.message}`)
+            }
+          },
         },
-      },
-    )
+      )
+    }
   }
 
   const handleChange = (
@@ -135,172 +194,228 @@ export const CreateTenant = () => {
   const handleImageUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const url = e.target.value
     setImageUrl(url)
-    if (url) {
-      setImagePreview(url)
-      setFormData((prev) => ({ ...prev, image: url }))
+
+    if (!url) {
+      // Clear preview if URL is empty
+      setImagePreview(null)
+      setFormData((prev) => ({ ...prev, image: '' }))
+      return
     }
+
+    const isValidUrl = /^(https?:\/\/.+\..+|data:image\/.+;base64,.+)/.test(url)
+
+    if (isValidUrl) {
+      // Test if image can actually load
+      const img = new Image()
+      img.onload = () => {
+        setImagePreview(url)
+        setFormData((prev) => ({ ...prev, image: url }))
+      }
+      img.onerror = () => {
+        setImagePreview(null)
+        setFormData((prev) => ({ ...prev, image: '' }))
+      }
+      img.src = url
+    } else {
+      // Clear preview if URL format is invalid
+      setImagePreview(null)
+      setFormData((prev) => ({ ...prev, image: '' }))
+    }
+  }
+
+  const handleRemoveImage = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setImagePreview(null)
+    setImageUrl('')
+    setFormData((prev) => ({ ...prev, image: '' }))
   }
 
   return (
     <>
-      <Toaster richColors position="top-center" />
+      <Toaster richColors position="top-center" duration={2000} />
       <div className={styles.container}>
-        <div className={styles.header}>
-          <div>
-            <h1 className="page-title">Create New Tenant</h1>
-            <p className="page-subtitle">
-              Fill in the details to create a new tenant
-            </p>
+        {isEditMode && isTenantLoading ? (
+          <div className="loading-container">
+            <ArrowPathIcon className="animate-spin size-10 text-blue-400" />
           </div>
-          <Button
-            variant="primary"
-            size="md"
-            onClick={handleSubmit}
-            disabled={
-              createMutation.isPending ||
-              !!nameError ||
-              !!emailError ||
-              !!websiteError
-            }
-          >
-            {createMutation.isPending ? 'Saving...' : 'Save'}
-          </Button>
-        </div>
-
-        <form onSubmit={handleSubmit} className={styles.form}>
-          <div className={styles.section}>
-            <div className={styles['section-info']}>
-              <h2 className="section-title">Tenant Information</h2>
-              <p className="section-description">
-                Basic information for the new tenant
-              </p>
+        ) : (
+          <>
+            <div className={styles.header}>
+              <div>
+                <h1 className="page-title">
+                  {isEditMode ? 'Edit Tenant' : 'Create New Tenant'}
+                </h1>
+                <p className="page-subtitle">
+                  {isEditMode
+                    ? 'Update the tenant information'
+                    : 'Fill in the details to create a new tenant'}
+                </p>
+              </div>
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleSubmit}
+                disabled={
+                  createMutation.isPending ||
+                  updateMutation.isPending ||
+                  !!nameError ||
+                  !!emailError ||
+                  !!websiteError
+                }
+              >
+                {createMutation.isPending || updateMutation.isPending
+                  ? 'Saving...'
+                  : isEditMode
+                    ? 'Update'
+                    : 'Create'}
+              </Button>
             </div>
 
-            <div className={styles['section-content']}>
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Name <span className="required">*</span>
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className={styles.input}
-                  placeholder="Enter tenant name"
-                  required
-                />
-                {nameError && (
-                  <span className="text-red-400 text-sm mt-1">{nameError}</span>
-                )}
+            <form onSubmit={handleSubmit} className={styles.form}>
+              <div className={styles.section}>
+                <div className={styles['section-info']}>
+                  <h2 className="section-title">Tenant Information</h2>
+                  <p className="section-description">
+                    Basic information for the new tenant
+                  </p>
+                </div>
+
+                <div className={styles['section-content']}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>
+                      Name <span className="required">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      className={styles.input}
+                      placeholder="Enter tenant name"
+                      required
+                    />
+                    {nameError && (
+                      <span className="text-red-400 text-sm mt-1">
+                        {nameError}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className={styles.field}>
+                    <label className={styles.label}>
+                      Email <span className="required">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={formData.email}
+                      onChange={handleChange}
+                      className={styles.input}
+                      placeholder="The email of the tenant that is responsible"
+                      required
+                    />
+                    {emailError && (
+                      <span className="text-red-400 text-sm mt-1">
+                        {emailError}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className={styles.field}>
+                    <label className={styles.label}>
+                      Description <span className="required">*</span>
+                    </label>
+                    <textarea
+                      name="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      className={styles.textarea}
+                      placeholder="A small description about the tenant"
+                      rows={3}
+                      required
+                    />
+                  </div>
+                </div>
               </div>
 
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Email <span className="required">*</span>
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className={styles.input}
-                  placeholder="The email of the tenant that is responsible"
-                  required
-                />
-                {emailError && (
-                  <span className="text-red-400 text-sm mt-1">
-                    {emailError}
-                  </span>
-                )}
-              </div>
+              <div className={styles.section}>
+                <div className={styles['section-info']}>
+                  <h2 className="section-title">Additional Details</h2>
+                  <p className="section-description">
+                    Optional information for the tenant
+                  </p>
+                </div>
 
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Description <span className="required">*</span>
-                </label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  className={styles.textarea}
-                  placeholder="A small description about the tenant"
-                  rows={3}
-                  required
-                />
-              </div>
-            </div>
-          </div>
-
-          <div className={styles.section}>
-            <div className={styles['section-info']}>
-              <h2 className="section-title">Additional Details</h2>
-              <p className="section-description">
-                Optional information for the tenant
-              </p>
-            </div>
-
-            <div className={styles['section-content']}>
-              <div className={styles.field}>
-                <label className={styles.label}>Image</label>
-                <div
-                  {...getRootProps()}
-                  className={`${styles.dropzone} ${isDragActive ? styles['dropzone-active'] : ''}`}
-                >
-                  <input {...getInputProps()} />
-                  {imagePreview ? (
-                    <div className={styles['image-preview']}>
-                      <img
-                        src={imagePreview}
-                        alt="Preview"
-                        className={styles['preview-image']}
-                      />
-                      <p className={styles['dropzone-text']}>
-                        Drop image here or click to upload
-                      </p>
+                <div className={styles['section-content']}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>Image</label>
+                    <div
+                      {...getRootProps()}
+                      className={`${styles.dropzone} ${isDragActive ? styles['dropzone-active'] : ''}`}
+                    >
+                      <input {...getInputProps()} />
+                      {imagePreview ? (
+                        <div className={styles['image-preview']}>
+                          <button
+                            type="button"
+                            onClick={handleRemoveImage}
+                            className={styles['remove-image-button']}
+                            aria-label="Remove image"
+                          >
+                            <XMarkIcon className={styles['remove-icon']} />
+                          </button>
+                          <img
+                            className={styles['preview-image']}
+                            src={imagePreview}
+                          />
+                          <p className={styles['dropzone-text']}>
+                            Drop image here or click to upload
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <PhotoIcon className={styles['upload-icon']} />
+                          <p className={styles['upload-text']}>
+                            {isDragActive
+                              ? 'Drop image here'
+                              : 'Drop image here or click to upload'}
+                          </p>
+                        </>
+                      )}
                     </div>
-                  ) : (
-                    <>
-                      <PhotoIcon className={styles['upload-icon']} />
-                      <p className={styles['upload-text']}>
-                        {isDragActive
-                          ? 'Drop image here'
-                          : 'Drop image here or click to upload'}
-                      </p>
-                    </>
-                  )}
-                </div>
-                <div className={styles['or-divider']}>
-                  <span>OR</span>
-                </div>
-                <input
-                  type="url"
-                  value={imageUrl}
-                  onChange={handleImageUrlChange}
-                  className={styles.input}
-                  placeholder="Enter image URL"
-                />
-              </div>
+                    <div className={styles['or-divider']}>
+                      <span>OR</span>
+                    </div>
+                    <input
+                      type="url"
+                      value={imageUrl}
+                      onChange={handleImageUrlChange}
+                      className={styles.input}
+                      placeholder="Enter image URL"
+                    />
+                  </div>
 
-              <div className={`${styles.field} mt-2`}>
-                <label className={styles.label}>Website</label>
-                <input
-                  type="url"
-                  name="website"
-                  value={formData.website}
-                  onChange={handleChange}
-                  className={styles.input}
-                  placeholder="Enter the project related URL"
-                />
-                {websiteError && (
-                  <span className="text-red-400 text-sm mt-1">
-                    {websiteError}
-                  </span>
-                )}
+                  <div className={`${styles.field} mt-2`}>
+                    <label className={styles.label}>Website</label>
+                    <input
+                      type="url"
+                      name="website"
+                      value={formData.website}
+                      onChange={handleChange}
+                      className={styles.input}
+                      placeholder="Enter the project related URL"
+                    />
+                    {websiteError && (
+                      <span className="text-red-400 text-sm mt-1">
+                        {websiteError}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-        </form>
+            </form>
+          </>
+        )}
       </div>
     </>
   )

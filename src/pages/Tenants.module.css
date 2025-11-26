@@ -10,13 +10,6 @@
   margin-bottom: 1.5rem;
 }
 
-.loading-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 16rem;
-}
-
 .grid {
   display: grid;
   grid-template-columns: 1fr;

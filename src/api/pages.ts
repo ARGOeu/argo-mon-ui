@@ -17,9 +17,11 @@ export const fetchSavePage = async (
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
-    throw new Error(
+    const error = new Error(
       errorData.message || `HTTP error! status: ${response.status}`,
-    )
+    ) as Error & { errors?: string[] }
+    error.errors = errorData.errors || []
+    throw error
   }
 
   return response.json()
@@ -41,9 +43,11 @@ export const fetchUpdatePage = async (
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
-    throw new Error(
+    const error = new Error(
       errorData.message || `HTTP error! status: ${response.status}`,
-    )
+    ) as Error & { errors?: string[] }
+    error.errors = errorData.errors || []
+    throw error
   }
 
   return response.json()

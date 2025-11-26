@@ -11,6 +11,8 @@ export type AuthContextType = {
     name?: string
     given_name?: string
     family_name?: string
+    entitlements: string[]
+    roles: string[]
   }
   login: () => void
   logout: () => void
