@@ -6,6 +6,7 @@ import {
   CubeIcon,
   PaintBrushIcon,
   PhotoIcon,
+  XMarkIcon,
 } from '@heroicons/react/16/solid'
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import { useParams } from 'react-router-dom'
@@ -33,12 +34,12 @@ import { toast, Toaster } from 'sonner'
 import SelectGroup from '@/components/SelectGroup'
 import { BanIcon, Columns2Icon, SquareIcon } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
-import { Button } from '@/components/Button'
+import Button from '@/components/Button'
 import styles from './Build.module.css'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
-export const Build = () => {
+const Build = () => {
   const { token } = useAuth()
   const { id: editId } = useParams<{ id?: string }>()
   const isEditMode = Boolean(editId)
@@ -60,6 +61,8 @@ export const Build = () => {
   const [selectText, setSelectText] = useState('none')
   const [color, setColor] = useState('#FFFFFF')
   const [logo, setLogo] = useState('')
+  const [logoUrl, setLogoUrl] = useState('')
+  const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [columns, setColumns] = useState('one')
   const [activeTab, setActiveTab] = useState<'config' | 'items' | 'theming'>(
     'config',
@@ -92,6 +95,12 @@ export const Build = () => {
       setSelectText(pageData.config?.theming?.status.text || 'none')
       setColor(pageData.config?.theming?.color || '')
       setLogo(pageData.config?.theming?.logo || '')
+      if (pageData.config?.theming?.logo) {
+        setLogoPreview(pageData.config.theming.logo)
+        if (!pageData.config.theming.logo.includes(BACKEND_API)) {
+          setLogoUrl(pageData.config.theming.logo)
+        }
+      }
       setColumns(pageData.config?.theming?.columns || 'one')
 
       // If we have data source info, automatically connect
@@ -338,8 +347,8 @@ export const Build = () => {
     if (acceptedFiles.length > 0) {
       const file = acceptedFiles[0]
 
-      if (file.type !== 'image/png' && file.type !== 'image/jpeg') {
-        toast.error('Only PNG and JPEG image formats are supported')
+      if (!file.type.startsWith('image/')) {
+        toast.error('Only image files are supported')
         return
       }
 
@@ -353,6 +362,7 @@ export const Build = () => {
         if (event.target?.result) {
           const base64String = event.target.result as string
           setLogo(base64String)
+          setLogoPreview(base64String)
         }
       }
       reader.readAsDataURL(file)
@@ -367,6 +377,42 @@ export const Build = () => {
     },
     maxFiles: 1,
   })
+
+  const handleLogoUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const url = e.target.value
+    setLogoUrl(url)
+
+    if (!url) {
+      setLogoPreview(null)
+      setLogo('')
+      return
+    }
+
+    const isValidUrl = /^(https?:\/\/.+\..+|data:image\/.+;base64,.+)/.test(url)
+
+    if (isValidUrl) {
+      const img = new Image()
+      img.onload = () => {
+        setLogoPreview(url)
+        setLogo(url)
+      }
+      img.onerror = () => {
+        setLogoPreview(null)
+        setLogo('')
+      }
+      img.src = url
+    } else {
+      setLogoPreview(null)
+      setLogo('')
+    }
+  }
+
+  const handleRemoveLogo = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setLogoPreview(null)
+    setLogoUrl('')
+    setLogo('')
+  }
 
   // Show loading spinner while loading page data
   if (isEditMode && getPageQuery.isLoading) {
@@ -468,9 +514,9 @@ export const Build = () => {
               <div
                 className={`${styles['custom-tab-content']} ${activeTab === 'config' ? styles['active'] : ''}`}
               >
-                <div className="space-y-6">
-                  <div className="grid grid-cols-[320px_1fr] gap-6 items-center">
-                    <div>
+                <div className="space-y-8">
+                  <div className="grid grid-cols-[320px_1fr] gap-6">
+                    <div className="pt-2 ps-2">
                       <h3 className="section-title">Page Settings</h3>
                       <p className="section-description">
                         Basic information for your status page.
@@ -519,8 +565,8 @@ export const Build = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-[320px_1fr] gap-6 items-center">
-                    <div>
+                  <div className="grid grid-cols-[320px_1fr] gap-6">
+                    <div className="pt-2 ps-2">
                       <h3 className="section-title">Data Source</h3>
                       <p className="section-description">
                         Connect to your Argo-web-api endpoint.
@@ -734,26 +780,34 @@ export const Build = () => {
                           </label>
                           <div
                             {...getRootProps()}
-                            className={`border-2 border-dashed rounded-lg p-2 text-center cursor-pointer transition-colors ${
+                            className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors flex flex-col items-center justify-center ${
                               isDragActive
                                 ? 'border-blue-400 bg-blue-50'
                                 : 'border-gray-300 bg-gray-50 hover:border-gray-400'
                             }`}
                           >
                             <input {...getInputProps()} />
-                            {logo ? (
-                              <div className="flex flex-col items-center gap-2">
+                            {logoPreview ? (
+                              <div className="relative flex flex-col items-center gap-2 w-full">
+                                <button
+                                  type="button"
+                                  onClick={handleRemoveLogo}
+                                  className="absolute -top-2 -right-2 bg-gray-600 hover:bg-gray-700 border-2 border-white rounded-full w-7 h-7 flex items-center justify-center z-10 shadow-md"
+                                  aria-label="Remove logo"
+                                >
+                                  <XMarkIcon className="w-5 h-5 text-white" />
+                                </button>
                                 <img
                                   alt="Logo"
-                                  className="h-12 w-auto object-contain"
+                                  className="h-20 w-20 object-contain rounded"
                                   src={
-                                    logo?.startsWith('http') ||
-                                    logo?.startsWith('data:')
-                                      ? logo
-                                      : `${BACKEND_API}${logo}`
+                                    logoPreview?.startsWith('http') ||
+                                    logoPreview?.startsWith('data:')
+                                      ? logoPreview
+                                      : `${BACKEND_API}${logoPreview}`
                                   }
                                 />
-                                <p className="text-xs text-gray-500">
+                                <p className="text-sm text-gray-500">
                                   Click or drag to change
                                 </p>
                               </div>
@@ -770,6 +824,20 @@ export const Build = () => {
                               </>
                             )}
                           </div>
+                          <div className="flex items-center my-2">
+                            <div className="flex-1 border-b border-gray-300"></div>
+                            <span className="px-3 text-xs text-gray-500 font-medium uppercase">
+                              OR
+                            </span>
+                            <div className="flex-1 border-b border-gray-300"></div>
+                          </div>
+                          <input
+                            type="url"
+                            value={logoUrl}
+                            onChange={handleLogoUrlChange}
+                            className="input w-full"
+                            placeholder="Enter logo URL"
+                          />
                         </div>
 
                         <div>
@@ -929,3 +997,5 @@ export const Build = () => {
     </div>
   )
 }
+
+export default Build

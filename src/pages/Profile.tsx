@@ -77,7 +77,7 @@ export const Profile = () => {
                       User ID
                     </label>
                     <p
-                      className={`text-sm ${profile?.sub ? 'text-gray-800 font-medium' : 'text-gray-400 italic'}`}
+                      className={`text-sm break-all ${profile?.sub ? 'text-gray-800 font-medium' : 'text-gray-400 italic'}`}
                     >
                       {profile?.sub || 'Not available'}
                     </p>

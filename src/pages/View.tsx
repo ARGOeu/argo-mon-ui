@@ -7,11 +7,12 @@ import {
   ChevronRightIcon,
 } from '@heroicons/react/16/solid'
 import { useNavigate } from 'react-router-dom'
-import { ConfirmDialog } from '@/components/ConfirmDialog'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import { toast, Toaster } from 'sonner'
 import { useState } from 'react'
+import Button from '@/components/Button'
 
-export const View = () => {
+const View = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 10
   const { data } = useGetAllPagesQuery(currentPage, pageSize)
@@ -48,6 +49,10 @@ export const View = () => {
         toast.success('Status page deleted successfully!')
         setDeleteDialogOpen(false)
         setPageToDelete(null)
+
+        if (data?.content && data.content.length === 1 && currentPage > 1) {
+          setCurrentPage((prev) => prev - 1)
+        }
       },
       onError: (error) => {
         toast.error(`Failed to delete page: ${error.message}`)
@@ -66,16 +71,34 @@ export const View = () => {
       <ConfirmDialog
         isOpen={deleteDialogOpen}
         title="Delete Status Page"
-        message={`Are you sure you want to delete the status page "${pageToDelete?.name}"? This action cannot be undone.`}
+        message={
+          <>
+            Are you sure you want to delete the status page "
+            {pageToDelete?.name}"?
+            <br />
+            <span className="text-red-600 font-medium">
+              This action cannot be undone.
+            </span>
+          </>
+        }
         confirmLabel="Delete"
         cancelLabel="Cancel"
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
       <div className="max-w-full md:max-w-5xl lg:max-w-6xl w-full">
-        <div className="pb-1 mb-4 md:mb-6 px-2 md:px-0">
-          <h1 className="page-title">Status Pages</h1>
-          <p className="page-subtitle">View and manage your pages</p>
+        <div className="pb-1 mb-4 md:mb-6 px-2 md:px-0 flex items-center justify-between">
+          <div>
+            <h1 className="page-title">Status Pages</h1>
+            <p className="page-subtitle">View and manage your pages</p>
+          </div>
+          <Button
+            variant="primary"
+            size="md"
+            onClick={() => navigate('/tenants/create')}
+          >
+            Create New Status Page
+          </Button>
         </div>
 
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden max-h-[calc(100vh-200px)] flex flex-col">
@@ -225,3 +248,5 @@ export const View = () => {
     </div>
   )
 }
+
+export default View

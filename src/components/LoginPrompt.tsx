@@ -1,4 +1,4 @@
-import { Button } from './Button'
+import Button from './Button'
 import { LockClosedIcon } from '@heroicons/react/24/outline'
 
 interface LoginPromptProps {
@@ -7,7 +7,7 @@ interface LoginPromptProps {
   onLogin: () => void
 }
 
-export function LoginPrompt({
+function LoginPrompt({
   title = 'Authentication Required',
   description = 'Please login to access this page and manage your status pages',
   onLogin,
@@ -27,3 +27,5 @@ export function LoginPrompt({
     </div>
   )
 }
+
+export default LoginPrompt

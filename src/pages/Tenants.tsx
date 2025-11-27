@@ -7,15 +7,15 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from '@heroicons/react/16/solid'
-import { Button } from '@/components/Button'
-import { ConfirmDialog } from '@/components/ConfirmDialog'
+import Button from '@/components/Button'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import { useNavigate } from 'react-router-dom'
 import { toast, Toaster } from 'sonner'
 import styles from './Tenants.module.css'
 
-export const Tenants = () => {
+const Tenants = () => {
   const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 2
+  const pageSize = 9
   const { data, isLoading } = useGetTenants(currentPage, pageSize)
   const deleteMutation = useDeleteTenantMutation()
   const navigate = useNavigate()
@@ -51,6 +51,10 @@ export const Tenants = () => {
         toast.success('Tenant deleted successfully!')
         setDeleteDialogOpen(false)
         setTenantToDelete(null)
+
+        if (data?.content && data.content.length === 1 && currentPage > 1) {
+          setCurrentPage((prev) => prev - 1)
+        }
       },
       onError: (error) => {
         toast.error(`Failed to delete tenant: ${error.message}`)
@@ -69,7 +73,16 @@ export const Tenants = () => {
       <ConfirmDialog
         isOpen={deleteDialogOpen}
         title="Delete Tenant"
-        message={`Are you sure you want to delete the tenant "${tenantToDelete?.name}"? This action cannot be undone.`}
+        message={
+          <>
+            Are you sure you want to delete the tenant "{tenantToDelete?.name}
+            "?
+            <br />
+            <span className="text-red-600 font-medium">
+              This action cannot be undone.
+            </span>
+          </>
+        }
         confirmLabel="Delete"
         cancelLabel="Cancel"
         onConfirm={handleDeleteConfirm}
@@ -111,14 +124,21 @@ export const Tenants = () => {
                       ) : (
                         <div className={styles['tenant-fallback']}>
                           <span className={styles['fallback-text']}>
-                            {tenant.name.charAt(0).toUpperCase()}
+                            {tenant.email.charAt(0).toUpperCase()}
                           </span>
                         </div>
                       )}
                     </div>
                     <div className={styles['info-container']}>
-                      <h3 className={styles['tenant-name']}>{tenant.name}</h3>
-                      <p className={styles['tenant-email']}>{tenant.email}</p>
+                      <h3 className={styles['tenant-name']} title={tenant.name}>
+                        {tenant.name}
+                      </h3>
+                      <p
+                        className={styles['tenant-email']}
+                        title={tenant.email}
+                      >
+                        {tenant.email}
+                      </p>
                     </div>
                   </div>
                   <p className={styles['tenant-description']}>
@@ -188,3 +208,5 @@ export const Tenants = () => {
     </div>
   )
 }
+
+export default Tenants

@@ -1,18 +1,18 @@
 import { XMarkIcon } from '@heroicons/react/16/solid'
-import { Button } from './Button'
+import Button from './Button'
 import styles from './ConfirmDialog.module.css'
 
 type ConfirmDialogProps = {
   isOpen: boolean
   title: string
-  message: string
+  message: string | React.ReactNode
   confirmLabel?: string
   cancelLabel?: string
   onConfirm: () => void
   onCancel: () => void
 }
 
-export const ConfirmDialog = ({
+const ConfirmDialog = ({
   isOpen,
   title,
   message,
@@ -38,7 +38,11 @@ export const ConfirmDialog = ({
         </div>
 
         <div className={styles.content}>
-          <p className={styles.message}>{message}</p>
+          {typeof message === 'string' ? (
+            <p className={styles.message}>{message}</p>
+          ) : (
+            <div className={styles.message}>{message}</div>
+          )}
         </div>
 
         <div className={styles.actions}>
@@ -53,3 +57,5 @@ export const ConfirmDialog = ({
     </div>
   )
 }
+
+export default ConfirmDialog
