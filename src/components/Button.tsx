@@ -27,7 +27,7 @@ const sizeClassMap: Record<ButtonSize, string> = {
   lg: styles.lg,
 }
 
-export function Button({
+function Button({
   variant = 'primary',
   size = 'md',
   className = '',
@@ -50,3 +50,5 @@ export function Button({
     </button>
   )
 }
+
+export default Button

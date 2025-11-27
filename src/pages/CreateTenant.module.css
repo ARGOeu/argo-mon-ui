@@ -25,6 +25,7 @@
 
 .section-info {
   padding-top: 0.5rem;
+  padding-left: 0.5rem;
 }
 
 .section-content {
@@ -33,7 +34,7 @@
   padding: 1rem 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.8rem;
 }
 
 .field {

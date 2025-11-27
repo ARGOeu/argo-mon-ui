@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 import { ArrowPathIcon, PhotoIcon, XMarkIcon } from '@heroicons/react/16/solid'
 import {
@@ -8,12 +8,15 @@ import {
   useGetTenantById,
 } from '@/hooks/useTenants'
 import { toast, Toaster } from 'sonner'
-import { Button } from '../components/Button'
+import Button from '../components/Button'
 import styles from './CreateTenant.module.css'
 
-export const CreateTenant = () => {
+const BACKEND_API = import.meta.env.VITE_BACKEND_URI
+
+const CreateTenant = () => {
   const { id: tenantId } = useParams<{ id?: string }>()
   const isEditMode = Boolean(tenantId)
+  const navigate = useNavigate()
 
   const [formData, setFormData] = useState({
     name: '',
@@ -46,6 +49,9 @@ export const CreateTenant = () => {
       })
       if (tenantData.info.image) {
         setImagePreview(tenantData.info.image)
+        if (!tenantData.info.image.includes(BACKEND_API)) {
+          setImageUrl(tenantData.info.image)
+        }
       }
     }
   }, [isEditMode, tenantData])
@@ -79,7 +85,6 @@ export const CreateTenant = () => {
     accept: {
       'image/png': ['.png'],
       'image/jpeg': ['.jpg', '.jpeg'],
-      'image/svg+xml': ['.svg'],
     },
     maxFiles: 1,
   })
@@ -87,14 +92,9 @@ export const CreateTenant = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (nameError || emailError || websiteError) {
-      toast.error('Please fix the validation errors before submitting')
-      return
-    }
-
     const submitData = {
       ...formData,
-      image: formData.image || imageUrl || undefined,
+      image: formData.image || imageUrl,
     }
 
     if (isEditMode && tenantId) {
@@ -104,6 +104,9 @@ export const CreateTenant = () => {
         {
           onSuccess: () => {
             toast.success('Tenant updated successfully!')
+            setTimeout(() => {
+              navigate(`/tenants/view`)
+            }, 2000)
           },
           onError: (error: Error & { errors?: string[] }) => {
             if (error.errors && error.errors.length > 0) {
@@ -127,6 +130,9 @@ export const CreateTenant = () => {
         {
           onSuccess: () => {
             toast.success('Tenant created successfully!')
+            setTimeout(() => {
+              navigate(`/tenants/view`)
+            }, 2000)
           },
           onError: (error: Error & { errors?: string[] }) => {
             if (error.errors && error.errors.length > 0) {
@@ -260,7 +266,10 @@ export const CreateTenant = () => {
                   updateMutation.isPending ||
                   !!nameError ||
                   !!emailError ||
-                  !!websiteError
+                  !!websiteError ||
+                  !formData.name.trim() ||
+                  !formData.email.trim() ||
+                  !formData.description.trim()
                 }
               >
                 {createMutation.isPending || updateMutation.isPending
@@ -420,3 +429,5 @@ export const CreateTenant = () => {
     </>
   )
 }
+
+export default CreateTenant

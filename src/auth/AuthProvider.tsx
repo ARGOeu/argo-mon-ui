@@ -43,12 +43,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         if (auth) {
           setToken(keycloak.token)
 
-          console.log('keycloak', keycloak)
-
           // Load minimal profile
           const userInfo = (await keycloak.loadUserInfo()) as KeycloakUserInfo
-
-          console.log('userInfo', userInfo)
 
           // Extract roles from entitlements
           const roles =

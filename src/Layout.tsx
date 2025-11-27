@@ -8,8 +8,8 @@ import {
   DocumentPlusIcon,
 } from '@heroicons/react/16/solid'
 import { squishEmail } from './utils/profile'
-import { Button } from './components/Button'
-import { LoginPrompt } from './components/LoginPrompt'
+import Button from './components/Button'
+import LoginPrompt from './components/LoginPrompt'
 
 function SidebarNavItem({
   to,
@@ -93,7 +93,10 @@ export default function Layout() {
                         .charAt(0)
                         .toUpperCase()}
                     </div>
-                    <div className="truncate font-medium">
+                    <div
+                      className="truncate font-medium"
+                      title={profile.username || squishEmail(profile.sub || '')}
+                    >
                       {profile.username || squishEmail(profile.sub || '')}
                     </div>
                   </div>
