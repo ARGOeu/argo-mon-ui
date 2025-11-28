@@ -13,9 +13,6 @@ export const useReportsMutation = () => {
       }
       return fetchReportsApi(data, token)
     },
-    onSuccess: (data) => {
-      console.log('Report API success:', data)
-    },
     onError: (error) => {
       console.error('Report API error:', error)
     },

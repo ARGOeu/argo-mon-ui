@@ -13,9 +13,6 @@ export const useGroupsMutation = () => {
       }
       return fetchGroupsApi(data, token)
     },
-    onSuccess: (data) => {
-      console.log('Retrieve Page success:', data)
-    },
     onError: (error) => {
       console.error('Retrieve Page error:', error)
     },

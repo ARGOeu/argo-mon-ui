@@ -5,6 +5,7 @@ import {
   Route,
   Routes,
 } from 'react-router-dom'
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Layout from './Layout'
 import { Home } from './pages/Home'
 import AuthProtected from './routing/AuthProtected'
@@ -14,7 +15,8 @@ import Build from './pages/Build'
 import View from './pages/View'
 import Tenants from './pages/Tenants'
 import CreateTenant from './pages/CreateTenant'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import Projects from './pages/Projects'
+import CreateProject from './pages/CreateProject'
 import { Status } from './pages/Status'
 import { AuthProvider } from './auth/AuthProvider'
 
@@ -77,6 +79,30 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoles={['super_admin']}>
                     <CreateTenant />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="projects/view"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin']}>
+                    <Projects />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="projects/create"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin']}>
+                    <CreateProject />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="projects/edit/:id"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin']}>
+                    <CreateProject />
                   </ProtectedRoute>
                 }
               />

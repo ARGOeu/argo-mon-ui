@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useGetTenants, useDeleteTenantMutation } from '@/hooks/useTenants'
+import { useGetProjects, useDeleteProjectMutation } from '@/hooks/useProjects'
 import {
   ArrowPathIcon,
   PencilSquareIcon,
@@ -12,18 +12,18 @@ import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { useNavigate } from 'react-router-dom'
 import { toast, Toaster } from 'sonner'
-import styles from './Tenants.module.css'
+import styles from './Projects.module.css'
 
-const Tenants = () => {
+const Projects = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchInput, setSearchInput] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const pageSize = 9
-  const { data, isLoading } = useGetTenants(currentPage, pageSize, searchQuery)
-  const deleteMutation = useDeleteTenantMutation()
+  const { data, isLoading } = useGetProjects(currentPage, pageSize, searchQuery)
+  const deleteMutation = useDeleteProjectMutation()
   const navigate = useNavigate()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [tenantToDelete, setTenantToDelete] = useState<{
+  const [projectToDelete, setProjectToDelete] = useState<{
     id: string
     name: string
   } | null>(null)
@@ -38,46 +38,37 @@ const Tenants = () => {
     return () => clearTimeout(timer)
   }, [searchInput])
 
-  const tenants =
-    (data &&
-      data?.content?.length > 0 &&
-      data.content.map((tenant) => ({
-        ...tenant?.info,
-        id: tenant?.id,
-      }))) ||
-    []
-
-  const handleEdit = (tenantId: string) => {
-    navigate(`/tenants/edit/${tenantId}`)
+  const handleEdit = (projectId: string) => {
+    navigate(`/projects/edit/${projectId}`)
   }
 
   const handleDeleteClick = (id: string, name: string) => {
-    setTenantToDelete({ id, name })
+    setProjectToDelete({ id, name })
     setDeleteDialogOpen(true)
   }
 
   const handleDeleteConfirm = () => {
-    if (!tenantToDelete) return
+    if (!projectToDelete) return
 
-    deleteMutation.mutate(tenantToDelete.id, {
+    deleteMutation.mutate(projectToDelete.id, {
       onSuccess: () => {
-        toast.success('Tenant deleted successfully!')
+        toast.success('Project deleted successfully!')
         setDeleteDialogOpen(false)
-        setTenantToDelete(null)
+        setProjectToDelete(null)
 
         if (data?.content && data.content.length === 1 && currentPage > 1) {
           setCurrentPage((prev) => prev - 1)
         }
       },
       onError: (error) => {
-        toast.error(`Failed to delete tenant: ${error.message}`)
+        toast.error(`Failed to delete project: ${error.message}`)
       },
     })
   }
 
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false)
-    setTenantToDelete(null)
+    setProjectToDelete(null)
   }
 
   const handleClearSearch = () => {
@@ -85,22 +76,21 @@ const Tenants = () => {
     setSearchQuery('')
   }
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-GB', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+  }
+
   return (
     <div className={styles.container}>
       <Toaster richColors position="top-center" duration={2000} />
       <ConfirmDialog
         isOpen={deleteDialogOpen}
-        title="Delete Tenant"
-        message={
-          <>
-            Are you sure you want to delete the tenant "{tenantToDelete?.name}
-            "?
-            <br />
-            <span className="text-red-600 font-medium">
-              This action cannot be undone.
-            </span>
-          </>
-        }
+        title="Delete Project"
+        message={`Are you sure you want to delete the project "${projectToDelete?.name}"? This action cannot be undone.`}
         confirmLabel="Delete"
         cancelLabel="Cancel"
         onConfirm={handleDeleteConfirm}
@@ -108,17 +98,17 @@ const Tenants = () => {
       />
       <div className={styles.header}>
         <div>
-          <h1 className="page-title">Tenants</h1>
+          <h1 className="page-title">Projects</h1>
           <p className="page-subtitle">
-            Manage and create new tenants for the monitoring service
+            Manage and create projects for the monitoring service
           </p>
         </div>
         <Button
           variant="primary"
           size="md"
-          onClick={() => navigate('/tenants/create')}
+          onClick={() => navigate('/projects/create')}
         >
-          Create New Tenant
+          Create New Project
         </Button>
       </div>
 
@@ -127,7 +117,7 @@ const Tenants = () => {
           <MagnifyingGlassIcon className={styles['search-icon']} />
           <input
             type="text"
-            placeholder="Search tenants..."
+            placeholder="Search projects..."
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             className={styles['search-input']}
@@ -151,55 +141,66 @@ const Tenants = () => {
         </div>
       ) : (
         <div className={styles.grid}>
-          {tenants && tenants?.length > 0 ? (
-            tenants.map((tenant) => (
-              <div key={tenant.id} className={styles.card}>
+          {data?.content && data.content.length > 0 ? (
+            data.content.map((project) => (
+              <div key={project.id} className={styles.card}>
                 <div className={styles['card-content']}>
                   <div className={styles['card-header']}>
-                    <div className={styles['image-container']}>
-                      {tenant.image ? (
-                        <img
-                          className={styles['tenant-image']}
-                          src={tenant.image}
-                        />
-                      ) : (
-                        <div className={styles['tenant-fallback']}>
-                          <span className={styles['fallback-text']}>
-                            {tenant.email.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                      )}
+                    <h3 className={styles['project-name']} title={project.name}>
+                      {project.name}
+                    </h3>
+                  </div>
+
+                  <div className={styles['dates-section']}>
+                    <div className={styles['date-row']}>
+                      <span className={styles['label']}>Start Date:</span>
+                      <span className={styles['date-value']}>
+                        {formatDate(project.start_date)}
+                      </span>
                     </div>
-                    <div className={styles['info-container']}>
-                      <h3 className={styles['tenant-name']} title={tenant.name}>
-                        {tenant.name}
-                      </h3>
-                      <p
-                        className={styles['tenant-email']}
-                        title={tenant.email}
-                      >
-                        {tenant.email}
-                      </p>
+                    <div className={styles['date-row']}>
+                      <span className={styles['label']}>End Date:</span>
+                      <span className={styles['date-value']}>
+                        {formatDate(project.end_date)}
+                      </span>
+                    </div>
+                    <div className={styles['date-row']}>
+                      <span className={styles['label']}>
+                        Sustainability End Date:
+                      </span>
+                      <span className={styles['date-value']}>
+                        {formatDate(project.sustainability_end_date)}
+                      </span>
                     </div>
                   </div>
-                  <p className={styles['tenant-description']}>
-                    {tenant.description}
-                  </p>
+
+                  <div className={styles['policy-section']}>
+                    <div className={styles['label']}>
+                      Data Retention Policy:
+                    </div>
+                    <p
+                      className={styles['policy-text']}
+                      title={project.data_retention_policy}
+                    >
+                      {project.data_retention_policy}
+                    </p>
+                  </div>
                 </div>
+
                 <div className={styles['card-footer']}>
                   <button
-                    aria-label="Edit Tenant"
+                    aria-label="Edit Project"
                     className={`${styles['action-button']} ${styles.edit} tooltip`}
                     data-tip="Edit"
-                    onClick={() => handleEdit(tenant.id!)}
+                    onClick={() => handleEdit(project.id!)}
                   >
                     <PencilSquareIcon className={styles['action-icon']} />
                   </button>
                   <button
-                    aria-label="Delete Tenant"
+                    aria-label="Delete Project"
                     className={`${styles['action-button']} ${styles.delete} tooltip`}
                     data-tip="Delete"
-                    onClick={() => handleDeleteClick(tenant.id!, tenant.name)}
+                    onClick={() => handleDeleteClick(project.id!, project.name)}
                   >
                     <TrashIcon className={styles['action-icon']} />
                   </button>
@@ -208,13 +209,13 @@ const Tenants = () => {
             ))
           ) : (
             <div className={styles['empty-state']}>
-              <p className={styles['empty-text']}>No tenants found</p>
+              <p className={styles['empty-text']}>No projects found</p>
             </div>
           )}
         </div>
       )}
 
-      {data?.content && data.content?.length > 0 && (
+      {data?.content && data.content.length > 0 && (
         <div className="flex items-center justify-between px-4 py-1 border border-gray-200 rounded-lg mt-3">
           <div className="flex items-center gap-2">
             <span className="text-sm text-gray-700">
@@ -250,4 +251,4 @@ const Tenants = () => {
   )
 }
 
-export default Tenants
+export default Projects

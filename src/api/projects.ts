@@ -1,17 +1,17 @@
-import type { Tenant, TenantList } from '@/types/tenants'
+import type { Project, ProjectList } from '@/types/projects'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
-export const fetchTenants = async (
+export const fetchProjects = async (
   token: string,
   page: number = 1,
   size: number = 10,
   search?: string,
-): Promise<TenantList> => {
+): Promise<ProjectList> => {
   const searchParam = search ? `&search=${encodeURIComponent(search)}` : ''
 
   const response = await fetch(
-    `${BACKEND_API}/v1/admin/tenants?page=${page}&size=${size}${searchParam}`,
+    `${BACKEND_API}/v1/admin/projects?page=${page}&size=${size}${searchParam}`,
     {
       method: 'GET',
       headers: {
@@ -31,11 +31,11 @@ export const fetchTenants = async (
   return response.json()
 }
 
-export const fetchTenantById = async (
+export const fetchProjectById = async (
   id: string,
   token: string,
-): Promise<Tenant> => {
-  const response = await fetch(`${BACKEND_API}/v1/admin/tenants/${id}`, {
+): Promise<Project> => {
+  const response = await fetch(`${BACKEND_API}/v1/admin/projects/${id}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -53,11 +53,11 @@ export const fetchTenantById = async (
   return response.json()
 }
 
-export const fetchCreateTenant = async (
-  data: Tenant,
+export const fetchCreateProject = async (
+  data: Project,
   token: string,
-): Promise<Tenant> => {
-  const response = await fetch(`${BACKEND_API}/v1/admin/tenants`, {
+): Promise<Project> => {
+  const response = await fetch(`${BACKEND_API}/v1/admin/projects`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -78,12 +78,12 @@ export const fetchCreateTenant = async (
   return response.json()
 }
 
-export const fetchUpdateTenant = async (
+export const fetchUpdateProject = async (
   id: string,
-  data: Tenant,
+  data: Project,
   token: string,
-): Promise<Tenant> => {
-  const response = await fetch(`${BACKEND_API}/v1/admin/tenants/${id}`, {
+): Promise<Project> => {
+  const response = await fetch(`${BACKEND_API}/v1/admin/projects/${id}`, {
     method: 'PUT',
     headers: {
       'Content-Type': 'application/json',
@@ -104,11 +104,11 @@ export const fetchUpdateTenant = async (
   return response.json()
 }
 
-export const fetchDeleteTenant = async (
+export const fetchDeleteProject = async (
   id: string,
   token: string,
 ): Promise<void> => {
-  const response = await fetch(`${BACKEND_API}/v1/admin/tenants/${id}`, {
+  const response = await fetch(`${BACKEND_API}/v1/admin/projects/${id}`, {
     method: 'DELETE',
     headers: {
       'Content-Type': 'application/json',
