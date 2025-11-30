@@ -19,8 +19,7 @@ export const useSavePageMutation = () => {
       }
       return fetchSavePage(data, token)
     },
-    onSuccess: (data) => {
-      console.log('Page save success:', data)
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['all-pages'] })
     },
     onError: (error) => {

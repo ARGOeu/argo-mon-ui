@@ -6,6 +6,8 @@ import {
   WrenchScrewdriverIcon,
   RectangleStackIcon,
   DocumentPlusIcon,
+  FolderIcon,
+  PlusCircleIcon,
 } from '@heroicons/react/16/solid'
 import { squishEmail } from './utils/profile'
 import Button from './components/Button'
@@ -68,7 +70,15 @@ export default function Layout() {
               </SidebarNavItem>
               <SidebarNavItem to="/tenants/create">
                 <DocumentPlusIcon className="size-5" aria-hidden />
-                Create a Tenant
+                Create Tenant
+              </SidebarNavItem>
+              <SidebarNavItem to="/projects/view">
+                <FolderIcon className="size-5" aria-hidden />
+                Projects
+              </SidebarNavItem>
+              <SidebarNavItem to="/projects/create">
+                <PlusCircleIcon className="size-5" aria-hidden />
+                Create Project
               </SidebarNavItem>
             </>
           )}
@@ -78,7 +88,7 @@ export default function Layout() {
           </SidebarNavItem>
           <SidebarNavItem to="/status-pages/build">
             <WrenchScrewdriverIcon className="size-5" aria-hidden />
-            Build a Status Page
+            Build Status Page
           </SidebarNavItem>
         </nav>
 

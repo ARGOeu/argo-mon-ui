@@ -1,91 +1,98 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/auth/useAuth'
 import {
-  fetchTenants,
-  fetchTenantById,
-  fetchCreateTenant,
-  fetchUpdateTenant,
-  fetchDeleteTenant,
-} from '@/api/tenants'
-import type { Tenant, TenantList } from '@/types/tenants'
+  fetchProjects,
+  fetchProjectById,
+  fetchCreateProject,
+  fetchUpdateProject,
+  fetchDeleteProject,
+} from '@/api/projects'
+import type { Project, ProjectList } from '@/types/projects'
 
-export const useGetTenants = (
+export const useGetProjects = (
   page: number = 1,
   size: number = 10,
   search?: string,
 ) => {
   const { token } = useAuth()
 
-  return useQuery<TenantList, Error>({
-    queryKey: ['tenants', page, size, search],
+  return useQuery<ProjectList, Error>({
+    queryKey: ['projects', page, size, search],
     queryFn: () => {
       if (!token) {
         throw new Error('No authentication token available')
       }
-      return fetchTenants(token, page, size, search)
+      return fetchProjects(token, page, size, search)
     },
     retry: false,
     enabled: !!token,
   })
 }
 
-export const useGetTenantById = (id: string) => {
+export const useGetProjectById = (id: string) => {
   const { token } = useAuth()
 
-  return useQuery<Tenant, Error>({
-    queryKey: ['tenant', id],
+  return useQuery<Project, Error>({
+    queryKey: ['project', id],
     queryFn: () => {
       if (!token) {
         throw new Error('No authentication token available')
       }
-      return fetchTenantById(id, token)
+      return fetchProjectById(id, token)
     },
     retry: false,
     enabled: !!token && !!id,
   })
 }
 
-export const useCreateTenantMutation = () => {
+export const useCreateProjectMutation = () => {
   const queryClient = useQueryClient()
   const { token } = useAuth()
 
-  return useMutation<Tenant, Error, Tenant>({
-    mutationFn: (data: Tenant) => {
+  return useMutation<Project, Error, Project>({
+    mutationFn: (data) => {
       if (!token) {
         throw new Error('No authentication token available')
       }
-      return fetchCreateTenant(data, token)
+      return fetchCreateProject(data, token)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
     onError: (error) => {
-      console.error('Tenant create error:', error)
+      console.error('Project create error:', error)
     },
   })
 }
 
-export const useUpdateTenantMutation = () => {
+export const useUpdateProjectMutation = () => {
   const queryClient = useQueryClient()
   const { token } = useAuth()
 
-  return useMutation<Tenant, Error, { id: string; data: Tenant }>({
+  return useMutation<
+    Project,
+    Error,
+    {
+      id: string
+      data: Project
+    }
+  >({
     mutationFn: ({ id, data }) => {
       if (!token) {
         throw new Error('No authentication token available')
       }
-      return fetchUpdateTenant(id, data, token)
+      return fetchUpdateProject(id, data, token)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
     onError: (error) => {
-      console.error('Tenant update error:', error)
+      console.error('Project update error:', error)
     },
   })
 }
 
-export const useDeleteTenantMutation = () => {
+export const useDeleteProjectMutation = () => {
   const queryClient = useQueryClient()
   const { token } = useAuth()
 
@@ -94,13 +101,13 @@ export const useDeleteTenantMutation = () => {
       if (!token) {
         throw new Error('No authentication token available')
       }
-      return fetchDeleteTenant(id, token)
+      return fetchDeleteProject(id, token)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['projects'] })
     },
     onError: (error) => {
-      console.error('Tenant delete error:', error)
+      console.error('Project delete error:', error)
     },
   })
 }

@@ -87,78 +87,69 @@
 }
 
 .card-content {
-  padding: 1rem 1.25rem;
+  padding: 0.5rem 1rem;
   flex: 1;
 }
 
 .card-header {
   display: flex;
-  align-items: flex-start;
-  gap: 0.75rem;
-  margin-bottom: 0.75rem;
-}
-
-.image-container {
-  flex-shrink: 0;
-  border-radius: 0.5rem;
-}
-
-.tenant-image {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 0.5rem;
-  object-fit: contain;
-  background-color: #f9fafb;
-  padding: 0.25rem;
-}
-
-.tenant-fallback {
-  width: 3rem;
-  height: 3rem;
-  border-radius: 0.5rem;
-  background-color: #6c7788;
-  display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
 }
 
-.fallback-text {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: white;
-}
-
-.info-container {
-  flex: 1;
-  min-width: 0;
-}
-
-.tenant-name {
-  font-size: 1rem;
+.project-name {
+  font-size: 1.25rem;
   font-weight: 600;
   color: #111827;
-  margin-bottom: 0.125rem;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.tenant-email {
-  font-size: 0.75rem;
+.dates-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.date-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.label {
+  font-size: 0.85rem;
+  font-weight: 500;
   color: #6b7280;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 150px;
 }
 
-.tenant-description {
+.date-value {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #111827;
+}
+
+.policy-section {
+  margin: 0.5rem 0 0.25rem 0;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.policy-text {
   font-size: 0.875rem;
+  font-weight: 500;
   color: #4b5563;
   display: -webkit-box;
-  -webkit-line-clamp: 3;
-  line-clamp: 3;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  line-height: 1.6;
 }
 
 .card-footer {
@@ -215,7 +206,7 @@
   font-size: 1.125rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 840px) {
   .container {
     max-width: 80rem;
   }
@@ -234,7 +225,7 @@
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .container {
     max-width: 72rem;
   }

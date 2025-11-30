@@ -95,7 +95,7 @@ const View = () => {
           <Button
             variant="primary"
             size="md"
-            onClick={() => navigate('/tenants/create')}
+            onClick={() => navigate('/status-pages/build')}
           >
             Create New Status Page
           </Button>
@@ -106,19 +106,19 @@ const View = () => {
             <table className="w-full table-fixed">
               <thead className="bg-gray-100 border-b border-gray-200">
                 <tr>
-                  <th className="w-[20%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="w-[20%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 tracking-wider">
                     Name
                   </th>
-                  <th className="w-[20%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="w-[20%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 tracking-wider">
                     Path
                   </th>
-                  <th className="hidden md:table-cell w-[15%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="hidden md:table-cell w-[15%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 tracking-wider">
                     Report
                   </th>
-                  <th className="hidden sm:table-cell w-[15%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="hidden sm:table-cell w-[15%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 tracking-wider">
                     Updated
                   </th>
-                  <th className="w-[10%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 uppercase tracking-wider">
+                  <th className="w-[10%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 tracking-wider">
                     Actions
                   </th>
                 </tr>
