@@ -13,6 +13,8 @@ import styles from './CreateTenant.module.css'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+
 const CreateTenant = () => {
   const { id: tenantId } = useParams<{ id?: string }>()
   const isEditMode = Boolean(tenantId)
@@ -25,11 +27,17 @@ const CreateTenant = () => {
     website: '',
     image: '',
   })
+  const [contact, setContact] = useState({
+    name: '',
+    email: '',
+    type: '',
+  })
   const [imageUrl, setImageUrl] = useState('')
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [nameError, setNameError] = useState('')
   const [emailError, setEmailError] = useState('')
   const [websiteError, setWebsiteError] = useState('')
+  const [contactEmailError, setContactEmailError] = useState('')
 
   const createMutation = useCreateTenantMutation()
   const updateMutation = useUpdateTenantMutation()
@@ -47,6 +55,13 @@ const CreateTenant = () => {
         website: tenantData.info.website || '',
         image: tenantData.info.image || '',
       })
+      if (tenantData.contacts && tenantData.contacts.length > 0) {
+        setContact({
+          name: tenantData.contacts[0].name || '',
+          email: tenantData.contacts[0].email || '',
+          type: tenantData.contacts[0].type || '',
+        })
+      }
       if (tenantData.info.image) {
         setImagePreview(tenantData.info.image)
         if (!tenantData.info.image.includes(BACKEND_API)) {
@@ -97,10 +112,21 @@ const CreateTenant = () => {
       image: formData.image || imageUrl,
     }
 
+    const contacts =
+      contact.name.trim() && contact.email.trim()
+        ? [
+            {
+              name: contact.name,
+              email: contact.email,
+              type: contact.type || undefined,
+            },
+          ]
+        : []
+
     if (isEditMode && tenantId) {
       // Update existing tenant
       updateMutation.mutate(
-        { id: tenantId, data: { info: submitData } },
+        { id: tenantId, data: { info: submitData, contacts } },
         {
           onSuccess: () => {
             toast.success('Tenant updated successfully!')
@@ -126,7 +152,7 @@ const CreateTenant = () => {
     } else {
       // Create new tenant
       createMutation.mutate(
-        { info: submitData },
+        { info: submitData, contacts },
         {
           onSuccess: () => {
             toast.success('Tenant created successfully!')
@@ -176,7 +202,6 @@ const CreateTenant = () => {
 
     if (name === 'email') {
       // Email validation
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
       if (value && !emailRegex.test(value)) {
         setEmailError('Please enter a valid email address')
       } else {
@@ -193,6 +218,23 @@ const CreateTenant = () => {
         )
       } else {
         setWebsiteError('')
+      }
+    }
+  }
+
+  const handleContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target
+
+    setContact((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+
+    if (name === 'email') {
+      if (value && !emailRegex.test(value)) {
+        setContactEmailError('Please enter a valid email address')
+      } else {
+        setContactEmailError('')
       }
     }
   }
@@ -267,9 +309,12 @@ const CreateTenant = () => {
                   !!nameError ||
                   !!emailError ||
                   !!websiteError ||
+                  !!contactEmailError ||
                   !formData.name.trim() ||
                   !formData.email.trim() ||
-                  !formData.description.trim()
+                  !formData.description.trim() ||
+                  Boolean(contact.name.trim() && !contact.email.trim()) ||
+                  Boolean(!contact.name.trim() && contact.email.trim())
                 }
               >
                 {createMutation.isPending || updateMutation.isPending
@@ -285,7 +330,7 @@ const CreateTenant = () => {
                 <div className={styles['section-info']}>
                   <h2 className="section-title">Tenant Information</h2>
                   <p className="section-description">
-                    Basic information for the new tenant
+                    Basic details and identification
                   </p>
                 </div>
 
@@ -349,9 +394,65 @@ const CreateTenant = () => {
 
               <div className={styles.section}>
                 <div className={styles['section-info']}>
+                  <h2 className="section-title">Contact Information</h2>
+                  <p className="section-description">
+                    Contact details for the tenant
+                  </p>
+                </div>
+
+                <div className={styles['section-content']}>
+                  <div className={styles.field}>
+                    <label className={styles.label}>
+                      Contact Name <span className="required">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      name="name"
+                      value={contact.name}
+                      onChange={handleContactChange}
+                      className={styles.input}
+                      placeholder="Enter contact name"
+                    />
+                  </div>
+
+                  <div className={styles.field}>
+                    <label className={styles.label}>
+                      Contact Email <span className="required">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      name="email"
+                      value={contact.email}
+                      onChange={handleContactChange}
+                      className={styles.input}
+                      placeholder="Enter contact email"
+                    />
+                    {contactEmailError && (
+                      <span className="text-red-400 text-sm mt-1">
+                        {contactEmailError}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className={styles.field}>
+                    <label className={styles.label}>Contact Type</label>
+                    <input
+                      type="text"
+                      name="type"
+                      value={contact.type}
+                      onChange={handleContactChange}
+                      className={styles.input}
+                      placeholder="Enter contact type (e.g., Admin, Operations, Security)"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className={styles.section}>
+                <div className={styles['section-info']}>
                   <h2 className="section-title">Additional Details</h2>
                   <p className="section-description">
-                    Optional information for the tenant
+                    Optional media and website links
                   </p>
                 </div>
 

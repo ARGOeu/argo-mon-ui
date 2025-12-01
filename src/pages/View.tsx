@@ -213,7 +213,7 @@ const View = () => {
         )}
 
         {data?.content && data.content?.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-1 border border-gray-200 rounded-lg mt-3">
+          <div className="flex items-center justify-between px-4 py-1 border border-gray-200 rounded-lg my-4">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-700">
                 Page {currentPage} of {data.total_pages}

@@ -161,6 +161,28 @@
   overflow: hidden;
 }
 
+.contact-info {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.contact-name {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #374151;
+  margin: 0 0 0.25rem 0;
+}
+
+.contact-email {
+  font-size: 0.75rem;
+  color: #6b7280;
+  margin: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .card-footer {
   background-color: #f9fafb;
   padding: 0.25rem 1rem;
