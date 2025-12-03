@@ -28,3 +28,8 @@ export type TenantList = {
   total_elements: number
   total_pages: number
 }
+
+export type TenantProjectAssignment = {
+  tenant_id: string
+  project_ids: string[]
+}

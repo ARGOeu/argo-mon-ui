@@ -7,6 +7,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   MagnifyingGlassIcon,
+  PlusCircleIcon,
 } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -50,6 +51,10 @@ const Tenants = () => {
 
   const handleEdit = (tenantId: string) => {
     navigate(`/tenants/edit/${tenantId}`)
+  }
+
+  const handleAssignProjects = (tenantId: string) => {
+    navigate(`/tenants/${tenantId}/projects/assign`)
   }
 
   const handleDeleteClick = (id: string, name: string) => {
@@ -205,6 +210,14 @@ const Tenants = () => {
                     onClick={() => handleEdit(tenant.id!)}
                   >
                     <PencilSquareIcon className={styles['action-icon']} />
+                  </button>
+                  <button
+                    aria-label="Assign Projects"
+                    className={`${styles['action-button']} ${styles.assign} tooltip`}
+                    data-tip="Assign Projects"
+                    onClick={() => handleAssignProjects(tenant.id!)}
+                  >
+                    <PlusCircleIcon className={styles['action-icon']} />
                   </button>
                   <button
                     aria-label="Delete Tenant"
