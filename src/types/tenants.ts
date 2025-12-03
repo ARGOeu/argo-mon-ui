@@ -1,3 +1,9 @@
+export type Contact = {
+  name: string
+  email: string
+  type?: string
+}
+
 export type TenantInfo = {
   name: string
   email: string
@@ -11,6 +17,7 @@ export type TenantInfo = {
 export type Tenant = {
   id?: string
   info: TenantInfo
+  contacts?: Contact[]
   updated_by?: string
 }
 

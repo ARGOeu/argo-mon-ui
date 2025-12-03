@@ -322,13 +322,13 @@ const CreateProject = () => {
                     <label className={styles.label}>
                       Data Retention Policy <span className="required">*</span>
                     </label>
-                    <input
-                      type="text"
+                    <textarea
                       name="data_retention_policy"
                       value={formData.data_retention_policy}
                       onChange={handleChange}
                       className={styles.input}
                       placeholder="Enter data retention policy"
+                      rows={3}
                       required
                     />
                   </div>
