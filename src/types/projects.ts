@@ -1,3 +1,10 @@
+export type ProjectItem = {
+  id: string
+  name: string
+  start_date: string
+  end_date: string
+}
+
 export type Project = {
   id?: string
   name: string

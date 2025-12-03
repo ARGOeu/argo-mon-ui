@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useInfiniteQuery,
+} from '@tanstack/react-query'
 import { useAuth } from '@/auth/useAuth'
 import {
   fetchTenants,
@@ -6,8 +11,14 @@ import {
   fetchCreateTenant,
   fetchUpdateTenant,
   fetchDeleteTenant,
+  fetchAssignTenantProjects,
+  fetchTenantProjects,
 } from '@/api/tenants'
-import type { Tenant, TenantList } from '@/types/tenants'
+import type {
+  Tenant,
+  TenantList,
+  TenantProjectAssignment,
+} from '@/types/tenants'
 
 export const useGetTenants = (
   page: number = 1,
@@ -102,5 +113,51 @@ export const useDeleteTenantMutation = () => {
     onError: (error) => {
       console.error('Tenant delete error:', error)
     },
+  })
+}
+
+export const useAssignTenantProjectsMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<void, Error, TenantProjectAssignment>({
+    mutationFn: (data: TenantProjectAssignment) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchAssignTenantProjects(data, token)
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['tenant-projects', variables.tenant_id],
+      })
+      queryClient.invalidateQueries({ queryKey: ['all-projects'] })
+    },
+    onError: (error) => {
+      console.error('Tenant project assignment error:', error)
+    },
+  })
+}
+
+export const useGetTenantProjects = (tenantId: string) => {
+  const { token } = useAuth()
+
+  return useInfiniteQuery<TenantList, Error>({
+    queryKey: ['tenant-projects', tenantId],
+    queryFn: ({ pageParam = 1 }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchTenantProjects(tenantId, token, pageParam as number, 10)
+    },
+    getNextPageParam: (lastPage) => {
+      const currentPage = lastPage.number_of_page
+      const totalPages = lastPage.total_pages
+      return currentPage < totalPages ? currentPage + 1 : undefined
+    },
+    initialPageParam: 1,
+    retry: false,
+    enabled: !!token && !!tenantId,
+    refetchOnMount: 'always',
   })
 }

@@ -107,10 +107,10 @@ const CreateTenant = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    const submitData = {
-      ...formData,
-      image: formData.image || imageUrl,
-    }
+    const submitData =
+      formData.image || imageUrl
+        ? { ...formData, image: formData.image || imageUrl }
+        : { ...formData, image: undefined }
 
     const contacts =
       contact.name.trim() && contact.email.trim()

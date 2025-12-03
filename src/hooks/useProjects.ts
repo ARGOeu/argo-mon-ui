@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import {
+  useMutation,
+  useQuery,
+  useQueryClient,
+  useInfiniteQuery,
+} from '@tanstack/react-query'
 import { useAuth } from '@/auth/useAuth'
 import {
   fetchProjects,
@@ -26,6 +31,29 @@ export const useGetProjects = (
     },
     retry: false,
     enabled: !!token,
+  })
+}
+
+export const useGetAllProjects = () => {
+  const { token } = useAuth()
+
+  return useInfiniteQuery<ProjectList, Error>({
+    queryKey: ['all-projects'],
+    queryFn: ({ pageParam = 1 }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchProjects(token, pageParam as number)
+    },
+    getNextPageParam: (lastPage) => {
+      const currentPage = lastPage.number_of_page
+      const totalPages = lastPage.total_pages
+      return currentPage < totalPages ? currentPage + 1 : undefined
+    },
+    initialPageParam: 1,
+    retry: false,
+    enabled: !!token,
+    refetchOnMount: 'always',
   })
 }
 
