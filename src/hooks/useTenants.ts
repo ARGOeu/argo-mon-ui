@@ -13,6 +13,7 @@ import {
   fetchDeleteTenant,
   fetchAssignTenantProjects,
   fetchTenantProjects,
+  fetchContactTypes,
 } from '@/api/tenants'
 import type {
   Tenant,
@@ -52,6 +53,7 @@ export const useGetTenantById = (id: string) => {
       return fetchTenantById(id, token)
     },
     retry: false,
+    refetchOnMount: 'always',
     enabled: !!token && !!id,
   })
 }
@@ -159,5 +161,21 @@ export const useGetTenantProjects = (tenantId: string) => {
     retry: false,
     enabled: !!token && !!tenantId,
     refetchOnMount: 'always',
+  })
+}
+
+export const useGetContactTypes = () => {
+  const { token } = useAuth()
+
+  return useQuery<string[], Error>({
+    queryKey: ['contact-types'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchContactTypes(token)
+    },
+    retry: false,
+    enabled: !!token,
   })
 }
