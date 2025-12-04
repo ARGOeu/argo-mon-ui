@@ -173,3 +173,22 @@ export const fetchTenantProjects = async (
 
   return response.json()
 }
+
+export const fetchContactTypes = async (token: string): Promise<string[]> => {
+  const response = await fetch(`${BACKEND_API}/v1/admin/contact-types`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}

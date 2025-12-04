@@ -69,6 +69,7 @@ export const useGetProjectById = (id: string) => {
       return fetchProjectById(id, token)
     },
     retry: false,
+    refetchOnMount: 'always',
     enabled: !!token && !!id,
   })
 }

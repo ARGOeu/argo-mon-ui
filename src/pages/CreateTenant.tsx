@@ -6,6 +6,7 @@ import {
   useCreateTenantMutation,
   useUpdateTenantMutation,
   useGetTenantById,
+  useGetContactTypes,
 } from '@/hooks/useTenants'
 import { toast, Toaster } from 'sonner'
 import Button from '../components/Button'
@@ -44,6 +45,8 @@ const CreateTenant = () => {
   const { data: tenantData, isLoading: isTenantLoading } = useGetTenantById(
     tenantId || '',
   )
+  const { data: contactTypes, isLoading: isContactTypesLoading } =
+    useGetContactTypes()
 
   // Load tenant data in edit mode
   useEffect(() => {
@@ -222,7 +225,9 @@ const CreateTenant = () => {
     }
   }
 
-  const handleContactChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleContactChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
     const { name, value } = e.target
 
     setContact((prev) => ({
@@ -314,7 +319,11 @@ const CreateTenant = () => {
                   !formData.email.trim() ||
                   !formData.description.trim() ||
                   Boolean(contact.name.trim() && !contact.email.trim()) ||
-                  Boolean(!contact.name.trim() && contact.email.trim())
+                  Boolean(!contact.name.trim() && contact.email.trim()) ||
+                  Boolean(
+                    (contact.name.trim() || contact.email.trim()) &&
+                      !contact.type,
+                  )
                 }
               >
                 {createMutation.isPending || updateMutation.isPending
@@ -435,15 +444,31 @@ const CreateTenant = () => {
                   </div>
 
                   <div className={styles.field}>
-                    <label className={styles.label}>Contact Type</label>
-                    <input
-                      type="text"
-                      name="type"
-                      value={contact.type}
-                      onChange={handleContactChange}
-                      className={styles.input}
-                      placeholder="Enter contact type (e.g., Admin, Operations, Security)"
-                    />
+                    <label className={styles.label}>
+                      Contact Type <span className="required">*</span>
+                    </label>
+                    {isContactTypesLoading ? (
+                      <div className="text-sm text-gray-500">Loading...</div>
+                    ) : (
+                      <select
+                        name="type"
+                        value={contact.type}
+                        onChange={handleContactChange}
+                        className={styles.input}
+                        style={{ textTransform: 'capitalize' }}
+                      >
+                        <option value="">Select contact type</option>
+                        {contactTypes?.map((type) => (
+                          <option
+                            key={type}
+                            value={type}
+                            style={{ textTransform: 'capitalize' }}
+                          >
+                            {type.toLowerCase()}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </div>
                 </div>
               </div>
