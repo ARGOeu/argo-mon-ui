@@ -45,7 +45,6 @@ const Tenants = () => {
       data.content.map((tenant) => ({
         ...tenant?.info,
         id: tenant?.id,
-        contacts: tenant?.contacts,
       }))) ||
     []
 
@@ -191,16 +190,6 @@ const Tenants = () => {
                   <p className={styles['tenant-description']}>
                     {tenant.description}
                   </p>
-                  {tenant.contacts && tenant.contacts.length > 0 && (
-                    <div className={styles['contact-info']}>
-                      <p className={styles['contact-name']}>
-                        Contact: {tenant.contacts[0].name}
-                      </p>
-                      <p className={styles['contact-email']}>
-                        {tenant.contacts[0].email}
-                      </p>
-                    </div>
-                  )}
                 </div>
                 <div className={styles['card-footer']}>
                   <button

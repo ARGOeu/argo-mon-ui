@@ -453,30 +453,27 @@ const Build = () => {
             </div>
           </div>
 
-          <div
-            className={
-              activeTab === 'config'
-                ? 'flex flex-row justify-between items-center max-w-4xl'
-                : 'grid grid-cols-[minmax(400px,600px)_1fr] gap-6 items-center'
-            }
-          >
-            <div className={styles['custom-tabs']}>
+          <div className="flex flex-row justify-between items-center mb-6">
+            <div className={styles.tabs}>
               <button
-                className={`${styles['custom-tab']} ${activeTab === 'config' ? styles['active'] : ''}`}
+                type="button"
+                className={`${styles.tab} ${activeTab === 'config' ? styles['tab-active'] : ''}`}
                 onClick={() => setActiveTab('config')}
               >
                 <Cog6ToothIcon className="size-5" />
                 Config
               </button>
               <button
-                className={`${styles['custom-tab']} ${activeTab === 'items' ? styles['active'] : ''}`}
+                type="button"
+                className={`${styles.tab} ${activeTab === 'items' ? styles['tab-active'] : ''}`}
                 onClick={() => setActiveTab('items')}
               >
                 <CubeIcon className="size-5" />
                 Items
               </button>
               <button
-                className={`${styles['custom-tab']} ${activeTab === 'theming' ? styles['active'] : ''}`}
+                type="button"
+                className={`${styles.tab} ${activeTab === 'theming' ? styles['tab-active'] : ''}`}
                 onClick={() => setActiveTab('theming')}
               >
                 <PaintBrushIcon className="size-5" />
@@ -484,7 +481,7 @@ const Build = () => {
               </button>
             </div>
 
-            <div className="flex justify-end gap-4 max-w-2xl">
+            <div className="flex justify-end gap-4">
               {saved && (
                 <Button
                   variant="outline-primary"
