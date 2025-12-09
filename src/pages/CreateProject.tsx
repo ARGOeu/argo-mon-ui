@@ -256,7 +256,6 @@ const CreateProject = () => {
                       name="name"
                       value={formData.name}
                       onChange={handleChange}
-                      className={styles.input}
                       placeholder="Enter project name"
                       required
                     />
@@ -272,7 +271,6 @@ const CreateProject = () => {
                       value={formData.start_date}
                       onChange={handleChange}
                       onClick={(e) => e.currentTarget.showPicker?.()}
-                      className={styles.input}
                       required
                     />
                   </div>
@@ -287,7 +285,6 @@ const CreateProject = () => {
                       value={formData.end_date}
                       onChange={handleChange}
                       onClick={(e) => e.currentTarget.showPicker?.()}
-                      className={styles.input}
                       required
                     />
                     {validationErrors.end_date && (
@@ -308,7 +305,6 @@ const CreateProject = () => {
                       value={formData.sustainability_end_date}
                       onChange={handleChange}
                       onClick={(e) => e.currentTarget.showPicker?.()}
-                      className={styles.input}
                       required
                     />
                     {validationErrors.sustainability_end_date && (
@@ -326,9 +322,8 @@ const CreateProject = () => {
                       name="data_retention_policy"
                       value={formData.data_retention_policy}
                       onChange={handleChange}
-                      className={styles.input}
                       placeholder="Enter data retention policy"
-                      rows={3}
+                      rows={2}
                       required
                     />
                   </div>
