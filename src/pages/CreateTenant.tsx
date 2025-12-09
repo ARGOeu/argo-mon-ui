@@ -11,6 +11,7 @@ import { toast, Toaster } from 'sonner'
 import Button from '../components/Button'
 import ContactInformation from '../components/ContactInformation'
 import InfrastructureMetadata from '../components/InfrastructureMetadata'
+import type { Metadata } from '@/types/tenants'
 import styles from './CreateTenant.module.css'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
@@ -77,20 +78,44 @@ const CreateTenant = () => {
         website: tenantData.info.website || '',
         image: tenantData.info.image || '',
       })
-      if (tenantData.contacts && tenantData.contacts.length > 0) {
-        setContacts(
-          tenantData.contacts.map((c) => ({
-            name: c.name || '',
-            email: c.email || '',
-            type: c.type || '',
-          })),
-        )
-      }
+
       if (tenantData.info.image) {
         setImagePreview(tenantData.info.image)
         if (!tenantData.info.image.includes(BACKEND_API)) {
           setImageUrl(tenantData.info.image)
         }
+      }
+
+      if (tenantData.contacts && tenantData.contacts.length > 0) {
+        setContacts(
+          tenantData.contacts.map((contact) => ({
+            name: contact.name || '',
+            email: contact.email || '',
+            type: contact.type || '',
+          })),
+        )
+      }
+
+      if (tenantData.metadata) {
+        const loadedInternalLists =
+          tenantData.metadata.internalLists &&
+          tenantData.metadata.internalLists.length > 0
+            ? tenantData.metadata.internalLists.map((list) => ({
+                email: list.email || '',
+                type: list.type || '',
+              }))
+            : [{ email: '', type: '' }]
+
+        setMetadata({
+          ui_url: tenantData.metadata.instance?.ui_url || '',
+          poem_url: tenantData.metadata.instance?.poem_url || '',
+          topology_type: tenantData.metadata.instance?.topology?.type || '',
+          topology_url: tenantData.metadata.instance?.topology?.url || '',
+          topology_feed: tenantData.metadata.instance?.topology?.feed || '',
+          internalLists: loadedInternalLists,
+          auth_name: tenantData.metadata.auth_metadata?.auth_name || '',
+          auth_url: tenantData.metadata.auth_metadata?.auth_url || '',
+        })
       }
     }
   }, [isEditMode, tenantData])
@@ -177,20 +202,7 @@ const CreateTenant = () => {
         type: contact.type || undefined,
       }))
 
-    const metadataObj: {
-      instance: {
-        ui_url?: string
-        poem_url?: string
-        topology?: {
-          type?: string
-          url?: string
-          feed?: string
-        }
-        email: string
-      }
-      internalLists?: Array<{ email?: string; type?: string }>
-      auth_metadata?: { auth_name?: string; auth_url?: string }
-    } = {
+    const metadataObj: Metadata = {
       instance: {
         ui_url: metadata.ui_url || undefined,
         poem_url: metadata.poem_url || undefined,
@@ -199,7 +211,6 @@ const CreateTenant = () => {
           url: metadata.topology_url || undefined,
           feed: metadata.topology_feed || undefined,
         },
-        email: 'email_instance_field@example.com',
       },
     }
 
@@ -492,6 +503,7 @@ const CreateTenant = () => {
                           value={formData.name}
                           onChange={handleChange}
                           placeholder="Enter tenant name"
+                          disabled={isEditMode}
                           required
                         />
                         {errors.name && (

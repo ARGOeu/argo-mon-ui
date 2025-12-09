@@ -45,7 +45,7 @@ const ContactInformation = ({
       )
       setErrors(initialData.map(() => ({ email: '' })))
     }
-  }, [initialData])
+  }, [initialData, onContactsChange])
 
   const handleChange = (
     index: number,

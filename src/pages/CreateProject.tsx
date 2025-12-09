@@ -257,6 +257,7 @@ const CreateProject = () => {
                       value={formData.name}
                       onChange={handleChange}
                       placeholder="Enter project name"
+                      disabled={isEditMode}
                       required
                     />
                   </div>
