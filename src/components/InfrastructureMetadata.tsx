@@ -73,7 +73,7 @@ const InfrastructureMetadata = ({
         internalListsEmails: loadedInternalLists.map(() => ({ email: '' })),
       }))
     }
-  }, [initialData])
+  }, [initialData, onMetadataChange])
 
   const urlErrorMesage =
     'Please enter a valid URL (must start with http:// or https://)'
