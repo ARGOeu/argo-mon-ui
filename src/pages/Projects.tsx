@@ -14,19 +14,21 @@ import { useNavigate } from 'react-router-dom'
 import { toast, Toaster } from 'sonner'
 import styles from './Projects.module.css'
 
+const pageSize = 9
+
 const Projects = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchInput, setSearchInput] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const pageSize = 9
   const { data, isLoading } = useGetProjects(currentPage, pageSize, searchQuery)
   const deleteMutation = useDeleteProjectMutation()
-  const navigate = useNavigate()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState<{
     id: string
     name: string
   } | null>(null)
+
+  const navigate = useNavigate()
 
   // Debounced search effect
   useEffect(() => {

@@ -307,7 +307,7 @@ const InfrastructureMetadata = ({
 
             <div className={styles.field}>
               <label className={styles.label}>
-                URL <span className="required">*</span>
+                Service URL <span className="required">*</span>
               </label>
               <input
                 type="url"
@@ -326,7 +326,7 @@ const InfrastructureMetadata = ({
 
             <div className={styles.field}>
               <label className={styles.label}>
-                Feed <span className="required">*</span>
+                Data Feed <span className="required">*</span>
               </label>
               <input
                 type="text"

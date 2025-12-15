@@ -192,3 +192,108 @@ export const fetchContactTypes = async (token: string): Promise<string[]> => {
 
   return response.json()
 }
+
+// Endpoints for admin and viewer roles
+export const fetchUserTenants = async (
+  token: string,
+  page: number = 1,
+  size: number = 10,
+  search?: string,
+): Promise<TenantList> => {
+  const searchParam = search ? `&search=${encodeURIComponent(search)}` : ''
+
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants?page=${page}&size=${size}${searchParam}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchUserTenantById = async (
+  id: string,
+  token: string,
+): Promise<Tenant> => {
+  const response = await fetch(`${BACKEND_API}/v1/tenants/${id}`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchUpdateUserTenant = async (
+  id: string,
+  data: Tenant,
+  token: string,
+): Promise<Tenant> => {
+  const response = await fetch(`${BACKEND_API}/v1/tenants/${id}`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(data),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    const error = new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    ) as Error & { errors?: string[] }
+    error.errors = errorData.errors || []
+    throw error
+  }
+
+  return response.json()
+}
+
+export const fetchUserTenantProjects = async (
+  tenantId: string,
+  token: string,
+  page: number = 1,
+  size: number = 10,
+): Promise<TenantList> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/projects?page=${page}&size=${size}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}

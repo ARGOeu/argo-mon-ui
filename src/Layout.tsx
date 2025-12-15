@@ -44,6 +44,9 @@ export default function Layout() {
   const { authenticated, profile, login, logout } = useAuth()
 
   const isSuperAdmin = profile?.roles?.includes('super_admin')
+  const isAdmin = profile?.roles?.includes('admin')
+  const isViewer = profile?.roles?.includes('viewer')
+  const hasTenantsAccess = isSuperAdmin || isAdmin || isViewer
 
   return (
     <div className="min-h-screen flex">
@@ -62,12 +65,14 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 py-4 flex flex-col gap-y-1">
+          {hasTenantsAccess && (
+            <SidebarNavItem to="/tenants/view">
+              <ServerStackIcon className="size-5" aria-hidden />
+              Tenants
+            </SidebarNavItem>
+          )}
           {isSuperAdmin && (
             <>
-              <SidebarNavItem to="/tenants/view">
-                <ServerStackIcon className="size-5" aria-hidden />
-                Tenants
-              </SidebarNavItem>
               <SidebarNavItem to="/tenants/create">
                 <DocumentPlusIcon className="size-5" aria-hidden />
                 Create Tenant

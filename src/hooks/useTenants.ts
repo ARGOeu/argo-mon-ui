@@ -14,6 +14,10 @@ import {
   fetchAssignTenantProjects,
   fetchTenantProjects,
   fetchContactTypes,
+  fetchUserTenants,
+  fetchUserTenantById,
+  fetchUpdateUserTenant,
+  fetchUserTenantProjects,
 } from '@/api/tenants'
 import type {
   Tenant,
@@ -25,6 +29,7 @@ export const useGetTenants = (
   page: number = 1,
   size: number = 10,
   search?: string,
+  enabled: boolean = true,
 ) => {
   const { token } = useAuth()
 
@@ -37,7 +42,7 @@ export const useGetTenants = (
       return fetchTenants(token, page, size, search)
     },
     retry: false,
-    enabled: !!token,
+    enabled: enabled && !!token,
   })
 }
 
@@ -177,5 +182,88 @@ export const useGetContactTypes = () => {
     },
     retry: false,
     enabled: !!token,
+  })
+}
+
+// Hooks for admin and viewer roles
+export const useGetUserTenants = (
+  page: number = 1,
+  size: number = 10,
+  search?: string,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<TenantList, Error>({
+    queryKey: ['user-tenants', page, size, search],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchUserTenants(token, page, size, search)
+    },
+    retry: false,
+    enabled: enabled && !!token,
+  })
+}
+
+export const useGetUserTenantById = (id: string) => {
+  const { token } = useAuth()
+
+  return useQuery<Tenant, Error>({
+    queryKey: ['user-tenant', id],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchUserTenantById(id, token)
+    },
+    retry: false,
+    refetchOnMount: 'always',
+    enabled: !!token && !!id,
+  })
+}
+
+export const useUpdateUserTenantMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<Tenant, Error, { id: string; data: Tenant }>({
+    mutationFn: ({ id, data }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchUpdateUserTenant(id, data, token)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['user-tenant'] })
+    },
+    onError: (error) => {
+      console.error('User tenant update error:', error)
+    },
+  })
+}
+
+export const useGetUserTenantProjects = (tenantId: string) => {
+  const { token } = useAuth()
+
+  return useInfiniteQuery<TenantList, Error>({
+    queryKey: ['user-tenant-projects', tenantId],
+    queryFn: ({ pageParam = 1 }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchUserTenantProjects(tenantId, token, pageParam as number, 10)
+    },
+    getNextPageParam: (lastPage) => {
+      const currentPage = lastPage.number_of_page
+      const totalPages = lastPage.total_pages
+      return currentPage < totalPages ? currentPage + 1 : undefined
+    },
+    initialPageParam: 1,
+    retry: false,
+    enabled: !!token && !!tenantId,
+    refetchOnMount: 'always',
   })
 }

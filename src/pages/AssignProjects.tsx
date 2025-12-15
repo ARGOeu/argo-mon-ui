@@ -6,13 +6,16 @@ import { toast, Toaster } from 'sonner'
 import Button from '@/components/Button'
 import {
   useGetTenantById,
+  useGetUserTenantById,
   useGetTenantProjects,
+  useGetUserTenantProjects,
   useAssignTenantProjectsMutation,
 } from '@/hooks/useTenants'
 import { useGetAllProjects } from '@/hooks/useProjects'
 import { GripVertical } from 'lucide-react'
 import type { ProjectItem } from '@/types/projects'
 import styles from './AssignProjects.module.css'
+import { useAuth } from '@/auth/useAuth'
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-GB', {
@@ -23,11 +26,16 @@ const formatDate = (dateString: string) => {
 }
 
 const AssignProjects = () => {
+  const { profile } = useAuth()
   const [allProjects, setAllProjects] = useState<ProjectItem[]>([])
   const [tenantProjectIds, setTenantProjectIds] = useState<string[]>([])
   const [availableProjects, setAvailableProjects] = useState<ProjectItem[]>([])
   const [assignedProjects, setAssignedProjects] = useState<ProjectItem[]>([])
   const [isInitialized, setIsInitialized] = useState(false)
+
+  const isSuperAdmin = profile?.roles?.includes('super_admin')
+  const isAdmin = profile?.roles?.includes('admin')
+  const isReadOnly = isAdmin
 
   const groupName = 'projects-assignment'
   const [availableRef, availableItems, setAvailableItems] = useDragAndDrop<
@@ -35,24 +43,45 @@ const AssignProjects = () => {
     ProjectItem
   >(availableProjects, {
     group: groupName,
-    dragHandle: '.dnd-handle',
+    dragHandle: isReadOnly ? undefined : '.dnd-handle',
+    disabled: isReadOnly,
   })
 
   const [assignedRef, assignedItems, setAssignedItems] = useDragAndDrop<
     HTMLUListElement,
     ProjectItem
-  >(assignedProjects, { group: groupName, dragHandle: '.dnd-handle' })
+  >(assignedProjects, {
+    group: groupName,
+    dragHandle: isReadOnly ? undefined : '.dnd-handle',
+    disabled: isReadOnly,
+  })
 
   const { id: tenantId } = useParams<{ id: string }>()
   const navigate = useNavigate()
 
-  const { data: tenantData } = useGetTenantById(tenantId || '')
+  const { data: adminTenantData } = useGetTenantById(tenantId || '')
+  const { data: userTenantData } = useGetUserTenantById(tenantId || '')
+  const tenantData = isSuperAdmin ? adminTenantData : userTenantData
 
   const {
-    data: tenantProjectsData,
-    fetchNextPage: fetchNextTenantProjectsPage,
-    hasNextPage: hasNextTenantProjectsPage,
+    data: adminProjectsData,
+    fetchNextPage: fetchNextAdminProjectsPage,
+    hasNextPage: hasNextAdminProjectsPage,
   } = useGetTenantProjects(tenantId || '')
+
+  const {
+    data: userProjectsData,
+    fetchNextPage: fetchNextUserProjectsPage,
+    hasNextPage: hasNextUserProjectsPage,
+  } = useGetUserTenantProjects(tenantId || '')
+
+  const tenantProjectsData = isSuperAdmin ? adminProjectsData : userProjectsData
+  const fetchNextTenantProjectsPage = isSuperAdmin
+    ? fetchNextAdminProjectsPage
+    : fetchNextUserProjectsPage
+  const hasNextTenantProjectsPage = isSuperAdmin
+    ? hasNextAdminProjectsPage
+    : hasNextUserProjectsPage
 
   const {
     data: allProjectsData,
@@ -62,11 +91,11 @@ const AssignProjects = () => {
 
   const assignMutation = useAssignTenantProjectsMutation()
 
-  // Fetch and gather all projects from all pages
+  // Fetch and gather all projects from all pages (only for super_admin)
   useEffect(() => {
     let projects: ProjectItem[] = []
 
-    if (allProjectsData?.pages) {
+    if (isSuperAdmin && allProjectsData?.pages) {
       allProjectsData.pages.forEach((page) => {
         projects = [
           ...projects,
@@ -86,7 +115,12 @@ const AssignProjects = () => {
     }
 
     setAllProjects(projects)
-  }, [allProjectsData, hasNextProjectsPage, fetchNextAllProjectsPage])
+  }, [
+    isSuperAdmin,
+    allProjectsData,
+    hasNextProjectsPage,
+    fetchNextAllProjectsPage,
+  ])
 
   // Fetch and gather all tenant project IDs from all pages
   useEffect(() => {
@@ -114,7 +148,10 @@ const AssignProjects = () => {
 
   // Filter and set initial items when data is ready
   useEffect(() => {
-    if (!hasNextProjectsPage && !hasNextTenantProjectsPage) {
+    if (
+      (isSuperAdmin ? !hasNextProjectsPage : true) &&
+      !hasNextTenantProjectsPage
+    ) {
       const assigned = allProjects?.filter((p) =>
         tenantProjectIds.includes(p.id),
       )
@@ -128,6 +165,7 @@ const AssignProjects = () => {
       setIsInitialized(true)
     }
   }, [
+    isSuperAdmin,
     allProjects,
     tenantProjectIds,
     hasNextProjectsPage,
@@ -196,9 +234,15 @@ const AssignProjects = () => {
       <div className={styles.container}>
         <div className={styles.header}>
           <div>
-            <h1 className="page-title">Assign Projects to Tenant</h1>
+            <h1 className="page-title">
+              {isReadOnly
+                ? 'View Assigned Projects'
+                : 'Assign Projects to Tenant'}
+            </h1>
             <p className="page-subtitle lg:me-30 md:me-20 sm:me-10">
-              Drag and drop projects to assign or remove them from tenant{' '}
+              {isReadOnly
+                ? `Viewing projects assigned to tenant `
+                : 'Drag and drop projects to assign or remove them from tenant '}
               <strong style={{ wordBreak: 'break-all' }}>
                 {`"${tenantData?.info.name}"`}
               </strong>
@@ -211,89 +255,120 @@ const AssignProjects = () => {
               onClick={handleCancel}
               disabled={assignMutation.isPending}
             >
-              Cancel
+              {isReadOnly ? 'Back' : 'Cancel'}
             </Button>
-            <Button
-              variant="primary"
-              size="md"
-              onClick={handleSave}
-              disabled={
-                assignMutation.isPending ||
-                (availableItems.length === 0 && assignedItems.length === 0)
-              }
-            >
-              {assignMutation.isPending ? 'Saving...' : 'Save'}
-            </Button>
+            {!isReadOnly && (
+              <Button
+                variant="primary"
+                size="md"
+                onClick={handleSave}
+                disabled={
+                  assignMutation.isPending ||
+                  (availableItems.length === 0 && assignedItems.length === 0)
+                }
+              >
+                {assignMutation.isPending ? 'Saving...' : 'Save'}
+              </Button>
+            )}
           </div>
         </div>
 
-        <div className={styles.content}>
-          <div className={styles.column}>
-            <div className={styles['column-header']}>
-              <h2 className={styles['column-title']}>Available Projects</h2>
-              <span className={styles['column-count']}>
-                {availableItems.length}
-              </span>
-            </div>
-            <div className={styles['list-container']}>
-              <ul ref={availableRef} className={styles.list}>
-                {availableItems.length > 0 ? (
-                  availableItems.map((project) => (
-                    <li key={project.id} className={styles['project-item']}>
-                      <div className="dnd-handle flex items-center gap-2 flex-grow-1">
-                        <GripVertical className={styles['drag-handle']} />
-                        <div className={styles['project-info']}>
-                          <span className={styles['project-name']}>
-                            {project.name}
-                          </span>
-                          <span className={styles['project-date']}>
-                            {formatDate(project.start_date)} -{' '}
-                            {formatDate(project.end_date)}
-                          </span>
+        <div
+          className={styles.content}
+          style={
+            isReadOnly
+              ? {
+                  maxWidth: '600px',
+                  margin: '0 auto',
+                }
+              : {}
+          }
+        >
+          {!isReadOnly && (
+            <div className={styles.column}>
+              <div className={styles['column-header']}>
+                <h2 className={styles['column-title']}>Available Projects</h2>
+                <span className={styles['column-count']}>
+                  {availableItems.length}
+                </span>
+              </div>
+              <div className={styles['list-container']}>
+                <ul ref={availableRef} className={styles.list}>
+                  {availableItems.length > 0 ? (
+                    availableItems.map((project) => (
+                      <li key={project.id} className={styles['project-item']}>
+                        <div className="dnd-handle flex items-center gap-2 flex-grow-1">
+                          <GripVertical className={styles['drag-handle']} />
+                          <div className={styles['project-info']}>
+                            <span className={styles['project-name']}>
+                              {project.name}
+                            </span>
+                            <span className={styles['project-date']}>
+                              {formatDate(project.start_date)} -{' '}
+                              {formatDate(project.end_date)}
+                            </span>
+                          </div>
                         </div>
-                      </div>
+                      </li>
+                    ))
+                  ) : (
+                    <li className={styles['empty-state']}>
+                      No available projects
                     </li>
-                  ))
-                ) : (
-                  <li className={styles['empty-state']}>
-                    No available projects
-                  </li>
-                )}
-              </ul>
+                  )}
+                </ul>
+              </div>
             </div>
-          </div>
+          )}
 
-          <div className={styles.column}>
+          <div
+            className={styles.column}
+            style={
+              isReadOnly
+                ? {
+                    gridColumn: '1 / -1',
+                  }
+                : {}
+            }
+          >
             <div className={styles['column-header']}>
-              <h2 className={styles['column-title']}>Assigned Projects</h2>
+              <h2 className={styles['column-title']}>
+                {isReadOnly ? 'Assigned Projects' : 'Assigned Projects'}
+              </h2>
               <span className={styles['column-count']}>
                 {assignedItems.length}
               </span>
             </div>
             <div className={styles['list-container']}>
               <ul ref={assignedRef} className={styles.list}>
-                {assignedItems.length > 0 ? (
-                  assignedItems.map((project) => (
-                    <li key={project.id} className={styles['project-item']}>
-                      <div className="dnd-handle flex items-center gap-2 flex-grow-1">
-                        <GripVertical className={styles['drag-handle']} />
-                        <div className={styles['project-info']}>
-                          <span className={styles['project-name']}>
-                            {project.name}
-                          </span>
-                          <span className={styles['project-date']}>
-                            {formatDate(project.start_date)} -{' '}
-                            {formatDate(project.end_date)}
-                          </span>
+                {assignedItems.length > 0
+                  ? assignedItems.map((project) => (
+                      <li
+                        key={project.id}
+                        className={styles['project-item']}
+                        style={isReadOnly ? { cursor: 'default' } : {}}
+                      >
+                        <div className="dnd-handle flex items-center gap-2 flex-grow-1">
+                          {!isReadOnly && (
+                            <GripVertical className={styles['drag-handle']} />
+                          )}
+                          <div className={styles['project-info']}>
+                            <span className={styles['project-name']}>
+                              {project.name}
+                            </span>
+                            <span className={styles['project-date']}>
+                              {formatDate(project.start_date)} -{' '}
+                              {formatDate(project.end_date)}
+                            </span>
+                          </div>
                         </div>
-                      </div>
-                    </li>
-                  ))
-                ) : (
-                  <li className={styles['empty-state']}>
-                    Drag projects here to assign
-                  </li>
-                )}
+                      </li>
+                    ))
+                  : !isReadOnly && (
+                      <li className={styles['empty-state']}>
+                        Drag projects here to assign
+                      </li>
+                    )}
               </ul>
             </div>
           </div>

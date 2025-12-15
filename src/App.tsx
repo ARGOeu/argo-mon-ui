@@ -62,7 +62,9 @@ function App() {
               <Route
                 path="tenants/view"
                 element={
-                  <ProtectedRoute requiredRoles={['super_admin']}>
+                  <ProtectedRoute
+                    requiredRoles={['super_admin', 'admin', 'viewer']}
+                  >
                     <Tenants />
                   </ProtectedRoute>
                 }
@@ -78,7 +80,7 @@ function App() {
               <Route
                 path="tenants/edit/:id"
                 element={
-                  <ProtectedRoute requiredRoles={['super_admin']}>
+                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
                     <CreateTenant />
                   </ProtectedRoute>
                 }
@@ -86,7 +88,7 @@ function App() {
               <Route
                 path="tenants/:id/projects/assign"
                 element={
-                  <ProtectedRoute requiredRoles={['super_admin']}>
+                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
                     <AssignProjects />
                   </ProtectedRoute>
                 }

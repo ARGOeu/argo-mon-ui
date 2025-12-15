@@ -17,6 +17,7 @@ const CreateProject = () => {
 
   const [formData, setFormData] = useState({
     name: '',
+    description: '',
     start_date: '',
     end_date: '',
     sustainability_end_date: '',
@@ -49,6 +50,7 @@ const CreateProject = () => {
 
       setFormData({
         name: projectData.name || '',
+        description: projectData.description || '',
         start_date: formatToDate(projectData.start_date),
         end_date: formatToDate(projectData.end_date),
         sustainability_end_date: formatToDate(
@@ -115,6 +117,7 @@ const CreateProject = () => {
 
     const submitData = {
       name: formData.name,
+      description: formData.description,
       start_date: formatToISO(formData.start_date, false),
       end_date: formatToISO(formData.end_date, true),
       sustainability_end_date: formatToISO(
@@ -223,6 +226,7 @@ const CreateProject = () => {
                   createMutation.isPending ||
                   updateMutation.isPending ||
                   !formData.name.trim() ||
+                  !formData.description.trim() ||
                   !formData.start_date ||
                   !formData.end_date ||
                   !formData.sustainability_end_date ||
@@ -249,7 +253,7 @@ const CreateProject = () => {
                 <div className={styles['section-content']}>
                   <div className={styles.field}>
                     <label className={styles.label}>
-                      Project Name <span className="required">*</span>
+                      Name <span className="required">*</span>
                     </label>
                     <input
                       type="text"
@@ -258,6 +262,19 @@ const CreateProject = () => {
                       onChange={handleChange}
                       placeholder="Enter project name"
                       disabled={isEditMode}
+                      required
+                    />
+                  </div>
+                  <div className={styles.field}>
+                    <label className={styles.label}>
+                      Description <span className="required">*</span>
+                    </label>
+                    <textarea
+                      name="description"
+                      value={formData.description}
+                      onChange={handleChange}
+                      placeholder="Enter project description"
+                      rows={2}
                       required
                     />
                   </div>
