@@ -6,12 +6,15 @@ import {
   useCreateTenantMutation,
   useUpdateTenantMutation,
   useGetTenantById,
+  useGetUserTenantById,
+  useUpdateUserTenantMutation,
 } from '@/hooks/useTenants'
+import type { Metadata } from '@/types/tenants'
+import { useAuth } from '@/auth/useAuth'
 import { toast, Toaster } from 'sonner'
 import Button from '../components/Button'
 import ContactInformation from '../components/ContactInformation'
 import InfrastructureMetadata from '../components/InfrastructureMetadata'
-import type { Metadata } from '@/types/tenants'
 import styles from './CreateTenant.module.css'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
@@ -19,9 +22,12 @@ const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const CreateTenant = () => {
+  const { profile } = useAuth()
   const { id: tenantId } = useParams<{ id?: string }>()
   const isEditMode = Boolean(tenantId)
   const navigate = useNavigate()
+
+  const isSuperAdmin = profile?.roles?.includes('super_admin')
 
   const [formData, setFormData] = useState({
     name: '',
@@ -63,10 +69,18 @@ const CreateTenant = () => {
     useState(false)
 
   const createMutation = useCreateTenantMutation()
-  const updateMutation = useUpdateTenantMutation()
-  const { data: tenantData, isLoading: isTenantLoading } = useGetTenantById(
+  const adminUpdateMutation = useUpdateTenantMutation()
+  const userUpdateMutation = useUpdateUserTenantMutation()
+  const updateMutation = isSuperAdmin ? adminUpdateMutation : userUpdateMutation
+
+  const { data: adminTenantData, isLoading: adminLoading } = useGetTenantById(
     tenantId || '',
   )
+  const { data: userTenantData, isLoading: userLoading } = useGetUserTenantById(
+    tenantId || '',
+  )
+  const tenantData = isSuperAdmin ? adminTenantData : userTenantData
+  const isTenantLoading = isSuperAdmin ? adminLoading : userLoading
 
   // Load tenant data in edit mode
   useEffect(() => {
