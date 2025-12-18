@@ -92,12 +92,20 @@
   background-color: #fefefe;
   border-color: #d1d5db;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.1);
-  transform: translateY(-1px);
 }
 
 .project-item:active {
   box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.15);
   transform: scale(1.01);
+}
+
+.project-item.read-only {
+  cursor: default !important;
+}
+
+.project-item.read-only:active {
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transform: none;
 }
 
 .drag-handle {

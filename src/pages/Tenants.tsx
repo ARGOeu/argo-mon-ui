@@ -4,6 +4,7 @@ import {
   useGetUserTenants,
   useDeleteTenantMutation,
 } from '@/hooks/useTenants'
+import { useGetUserProfile } from '@/hooks/useProfile'
 import { useAuth } from '@/auth/useAuth'
 import {
   ArrowPathIcon,
@@ -13,23 +14,38 @@ import {
   ChevronRightIcon,
   MagnifyingGlassIcon,
   PlusCircleIcon,
+  ListBulletIcon,
 } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { useNavigate } from 'react-router-dom'
 import { toast, Toaster } from 'sonner'
 import styles from './Tenants.module.css'
+import type { UserGroup } from '@/types/profile'
+
+const pageSize = 9
 
 const Tenants = () => {
-  const { profile } = useAuth()
   const [currentPage, setCurrentPage] = useState(1)
   const [searchInput, setSearchInput] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const pageSize = 9
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
+  const [tenantToDelete, setTenantToDelete] = useState<{
+    id: string
+    name: string
+  } | null>(null)
+
+  const { profile } = useAuth()
+  const navigate = useNavigate()
+  const { data: userProfileData } = useGetUserProfile()
 
   const isSuperAdmin = profile?.roles?.includes('super_admin')
-  const isAdmin = profile?.roles?.includes('admin')
-  const isViewer = profile?.roles?.includes('viewer')
+
+  const hasTenantAccess =
+    (!isSuperAdmin &&
+      userProfileData?.groups &&
+      userProfileData.groups.length > 0) ||
+    false
 
   const { data: adminData, isLoading: adminLoading } = useGetTenants(
     currentPage,
@@ -41,19 +57,33 @@ const Tenants = () => {
     currentPage,
     pageSize,
     searchQuery,
-    isAdmin || isViewer,
+    hasTenantAccess,
   )
 
   const data = isSuperAdmin ? adminData : userData
   const isLoading = isSuperAdmin ? adminLoading : userLoading
 
   const deleteMutation = useDeleteTenantMutation()
-  const navigate = useNavigate()
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [tenantToDelete, setTenantToDelete] = useState<{
-    id: string
-    name: string
-  } | null>(null)
+
+  const getRoleForTenant = (tenantName: string): string | null => {
+    if (isSuperAdmin || !userProfileData?.groups) return null
+
+    const group = userProfileData?.groups?.find(
+      (g: UserGroup) => g?.name === tenantName,
+    )
+    return group?.role || null
+  }
+
+  const isTenantAdmin = (tenantName: string) => {
+    if (!tenantName) return false
+    if (isSuperAdmin) return false
+    if (!userProfileData?.groups) return false
+
+    const group = userProfileData?.groups?.find(
+      (g: UserGroup) => g?.name === tenantName,
+    )
+    return group?.role === 'admin'
+  }
 
   // Debounced search effect
   useEffect(() => {
@@ -143,11 +173,9 @@ const Tenants = () => {
           <p className="page-subtitle">
             {isSuperAdmin
               ? 'Manage and create new tenants for the monitoring service'
-              : isAdmin
-                ? 'View and manage your tenants'
-                : isViewer
-                  ? 'View your tenants'
-                  : 'View tenants'}
+              : hasTenantAccess
+                ? 'View your tenants'
+                : null}
           </p>
         </div>
         {isSuperAdmin && (
@@ -210,9 +238,37 @@ const Tenants = () => {
                       )}
                     </div>
                     <div className={styles['info-container']}>
-                      <h3 className={styles['tenant-name']} title={tenant.name}>
-                        {tenant.name}
-                      </h3>
+                      <div className={styles['name-role-container']}>
+                        <h3
+                          className={styles['tenant-name']}
+                          title={tenant.name}
+                        >
+                          {tenant.name}
+                        </h3>
+                        {(() => {
+                          if (isSuperAdmin) {
+                            return (
+                              <span
+                                className={`${styles['role-badge']} ${styles['admin']}`}
+                              >
+                                Admin
+                              </span>
+                            )
+                          }
+                          const role = getRoleForTenant(tenant.name)
+                          return role ? (
+                            <span
+                              className={`${styles['role-badge']} ${styles[role.toLowerCase()]}`}
+                            >
+                              {role.toLowerCase() === 'admin'
+                                ? 'Admin'
+                                : role.toLowerCase() === 'viewer'
+                                  ? 'Member'
+                                  : null}
+                            </span>
+                          ) : null
+                        })()}
+                      </div>
                       <p
                         className={styles['tenant-email']}
                         title={tenant.email}
@@ -225,50 +281,52 @@ const Tenants = () => {
                     {tenant.description}
                   </p>
                 </div>
-                <div className={styles['card-footer']}>
-                  {(isSuperAdmin || isAdmin) && (
-                    <button
-                      aria-label="Edit Tenant"
-                      className={`${styles['action-button']} ${styles.edit} tooltip`}
-                      data-tip="Edit"
-                      onClick={() => handleEdit(tenant.id!)}
-                    >
-                      <PencilSquareIcon className={styles['action-icon']} />
-                    </button>
-                  )}
-                  {isAdmin && (
-                    <button
-                      aria-label="View Projects"
-                      className={`${styles['action-button']} ${styles.assign} tooltip`}
-                      data-tip="View Projects"
-                      onClick={() => handleAssignProjects(tenant.id!)}
-                    >
-                      <PlusCircleIcon className={styles['action-icon']} />
-                    </button>
-                  )}
-                  {isSuperAdmin && (
-                    <>
+                {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
+                  <div className={styles['card-footer']}>
+                    {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
                       <button
-                        aria-label="Assign Projects"
+                        aria-label="Edit Tenant"
+                        className={`${styles['action-button']} ${styles.edit} tooltip`}
+                        data-tip="Edit"
+                        onClick={() => handleEdit(tenant.id!)}
+                      >
+                        <PencilSquareIcon className={styles['action-icon']} />
+                      </button>
+                    )}
+                    {isTenantAdmin(tenant.name) && (
+                      <button
+                        aria-label="View Assigned Projects"
                         className={`${styles['action-button']} ${styles.assign} tooltip`}
-                        data-tip="Assign Projects"
+                        data-tip="View Assigned Projects"
                         onClick={() => handleAssignProjects(tenant.id!)}
                       >
-                        <PlusCircleIcon className={styles['action-icon']} />
+                        <ListBulletIcon className={styles['action-icon']} />
                       </button>
-                      <button
-                        aria-label="Delete Tenant"
-                        className={`${styles['action-button']} ${styles.delete} tooltip`}
-                        data-tip="Delete"
-                        onClick={() =>
-                          handleDeleteClick(tenant.id!, tenant.name)
-                        }
-                      >
-                        <TrashIcon className={styles['action-icon']} />
-                      </button>
-                    </>
-                  )}
-                </div>
+                    )}
+                    {isSuperAdmin && (
+                      <>
+                        <button
+                          aria-label="Assign Projects"
+                          className={`${styles['action-button']} ${styles.assign} tooltip`}
+                          data-tip="Assign Projects"
+                          onClick={() => handleAssignProjects(tenant.id!)}
+                        >
+                          <PlusCircleIcon className={styles['action-icon']} />
+                        </button>
+                        <button
+                          aria-label="Delete Tenant"
+                          className={`${styles['action-button']} ${styles.delete} tooltip`}
+                          data-tip="Delete"
+                          onClick={() =>
+                            handleDeleteClick(tenant.id!, tenant.name)
+                          }
+                        >
+                          <TrashIcon className={styles['action-icon']} />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             ))
           ) : (

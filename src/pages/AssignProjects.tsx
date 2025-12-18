@@ -16,6 +16,8 @@ import { GripVertical } from 'lucide-react'
 import type { ProjectItem } from '@/types/projects'
 import styles from './AssignProjects.module.css'
 import { useAuth } from '@/auth/useAuth'
+import { useGetUserProfile } from '@/hooks/useProfile'
+import type { UserGroup } from '@/types/profile'
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-GB', {
@@ -27,15 +29,32 @@ const formatDate = (dateString: string) => {
 
 const AssignProjects = () => {
   const { profile } = useAuth()
+  const { id: tenantId } = useParams<{ id: string }>()
   const [allProjects, setAllProjects] = useState<ProjectItem[]>([])
   const [tenantProjectIds, setTenantProjectIds] = useState<string[]>([])
   const [availableProjects, setAvailableProjects] = useState<ProjectItem[]>([])
   const [assignedProjects, setAssignedProjects] = useState<ProjectItem[]>([])
   const [isInitialized, setIsInitialized] = useState(false)
+  const { data: adminTenantData } = useGetTenantById(tenantId || '')
+  const { data: userTenantData } = useGetUserTenantById(tenantId || '')
 
   const isSuperAdmin = profile?.roles?.includes('super_admin')
-  const isAdmin = profile?.roles?.includes('admin')
-  const isReadOnly = isAdmin
+  const { data: userProfileData } = useGetUserProfile()
+
+  const tenantData = isSuperAdmin ? adminTenantData : userTenantData
+
+  const isTenantAdmin = (tenantName: string) => {
+    if (!tenantName) return false
+    if (isSuperAdmin) return false
+    if (!userProfileData?.groups) return false
+
+    const group = userProfileData?.groups?.find(
+      (g: UserGroup) => g?.name === tenantName,
+    )
+    return group?.role === 'admin'
+  }
+
+  const isReadOnly = isTenantAdmin(tenantData?.info.name || '')
 
   const groupName = 'projects-assignment'
   const [availableRef, availableItems, setAvailableItems] = useDragAndDrop<
@@ -56,12 +75,7 @@ const AssignProjects = () => {
     disabled: isReadOnly,
   })
 
-  const { id: tenantId } = useParams<{ id: string }>()
   const navigate = useNavigate()
-
-  const { data: adminTenantData } = useGetTenantById(tenantId || '')
-  const { data: userTenantData } = useGetUserTenantById(tenantId || '')
-  const tenantData = isSuperAdmin ? adminTenantData : userTenantData
 
   const {
     data: adminProjectsData,
@@ -345,7 +359,7 @@ const AssignProjects = () => {
                   ? assignedItems.map((project) => (
                       <li
                         key={project.id}
-                        className={styles['project-item']}
+                        className={`${styles['project-item']} ${isReadOnly ? styles['read-only'] : ''}`}
                         style={isReadOnly ? { cursor: 'default' } : {}}
                       >
                         <div className="dnd-handle flex items-center gap-2 flex-grow-1">
