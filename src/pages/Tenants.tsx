@@ -22,8 +22,26 @@ import { useNavigate } from 'react-router-dom'
 import { toast, Toaster } from 'sonner'
 import styles from './Tenants.module.css'
 import type { UserGroup } from '@/types/profile'
+import type { Job, JobStatus } from '@/types/tenants'
 
 const pageSize = 9
+
+const JOB_NAMES: Record<string, string> = {
+  init_ams: 'ARGO Messaging Service (AMS) Status',
+  init_mongo: 'MongoDB Status',
+  create_domain_names: 'Domain Names Creation Status',
+}
+
+const getStatusDisplay = (status: JobStatus): string => {
+  if (status === 'unknown') return 'Unknown'
+  if (status === 'initialising') return 'Initialising'
+  if (status === 'initialised') return 'Initialised'
+  if (status === 'failed_initialisation') return 'Failed Initialisation'
+  if (status === 'in_progress') return 'In Progress'
+  if (status === 'completed') return 'Completed'
+  if (status === 'failed') return 'Failed'
+  return status
+}
 
 const Tenants = () => {
   const [currentPage, setCurrentPage] = useState(1)
@@ -101,6 +119,7 @@ const Tenants = () => {
       data.content.map((tenant) => ({
         ...tenant?.info,
         id: tenant?.id,
+        status: tenant?.status,
       }))) ||
     []
 
@@ -280,6 +299,30 @@ const Tenants = () => {
                   <p className={styles['tenant-description']}>
                     {tenant.description}
                   </p>
+                  {isSuperAdmin &&
+                    tenant.status?.jobs &&
+                    tenant.status.jobs.length > 0 && (
+                      <div className={styles['status-section']}>
+                        <div className={styles['status-list']}>
+                          {tenant.status.jobs.map((job: Job) => (
+                            <span
+                              key={job.name}
+                              className={`${styles['status-badge']} ${styles[`status-${job.status}`]}`}
+                              title={`${JOB_NAMES[job.name] || job.name}: ${getStatusDisplay(job.status)}`}
+                            >
+                              {job.name === 'init_ams'
+                                ? 'AMS'
+                                : job.name === 'init_mongo'
+                                  ? 'MongoDB'
+                                  : job.name === 'create_domain_names'
+                                    ? 'Domain Names'
+                                    : job.name}
+                              :{getStatusDisplay(job.status)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                 </div>
                 {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
                   <div className={styles['card-footer']}>
@@ -312,6 +355,16 @@ const Tenants = () => {
                           onClick={() => handleAssignProjects(tenant.id!)}
                         >
                           <PlusCircleIcon className={styles['action-icon']} />
+                        </button>
+                        <button
+                          aria-label="View Status"
+                          className={`${styles['action-button']} ${styles.status} tooltip`}
+                          data-tip="View Status"
+                          onClick={() =>
+                            navigate(`/tenants/${tenant.id}/status`)
+                          }
+                        >
+                          <ListBulletIcon className={styles['action-icon']} />
                         </button>
                         <button
                           aria-label="Delete Tenant"
