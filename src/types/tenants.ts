@@ -57,6 +57,7 @@ export type Job = {
   start?: string
   end?: string
   message?: string
+  mode?: 'auto' | 'manual'
 }
 
 export type TenantStatus = {
