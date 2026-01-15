@@ -15,6 +15,7 @@ import Build from './pages/Build'
 import View from './pages/View'
 import Tenants from './pages/Tenants'
 import CreateTenant from './pages/CreateTenant'
+import TenantStatus from './pages/TenantStatus'
 import AssignProjects from './pages/AssignProjects'
 import Projects from './pages/Projects'
 import CreateProject from './pages/CreateProject'
@@ -90,6 +91,14 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
                     <AssignProjects />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="tenants/:id/status"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin']}>
+                    <TenantStatus />
                   </ProtectedRoute>
                 }
               />

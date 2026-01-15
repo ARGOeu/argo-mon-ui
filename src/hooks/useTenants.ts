@@ -18,8 +18,10 @@ import {
   fetchUserTenantById,
   fetchUpdateUserTenant,
   fetchUserTenantProjects,
+  fetchTenantStatus,
 } from '@/api/tenants'
 import type {
+  Job,
   Tenant,
   TenantList,
   TenantProjectAssignment,
@@ -265,5 +267,21 @@ export const useGetUserTenantProjects = (tenantId: string) => {
     retry: false,
     enabled: !!token && !!tenantId,
     refetchOnMount: 'always',
+  })
+}
+
+export const useGetTenantStatus = (id: string) => {
+  const { token } = useAuth()
+
+  return useQuery<{ name: string; status: { jobs: Job[] } }, Error>({
+    queryKey: ['tenant-status', id],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchTenantStatus(id, token)
+    },
+    retry: false,
+    enabled: !!token && !!id,
   })
 }

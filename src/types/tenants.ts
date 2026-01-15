@@ -42,12 +42,34 @@ export type TenantInfo = {
   updated_at?: string
 }
 
+export type JobStatus =
+  | 'unknown'
+  | 'initialising'
+  | 'initialised'
+  | 'failed_initialisation'
+  | 'in_progress'
+  | 'completed'
+  | 'failed'
+
+export type Job = {
+  name: string
+  status: JobStatus
+  start?: string
+  end?: string
+  message?: string
+}
+
+export type TenantStatus = {
+  jobs: Job[]
+}
+
 export type Tenant = {
   id?: string
   info: TenantInfo
   contacts?: Contact[]
   metadata?: Metadata
   updated_by?: string
+  status?: TenantStatus
 }
 
 export type TenantList = {
