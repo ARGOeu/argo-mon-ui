@@ -45,6 +45,157 @@
   background-color: #f9fafb;
 }
 
+.manual-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  background-color: #fef3c7;
+  color: #92400e;
+  margin-left: 0.5rem;
+}
+
+.status-change-section {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.status-change-fields {
+  display: flex;
+  gap: 1rem;
+}
+
+.status-change-col {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  flex: 1;
+}
+
+.status-change-dropdown {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  color: #4b5563;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-change-dropdown:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.status-change-dropdown:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.status-message-input {
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  background-color: white;
+  color: #4b5563;
+  transition: all 0.2s;
+}
+
+.status-message-input:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.status-message-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.status-message-input::placeholder {
+  color: #9ca3af;
+}
+
+.status-change-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+
+.status-save-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: white;
+  background-color: #2563eb;
+  border: none;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-save-button:hover {
+  background-color: #1d4ed8;
+}
+
+.status-save-button:active {
+  background-color: #1e40af;
+}
+
+.status-cancel-button {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #374151;
+  background-color: white;
+  border: 1px solid #d1d5db;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-cancel-button:hover {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.status-cancel-button:active {
+  background-color: #f3f4f6;
+}
+
+.status-edit-button {
+  width: fit-content;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #2563eb;
+  background-color: white;
+  border: 1px solid #2563eb;
+  border-radius: 0.375rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.status-edit-button:hover {
+  background-color: #eff6ff;
+}
+
+.status-edit-button:active {
+  background-color: #dbeafe;
+}
+
 .toggle-icon {
   width: 1.25rem;
   height: 1.25rem;
@@ -307,6 +458,15 @@
   gap: 0.5rem;
 }
 
+.detail-row-with-button {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.375rem 0;
+  border-bottom: 1px solid #f9fafb;
+}
+
 .detail-row {
   display: grid;
   grid-template-columns: 120px 1fr;
@@ -315,7 +475,12 @@
   border-bottom: 1px solid #f9fafb;
 }
 
-.detail-row:last-child {
+.detail-row-with-button .detail-row {
+  border-bottom: none;
+  padding: 0;
+}
+
+.job-details > *:last-child {
   border-bottom: none;
 }
 
@@ -323,7 +488,7 @@
   font-size: 0.8125rem;
   font-weight: 600;
   color: #6b7280;
-  padding: 0 0.5rem;
+  padding: 0 0.3rem;
 }
 
 .detail-value {
