@@ -325,14 +325,17 @@ export const updateTenantStatus = async (
   data: { jobs: Job[] },
   token: string,
 ): Promise<{ name: string; status: { jobs: Job[] } }> => {
-  const response = await fetch(`${BACKEND_API}/v1/admin/tenants/${id}/status`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${token}`,
+  const response = await fetch(
+    `${BACKEND_API}/v1/admin/tenants/${id}/manual/status`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
     },
-    body: JSON.stringify(data),
-  })
+  )
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))

@@ -277,12 +277,12 @@
   color: #2563eb;
 }
 
-.job-status-badge.status-failed_initialisation {
+.job-status-badge.status-failed-initialisation {
   background-color: #fee2e2;
   color: #991b1b;
 }
 
-.job-status-badge.status-in_progress {
+.job-status-badge.status-in-progress {
   background-color: #dbeafe;
   color: #1d4ed8;
 }

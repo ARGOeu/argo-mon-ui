@@ -27,20 +27,32 @@ import type { Job, JobStatus } from '@/types/tenants'
 const pageSize = 9
 
 const JOB_NAMES: Record<string, string> = {
-  init_ams: 'ARGO Messaging Service (AMS) Status',
-  init_mongo: 'MongoDB Status',
-  create_domain_names: 'Domain Names Creation Status',
+  INIT_AMS: 'ARGO Messaging Service (AMS) Status',
+  INIT_MONGO: 'MongoDB Status',
+  CREATE_DOMAIN_NAMES: 'Domain Names Creation Status',
 }
 
 const getStatusDisplay = (status: JobStatus): string => {
-  if (status === 'unknown') return 'Unknown'
-  if (status === 'initialising') return 'Initialising'
-  if (status === 'initialised') return 'Initialised'
-  if (status === 'failed_initialisation') return 'Failed Initialisation'
-  if (status === 'in_progress') return 'In Progress'
-  if (status === 'completed') return 'Completed'
-  if (status === 'failed') return 'Failed'
+  if (status === 'UNKNOWN') return 'Unknown'
+  if (status === 'INITIALISING') return 'Initialising'
+  if (status === 'INITIALISED') return 'Initialised'
+  if (status === 'FAILED_INITIALISATION') return 'Failed Initialisation'
+  if (status === 'IN_PROGRESS') return 'In Progress'
+  if (status === 'COMPLETED') return 'Completed'
+  if (status === 'FAILED') return 'Failed'
   return status
+}
+
+const getStatusBadgeClass = (status: JobStatus): string => {
+  if (status === 'UNKNOWN') return styles['status-unknown']
+  if (status === 'INITIALISING') return styles['status-initialising']
+  if (status === 'INITIALISED') return styles['status-initialised']
+  if (status === 'FAILED_INITIALISATION')
+    return styles['status-failed_initialisation']
+  if (status === 'IN_PROGRESS') return styles['status-in_progress']
+  if (status === 'COMPLETED') return styles['status-completed']
+  if (status === 'FAILED') return styles['status-failed']
+  return ''
 }
 
 const Tenants = () => {
@@ -307,14 +319,14 @@ const Tenants = () => {
                           {tenant.status.jobs.map((job: Job) => (
                             <span
                               key={job.name}
-                              className={`${styles['status-badge']} ${styles[`status-${job.status}`]}`}
+                              className={`${styles['status-badge']} ${getStatusBadgeClass(job.status)}`}
                               title={`${JOB_NAMES[job.name] || job.name}: ${getStatusDisplay(job.status)}`}
                             >
-                              {job.name === 'init_ams'
+                              {job.name === 'INIT_AMS'
                                 ? 'AMS'
-                                : job.name === 'init_mongo'
+                                : job.name === 'INIT_MONGO'
                                   ? 'MongoDB'
-                                  : job.name === 'create_domain_names'
+                                  : job.name === 'CREATE_DOMAIN_NAMES'
                                     ? 'Domain Names'
                                     : job.name}
                               :{getStatusDisplay(job.status)}

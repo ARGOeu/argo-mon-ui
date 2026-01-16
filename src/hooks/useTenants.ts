@@ -45,6 +45,7 @@ export const useGetTenants = (
       return fetchTenants(token, page, size, search)
     },
     retry: false,
+    refetchOnMount: 'always',
     enabled: enabled && !!token,
   })
 }
