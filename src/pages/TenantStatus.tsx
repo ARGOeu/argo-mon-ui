@@ -22,35 +22,47 @@ import type { Job, JobStatus } from '@/types/tenants'
 import styles from './TenantStatus.module.css'
 
 const JOB_NAMES: Record<string, string> = {
-  init_ams: 'ARGO Messaging Service (AMS) Status',
-  init_mongo: 'MongoDB Status',
-  create_domain_names: 'Domain Names Creation Status',
+  INIT_AMS: 'ARGO Messaging Service (AMS) Status',
+  INIT_MONGO: 'MongoDB Status',
+  CREATE_DOMAIN_NAMES: 'Domain Names Creation Status',
 }
 
 const getStatusDisplay = (status: JobStatus): string => {
-  if (status === 'unknown') return 'Unknown'
-  if (status === 'initialising') return 'Initialising'
-  if (status === 'initialised') return 'Initialised'
-  if (status === 'failed_initialisation') return 'Failed Initialisation'
-  if (status === 'in_progress') return 'In Progress'
-  if (status === 'completed') return 'Completed'
-  if (status === 'failed') return 'Failed'
+  if (status === 'UNKNOWN') return 'Unknown'
+  if (status === 'INITIALISING') return 'Initialising'
+  if (status === 'INITIALISED') return 'Initialised'
+  if (status === 'FAILED_INITIALISATION') return 'Failed Initialisation'
+  if (status === 'IN_PROGRESS') return 'In Progress'
+  if (status === 'COMPLETED') return 'Completed'
+  if (status === 'FAILED') return 'Failed'
   return status
 }
 
 const getStatusIcon = (status: JobStatus) => {
-  if (status === 'completed')
+  if (status === 'COMPLETED')
     return <CheckCircleIcon className={styles['status-icon-completed']} />
-  if (status === 'failed' || status === 'failed_initialisation')
+  if (status === 'FAILED' || status === 'FAILED_INITIALISATION')
     return <XCircleIcon className={styles['status-icon-failed']} />
-  if (status === 'initialising')
+  if (status === 'INITIALISING')
     return <ClockIcon className={styles[`status-icon-initialising`]} />
-  if (status === 'initialised')
+  if (status === 'INITIALISED')
     return <ClockIcon className={styles['status-icon-initialised']} />
-  if (status === 'in_progress')
+  if (status === 'IN_PROGRESS')
     return <ClockIcon className={styles['status-icon-in-progress']} />
 
   return <QuestionMarkCircleIcon className={styles['status-icon-unknown']} />
+}
+
+const getStatusBadgeClass = (status: JobStatus): string => {
+  if (status === 'UNKNOWN') return styles['status-unknown']
+  if (status === 'INITIALISING') return styles['status-initialising']
+  if (status === 'INITIALISED') return styles['status-initialised']
+  if (status === 'FAILED_INITIALISATION')
+    return styles['status-failed-initialisation']
+  if (status === 'IN_PROGRESS') return styles['status-in-progress']
+  if (status === 'COMPLETED') return styles['status-completed']
+  if (status === 'FAILED') return styles['status-failed']
+  return ''
 }
 
 const formatDateTime = (dateString?: string) => {
@@ -66,13 +78,13 @@ const formatDateTime = (dateString?: string) => {
 }
 
 const STATUS_OPTIONS: { value: JobStatus; label: string }[] = [
-  { value: 'unknown', label: 'Unknown' },
-  { value: 'initialising', label: 'Initialising' },
-  { value: 'initialised', label: 'Initialised' },
-  { value: 'failed_initialisation', label: 'Failed Initialisation' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'completed', label: 'Completed' },
-  { value: 'failed', label: 'Failed' },
+  { value: 'UNKNOWN', label: 'Unknown' },
+  { value: 'INITIALISING', label: 'Initialising' },
+  { value: 'INITIALISED', label: 'Initialised' },
+  { value: 'FAILED_INITIALISATION', label: 'Failed Initialisation' },
+  { value: 'IN_PROGRESS', label: 'In Progress' },
+  { value: 'COMPLETED', label: 'Completed' },
+  { value: 'FAILED', label: 'Failed' },
 ]
 
 const TenantStatus = () => {
@@ -154,7 +166,7 @@ const TenantStatus = () => {
       status: selectedStatus,
       message: jobMessage.trim(),
       start: job.start || new Date().toISOString().split('.')[0] + 'Z',
-      end: ['completed', 'failed', 'failed_initialisation'].includes(
+      end: ['COMPLETED', 'FAILED', 'FAILED_INITIALISATION'].includes(
         selectedStatus,
       )
         ? new Date().toISOString().split('.')[0] + 'Z'
@@ -189,31 +201,30 @@ const TenantStatus = () => {
     step: string,
   ): 'active' | 'completed' | 'pending' | 'failed' => {
     const statusOrder = [
-      'unknown',
-      'initialising',
-      'initialised',
-      'failed_initialisation',
-      'in_progress',
-      'completed',
-      'failed',
+      'UNKNOWN',
+      'INITIALISING',
+      'INITIALISED',
+      'FAILED_INITIALISATION',
+      'IN_PROGRESS',
+      'COMPLETED',
+      'FAILED',
     ]
     const currentIndex = statusOrder.indexOf(job.status)
     const stepIndex = statusOrder.indexOf(step)
 
-    if (job.status === 'failed') {
-      if (step === 'failed') return 'failed'
+    if (job.status === 'FAILED') {
+      if (step === 'FAILED') return 'failed'
       if (stepIndex < currentIndex) return 'completed'
       return 'pending'
     }
 
-    if (job.status === 'failed_initialisation') {
-      if (step === 'failed_initialisation') return 'failed'
-      if (step === 'unknown' || step === 'initialising') return 'completed'
+    if (job.status === 'FAILED_INITIALISATION') {
+      if (step === 'FAILED_INITIALISATION') return 'failed'
+      if (step === 'UNKNOWN' || step === 'INITIALISING') return 'completed'
       return 'pending'
     }
 
-    if (job.status === 'completed' && step === 'completed') return 'completed'
-
+    if (job.status === 'COMPLETED' && step === 'COMPLETED') return 'completed'
     if (stepIndex < currentIndex) return 'completed'
     if (stepIndex === currentIndex) return 'active'
     return 'pending'
@@ -221,22 +232,22 @@ const TenantStatus = () => {
 
   const getProgressSteps = (job: Job) => {
     return [
-      { key: 'unknown', label: 'Unknown' },
-      { key: 'initialising', label: 'Initialising' },
+      { key: 'UNKNOWN', label: 'Unknown' },
+      { key: 'INITIALISING', label: 'Initialising' },
       {
         key:
-          job.status === 'failed_initialisation'
-            ? 'failed_initialisation'
-            : 'initialised',
+          job.status === 'FAILED_INITIALISATION'
+            ? 'FAILED_INITIALISATION'
+            : 'INITIALISED',
         label:
-          job.status === 'failed_initialisation'
+          job.status === 'FAILED_INITIALISATION'
             ? 'Failed Initialisation'
             : 'Initialised',
       },
-      { key: 'in_progress', label: 'In Progress' },
+      { key: 'IN_PROGRESS', label: 'In Progress' },
       {
-        key: job.status === 'failed' ? 'failed' : 'completed',
-        label: job.status === 'failed' ? 'Failed' : 'Completed',
+        key: job.status === 'FAILED' ? 'FAILED' : 'COMPLETED',
+        label: job.status === 'FAILED' ? 'Failed' : 'Completed',
       },
     ]
   }
@@ -278,7 +289,7 @@ const TenantStatus = () => {
                     <h2 className={styles['job-title']}>
                       {JOB_NAMES[job.name] || job.name}
                     </h2>
-                    {job.mode === 'manual' && (
+                    {job.mode === 'MANUAL' && (
                       <span className={styles['manual-badge']}>Manual</span>
                     )}
                   </div>
@@ -290,7 +301,7 @@ const TenantStatus = () => {
                     }}
                   >
                     <span
-                      className={`${styles['job-status-badge']} ${styles[`status-${job.status}`]}`}
+                      className={`${styles['job-status-badge']} ${getStatusBadgeClass(job.status)}`}
                     >
                       {getStatusDisplay(job.status)}
                     </span>
@@ -325,7 +336,7 @@ const TenantStatus = () => {
                       </div>
                     </div>
 
-                    {job.mode === 'manual' && editingJob === job.name && (
+                    {job.mode === 'MANUAL' && editingJob === job.name && (
                       <div className={styles['status-change-section']}>
                         <div className={styles['status-change-fields']}>
                           <div className={styles['status-change-col']}>
@@ -394,7 +405,7 @@ const TenantStatus = () => {
                             {formatDateTime(job.start)}
                           </span>
                         </div>
-                        {job.mode === 'manual' && editingJob !== job.name && (
+                        {job.mode === 'MANUAL' && editingJob !== job.name && (
                           <button
                             onClick={() => handleEditClick(job)}
                             className={styles['status-edit-button']}

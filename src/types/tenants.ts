@@ -43,13 +43,13 @@ export type TenantInfo = {
 }
 
 export type JobStatus =
-  | 'unknown'
-  | 'initialising'
-  | 'initialised'
-  | 'failed_initialisation'
-  | 'in_progress'
-  | 'completed'
-  | 'failed'
+  | 'UNKNOWN'
+  | 'INITIALISING'
+  | 'INITIALISED'
+  | 'FAILED_INITIALISATION'
+  | 'IN_PROGRESS'
+  | 'COMPLETED'
+  | 'FAILED'
 
 export type Job = {
   name: string
@@ -57,7 +57,7 @@ export type Job = {
   start?: string
   end?: string
   message?: string
-  mode?: 'auto' | 'manual'
+  mode?: 'AUTO' | 'MANUAL'
 }
 
 export type TenantStatus = {
