@@ -1,5 +1,7 @@
 import { Link, NavLink, Outlet } from 'react-router'
 import { useAuth } from './auth/useAuth'
+import { useRegisterUserMutation } from './hooks/useUsers'
+import { useEffect, useRef } from 'react'
 import {
   ArrowLeftStartOnRectangleIcon,
   ServerStackIcon,
@@ -8,6 +10,7 @@ import {
   DocumentPlusIcon,
   FolderIcon,
   PlusCircleIcon,
+  UserGroupIcon,
 } from '@heroicons/react/16/solid'
 import { squishEmail } from './utils/profile'
 import Button from './components/Button'
@@ -42,11 +45,21 @@ function SidebarNavItem({
 
 export default function Layout() {
   const { authenticated, profile, login, logout } = useAuth()
+  const registerMutation = useRegisterUserMutation()
+  const hasRegistered = useRef(false)
 
   const isSuperAdmin = profile?.roles?.includes('super_admin')
   const isAdmin = profile?.roles?.includes('admin')
   const isViewer = profile?.roles?.includes('viewer')
   const hasTenantsAccess = isSuperAdmin || isAdmin || isViewer
+
+  // Register user once when authenticated
+  useEffect(() => {
+    if (authenticated && !hasRegistered.current) {
+      hasRegistered.current = true
+      registerMutation.mutate()
+    }
+  }, [authenticated, registerMutation])
 
   return (
     <div className="min-h-screen flex">
@@ -65,6 +78,12 @@ export default function Layout() {
         </div>
 
         <nav className="flex-1 py-4 flex flex-col gap-y-1">
+          {isSuperAdmin && (
+            <SidebarNavItem to="/administration">
+              <UserGroupIcon className="size-5" aria-hidden />
+              Administration
+            </SidebarNavItem>
+          )}
           {hasTenantsAccess && (
             <SidebarNavItem to="/tenants/view">
               <ServerStackIcon className="size-5" aria-hidden />

@@ -71,6 +71,7 @@ export type Tenant = {
   metadata?: Metadata
   updated_by?: string
   status?: TenantStatus
+  ['group-status']?: 'UNKNOWN' | 'NOT_FOUND' | 'EXISTS'
 }
 
 export type TenantList = {
@@ -84,4 +85,13 @@ export type TenantList = {
 export type TenantProjectAssignment = {
   tenant_id: string
   project_ids: string[]
+}
+
+export type Member = {
+  id: string
+  username: string
+  firstName: string
+  lastName: string
+  email: string
+  tenants?: string[]
 }

@@ -20,12 +20,14 @@ import {
   fetchUserTenantProjects,
   fetchTenantStatus,
   updateTenantStatus,
+  fetchMembers,
 } from '@/api/tenants'
 import type {
   Job,
   Tenant,
   TenantList,
   TenantProjectAssignment,
+  Member,
 } from '@/types/tenants'
 
 export const useGetTenants = (
@@ -311,5 +313,21 @@ export const useUpdateTenantStatusMutation = () => {
     onError: (error) => {
       console.error('Tenant status update error:', error)
     },
+  })
+}
+
+export const useGetMembers = (enabled: boolean = true) => {
+  const { token } = useAuth()
+
+  return useQuery<Member[], Error>({
+    queryKey: ['members'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchMembers(token)
+    },
+    retry: false,
+    enabled: enabled && !!token,
   })
 }

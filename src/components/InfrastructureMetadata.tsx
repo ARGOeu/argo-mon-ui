@@ -237,16 +237,13 @@ const InfrastructureMetadata = ({
         <div className={styles['section-content']}>
           <div className={styles['field-grid']}>
             <div className={styles.field}>
-              <label className={styles.label}>
-                UI URL <span className="required">*</span>
-              </label>
+              <label className={styles.label}>UI URL</label>
               <input
                 type="url"
                 name="ui_url"
                 value={metadata.ui_url}
                 onChange={handleChange}
                 placeholder="Enter UI URL"
-                required
               />
               {errors.uiUrl && (
                 <span className="text-red-400 text-sm mt-1">
@@ -256,16 +253,13 @@ const InfrastructureMetadata = ({
             </div>
 
             <div className={styles.field}>
-              <label className={styles.label}>
-                POEM URL <span className="required">*</span>
-              </label>
+              <label className={styles.label}>POEM URL</label>
               <input
                 type="url"
                 name="poem_url"
                 value={metadata.poem_url}
                 onChange={handleChange}
                 placeholder="Enter POEM URL"
-                required
               />
               {errors.poemUrl && (
                 <span className="text-red-400 text-sm mt-1">
@@ -286,9 +280,7 @@ const InfrastructureMetadata = ({
         <div className={styles['section-content']}>
           <div className={styles['field-grid']}>
             <div className={styles.field}>
-              <label className={styles.label}>
-                Type <span className="required">*</span>
-              </label>
+              <label className={styles.label}>Type</label>
               {isContactTypesLoading ? (
                 <div className="text-sm text-gray-500">Loading...</div>
               ) : (
@@ -296,7 +288,6 @@ const InfrastructureMetadata = ({
                   name="topology_type"
                   value={metadata.topology_type}
                   onChange={handleChange}
-                  required
                 >
                   <option value="">Select type</option>
                   <option value="GOCDB">GOCdb</option>
@@ -306,16 +297,13 @@ const InfrastructureMetadata = ({
             </div>
 
             <div className={styles.field}>
-              <label className={styles.label}>
-                Service URL <span className="required">*</span>
-              </label>
+              <label className={styles.label}>Service URL</label>
               <input
                 type="url"
                 name="topology_url"
                 value={metadata.topology_url}
                 onChange={handleChange}
                 placeholder="Enter topology URL"
-                required
               />
               {errors.topologyUrl && (
                 <span className="text-red-400 text-sm mt-1">
@@ -325,16 +313,13 @@ const InfrastructureMetadata = ({
             </div>
 
             <div className={styles.field}>
-              <label className={styles.label}>
-                Data Feed <span className="required">*</span>
-              </label>
+              <label className={styles.label}>Data Feed</label>
               <input
                 type="text"
                 name="topology_feed"
                 value={metadata.topology_feed}
                 onChange={handleChange}
                 placeholder="Enter topology feed"
-                required
               />
             </div>
           </div>
