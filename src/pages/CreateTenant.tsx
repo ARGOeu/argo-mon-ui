@@ -190,14 +190,7 @@ const CreateTenant = () => {
   }
 
   const hasMetadataErrors = () => {
-    return (
-      !metadata.ui_url.trim() ||
-      !metadata.poem_url.trim() ||
-      !metadata.topology_type ||
-      !metadata.topology_url.trim() ||
-      !metadata.topology_feed.trim() ||
-      hasMetadataValidationError
-    )
+    return hasMetadataValidationError
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -216,16 +209,48 @@ const CreateTenant = () => {
         type: contact.type || undefined,
       }))
 
-    const metadataObj: Metadata = {
-      instance: {
-        ui_url: metadata.ui_url || undefined,
-        poem_url: metadata.poem_url || undefined,
-        topology: {
-          type: metadata.topology_type || undefined,
-          url: metadata.topology_url || undefined,
-          feed: metadata.topology_feed || undefined,
-        },
-      },
+    const metadataObj: Metadata = {}
+
+    // Check if any instance fields have values
+    const hasInstanceData =
+      metadata.ui_url.trim() ||
+      metadata.poem_url.trim() ||
+      metadata.topology_type.trim() ||
+      metadata.topology_url.trim() ||
+      metadata.topology_feed.trim()
+
+    if (hasInstanceData) {
+      metadataObj.instance = {}
+
+      if (metadata.ui_url.trim()) {
+        metadataObj.instance.ui_url = metadata.ui_url
+      }
+
+      if (metadata.poem_url.trim()) {
+        metadataObj.instance.poem_url = metadata.poem_url
+      }
+
+      // Check if any topology fields have values
+      const hasTopologyData =
+        metadata.topology_type.trim() ||
+        metadata.topology_url.trim() ||
+        metadata.topology_feed.trim()
+
+      if (hasTopologyData) {
+        metadataObj.instance.topology = {}
+
+        if (metadata.topology_type.trim()) {
+          metadataObj.instance.topology.type = metadata.topology_type
+        }
+
+        if (metadata.topology_url.trim()) {
+          metadataObj.instance.topology.url = metadata.topology_url
+        }
+
+        if (metadata.topology_feed.trim()) {
+          metadataObj.instance.topology.feed = metadata.topology_feed
+        }
+      }
     }
 
     const internalListsData = metadata.internalLists
@@ -438,20 +463,14 @@ const CreateTenant = () => {
                   !formData.name.trim() ||
                   !formData.email.trim() ||
                   !formData.description.trim() ||
-                  contacts.some(
+                  !contacts.some(
                     (contact) =>
-                      (contact.name.trim() && !contact.email.trim()) ||
-                      (!contact.name.trim() && contact.email.trim()) ||
-                      ((contact.name.trim() || contact.email.trim()) &&
-                        !contact.type),
+                      contact.name.trim() &&
+                      contact.email.trim() &&
+                      contact.type.trim(),
                   ) ||
                   hasContactValidationError ||
-                  hasMetadataValidationError ||
-                  !metadata.ui_url.trim() ||
-                  !metadata.poem_url.trim() ||
-                  !metadata.topology_type ||
-                  !metadata.topology_url.trim() ||
-                  !metadata.topology_feed.trim()
+                  hasMetadataValidationError
                 }
               >
                 {createMutation.isPending || updateMutation.isPending

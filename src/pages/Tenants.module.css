@@ -283,6 +283,14 @@
   background: none;
 }
 
+.action-button.invite {
+  color: #7c3aed;
+}
+
+.action-button.invite:hover {
+  background-color: #f5f3ff;
+}
+
 .action-button.assign {
   color: #2563eb;
 }
@@ -304,7 +312,7 @@
 }
 
 .action-button.status:hover {
-  background-color: #d1fae5;
+  background-color: #ecfdf5;
 }
 
 .action-button.delete {

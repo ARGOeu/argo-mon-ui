@@ -19,6 +19,7 @@ import TenantStatus from './pages/TenantStatus'
 import AssignProjects from './pages/AssignProjects'
 import Projects from './pages/Projects'
 import CreateProject from './pages/CreateProject'
+import Administration from './pages/Administration'
 import { Status } from './pages/Status'
 import { AuthProvider } from './auth/AuthProvider'
 
@@ -123,6 +124,14 @@ function App() {
                 element={
                   <ProtectedRoute requiredRoles={['super_admin']}>
                     <CreateProject />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="administration"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin']}>
+                    <Administration />
                   </ProtectedRoute>
                 }
               />

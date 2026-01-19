@@ -15,6 +15,7 @@ import {
   MagnifyingGlassIcon,
   PlusCircleIcon,
   ListBulletIcon,
+  UserPlusIcon,
 } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -339,14 +340,24 @@ const Tenants = () => {
                 {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
                   <div className={styles['card-footer']}>
                     {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
-                      <button
-                        aria-label="Edit Tenant"
-                        className={`${styles['action-button']} ${styles.edit} tooltip`}
-                        data-tip="Edit"
-                        onClick={() => handleEdit(tenant.id!)}
-                      >
-                        <PencilSquareIcon className={styles['action-icon']} />
-                      </button>
+                      <>
+                        <button
+                          aria-label="Edit Tenant"
+                          className={`${styles['action-button']} ${styles.edit} tooltip`}
+                          data-tip="Edit"
+                          onClick={() => handleEdit(tenant.id!)}
+                        >
+                          <PencilSquareIcon className={styles['action-icon']} />
+                        </button>
+                        <button
+                          aria-label="Invite Members"
+                          className={`${styles['action-button']} ${styles.invite} tooltip`}
+                          data-tip="Invite Members"
+                          onClick={() => {}}
+                        >
+                          <UserPlusIcon className={styles['action-icon']} />
+                        </button>
+                      </>
                     )}
                     {isTenantAdmin(tenant.name) && (
                       <button
