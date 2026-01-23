@@ -20,6 +20,8 @@ import AssignProjects from './pages/AssignProjects'
 import Projects from './pages/Projects'
 import CreateProject from './pages/CreateProject'
 import Administration from './pages/Administration'
+import ManageTenantMembers from './pages/ManageTenantMembers'
+import MyInvitations from './pages/MyInvitations'
 import { Status } from './pages/Status'
 import { AuthProvider } from './auth/AuthProvider'
 
@@ -96,6 +98,14 @@ function App() {
                 }
               />
               <Route
+                path="tenants/:id/members"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                    <ManageTenantMembers />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="tenants/:id/status"
                 element={
                   <ProtectedRoute requiredRoles={['super_admin']}>
@@ -133,6 +143,14 @@ function App() {
                   <ProtectedRoute requiredRoles={['super_admin']}>
                     <Administration />
                   </ProtectedRoute>
+                }
+              />
+              <Route
+                path="my-invitations"
+                element={
+                  <AuthProtected>
+                    <MyInvitations />
+                  </AuthProtected>
                 }
               />
               <Route

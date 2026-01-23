@@ -270,7 +270,10 @@ const TenantStatus = () => {
               Tenant Status
             </h1>
             <p className="page-subtitle">
-              View and manage status for {tenantData.info.name}
+              View and manage status for tenant
+              <strong style={{ wordBreak: 'break-all' }}>
+                {tenantData?.info.name ? ` ${tenantData.info.name}` : '...'}
+              </strong>
             </p>
           </div>
         </div>

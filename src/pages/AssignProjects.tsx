@@ -258,7 +258,7 @@ const AssignProjects = () => {
                 ? `Viewing projects assigned to tenant `
                 : 'Drag and drop projects to assign or remove them from tenant '}
               <strong style={{ wordBreak: 'break-all' }}>
-                {`"${tenantData?.info.name}"`}
+                {tenantData?.info.name ? ` ${tenantData.info.name}` : '...'}
               </strong>
             </p>
           </div>
