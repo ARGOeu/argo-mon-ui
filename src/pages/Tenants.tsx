@@ -15,7 +15,7 @@ import {
   MagnifyingGlassIcon,
   PlusCircleIcon,
   ListBulletIcon,
-  UserPlusIcon,
+  UserGroupIcon,
 } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -142,6 +142,10 @@ const Tenants = () => {
 
   const handleAssignProjects = (tenantId: string) => {
     navigate(`/tenants/${tenantId}/projects/assign`)
+  }
+
+  const handleManageMembers = (tenantId: string) => {
+    navigate(`/tenants/${tenantId}/members`)
   }
 
   const handleDeleteClick = (id: string, name: string) => {
@@ -350,12 +354,12 @@ const Tenants = () => {
                           <PencilSquareIcon className={styles['action-icon']} />
                         </button>
                         <button
-                          aria-label="Invite Members"
+                          aria-label="Manage Members"
                           className={`${styles['action-button']} ${styles.invite} tooltip`}
-                          data-tip="Invite Members"
-                          onClick={() => {}}
+                          data-tip="Manage Members"
+                          onClick={() => handleManageMembers(tenant.id!)}
                         >
-                          <UserPlusIcon className={styles['action-icon']} />
+                          <UserGroupIcon className={styles['action-icon']} />
                         </button>
                       </>
                     )}

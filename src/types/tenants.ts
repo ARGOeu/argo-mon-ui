@@ -87,11 +87,24 @@ export type TenantProjectAssignment = {
   project_ids: string[]
 }
 
+export type TenantMembership = {
+  name: string
+  role: 'admin' | 'viewer'
+}
+
 export type Member = {
   id: string
   username: string
   firstName: string
   lastName: string
   email: string
-  tenants?: string[]
+  tenants?: TenantMembership[]
+}
+
+export type PaginatedMembersResponse = {
+  size_of_page: number
+  number_of_page: number
+  total_elements: number
+  total_pages: number
+  content: Member[]
 }

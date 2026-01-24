@@ -7,34 +7,94 @@ import {
   IdentificationIcon,
   UserPlusIcon,
 } from '@heroicons/react/16/solid'
-import { XMarkIcon } from '@heroicons/react/24/outline'
+import {
+  XMarkIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+} from '@heroicons/react/24/outline'
 import styles from './Administration.module.css'
+import AdminInvitations from './AdminInvitations'
+
+type SortColumn = 'username' | 'firstName' | 'lastName' | 'email' | 'tenants'
+type SortDirection = 'asc' | 'desc'
 
 const Administration = () => {
-  const [activeTab, setActiveTab] = useState<'users'>('users')
+  const [activeTab, setActiveTab] = useState<'users' | 'invitations'>('users')
   const [searchInput, setSearchInput] = useState('')
+  const [sortColumn, setSortColumn] = useState<SortColumn | null>(null)
+  const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
 
   const { profile } = useAuth()
   const isSuperAdmin = profile?.roles?.includes('super_admin')
 
   const { data: usersData, isLoading } = useGetMembers(isSuperAdmin)
+  const membersData = usersData
 
   const filteredUsers = useMemo(() => {
-    if (!usersData) return []
-    if (!searchInput.trim()) return usersData
+    if (!membersData) return []
 
-    const query = searchInput.toLowerCase()
-    return usersData.filter(
-      (user) =>
-        user.username.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query) ||
-        user.firstName.toLowerCase().includes(query) ||
-        user.lastName.toLowerCase().includes(query),
-    )
-  }, [usersData, searchInput])
+    let filtered = membersData
+
+    if (searchInput.trim()) {
+      const query = searchInput.toLowerCase()
+      filtered = filtered.filter(
+        (user) =>
+          user.username.toLowerCase().includes(query) ||
+          user.email.toLowerCase().includes(query) ||
+          user.firstName.toLowerCase().includes(query) ||
+          user.lastName.toLowerCase().includes(query),
+      )
+    }
+
+    if (sortColumn) {
+      filtered = [...filtered].sort((a, b) => {
+        let aValue: string | number
+        let bValue: string | number
+
+        if (sortColumn === 'tenants') {
+          aValue = a.tenants?.length || 0
+          bValue = b.tenants?.length || 0
+        } else {
+          aValue = a[sortColumn]?.toLowerCase() || ''
+          bValue = b[sortColumn]?.toLowerCase() || ''
+        }
+
+        if (aValue < bValue) return sortDirection === 'asc' ? -1 : 1
+        if (aValue > bValue) return sortDirection === 'asc' ? 1 : -1
+        return 0
+      })
+    }
+
+    return filtered
+  }, [membersData, searchInput, sortColumn, sortDirection])
 
   const handleClearSearch = () => {
     setSearchInput('')
+  }
+
+  const handleSort = (column: SortColumn) => {
+    if (sortColumn === column) {
+      setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')
+    } else {
+      setSortColumn(column)
+      setSortDirection('asc')
+    }
+  }
+
+  const renderSortIcon = (column: SortColumn) => {
+    if (sortColumn !== column) {
+      return (
+        <span className={styles['sort-icon-container']}>
+          <ChevronUpIcon className={styles['sort-icon-inactive']} />
+          <ChevronDownIcon className={styles['sort-icon-inactive']} />
+        </span>
+      )
+    }
+    return sortDirection === 'asc' ? (
+      <ChevronUpIcon className={styles['sort-icon-active']} />
+    ) : (
+      <ChevronDownIcon className={styles['sort-icon-active']} />
+    )
   }
 
   if (!isSuperAdmin) {
@@ -52,7 +112,7 @@ const Administration = () => {
       <div className={styles.header}>
         <div>
           <h1 className="page-title">Administration Panel</h1>
-          <p className="page-subtitle">View and manage users</p>
+          <p className="page-subtitle">Central management and configuration</p>
         </div>
       </div>
 
@@ -62,6 +122,12 @@ const Administration = () => {
           onClick={() => setActiveTab('users')}
         >
           Users
+        </button>
+        <button
+          className={`${styles.tab} ${activeTab === 'invitations' ? styles['tab-active'] : ''}`}
+          onClick={() => setActiveTab('invitations')}
+        >
+          Invitations
         </button>
       </div>
 
@@ -101,11 +167,51 @@ const Administration = () => {
                     <table className={styles.table}>
                       <thead className={styles['table-head']}>
                         <tr>
-                          <th className={styles['th-username']}>Username</th>
-                          <th className={styles['th-name']}>First Name</th>
-                          <th className={styles['th-name']}>Last Name</th>
-                          <th className={styles['th-email']}>Email</th>
-                          <th className={styles['th-tenants']}>Tenants</th>
+                          <th className={styles['th-username']}>
+                            <button
+                              className={styles['sort-button']}
+                              onClick={() => handleSort('username')}
+                            >
+                              <span>Username</span>
+                              {renderSortIcon('username')}
+                            </button>
+                          </th>
+                          <th className={styles['th-name']}>
+                            <button
+                              className={styles['sort-button']}
+                              onClick={() => handleSort('firstName')}
+                            >
+                              <span>First Name</span>
+                              {renderSortIcon('firstName')}
+                            </button>
+                          </th>
+                          <th className={styles['th-name']}>
+                            <button
+                              className={styles['sort-button']}
+                              onClick={() => handleSort('lastName')}
+                            >
+                              <span>Last Name</span>
+                              {renderSortIcon('lastName')}
+                            </button>
+                          </th>
+                          <th className={styles['th-email']}>
+                            <button
+                              className={styles['sort-button']}
+                              onClick={() => handleSort('email')}
+                            >
+                              <span>Email</span>
+                              {renderSortIcon('email')}
+                            </button>
+                          </th>
+                          <th className={styles['th-tenants']}>
+                            <button
+                              className={styles['sort-button']}
+                              onClick={() => handleSort('tenants')}
+                            >
+                              <span>Tenants</span>
+                              {renderSortIcon('tenants')}
+                            </button>
+                          </th>
                           <th className={styles['th-actions']}>Actions</th>
                         </tr>
                       </thead>
@@ -138,9 +244,18 @@ const Administration = () => {
                                   user.tenants.map((tenant, index) => (
                                     <span
                                       key={index}
-                                      className={styles['tenant-badge']}
+                                      className={`tooltip ${styles['tenant-badge']} ${
+                                        tenant.role === 'admin'
+                                          ? styles['tenant-badge-admin']
+                                          : styles['tenant-badge-viewer']
+                                      }`}
+                                      data-tip={
+                                        tenant.role === 'admin'
+                                          ? 'Tenant Admin'
+                                          : 'Tenant Member'
+                                      }
                                     >
-                                      {tenant}
+                                      {tenant.name}
                                     </span>
                                   ))
                                 ) : (
@@ -190,6 +305,10 @@ const Administration = () => {
             </>
           )}
         </>
+      )}
+
+      {activeTab === 'invitations' && (
+        <AdminInvitations isSuperAdmin={isSuperAdmin} />
       )}
     </div>
   )

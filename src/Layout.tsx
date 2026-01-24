@@ -7,10 +7,9 @@ import {
   ServerStackIcon,
   WrenchScrewdriverIcon,
   RectangleStackIcon,
-  DocumentPlusIcon,
   FolderIcon,
-  PlusCircleIcon,
   UserGroupIcon,
+  EnvelopeIcon,
 } from '@heroicons/react/16/solid'
 import { squishEmail } from './utils/profile'
 import Button from './components/Button'
@@ -84,6 +83,12 @@ export default function Layout() {
               Administration
             </SidebarNavItem>
           )}
+          {authenticated && (
+            <SidebarNavItem to="/my-invitations">
+              <EnvelopeIcon className="size-5" aria-hidden />
+              My Invitations
+            </SidebarNavItem>
+          )}
           {hasTenantsAccess && (
             <SidebarNavItem to="/tenants/view">
               <ServerStackIcon className="size-5" aria-hidden />
@@ -91,20 +96,10 @@ export default function Layout() {
             </SidebarNavItem>
           )}
           {isSuperAdmin && (
-            <>
-              <SidebarNavItem to="/tenants/create">
-                <DocumentPlusIcon className="size-5" aria-hidden />
-                Create Tenant
-              </SidebarNavItem>
-              <SidebarNavItem to="/projects/view">
-                <FolderIcon className="size-5" aria-hidden />
-                Projects
-              </SidebarNavItem>
-              <SidebarNavItem to="/projects/create">
-                <PlusCircleIcon className="size-5" aria-hidden />
-                Create Project
-              </SidebarNavItem>
-            </>
+            <SidebarNavItem to="/projects/view">
+              <FolderIcon className="size-5" aria-hidden />
+              Projects
+            </SidebarNavItem>
           )}
           <SidebarNavItem to="/status-pages/view">
             <RectangleStackIcon className="size-5" aria-hidden />
