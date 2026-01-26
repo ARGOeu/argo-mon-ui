@@ -224,6 +224,26 @@
   justify-content: flex-start;
 }
 
+.remove-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.375rem;
+  background: none;
+  border-radius: 0.375rem;
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.remove-button:hover {
+  background-color: #fef2f2;
+}
+
+.remove-button:active {
+  transform: scale(0.95);
+}
+
 @media (max-width: 768px) {
   .container {
     padding: 1rem;

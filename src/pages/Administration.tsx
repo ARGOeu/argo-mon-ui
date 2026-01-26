@@ -273,9 +273,7 @@ const Administration = () => {
                               <div className={styles['actions-container']}>
                                 <button
                                   onClick={() =>
-                                    navigate(
-                                      `/profile?username=${encodeURIComponent(user.username)}`,
-                                    )
+                                    navigate(`/administration/users/${user.id}`)
                                   }
                                   className={`tooltip ${styles['action-button']}`}
                                   data-tip="Manage user"

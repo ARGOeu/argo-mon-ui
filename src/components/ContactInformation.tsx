@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useGetContactTypes } from '@/hooks/useTenants'
 import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid'
 import styles from '../pages/CreateTenant.module.css'
@@ -26,26 +26,12 @@ const ContactInformation = ({
   contacts,
   onContactsChange,
   onValidationChange,
-  initialData,
 }: ContactInformationProps) => {
-  const [errors, setErrors] = useState<Array<{ email: string }>>([
-    { email: '' },
-  ])
+  const [errors, setErrors] = useState<Array<{ email: string }>>(() =>
+    contacts.map(() => ({ email: '' })),
+  )
   const { data: contactTypes, isLoading: isContactTypesLoading } =
     useGetContactTypes()
-
-  useEffect(() => {
-    if (initialData && initialData.length > 0) {
-      onContactsChange(
-        initialData.map((c) => ({
-          name: c.name || '',
-          email: c.email || '',
-          type: c.type || '',
-        })),
-      )
-      setErrors(initialData.map(() => ({ email: '' })))
-    }
-  }, [initialData, onContactsChange])
 
   const handleChange = (
     index: number,

@@ -438,9 +438,18 @@ const CreateTenant = () => {
                   {isEditMode ? 'Edit Tenant' : 'Create New Tenant'}
                 </h1>
                 <p className="page-subtitle">
-                  {isEditMode
-                    ? 'Update the tenant information'
-                    : 'Fill in the details to create a new tenant'}
+                  {isEditMode ? (
+                    <>
+                      Update information for tenant
+                      <strong style={{ wordBreak: 'break-all' }}>
+                        {tenantData?.info.name
+                          ? ` ${tenantData.info.name}`
+                          : ''}
+                      </strong>
+                    </>
+                  ) : (
+                    'Fill in the details to create a new tenant'
+                  )}
                 </p>
                 <div className={styles.legend}>
                   <span className={styles['legend-indicator']} />
@@ -515,165 +524,167 @@ const CreateTenant = () => {
                 </button>
               </div>
 
-              {activeTab === 'info' && (
-                <>
-                  <div className={styles.section}>
-                    <div className={styles['section-info']}>
-                      <h2 className="section-title">Tenant Information</h2>
-                      <p className="section-description">
-                        Basic details and identification
-                      </p>
-                    </div>
-
-                    <div className={styles['section-content']}>
-                      <div className={styles.field}>
-                        <label className={styles.label}>
-                          Name <span className="required">*</span>
-                        </label>
-                        <input
-                          type="text"
-                          name="name"
-                          value={formData.name}
-                          onChange={handleChange}
-                          placeholder="Enter tenant name"
-                          disabled={isEditMode}
-                          required
-                        />
-                        {errors.name && (
-                          <span className="text-red-400 text-sm mt-1">
-                            {errors.name}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className={styles.field}>
-                        <label className={styles.label}>
-                          Email <span className="required">*</span>
-                        </label>
-                        <input
-                          type="email"
-                          name="email"
-                          value={formData.email}
-                          onChange={handleChange}
-                          placeholder="The email of the tenant that is responsible"
-                          required
-                        />
-                        {errors.email && (
-                          <span className="text-red-400 text-sm mt-1">
-                            {errors.email}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className={styles.field}>
-                        <label className={styles.label}>
-                          Description <span className="required">*</span>
-                        </label>
-                        <textarea
-                          name="description"
-                          value={formData.description}
-                          onChange={handleChange}
-                          placeholder="A small description about the tenant"
-                          rows={2}
-                          required
-                        />
-                      </div>
-                    </div>
+              <div style={{ display: activeTab === 'info' ? 'block' : 'none' }}>
+                <div className={styles.section}>
+                  <div className={styles['section-info']}>
+                    <h2 className="section-title">Tenant Information</h2>
+                    <p className="section-description">
+                      Basic details and identification
+                    </p>
                   </div>
 
-                  <div className={styles.section}>
-                    <div className={styles['section-info']}>
-                      <h2 className="section-title">Additional Details</h2>
-                      <p className="section-description">
-                        Optional media and website links
-                      </p>
+                  <div className={styles['section-content']}>
+                    <div className={styles.field}>
+                      <label className={styles.label}>
+                        Name <span className="required">*</span>
+                      </label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={formData.name}
+                        onChange={handleChange}
+                        placeholder="Enter tenant name"
+                        disabled={isEditMode}
+                        required
+                      />
+                      {errors.name && (
+                        <span className="text-red-400 text-sm mt-1">
+                          {errors.name}
+                        </span>
+                      )}
                     </div>
 
-                    <div className={styles['section-content']}>
-                      <div className={styles.field}>
-                        <label className={styles.label}>Image</label>
-                        <div
-                          {...getRootProps()}
-                          className={`${styles.dropzone} ${isDragActive ? styles['dropzone-active'] : ''}`}
-                        >
-                          <input {...getInputProps()} />
-                          {imagePreview ? (
-                            <div className={styles['image-preview']}>
-                              <button
-                                type="button"
-                                onClick={handleRemoveImage}
-                                className={styles['remove-image-button']}
-                                aria-label="Remove image"
-                              >
-                                <XMarkIcon className={styles['remove-icon']} />
-                              </button>
-                              <img
-                                className={styles['preview-image']}
-                                src={imagePreview}
-                              />
-                              <p className={styles['dropzone-text']}>
-                                Drop image here or click to upload
-                              </p>
-                            </div>
-                          ) : (
-                            <>
-                              <PhotoIcon className={styles['upload-icon']} />
-                              <p className={styles['upload-text']}>
-                                {isDragActive
-                                  ? 'Drop image here'
-                                  : 'Drop image here or click to upload'}
-                              </p>
-                            </>
-                          )}
-                        </div>
-                        <div className={styles['or-divider']}>
-                          <span>OR</span>
-                        </div>
-                        <input
-                          type="url"
-                          value={imageUrl}
-                          onChange={handleImageUrlChange}
-                          placeholder="Enter image URL"
-                        />
-                      </div>
+                    <div className={styles.field}>
+                      <label className={styles.label}>
+                        Email <span className="required">*</span>
+                      </label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={formData.email}
+                        onChange={handleChange}
+                        placeholder="The email of the tenant that is responsible"
+                        required
+                      />
+                      {errors.email && (
+                        <span className="text-red-400 text-sm mt-1">
+                          {errors.email}
+                        </span>
+                      )}
+                    </div>
 
-                      <div className={`${styles.field} mt-2`}>
-                        <label className={styles.label}>Website</label>
-                        <input
-                          type="url"
-                          name="website"
-                          value={formData.website}
-                          onChange={handleChange}
-                          placeholder="Enter the project related URL"
-                        />
-                        {errors.website && (
-                          <span className="text-red-400 text-sm mt-1">
-                            {errors.website}
-                          </span>
-                        )}
-                      </div>
+                    <div className={styles.field}>
+                      <label className={styles.label}>
+                        Description <span className="required">*</span>
+                      </label>
+                      <textarea
+                        name="description"
+                        value={formData.description}
+                        onChange={handleChange}
+                        placeholder="A small description about the tenant"
+                        rows={2}
+                        required
+                      />
                     </div>
                   </div>
-                </>
-              )}
+                </div>
 
-              {activeTab === 'contact' && (
+                <div className={styles.section}>
+                  <div className={styles['section-info']}>
+                    <h2 className="section-title">Additional Details</h2>
+                    <p className="section-description">
+                      Optional media and website links
+                    </p>
+                  </div>
+
+                  <div className={styles['section-content']}>
+                    <div className={styles.field}>
+                      <label className={styles.label}>Image</label>
+                      <div
+                        {...getRootProps()}
+                        className={`${styles.dropzone} ${isDragActive ? styles['dropzone-active'] : ''}`}
+                      >
+                        <input {...getInputProps()} />
+                        {imagePreview ? (
+                          <div className={styles['image-preview']}>
+                            <button
+                              type="button"
+                              onClick={handleRemoveImage}
+                              className={styles['remove-image-button']}
+                              aria-label="Remove image"
+                            >
+                              <XMarkIcon className={styles['remove-icon']} />
+                            </button>
+                            <img
+                              className={styles['preview-image']}
+                              src={imagePreview}
+                            />
+                            <p className={styles['dropzone-text']}>
+                              Drop image here or click to upload
+                            </p>
+                          </div>
+                        ) : (
+                          <>
+                            <PhotoIcon className={styles['upload-icon']} />
+                            <p className={styles['upload-text']}>
+                              {isDragActive
+                                ? 'Drop image here'
+                                : 'Drop image here or click to upload'}
+                            </p>
+                          </>
+                        )}
+                      </div>
+                      <div className={styles['or-divider']}>
+                        <span>OR</span>
+                      </div>
+                      <input
+                        type="url"
+                        value={imageUrl}
+                        onChange={handleImageUrlChange}
+                        placeholder="Enter image URL"
+                      />
+                    </div>
+
+                    <div className={`${styles.field} mt-2`}>
+                      <label className={styles.label}>Website</label>
+                      <input
+                        type="url"
+                        name="website"
+                        value={formData.website}
+                        onChange={handleChange}
+                        placeholder="Enter the project related URL"
+                      />
+                      {errors.website && (
+                        <span className="text-red-400 text-sm mt-1">
+                          {errors.website}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{ display: activeTab === 'contact' ? 'block' : 'none' }}
+              >
                 <ContactInformation
                   contacts={contacts}
                   onContactsChange={setContacts}
                   onValidationChange={setHasContactValidationError}
                   initialData={tenantData?.contacts || null}
                 />
-              )}
+              </div>
 
-              {activeTab === 'metadata' && (
+              <div
+                style={{ display: activeTab === 'metadata' ? 'block' : 'none' }}
+              >
                 <InfrastructureMetadata
                   metadata={metadata}
                   onMetadataChange={setMetadata}
                   onValidationChange={setHasMetadataValidationError}
                   initialData={tenantData?.metadata || null}
                 />
-              )}
+              </div>
             </form>
           </>
         )}
