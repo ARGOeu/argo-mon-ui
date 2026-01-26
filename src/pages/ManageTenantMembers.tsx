@@ -106,7 +106,6 @@ const ManageTenantMembers = () => {
           toast.success('Invitation sent successfully!')
           setInviteForm({ email: '', role: 'viewer' })
           setErrors({ email: '' })
-          setActiveTab('members')
         },
         onError: (error) => {
           toast.error(`Failed to send invitation: ${error.message}`)

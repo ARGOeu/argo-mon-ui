@@ -318,16 +318,21 @@ export const useUpdateTenantStatusMutation = () => {
   })
 }
 
-export const useGetMembers = (enabled: boolean = true) => {
+export const useGetMembers = (
+  page?: number,
+  size?: number,
+  search?: string,
+  enabled: boolean = true,
+) => {
   const { token } = useAuth()
 
-  return useQuery<Member[], Error>({
-    queryKey: ['members'],
+  return useQuery<PaginatedMembersResponse, Error>({
+    queryKey: ['members', page, size, search],
     queryFn: () => {
       if (!token) {
         throw new Error('No authentication token available')
       }
-      return fetchMembers(token)
+      return fetchMembers(token, page, size, search)
     },
     retry: false,
     enabled: enabled && !!token,
@@ -352,6 +357,27 @@ export const useGetTenantMembers = (
     },
     retry: false,
     enabled: enabled && !!token && !!tenantId,
+    refetchOnMount: 'always',
+  })
+}
+
+export const useGetUserProfileById = (
+  username: string,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<Member | undefined, Error>({
+    queryKey: ['user-profile', username],
+    queryFn: async () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      const response = await fetchMembers(token, 1, 1, username)
+      return response.content.length > 0 ? response.content[0] : undefined
+    },
+    retry: false,
+    enabled: enabled && !!token && !!username,
     refetchOnMount: 'always',
   })
 }

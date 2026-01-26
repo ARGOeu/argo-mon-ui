@@ -1,19 +1,21 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useAuth } from '@/auth/useAuth'
 import { useGetMembers } from '@/hooks/useTenants'
 import {
   ArrowPathIcon,
   MagnifyingGlassIcon,
-  IdentificationIcon,
-  UserPlusIcon,
+  UserCircleIcon,
 } from '@heroicons/react/16/solid'
 import {
   XMarkIcon,
   ChevronUpIcon,
   ChevronDownIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
 } from '@heroicons/react/24/outline'
 import styles from './Administration.module.css'
 import AdminInvitations from './AdminInvitations'
+import { useNavigate } from 'react-router-dom'
 
 type SortColumn = 'username' | 'firstName' | 'lastName' | 'email' | 'tenants'
 type SortDirection = 'asc' | 'desc'
@@ -23,28 +25,25 @@ const Administration = () => {
   const [searchInput, setSearchInput] = useState('')
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
+  const [currentPage, setCurrentPage] = useState(1)
+  const pageSize = 10
+  const navigate = useNavigate()
 
   const { profile } = useAuth()
   const isSuperAdmin = profile?.roles?.includes('super_admin')
 
-  const { data: usersData, isLoading } = useGetMembers(isSuperAdmin)
-  const membersData = usersData
+  const { data: usersData, isLoading } = useGetMembers(
+    currentPage,
+    pageSize,
+    searchInput,
+    isSuperAdmin,
+  )
 
   const filteredUsers = useMemo(() => {
-    if (!membersData) return []
+    const membersData = usersData?.content || []
+    if (!membersData || membersData.length === 0) return []
 
     let filtered = membersData
-
-    if (searchInput.trim()) {
-      const query = searchInput.toLowerCase()
-      filtered = filtered.filter(
-        (user) =>
-          user.username.toLowerCase().includes(query) ||
-          user.email.toLowerCase().includes(query) ||
-          user.firstName.toLowerCase().includes(query) ||
-          user.lastName.toLowerCase().includes(query),
-      )
-    }
 
     if (sortColumn) {
       filtered = [...filtered].sort((a, b) => {
@@ -66,10 +65,11 @@ const Administration = () => {
     }
 
     return filtered
-  }, [membersData, searchInput, sortColumn, sortDirection])
+  }, [usersData?.content, sortColumn, sortDirection])
 
   const handleClearSearch = () => {
     setSearchInput('')
+    setCurrentPage(1)
   }
 
   const handleSort = (column: SortColumn) => {
@@ -80,6 +80,10 @@ const Administration = () => {
       setSortDirection('asc')
     }
   }
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchInput])
 
   const renderSortIcon = (column: SortColumn) => {
     if (sortColumn !== column) {
@@ -268,20 +272,16 @@ const Administration = () => {
                             <td className={styles['td-actions']}>
                               <div className={styles['actions-container']}>
                                 <button
-                                  className={`tooltip ${styles['action-button']} ${styles['action-button-primary']}`}
-                                  data-tip="Add to Tenant Group"
-                                  aria-label="Add to Tenant Group"
-                                >
-                                  <UserPlusIcon
-                                    className={styles['action-icon']}
-                                  />
-                                </button>
-                                <button
+                                  onClick={() =>
+                                    navigate(
+                                      `/profile?username=${encodeURIComponent(user.username)}`,
+                                    )
+                                  }
                                   className={`tooltip ${styles['action-button']}`}
-                                  data-tip="View Profile"
-                                  aria-label="View Profile"
+                                  data-tip="Manage user"
+                                  aria-label="Manage user"
                                 >
-                                  <IdentificationIcon
+                                  <UserCircleIcon
                                     className={styles['action-icon']}
                                   />
                                 </button>
@@ -300,6 +300,39 @@ const Administration = () => {
                       ? 'No users found matching your search'
                       : 'No users available'}
                   </p>
+                </div>
+              )}
+
+              {filteredUsers.length > 0 && usersData && (
+                <div className={styles['pagination-container']}>
+                  <div className={styles['pagination-info']}>
+                    <span className={styles['pagination-text']}>
+                      Page {currentPage} of {usersData.total_pages}
+                    </span>
+                    <span className={styles['pagination-count']}>
+                      ({usersData.total_elements} total users)
+                    </span>
+                  </div>
+                  <div className={styles['pagination-buttons']}>
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(1, prev - 1))
+                      }
+                      disabled={currentPage === 1}
+                      className={styles['pagination-button']}
+                      aria-label="Previous page"
+                    >
+                      <ChevronLeftIcon className={styles['pagination-icon']} />
+                    </button>
+                    <button
+                      onClick={() => setCurrentPage((prev) => prev + 1)}
+                      disabled={currentPage >= usersData.total_pages}
+                      className={styles['pagination-button']}
+                      aria-label="Next page"
+                    >
+                      <ChevronRightIcon className={styles['pagination-icon']} />
+                    </button>
+                  </div>
                 </div>
               )}
             </>

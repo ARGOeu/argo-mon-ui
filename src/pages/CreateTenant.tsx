@@ -344,12 +344,12 @@ const CreateTenant = () => {
     }))
 
     if (name === 'name') {
-      // Allow only Latin uppercase letters (A-Z), spaces, and hyphen
-      const isValid = /^[A-Z\s-]*$/.test(value)
+      // Allow only Latin uppercase letters (A-Z), numbers (0-9), spaces, and hyphen
+      const isValid = /^[A-Z0-9\s-]*$/.test(value)
       if (value && !isValid) {
         setErrors((prev) => ({
           ...prev,
-          name: 'Only Latin uppercase letters, spaces, and hyphen (-) are allowed',
+          name: 'Only Latin uppercase letters, numbers, spaces, and hyphen (-) are allowed',
         }))
       } else {
         setErrors((prev) => ({ ...prev, name: '' }))
