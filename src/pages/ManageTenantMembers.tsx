@@ -4,15 +4,23 @@ import {
   useGetTenantInvitations,
   useCreateTenantInvitation,
 } from '@/hooks/useInvitations'
-import { useGetTenantMembers, useGetUserTenantById } from '@/hooks/useTenants'
+import {
+  useGetTenantMembers,
+  useGetUserTenantById,
+  useAddMemberDirectly,
+  useRemoveMemberFromTenant,
+} from '@/hooks/useTenants'
+import { useAuth } from '@/auth/useAuth'
 import {
   ArrowPathIcon,
   ArrowLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  UserMinusIcon,
 } from '@heroicons/react/24/solid'
 import { toast, Toaster } from 'sonner'
 import Button from '@/components/Button'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import styles from './ManageTenantMembers.module.css'
 import adminStyles from './AdminInvitations.module.css'
 import type { InvitationRole } from '@/types/invitations'
@@ -25,18 +33,35 @@ const roleOptions = [
 const ManageTenantMembers = () => {
   const { id: tenantId } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { profile } = useAuth()
   const { data: tenantData } = useGetUserTenantById(tenantId || '')
 
-  const [activeTab, setActiveTab] = useState<'members' | 'invite'>('members')
+  const isSuperAdmin = profile?.roles?.includes('super_admin')
+
+  const [activeTab, setActiveTab] = useState<
+    'members' | 'invite' | 'add-direct'
+  >('members')
   const [currentMembersPage, setCurrentMembersPage] = useState(1)
   const membersPageSize = 10
   const [inviteForm, setInviteForm] = useState({
     email: '',
     role: 'viewer' as InvitationRole,
   })
+  const [addDirectForm, setAddDirectForm] = useState({
+    email: '',
+    role: 'viewer' as InvitationRole,
+  })
   const [errors, setErrors] = useState({
     email: '',
   })
+  const [addDirectErrors, setAddDirectErrors] = useState({
+    email: '',
+  })
+  const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
+  const [memberToRemove, setMemberToRemove] = useState<{
+    id: string
+    name: string
+  } | null>(null)
 
   const { data: membersData, isLoading: membersLoading } = useGetTenantMembers(
     tenantId || '',
@@ -48,6 +73,8 @@ const ManageTenantMembers = () => {
     useGetTenantInvitations(tenantId || '', !!tenantId)
 
   const createInvitationMutation = useCreateTenantInvitation()
+  const addMemberDirectlyMutation = useAddMemberDirectly()
+  const removeMemberMutation = useRemoveMemberFromTenant()
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -114,6 +141,100 @@ const ManageTenantMembers = () => {
     )
   }
 
+  const handleAddDirectFormChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+  ) => {
+    const { name, value } = e.target
+
+    setAddDirectForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
+
+    if (name === 'email') {
+      if (!value.trim()) {
+        setAddDirectErrors((prev) => ({ ...prev, email: 'Email is required' }))
+      } else if (!validateEmail(value)) {
+        setAddDirectErrors((prev) => ({
+          ...prev,
+          email: 'Invalid email format',
+        }))
+      } else {
+        setAddDirectErrors((prev) => ({ ...prev, email: '' }))
+      }
+    }
+  }
+
+  const handleAddDirectSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!addDirectForm.email.trim()) {
+      setAddDirectErrors({ email: 'Email is required' })
+      return
+    }
+
+    if (!validateEmail(addDirectForm.email)) {
+      setAddDirectErrors({ email: 'Invalid email format' })
+      return
+    }
+
+    if (!tenantId) {
+      toast.error('Tenant ID is missing')
+      return
+    }
+
+    addMemberDirectlyMutation.mutate(
+      {
+        tenantId,
+        data: {
+          email: addDirectForm.email,
+          role: addDirectForm.role,
+        },
+      },
+      {
+        onSuccess: () => {
+          toast.success('Member added successfully!')
+          setAddDirectForm({ email: '', role: 'viewer' })
+          setAddDirectErrors({ email: '' })
+        },
+        onError: (error) => {
+          toast.error(`Failed to add member: ${error.message}`)
+        },
+      },
+    )
+  }
+
+  const handleRemoveClick = (memberId: string, memberName: string) => {
+    setMemberToRemove({ id: memberId, name: memberName })
+    setRemoveDialogOpen(true)
+  }
+
+  const handleRemoveConfirm = () => {
+    if (!tenantId || !memberToRemove) return
+
+    removeMemberMutation.mutate(
+      {
+        tenantId,
+        memberId: memberToRemove.id,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Member removed successfully!')
+          setRemoveDialogOpen(false)
+          setMemberToRemove(null)
+        },
+        onError: (error) => {
+          toast.error(`Failed to remove member: ${error.message}`)
+        },
+      },
+    )
+  }
+
+  const handleRemoveCancel = () => {
+    setRemoveDialogOpen(false)
+    setMemberToRemove(null)
+  }
+
   const handleBack = () => {
     navigate('/tenants/view')
   }
@@ -153,6 +274,14 @@ const ManageTenantMembers = () => {
           >
             Invite Member
           </button>
+          {isSuperAdmin && (
+            <button
+              className={`${styles.tab} ${activeTab === 'add-direct' ? styles['tab-active'] : ''}`}
+              onClick={() => setActiveTab('add-direct')}
+            >
+              Add Member
+            </button>
+          )}
         </div>
 
         {isLoading ? (
@@ -174,6 +303,7 @@ const ManageTenantMembers = () => {
                           <th>Last Name</th>
                           <th>Email</th>
                           <th>Role</th>
+                          <th>Actions</th>
                         </tr>
                       </thead>
                       <tbody className={styles['table-body']}>
@@ -198,12 +328,26 @@ const ManageTenantMembers = () => {
                                       : 'Member'}
                                   </span>
                                 </td>
+                                <td>
+                                  <button
+                                    onClick={() =>
+                                      handleRemoveClick(
+                                        member.id,
+                                        member.username,
+                                      )
+                                    }
+                                    className={styles['remove-button']}
+                                    title="Remove member"
+                                  >
+                                    <UserMinusIcon className="size-4" />
+                                  </button>
+                                </td>
                               </tr>
                             )
                           })
                         ) : (
                           <tr>
-                            <td colSpan={5} className={styles['empty-state']}>
+                            <td colSpan={6} className={styles['empty-state']}>
                               No members found for this tenant
                             </td>
                           </tr>
@@ -389,9 +533,107 @@ const ManageTenantMembers = () => {
                 </form>
               </div>
             )}
+
+            {activeTab === 'add-direct' && isSuperAdmin && (
+              <div className={styles['tab-content']}>
+                <form
+                  onSubmit={handleAddDirectSubmit}
+                  className={styles['invite-form']}
+                >
+                  <div className={styles['form-section']}>
+                    <h2 className={styles['section-title']}>
+                      Add Member Directly
+                    </h2>
+                    <p className={styles['section-description']}>
+                      Add a new member directly to this tenant without sending
+                      an invitation. The user must already have an account in
+                      the system.
+                    </p>
+
+                    <div className={styles['form-fields']}>
+                      <div className={styles.field}>
+                        <label className={styles.label}>
+                          Email Address <span className="required">*</span>
+                        </label>
+                        <input
+                          type="email"
+                          name="email"
+                          value={addDirectForm.email}
+                          onChange={handleAddDirectFormChange}
+                          placeholder="user@example.com"
+                          className={
+                            addDirectErrors.email ? styles['input-error'] : ''
+                          }
+                        />
+                        {addDirectErrors.email && (
+                          <span className={styles.error}>
+                            {addDirectErrors.email}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className={styles.field}>
+                        <label className={styles.label}>
+                          Role <span className="required">*</span>
+                        </label>
+                        <select
+                          name="role"
+                          value={addDirectForm.role}
+                          onChange={handleAddDirectFormChange}
+                        >
+                          {roleOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className={styles['form-actions']}>
+                      <Button
+                        variant="primary"
+                        size="md"
+                        type="submit"
+                        disabled={
+                          !addDirectForm.email.trim() ||
+                          !!addDirectErrors.email ||
+                          addMemberDirectlyMutation.isPending
+                        }
+                      >
+                        Add Member
+                      </Button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            )}
           </>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={removeDialogOpen}
+        title="Remove Member"
+        message={
+          memberToRemove ? (
+            <>
+              Are you sure you want to remove this user from the tenant "
+              {tenantData?.info.name}"?
+              <br />
+              <span className="text-amber-600 font-medium">
+                The user will lose access to this tenant.
+              </span>
+            </>
+          ) : (
+            ''
+          )
+        }
+        confirmLabel="Remove"
+        cancelLabel="Cancel"
+        onConfirm={handleRemoveConfirm}
+        onCancel={handleRemoveCancel}
+      />
     </>
   )
 }

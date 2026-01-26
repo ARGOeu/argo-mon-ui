@@ -22,6 +22,8 @@ import {
   updateTenantStatus,
   fetchMembers,
   fetchTenantMembers,
+  addMemberDirectly,
+  removeMemberFromTenant,
 } from '@/api/tenants'
 import type {
   Job,
@@ -379,5 +381,76 @@ export const useGetUserProfileById = (
     retry: false,
     enabled: enabled && !!token && !!username,
     refetchOnMount: 'always',
+  })
+}
+
+export const useAddMemberDirectly = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<
+    void,
+    Error,
+    { tenantId: string; data: { email: string; role: string } }
+  >({
+    mutationFn: ({ tenantId, data }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return addMemberDirectly(tenantId, data, token)
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['tenant-members', variables.tenantId],
+      })
+    },
+    onError: (error) => {
+      console.error('Add member error:', error)
+    },
+  })
+}
+
+export const useRemoveMemberFromTenant = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<void, Error, { tenantId: string; memberId: string }>({
+    mutationFn: ({ tenantId, memberId }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return removeMemberFromTenant(tenantId, memberId, token)
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['tenant-members', variables.tenantId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['members'],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['user-profile', variables.memberId],
+      })
+    },
+    onError: (error) => {
+      console.error('Remove member error:', error)
+    },
+  })
+}
+
+export const useGetTenantByName = () => {
+  const { token } = useAuth()
+
+  return useMutation<TenantList | null, Error, string>({
+    mutationFn: (tenantName: string) => {
+      console.log('tenantName', tenantName)
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchTenants(token, 1, 1, tenantName)
+    },
+    onError: (error) => {
+      console.error('Fetch tenant by name error:', error)
+    },
   })
 }

@@ -371,13 +371,13 @@ const TenantStatus = () => {
                             >
                               Message:
                             </label>
-                            <input
-                              type="text"
+                            <textarea
                               id={`message-${job.name}`}
                               value={jobMessage}
                               onChange={(e) => setJobMessage(e.target.value)}
                               placeholder="Enter a description for this status change"
                               className={styles['status-message-input']}
+                              rows={2}
                             />
                           </div>
                         </div>

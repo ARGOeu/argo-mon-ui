@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { useGetContactTypes } from '@/hooks/useTenants'
 import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid'
 import type { Metadata } from '@/types/tenants'
@@ -35,45 +35,16 @@ const InfrastructureMetadata = ({
   metadata,
   onMetadataChange,
   onValidationChange,
-  initialData,
 }: InfrastructureMetadataProps) => {
-  const [errors, setErrors] = useState({
+  const [errors, setErrors] = useState(() => ({
     uiUrl: '',
     poemUrl: '',
     topologyUrl: '',
     authUrl: '',
-    internalListsEmails: [{ email: '' }],
-  })
+    internalListsEmails: metadata.internalLists.map(() => ({ email: '' })),
+  }))
   const { data: contactTypes, isLoading: isContactTypesLoading } =
     useGetContactTypes()
-
-  useEffect(() => {
-    if (initialData) {
-      const loadedInternalLists =
-        initialData.internalLists && initialData.internalLists.length > 0
-          ? initialData.internalLists.map((list) => ({
-              email: list.email || '',
-              type: list.type || '',
-            }))
-          : [{ email: '', type: '' }]
-
-      onMetadataChange({
-        ui_url: initialData.instance?.ui_url || '',
-        poem_url: initialData.instance?.poem_url || '',
-        topology_type: initialData.instance?.topology?.type || '',
-        topology_url: initialData.instance?.topology?.url || '',
-        topology_feed: initialData.instance?.topology?.feed || '',
-        internalLists: loadedInternalLists,
-        auth_name: initialData.auth_metadata?.auth_name || '',
-        auth_url: initialData.auth_metadata?.auth_url || '',
-      })
-
-      setErrors((prev) => ({
-        ...prev,
-        internalListsEmails: loadedInternalLists.map(() => ({ email: '' })),
-      }))
-    }
-  }, [initialData, onMetadataChange])
 
   const urlErrorMesage =
     'Please enter a valid URL (must start with http:// or https://)'

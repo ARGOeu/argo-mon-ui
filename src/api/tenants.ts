@@ -411,3 +411,52 @@ export const fetchTenantMembers = async (
 
   return response.json()
 }
+
+export const addMemberDirectly = async (
+  tenantId: string,
+  data: { email: string; role: string },
+  token: string,
+): Promise<void> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/admin/tenants/${tenantId}/members`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+}
+
+export const removeMemberFromTenant = async (
+  tenantId: string,
+  memberId: string,
+  token: string,
+): Promise<void> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/members/${memberId}`,
+    {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+}

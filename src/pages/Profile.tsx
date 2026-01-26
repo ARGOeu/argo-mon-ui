@@ -1,23 +1,29 @@
 import { UserCircleIcon, ArrowPathIcon } from '@heroicons/react/16/solid'
-import { ArrowLeftIcon, TrashIcon } from '@heroicons/react/24/solid'
-import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
+import { ArrowLeftIcon, UserMinusIcon } from '@heroicons/react/24/solid'
+import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../auth/useAuth'
-import { useGetUserProfileById } from '@/hooks/useTenants'
+import {
+  useGetUserProfileById,
+  useGetTenantByName,
+  useRemoveMemberFromTenant,
+} from '@/hooks/useTenants'
 import { squishEmail } from '@/utils/profile'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import { toast, Toaster } from 'sonner'
 import styles from './Profile.module.css'
 
 export const Profile = () => {
-  const [searchParams] = useSearchParams()
-  const username = searchParams.get('username')
+  const { id: userId } = useParams<{ id: string }>()
+
   const { profile } = useAuth()
   const navigate = useNavigate()
   const isSuperAdmin = profile?.roles?.includes('super_admin')
 
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
   const [tenantToRemove, setTenantToRemove] = useState<{
+    id: string
     name: string
     role: string
   } | null>(null)
@@ -26,14 +32,17 @@ export const Profile = () => {
     data: userProfileData,
     isLoading,
     error,
-  } = useGetUserProfileById(username || '', !!username && isSuperAdmin)
+  } = useGetUserProfileById(userId || '', !!userId && isSuperAdmin)
 
-  if (username && !isSuperAdmin) {
+  const getTenantByNameMutation = useGetTenantByName()
+  const removeMemberMutation = useRemoveMemberFromTenant()
+
+  if (userId && !isSuperAdmin) {
     return <Navigate to="/profile" replace />
   }
 
   // Determine which profile to display based on route
-  const isViewingOtherUser = !!username
+  const isViewingOtherUser = !!userId
   const displayProfile = isViewingOtherUser ? userProfileData : null
 
   const handleBack = () => {
@@ -41,15 +50,49 @@ export const Profile = () => {
   }
 
   const handleRemoveClick = (tenantName: string, role: string) => {
-    setTenantToRemove({ name: tenantName, role })
+    setTenantToRemove({ id: '', name: tenantName, role })
     setRemoveDialogOpen(true)
   }
 
   const handleRemoveConfirm = () => {
-    if (!tenantToRemove) return
-    // TODO: Implement API call to remove user from tenant when its available
-    setRemoveDialogOpen(false)
-    setTenantToRemove(null)
+    if (!tenantToRemove || !userId) return
+
+    // Get the tenant ID by name
+    getTenantByNameMutation.mutate('TENANT-INVITATIONS-TEST', {
+      onSuccess: (tenantData) => {
+        let tenantId = ''
+        if (!tenantData || (tenantData && tenantData.content.length === 0)) {
+          toast.error('Tenant not found')
+          return
+        }
+        tenantId = tenantData.content[0].id || ''
+
+        if (!tenantId) {
+          toast.error('Tenant ID not found')
+          return
+        }
+
+        removeMemberMutation.mutate(
+          {
+            tenantId: tenantId,
+            memberId: userId,
+          },
+          {
+            onSuccess: () => {
+              toast.success('Member removed successfully!')
+              setRemoveDialogOpen(false)
+              setTenantToRemove(null)
+            },
+            onError: (error) => {
+              toast.error(`Failed to remove member: ${error.message}`)
+            },
+          },
+        )
+      },
+      onError: (error) => {
+        toast.error(`Failed to find tenant: ${error.message}`)
+      },
+    })
   }
 
   const handleRemoveCancel = () => {
@@ -112,6 +155,7 @@ export const Profile = () => {
 
   return (
     <div className={styles.container}>
+      <Toaster richColors position="top-center" duration={2000} />
       <ConfirmDialog
         isOpen={removeDialogOpen}
         title="Remove from Tenant"
@@ -121,7 +165,7 @@ export const Profile = () => {
             {tenantToRemove?.name}"?
             <br />
             <span className="text-amber-600 font-medium">
-              The user will lose {tenantToRemove?.role} access to this tenant.
+              The user will lose access to this tenant.
             </span>
           </>
         }
@@ -275,7 +319,7 @@ export const Profile = () => {
                                     }
                                     title="Remove user from this tenant"
                                   >
-                                    <TrashIcon
+                                    <UserMinusIcon
                                       className={styles['action-icon']}
                                     />
                                   </button>
@@ -287,11 +331,6 @@ export const Profile = () => {
                           <p className={styles['field-value-unavailable']}>
                             Not a member of any tenant
                           </p>
-                        )}
-                        {isSuperAdmin && (
-                          <button className={styles['add-tenant-button']}>
-                            Add to Tenant
-                          </button>
                         )}
                       </div>
                     ) : (
