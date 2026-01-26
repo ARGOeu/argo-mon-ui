@@ -2,7 +2,6 @@ import type {
   Job,
   Tenant,
   TenantList,
-  Member,
   PaginatedMembersResponse,
 } from '@/types/tenants'
 
@@ -199,7 +198,6 @@ export const fetchContactTypes = async (token: string): Promise<string[]> => {
   return response.json()
 }
 
-// Endpoints for admin and viewer roles
 export const fetchUserTenants = async (
   token: string,
   page: number = 1,
@@ -353,8 +351,23 @@ export const updateTenantStatus = async (
   return response.json()
 }
 
-export const fetchMembers = async (token: string): Promise<Member[]> => {
-  const response = await fetch(`${BACKEND_API}/v1/admin/members`, {
+export const fetchMembers = async (
+  token: string,
+  page?: number,
+  size?: number,
+  search?: string,
+): Promise<PaginatedMembersResponse> => {
+  const params = new URLSearchParams()
+  if (page !== undefined) params.append('page', page.toString())
+  if (size !== undefined) params.append('size', size.toString())
+  if (search) params.append('search', search)
+
+  const queryString = params.toString()
+  const url = queryString
+    ? `${BACKEND_API}/v1/admin/members?${queryString}`
+    : `${BACKEND_API}/v1/admin/members`
+
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

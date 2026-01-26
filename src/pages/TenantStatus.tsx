@@ -258,6 +258,15 @@ const TenantStatus = () => {
       <div className={styles.container}>
         <div className={styles.header}>
           <div>
+            <h1 className="page-title">Tenant Status</h1>
+            <p className="page-subtitle">
+              View and manage status for tenant
+              <strong style={{ wordBreak: 'break-all' }}>
+                {tenantData?.info.name ? ` ${tenantData.info.name}` : '...'}
+              </strong>
+            </p>
+          </div>
+          <div>
             <Button
               variant="secondary"
               size="sm"
@@ -266,15 +275,6 @@ const TenantStatus = () => {
               <ArrowLeftIcon className={styles['back-icon']} />
               Back to Tenants
             </Button>
-            <h1 className="page-title" style={{ marginTop: '1rem' }}>
-              Tenant Status
-            </h1>
-            <p className="page-subtitle">
-              View and manage status for tenant
-              <strong style={{ wordBreak: 'break-all' }}>
-                {tenantData?.info.name ? ` ${tenantData.info.name}` : '...'}
-              </strong>
-            </p>
           </div>
         </div>
 

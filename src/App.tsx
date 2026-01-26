@@ -146,6 +146,14 @@ function App() {
                 }
               />
               <Route
+                path="administration/users/:id"
+                element={
+                  <ProtectedRoute requiredRoles={['super_admin']}>
+                    <Profile />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="my-invitations"
                 element={
                   <AuthProtected>
