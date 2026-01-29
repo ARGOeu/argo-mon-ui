@@ -338,15 +338,17 @@ const CreateTenant = () => {
   ) => {
     const { name, value } = e.target
 
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-
     if (name === 'name') {
-      // Allow only Latin uppercase letters (A-Z), numbers (0-9), spaces, and hyphen
-      const isValid = /^[A-Z0-9\s-]*$/.test(value)
-      if (value && !isValid) {
+      // Capitalize and filter to only allow Latin letters (a-z, A-Z), numbers (0-9), spaces, and hyphen
+      const hasInvalidChars = /[^a-zA-Z0-9\s-]/.test(value)
+      const sanitizedValue = value.replace(/[^a-zA-Z0-9\s-]/g, '').toUpperCase()
+
+      setFormData((prev) => ({
+        ...prev,
+        [name]: sanitizedValue,
+      }))
+
+      if (hasInvalidChars) {
         setErrors((prev) => ({
           ...prev,
           name: 'Only Latin uppercase letters, numbers, spaces, and hyphen (-) are allowed',
@@ -354,7 +356,13 @@ const CreateTenant = () => {
       } else {
         setErrors((prev) => ({ ...prev, name: '' }))
       }
+      return
     }
+
+    setFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }))
 
     if (name === 'email') {
       // Email validation
@@ -498,9 +506,13 @@ const CreateTenant = () => {
                   onClick={() => setActiveTab('info')}
                 >
                   Tenant Details
-                  {hasTenantDetailsErrors() && (
-                    <span className={styles['tab-indicator']} />
-                  )}
+                  <span
+                    className={`${styles['tab-indicator']} ${
+                      hasTenantDetailsErrors()
+                        ? styles['tab-indicator-visible']
+                        : ''
+                    }`}
+                  />
                 </button>
                 <button
                   type="button"
@@ -508,9 +520,11 @@ const CreateTenant = () => {
                   onClick={() => setActiveTab('contact')}
                 >
                   Contact Information
-                  {hasContactErrors() && (
-                    <span className={styles['tab-indicator']} />
-                  )}
+                  <span
+                    className={`${styles['tab-indicator']} ${
+                      hasContactErrors() ? styles['tab-indicator-visible'] : ''
+                    }`}
+                  />
                 </button>
                 <button
                   type="button"
@@ -518,9 +532,11 @@ const CreateTenant = () => {
                   onClick={() => setActiveTab('metadata')}
                 >
                   Infrastructure Settings
-                  {hasMetadataErrors() && (
-                    <span className={styles['tab-indicator']} />
-                  )}
+                  <span
+                    className={`${styles['tab-indicator']} ${
+                      hasMetadataErrors() ? styles['tab-indicator-visible'] : ''
+                    }`}
+                  />
                 </button>
               </div>
 

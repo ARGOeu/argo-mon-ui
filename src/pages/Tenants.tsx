@@ -424,7 +424,7 @@ const Tenants = () => {
               Page {currentPage} of {data.total_pages}
             </span>
             <span className="text-sm text-gray-500">
-              ({data.total_elements} total items)
+              ({data.total_elements} total tenants)
             </span>
           </div>
           <div className="flex items-center gap-2">

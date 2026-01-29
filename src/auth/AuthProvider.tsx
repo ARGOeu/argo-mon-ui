@@ -97,9 +97,12 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
     }
   }, [])
 
-  const login = () =>
+  const login = (redirectUri?: string) =>
     keycloak.login({
-      redirectUri: import.meta.env.VITE_REDIRECT_URI || window.location.origin,
+      redirectUri:
+        redirectUri ||
+        import.meta.env.VITE_REDIRECT_URI ||
+        window.location.origin,
     })
 
   const logout = () =>

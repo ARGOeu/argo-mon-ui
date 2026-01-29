@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useGetAdminInvitations } from '@/hooks/useInvitations'
-import {
-  ArrowPathIcon,
-  MagnifyingGlassIcon,
-  XMarkIcon,
-} from '@heroicons/react/16/solid'
+import { ArrowPathIcon, MagnifyingGlassIcon } from '@heroicons/react/16/solid'
 import {
   ChevronUpIcon,
   ChevronDownIcon,
@@ -218,23 +214,23 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
         </div>
 
         {invitationsData.content && invitationsData.content.length > 0 && (
-          <div className={styles['pagination-container']}>
-            <div className={styles['pagination-info']}>
-              <span className={styles['pagination-text']}>
+          <div className="pagination-container">
+            <div className="pagination-info">
+              <span className="pagination-text">
                 Page {currentPage} of {invitationsData.total_pages}
               </span>
-              <span className={styles['pagination-count']}>
-                ({invitationsData.total_elements} total items)
+              <span className="pagination-count">
+                ({invitationsData.total_elements} total invitations)
               </span>
             </div>
-            <div className={styles['pagination-buttons']}>
+            <div className="pagination-buttons">
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
-                className={styles['pagination-button']}
+                className="pagination-button"
                 aria-label="Previous page"
               >
-                <ChevronLeftIcon className={styles['pagination-icon']} />
+                <ChevronLeftIcon className="pagination-icon" />
               </button>
               <button
                 onClick={() =>
@@ -243,10 +239,10 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
                   )
                 }
                 disabled={currentPage >= invitationsData.total_pages}
-                className={styles['pagination-button']}
+                className="pagination-button"
                 aria-label="Next page"
               >
-                <ChevronRightIcon className={styles['pagination-icon']} />
+                <ChevronRightIcon className="pagination-icon" />
               </button>
             </div>
           </div>
@@ -273,7 +269,7 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
               className={styles['clear-button']}
               aria-label="Clear search"
             >
-              <XMarkIcon className="size-4" />
+              ×
             </button>
           )}
         </div>

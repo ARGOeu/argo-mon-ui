@@ -103,8 +103,21 @@ export const fetchTenantInvitations = async (
 
 export const fetchUserInvitations = async (
   token: string,
+  params?: {
+    page?: number
+    size?: number
+  },
 ): Promise<PaginatedInvitationsResponse> => {
-  const response = await fetch(`${BACKEND_API}/v1/users/invitations`, {
+  const queryParams = new URLSearchParams()
+
+  if (params?.page) queryParams.append('page', params.page.toString())
+  if (params?.size) queryParams.append('size', params.size.toString())
+
+  const url = `${BACKEND_API}/v1/users/invitations${
+    queryParams.toString() ? `?${queryParams.toString()}` : ''
+  }`
+
+  const response = await fetch(url, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

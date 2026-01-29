@@ -88,16 +88,22 @@ export const useGetTenantInvitations = (
   })
 }
 
-export const useGetUserInvitations = (enabled: boolean = true) => {
+export const useGetUserInvitations = (
+  enabled: boolean = true,
+  params?: {
+    page?: number
+    size?: number
+  },
+) => {
   const { token } = useAuth()
 
   return useQuery<PaginatedInvitationsResponse, Error>({
-    queryKey: ['user-invitations'],
+    queryKey: ['user-invitations', params],
     queryFn: () => {
       if (!token) {
         throw new Error('No authentication token available')
       }
-      return fetchUserInvitations(token)
+      return fetchUserInvitations(token, params)
     },
     retry: false,
     enabled: enabled && !!token,
