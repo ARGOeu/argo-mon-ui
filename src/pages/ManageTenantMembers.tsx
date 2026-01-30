@@ -22,7 +22,6 @@ import { toast, Toaster } from 'sonner'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import styles from './ManageTenantMembers.module.css'
-import adminStyles from './AdminInvitations.module.css'
 import type { InvitationRole } from '@/types/invitations'
 
 const roleOptions = [
@@ -357,16 +356,16 @@ const ManageTenantMembers = () => {
                   </div>
 
                   {membersData?.content && membersData.content.length > 0 && (
-                    <div className={adminStyles['pagination-container']}>
-                      <div className={adminStyles['pagination-info']}>
-                        <span className={adminStyles['pagination-text']}>
+                    <div className="pagination-container">
+                      <div className="pagination-info">
+                        <span className="pagination-text">
                           Page {currentMembersPage} of {membersData.total_pages}
                         </span>
-                        <span className={adminStyles['pagination-count']}>
+                        <span className="pagination-count">
                           ({membersData.total_elements} total members)
                         </span>
                       </div>
-                      <div className={adminStyles['pagination-buttons']}>
+                      <div className="pagination-buttons">
                         <button
                           onClick={() =>
                             setCurrentMembersPage((prev) =>
@@ -374,12 +373,10 @@ const ManageTenantMembers = () => {
                             )
                           }
                           disabled={currentMembersPage === 1}
-                          className={adminStyles['pagination-button']}
+                          className="pagination-button"
                           aria-label="Previous page"
                         >
-                          <ChevronLeftIcon
-                            className={adminStyles['pagination-icon']}
-                          />
+                          <ChevronLeftIcon className="pagination-icon" />
                         </button>
                         <button
                           onClick={() =>
@@ -390,12 +387,10 @@ const ManageTenantMembers = () => {
                           disabled={
                             currentMembersPage >= membersData.total_pages
                           }
-                          className={adminStyles['pagination-button']}
+                          className="pagination-button"
                           aria-label="Next page"
                         >
-                          <ChevronRightIcon
-                            className={adminStyles['pagination-icon']}
-                          />
+                          <ChevronRightIcon className="pagination-icon" />
                         </button>
                       </div>
                     </div>
@@ -489,7 +484,7 @@ const ManageTenantMembers = () => {
                           name="email"
                           value={inviteForm.email}
                           onChange={handleInviteFormChange}
-                          placeholder="user@example.com"
+                          placeholder="Enter email address to invite"
                           className={errors.email ? styles['input-error'] : ''}
                         />
                         {errors.email && (
@@ -542,7 +537,7 @@ const ManageTenantMembers = () => {
                 >
                   <div className={styles['form-section']}>
                     <h2 className={styles['section-title']}>
-                      Add Member Directly
+                      Add a Member Directly
                     </h2>
                     <p className={styles['section-description']}>
                       Add a new member directly to this tenant without sending
@@ -560,7 +555,7 @@ const ManageTenantMembers = () => {
                           name="email"
                           value={addDirectForm.email}
                           onChange={handleAddDirectFormChange}
-                          placeholder="user@example.com"
+                          placeholder="Enter registered user's email address"
                           className={
                             addDirectErrors.email ? styles['input-error'] : ''
                           }

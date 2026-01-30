@@ -145,7 +145,7 @@ export default function Layout() {
               <Button
                 variant="primary"
                 size="sm"
-                onClick={login}
+                onClick={() => login()}
                 className="w-full"
               >
                 Login

@@ -20,7 +20,7 @@ function LoginPrompt({
         </div>
         <h2 className="text-2xl font-semibold text-gray-900 mb-1">{title}</h2>
         <p className="text-gray-600 mb-4">{description}</p>
-        <Button variant="primary" size="md" onClick={onLogin}>
+        <Button variant="primary" size="md" onClick={() => onLogin()}>
           Login
         </Button>
       </div>

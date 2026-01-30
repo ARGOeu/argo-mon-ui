@@ -14,7 +14,7 @@ export type AuthContextType = {
     entitlements: string[]
     roles: string[]
   }
-  login: () => void
+  login: (redirectUri?: string) => void
   logout: () => void
 }
 

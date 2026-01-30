@@ -205,7 +205,7 @@ const View = () => {
         </div>
 
         {(!data?.content || data.content.length === 0) && (
-          <div className="text-center py-8 md:py-12 bg-white rounded-lg border border-gray-200 mt-2">
+          <div className="text-center py-6 md:py-8 bg-white rounded-lg border border-gray-200 mt-2">
             <p className="text-sm md:text-base text-gray-500">
               No status pages found
             </p>
@@ -219,7 +219,7 @@ const View = () => {
                 Page {currentPage} of {data.total_pages}
               </span>
               <span className="text-sm text-gray-500">
-                ({data.total_elements} total items)
+                ({data.total_elements} total status pages)
               </span>
             </div>
             <div className="flex items-center gap-2">

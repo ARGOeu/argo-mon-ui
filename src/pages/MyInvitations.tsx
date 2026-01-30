@@ -1,12 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import {
   useGetUserInvitations,
   useRespondToInvitation,
 } from '@/hooks/useInvitations'
 import {
   ArrowPathIcon,
-  MagnifyingGlassIcon,
-  XMarkIcon,
   CheckCircleIcon,
   XCircleIcon,
   ChevronLeftIcon,
@@ -14,31 +12,17 @@ import {
 } from '@heroicons/react/24/solid'
 import { toast, Toaster } from 'sonner'
 import styles from './MyInvitations.module.css'
-import paginationStyles from './AdminInvitations.module.css'
+
+const pageSize = 10
 
 const MyInvitations = () => {
-  const [searchInput, setSearchInput] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 10
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(searchInput)
-      setCurrentPage(1)
-    }, 500)
-
-    return () => clearTimeout(timer)
-  }, [searchInput])
-
-  const { data: invitationsData, isLoading } = useGetUserInvitations(true)
+  const { data: invitationsData, isLoading } = useGetUserInvitations(true, {
+    page: currentPage,
+    size: pageSize,
+  })
   const respondMutation = useRespondToInvitation()
-
-  const handleClearSearch = () => {
-    setSearchInput('')
-    setDebouncedSearch('')
-    setCurrentPage(1)
-  }
 
   const handleRespond = (invitationId: string, action: 'ACCEPT' | 'REJECT') => {
     respondMutation.mutate(
@@ -56,22 +40,6 @@ const MyInvitations = () => {
     )
   }
 
-  const filteredInvitations = invitationsData?.content.filter((invitation) => {
-    if (!debouncedSearch.trim()) return true
-    const query = debouncedSearch.toLowerCase()
-    return (
-      invitation.tenant_name.toLowerCase().includes(query) ||
-      invitation.email.toLowerCase().includes(query)
-    )
-  })
-
-  const paginatedInvitations = filteredInvitations?.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize,
-  )
-
-  const totalPages = Math.ceil((filteredInvitations?.length || 0) / pageSize)
-
   return (
     <>
       <Toaster richColors position="top-center" duration={2000} />
@@ -85,35 +53,13 @@ const MyInvitations = () => {
           </div>
         </div>
 
-        <div className={styles['search-container']}>
-          <div className={styles['search-input-wrapper']}>
-            <MagnifyingGlassIcon className={styles['search-icon']} />
-            <input
-              type="text"
-              placeholder="Search invitations by tenant name or email..."
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              className={styles['search-input']}
-            />
-            {searchInput && (
-              <button
-                onClick={handleClearSearch}
-                className={styles['clear-button']}
-                aria-label="Clear search"
-              >
-                <XMarkIcon />
-              </button>
-            )}
-          </div>
-        </div>
-
         {isLoading ? (
           <div className="loading-container">
             <ArrowPathIcon className="animate-spin size-10 text-blue-400" />
           </div>
         ) : (
           <>
-            {paginatedInvitations && paginatedInvitations.length > 0 ? (
+            {invitationsData?.content && invitationsData.content.length > 0 ? (
               <>
                 <div className={styles['table-wrapper']}>
                   <div className={styles['table-scroll']}>
@@ -131,7 +77,7 @@ const MyInvitations = () => {
                         </tr>
                       </thead>
                       <tbody className={styles['table-body']}>
-                        {paginatedInvitations.map((invitation) => (
+                        {invitationsData.content.map((invitation) => (
                           <tr
                             key={invitation.id}
                             className={styles['table-row']}
@@ -208,7 +154,9 @@ const MyInvitations = () => {
                                   </button>
                                 </div>
                               ) : (
-                                <span className={styles['email-text']}>-</span>
+                                <span className={styles['empty-actions']}>
+                                  -
+                                </span>
                               )}
                             </td>
                           </tr>
@@ -218,42 +166,38 @@ const MyInvitations = () => {
                   </div>
                 </div>
 
-                {totalPages > 1 && (
-                  <div className={paginationStyles['pagination-container']}>
-                    <div className={paginationStyles['pagination-info']}>
-                      <span className={paginationStyles['pagination-text']}>
-                        Page {currentPage} of {totalPages}
+                {invitationsData.content.length > 0 && (
+                  <div className="pagination-container">
+                    <div className="pagination-info">
+                      <span className="pagination-text">
+                        Page {currentPage} of {invitationsData.total_pages}
                       </span>
-                      <span className={paginationStyles['pagination-count']}>
-                        ({filteredInvitations?.length || 0} total invitations)
+                      <span className="pagination-count">
+                        ({invitationsData.total_elements} total invitations)
                       </span>
                     </div>
-                    <div className={paginationStyles['pagination-buttons']}>
+                    <div className="pagination-buttons">
                       <button
                         onClick={() =>
                           setCurrentPage((prev) => Math.max(1, prev - 1))
                         }
                         disabled={currentPage === 1}
-                        className={paginationStyles['pagination-button']}
+                        className="pagination-button"
                         aria-label="Previous page"
                       >
-                        <ChevronLeftIcon
-                          className={paginationStyles['pagination-icon']}
-                        />
+                        <ChevronLeftIcon className="pagination-icon" />
                       </button>
                       <button
                         onClick={() =>
                           setCurrentPage((prev) =>
-                            Math.min(totalPages, prev + 1),
+                            Math.min(invitationsData.total_pages, prev + 1),
                           )
                         }
-                        disabled={currentPage >= totalPages}
-                        className={paginationStyles['pagination-button']}
+                        disabled={currentPage >= invitationsData.total_pages}
+                        className="pagination-button"
                         aria-label="Next page"
                       >
-                        <ChevronRightIcon
-                          className={paginationStyles['pagination-icon']}
-                        />
+                        <ChevronRightIcon className="pagination-icon" />
                       </button>
                     </div>
                   </div>
@@ -261,11 +205,7 @@ const MyInvitations = () => {
               </>
             ) : (
               <div className={styles['empty-state']}>
-                <p className={styles['empty-text']}>
-                  {searchInput
-                    ? 'No invitations found matching your search'
-                    : 'No invitations found'}
-                </p>
+                <p className={styles['empty-text']}>No invitations found</p>
               </div>
             )}
           </>

@@ -7,7 +7,6 @@ import {
   UserCircleIcon,
 } from '@heroicons/react/16/solid'
 import {
-  XMarkIcon,
   ChevronUpIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
@@ -153,7 +152,7 @@ const Administration = () => {
                   className={styles['clear-button']}
                   aria-label="Clear search"
                 >
-                  <XMarkIcon />
+                  ×
                 </button>
               )}
             </div>
@@ -302,33 +301,33 @@ const Administration = () => {
               )}
 
               {filteredUsers.length > 0 && usersData && (
-                <div className={styles['pagination-container']}>
-                  <div className={styles['pagination-info']}>
-                    <span className={styles['pagination-text']}>
+                <div className="pagination-container">
+                  <div className="pagination-info">
+                    <span className="pagination-text">
                       Page {currentPage} of {usersData.total_pages}
                     </span>
-                    <span className={styles['pagination-count']}>
+                    <span className="pagination-count">
                       ({usersData.total_elements} total users)
                     </span>
                   </div>
-                  <div className={styles['pagination-buttons']}>
+                  <div className="pagination-buttons">
                     <button
                       onClick={() =>
                         setCurrentPage((prev) => Math.max(1, prev - 1))
                       }
                       disabled={currentPage === 1}
-                      className={styles['pagination-button']}
+                      className="pagination-button"
                       aria-label="Previous page"
                     >
-                      <ChevronLeftIcon className={styles['pagination-icon']} />
+                      <ChevronLeftIcon className="pagination-icon" />
                     </button>
                     <button
                       onClick={() => setCurrentPage((prev) => prev + 1)}
                       disabled={currentPage >= usersData.total_pages}
-                      className={styles['pagination-button']}
+                      className="pagination-button"
                       aria-label="Next page"
                     >
-                      <ChevronRightIcon className={styles['pagination-icon']} />
+                      <ChevronRightIcon className="pagination-icon" />
                     </button>
                   </div>
                 </div>

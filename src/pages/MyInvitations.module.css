@@ -4,67 +4,7 @@
 }
 
 .header {
-  margin-bottom: 1.5rem;
-}
-
-.search-container {
-  margin-bottom: 1.5rem;
-}
-
-.search-input-wrapper {
-  position: relative;
-  max-width: 24rem;
-}
-
-.search-icon {
-  position: absolute;
-  left: 0.75rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1.25rem;
-  height: 1.25rem;
-  color: #9ca3af;
-  pointer-events: none;
-}
-
-.search-input {
-  width: 100%;
-  padding: 0.5rem 2.5rem 0.5rem 2.5rem;
-  border: 1px solid #d1d5db;
-  border-radius: 0.5rem;
-  font-size: 0.875rem;
-  transition: all 0.2s;
-}
-
-.search-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.clear-button {
-  position: absolute;
-  right: 0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 1.5rem;
-  height: 1.5rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0.8rem;
-  background: none;
-  border: none;
-  color: #6b7280;
-  font-size: 1.5rem;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: all 0.2s;
-}
-
-.clear-button:hover {
-  background-color: #f3f4f6;
-  color: #374151;
+  margin-bottom: 2rem;
 }
 
 .table-wrapper {
@@ -149,8 +89,6 @@
 }
 
 .tenant-name-text {
-  color: #111827;
-  font-weight: 500;
   word-break: break-word;
 }
 
@@ -158,6 +96,14 @@
   color: #6b7280;
   word-break: break-all;
   font-size: 0.875rem;
+}
+
+.empty-actions {
+  width: 40%;
+  display: block;
+  color: #6b7280;
+  font-size: 0.875rem;
+  text-align: center;
 }
 
 .role-badge {
@@ -214,11 +160,11 @@
 .actions-container {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.2rem;
 }
 
 .action-button {
-  padding: 0.375rem;
+  padding: 0.25rem;
   border-radius: 0.5rem;
   border: 1px solid;
   display: flex;

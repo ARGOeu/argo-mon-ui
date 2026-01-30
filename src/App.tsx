@@ -22,6 +22,7 @@ import CreateProject from './pages/CreateProject'
 import Administration from './pages/Administration'
 import ManageTenantMembers from './pages/ManageTenantMembers'
 import MyInvitations from './pages/MyInvitations'
+import { InvitationReview } from './pages/InvitationReview'
 import { Status } from './pages/Status'
 import { AuthProvider } from './auth/AuthProvider'
 
@@ -61,6 +62,7 @@ function App() {
         <Routes>
           <Route path="status/:slug" element={<Status />} />
           <Route element={<AuthLayout />}>
+            <Route path="invitation/:id" element={<InvitationReview />} />
             <Route element={<Layout />}>
               <Route index element={<Home />} />
               <Route
