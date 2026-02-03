@@ -79,6 +79,7 @@ function App() {
                 element={
                   <ProtectedRoute
                     requiredRoles={['super_admin', 'admin', 'viewer']}
+                    checkTenantAccess
                   >
                     <TenantDetails />
                   </ProtectedRoute>
@@ -95,7 +96,10 @@ function App() {
               <Route
                 path="tenants/edit/:id"
                 element={
-                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                  <ProtectedRoute
+                    requiredRoles={['super_admin', 'admin']}
+                    checkTenantAccess
+                  >
                     <CreateTenant />
                   </ProtectedRoute>
                 }
@@ -103,7 +107,10 @@ function App() {
               <Route
                 path="tenants/:id/projects/assign"
                 element={
-                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                  <ProtectedRoute
+                    requiredRoles={['super_admin', 'admin']}
+                    checkTenantAccess
+                  >
                     <AssignProjects />
                   </ProtectedRoute>
                 }
@@ -111,7 +118,10 @@ function App() {
               <Route
                 path="tenants/:id/members"
                 element={
-                  <ProtectedRoute requiredRoles={['super_admin', 'admin']}>
+                  <ProtectedRoute
+                    requiredRoles={['super_admin', 'admin']}
+                    checkTenantAccess
+                  >
                     <ManageTenantMembers />
                   </ProtectedRoute>
                 }

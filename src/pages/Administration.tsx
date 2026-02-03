@@ -227,7 +227,7 @@ const Administration = () => {
                                 className={styles['username-text']}
                                 title={user.username}
                               >
-                                {squishEmail(user.username, 6, 6)}
+                                {squishEmail(user.username, 8, 8)}
                               </span>
                             </td>
                             <td className={styles['td-name']}>

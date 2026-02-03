@@ -1,9 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import {
-  useGetTenantInvitations,
-  useCreateTenantInvitation,
-} from '@/hooks/useInvitations'
+import { useCreateTenantInvitation } from '@/hooks/useInvitations'
 import {
   useGetTenantMembers,
   useGetUserTenantById,
@@ -23,6 +20,7 @@ import {
 import { toast, Toaster } from 'sonner'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import TenantInvitations from './TenantInvitations'
 import styles from './ManageTenantMembers.module.css'
 import type { InvitationRole } from '@/types/invitations'
 
@@ -40,7 +38,7 @@ const ManageTenantMembers = () => {
   const isSuperAdmin = profile?.roles?.includes('super_admin')
 
   const [activeTab, setActiveTab] = useState<
-    'members' | 'invite' | 'add-direct'
+    'members' | 'invite' | 'add-direct' | 'invitations'
   >('members')
   const [currentMembersPage, setCurrentMembersPage] = useState(1)
   const membersPageSize = 10
@@ -67,7 +65,6 @@ const ManageTenantMembers = () => {
   const [searchInput, setSearchInput] = useState('')
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [selectedUser, setSelectedUser] = useState<{
-    username: string
     email: string
     firstName: string
     lastName: string
@@ -75,7 +72,7 @@ const ManageTenantMembers = () => {
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
   const [memberToRemove, setMemberToRemove] = useState<{
     id: string
-    name: string
+    email: string
   } | null>(null)
 
   const { data: membersData, isLoading: membersLoading } = useGetTenantMembers(
@@ -84,8 +81,6 @@ const ManageTenantMembers = () => {
     membersPageSize,
     !!tenantId,
   )
-  const { data: invitationsData, isLoading: invitationsLoading } =
-    useGetTenantInvitations(tenantId || '', !!tenantId)
 
   const { data: searchResults, isLoading: searchLoading } = useGetMembers(
     1,
@@ -255,8 +250,8 @@ const ManageTenantMembers = () => {
     )
   }
 
-  const handleRemoveClick = (memberId: string, memberName: string) => {
-    setMemberToRemove({ id: memberId, name: memberName })
+  const handleRemoveClick = (memberId: string, memberEmail: string) => {
+    setMemberToRemove({ id: memberId, email: memberEmail })
     setRemoveDialogOpen(true)
   }
 
@@ -290,7 +285,7 @@ const ManageTenantMembers = () => {
     navigate('/tenants/view')
   }
 
-  const isLoading = membersLoading || invitationsLoading
+  const isLoading = membersLoading
 
   return (
     <>
@@ -333,6 +328,12 @@ const ManageTenantMembers = () => {
               Add Member
             </button>
           )}
+          <button
+            className={`${styles.tab} ${activeTab === 'invitations' ? styles['tab-active'] : ''}`}
+            onClick={() => setActiveTab('invitations')}
+          >
+            Invitations
+          </button>
         </div>
 
         {isLoading ? (
@@ -380,15 +381,17 @@ const ManageTenantMembers = () => {
                                 <td>
                                   <button
                                     onClick={() =>
-                                      handleRemoveClick(
-                                        member.id,
-                                        member.username,
-                                      )
+                                      handleRemoveClick(member.id, member.email)
                                     }
-                                    className={styles['remove-button']}
-                                    title="Remove member"
+                                    className={`${styles['remove-button']} tooltip`}
+                                    data-tip="Remove member"
                                   >
-                                    <UserMinusIcon className="size-4" />
+                                    <UserMinusIcon
+                                      style={{
+                                        width: '1.2rem',
+                                        height: '1.2rem',
+                                      }}
+                                    />
                                   </button>
                                 </td>
                               </tr>
@@ -445,65 +448,6 @@ const ManageTenantMembers = () => {
                       </div>
                     </div>
                   )}
-                </div>
-
-                <div className={styles['invitations-section']}>
-                  <h2 className={styles['section-title']}>
-                    Pending Invitations
-                  </h2>
-                  <div className={styles['table-wrapper']}>
-                    <table className={styles.table}>
-                      <thead className={styles['table-head']}>
-                        <tr>
-                          <th>Email</th>
-                          <th>Role</th>
-                          <th>Status</th>
-                          <th>Created At</th>
-                        </tr>
-                      </thead>
-                      <tbody className={styles['table-body']}>
-                        {invitationsData &&
-                        invitationsData.content.length > 0 ? (
-                          invitationsData.content.map((invitation) => (
-                            <tr key={invitation.id}>
-                              <td>{invitation.email}</td>
-                              <td>
-                                <span
-                                  className={`${styles['role-badge']} ${styles[`role-${invitation.role}`]}`}
-                                >
-                                  {invitation.role === 'admin'
-                                    ? 'Tenant Admin'
-                                    : 'Member'}
-                                </span>
-                              </td>
-                              <td>
-                                <span
-                                  className={`${styles['status-badge']} ${styles[`status-${invitation.status.toLowerCase()}`]}`}
-                                >
-                                  {invitation.status}
-                                </span>
-                              </td>
-                              <td>
-                                {new Date(
-                                  invitation.created_at,
-                                ).toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}
-                              </td>
-                            </tr>
-                          ))
-                        ) : (
-                          <tr>
-                            <td colSpan={4} className={styles['empty-state']}>
-                              No pending invitations
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
                 </div>
               </div>
             )}
@@ -592,7 +536,7 @@ const ManageTenantMembers = () => {
                     <p className={styles['section-description']}>
                       Add a new member directly to this tenant without sending
                       an invitation. Search for a registered user by email or
-                      username.
+                      name.
                     </p>
 
                     <div className={styles['form-fields']}>
@@ -607,7 +551,7 @@ const ManageTenantMembers = () => {
                               name="search"
                               value={searchInput}
                               onChange={handleAddDirectFormChange}
-                              placeholder="Search by email or username..."
+                              placeholder="Search by email or name..."
                               className={
                                 addDirectErrors.search
                                   ? styles['input-error']
@@ -644,7 +588,7 @@ const ManageTenantMembers = () => {
                                           <span
                                             className={styles['user-details']}
                                           >
-                                            {user.username} • {user.email}
+                                            {user.email}
                                           </span>
                                         </div>
                                       </li>
@@ -668,7 +612,7 @@ const ManageTenantMembers = () => {
                                 {selectedUser.firstName} {selectedUser.lastName}
                               </span>
                               <span className={styles['selected-user-details']}>
-                                {selectedUser.username} • {selectedUser.email}
+                                {selectedUser.email}
                               </span>
                             </div>
                             <button
@@ -717,6 +661,15 @@ const ManageTenantMembers = () => {
                 </form>
               </div>
             )}
+
+            {activeTab === 'invitations' && (
+              <div className={styles['tab-content']}>
+                <TenantInvitations
+                  tenantId={tenantId || ''}
+                  tenantName={tenantData?.info.name || ''}
+                />
+              </div>
+            )}
           </>
         )}
       </div>
@@ -727,8 +680,9 @@ const ManageTenantMembers = () => {
         message={
           memberToRemove ? (
             <>
-              Are you sure you want to remove this user from the tenant "
-              {tenantData?.info.name}"?
+              Are you sure you want to remove user with email{' '}
+              <strong>{memberToRemove.email}</strong> from tenant{' '}
+              <strong>{tenantData?.info.name}</strong>?
               <br />
               <span className="text-amber-600 font-medium">
                 The user will lose access to this tenant.

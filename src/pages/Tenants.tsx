@@ -194,14 +194,18 @@ const Tenants = () => {
         isOpen={deleteDialogOpen}
         title="Delete Tenant"
         message={
-          <>
-            Are you sure you want to delete the tenant "{tenantToDelete?.name}
-            "?
-            <br />
-            <span className="text-red-600 font-medium">
-              This action cannot be undone.
-            </span>
-          </>
+          tenantToDelete ? (
+            <>
+              Are you sure you want to delete tenant{' '}
+              <strong>{tenantToDelete.name}</strong> ?
+              <br />
+              <span className="text-amber-600 font-medium">
+                This action cannot be undone.
+              </span>
+            </>
+          ) : (
+            ''
+          )
         }
         confirmLabel="Delete"
         cancelLabel="Cancel"

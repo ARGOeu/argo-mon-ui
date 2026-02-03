@@ -10,7 +10,7 @@
   display: flex;
   gap: 0.5rem;
   border-bottom: 2px solid #e5e7eb;
-  margin-bottom: 2rem;
+  margin-bottom: 1rem;
 }
 
 .tab {
@@ -59,14 +59,14 @@
 
 .members-section,
 .invitations-section {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
 }
 
 .section-title {
   font-size: 1.125rem;
   font-weight: 600;
   color: #1f2937;
-  margin-bottom: 1rem;
+  margin-bottom: 0.6rem;
 }
 
 .section-description {
@@ -223,6 +223,7 @@
 }
 
 .remove-button {
+  margin-left: 0.5rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;

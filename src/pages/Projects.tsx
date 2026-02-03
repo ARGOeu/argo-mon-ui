@@ -94,7 +94,20 @@ const Projects = () => {
       <ConfirmDialog
         isOpen={deleteDialogOpen}
         title="Delete Project"
-        message={`Are you sure you want to delete the project "${projectToDelete?.name}"? This action cannot be undone.`}
+        message={
+          projectToDelete ? (
+            <>
+              Are you sure you want to delete project{' '}
+              <strong>{projectToDelete.name}</strong> ?
+              <br />
+              <span className="text-amber-600 font-medium">
+                This action cannot be undone.
+              </span>
+            </>
+          ) : (
+            ''
+          )
+        }
         confirmLabel="Delete"
         cancelLabel="Cancel"
         onConfirm={handleDeleteConfirm}

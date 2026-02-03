@@ -460,3 +460,27 @@ export const removeMemberFromTenant = async (
     )
   }
 }
+
+export const revokeInvitation = async (
+  tenantId: string,
+  invitationId: string,
+  token: string,
+): Promise<void> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/invitations/${invitationId}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+}

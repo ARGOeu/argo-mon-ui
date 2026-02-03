@@ -6,7 +6,7 @@
   display: flex;
   gap: 0.5rem;
   border-bottom: 2px solid #e5e7eb;
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .tab {
@@ -43,7 +43,7 @@
 }
 
 .search-container {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
 }
 
 .search-input-wrapper {
@@ -309,6 +309,7 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
+  margin-left: 0.6rem;
 }
 
 .action-button {

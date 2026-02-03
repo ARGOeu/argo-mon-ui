@@ -72,14 +72,18 @@ const View = () => {
         isOpen={deleteDialogOpen}
         title="Delete Status Page"
         message={
-          <>
-            Are you sure you want to delete the status page "
-            {pageToDelete?.name}"?
-            <br />
-            <span className="text-red-600 font-medium">
-              This action cannot be undone.
-            </span>
-          </>
+          pageToDelete ? (
+            <>
+              Are you sure you want to delete status page{' '}
+              <strong>{pageToDelete.name}</strong> ?
+              <br />
+              <span className="text-amber-600 font-medium">
+                This action cannot be undone.
+              </span>
+            </>
+          ) : (
+            ''
+          )
         }
         confirmLabel="Delete"
         cancelLabel="Cancel"
