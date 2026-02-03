@@ -16,6 +16,7 @@ import View from './pages/View'
 import Tenants from './pages/Tenants'
 import CreateTenant from './pages/CreateTenant'
 import TenantStatus from './pages/TenantStatus'
+import TenantDetails from './pages/TenantDetails'
 import AssignProjects from './pages/AssignProjects'
 import Projects from './pages/Projects'
 import CreateProject from './pages/CreateProject'
@@ -72,6 +73,16 @@ function App() {
                     requiredRoles={['super_admin', 'admin', 'viewer']}
                   >
                     <Tenants />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="tenants/:id/details"
+                element={
+                  <ProtectedRoute
+                    requiredRoles={['super_admin', 'admin', 'viewer']}
+                  >
+                    <TenantDetails />
                   </ProtectedRoute>
                 }
               />

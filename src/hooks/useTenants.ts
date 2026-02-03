@@ -56,7 +56,7 @@ export const useGetTenants = (
   })
 }
 
-export const useGetTenantById = (id: string) => {
+export const useGetTenantById = (id: string, enabled: boolean = true) => {
   const { token } = useAuth()
 
   return useQuery<Tenant, Error>({
@@ -69,7 +69,7 @@ export const useGetTenantById = (id: string) => {
     },
     retry: false,
     refetchOnMount: 'always',
-    enabled: !!token && !!id,
+    enabled: enabled && !!token && !!id,
   })
 }
 
@@ -217,7 +217,7 @@ export const useGetUserTenants = (
   })
 }
 
-export const useGetUserTenantById = (id: string) => {
+export const useGetUserTenantById = (id: string, enabled: boolean = true) => {
   const { token } = useAuth()
 
   return useQuery<Tenant, Error>({
@@ -230,7 +230,7 @@ export const useGetUserTenantById = (id: string) => {
     },
     retry: false,
     refetchOnMount: 'always',
-    enabled: !!token && !!id,
+    enabled: enabled && !!token && !!id,
   })
 }
 

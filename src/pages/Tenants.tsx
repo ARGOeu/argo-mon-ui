@@ -16,6 +16,7 @@ import {
   PlusCircleIcon,
   ListBulletIcon,
   UserGroupIcon,
+  Bars3Icon,
 } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -148,6 +149,10 @@ const Tenants = () => {
     navigate(`/tenants/${tenantId}/members`)
   }
 
+  const handleViewDetails = (tenantId: string) => {
+    navigate(`/tenants/${tenantId}/details`)
+  }
+
   const handleDeleteClick = (id: string, name: string) => {
     setTenantToDelete({ id, name })
     setDeleteDialogOpen(true)
@@ -183,7 +188,7 @@ const Tenants = () => {
   }
 
   return (
-    <div className={styles.container}>
+    <div className="page-container">
       <Toaster richColors position="top-center" duration={2000} />
       <ConfirmDialog
         isOpen={deleteDialogOpen}
@@ -343,12 +348,20 @@ const Tenants = () => {
                 </div>
                 {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
                   <div className={styles['card-footer']}>
+                    <button
+                      aria-label="View Tenant Details"
+                      className={`${styles['action-button']} ${styles.view} tooltip`}
+                      data-tip="View Tenant Details"
+                      onClick={() => handleViewDetails(tenant.id!)}
+                    >
+                      <Bars3Icon className={styles['action-icon']} />
+                    </button>
                     {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
                       <>
                         <button
                           aria-label="Edit Tenant"
                           className={`${styles['action-button']} ${styles.edit} tooltip`}
-                          data-tip="Edit"
+                          data-tip="Edit Tenant"
                           onClick={() => handleEdit(tenant.id!)}
                         >
                           <PencilSquareIcon className={styles['action-icon']} />
@@ -396,7 +409,7 @@ const Tenants = () => {
                         <button
                           aria-label="Delete Tenant"
                           className={`${styles['action-button']} ${styles.delete} tooltip`}
-                          data-tip="Delete"
+                          data-tip="Delete Tenant"
                           onClick={() =>
                             handleDeleteClick(tenant.id!, tenant.name)
                           }

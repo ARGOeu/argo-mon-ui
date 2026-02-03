@@ -5,8 +5,8 @@ export function Home() {
   const { profile } = useAuth()
 
   return (
-    <div>
-      <h1 className="text-2xl font-semibold text-gray-900 mb-4">
+    <div className="page-container">
+      <h1 className="text-2xl font-semibold text-gray-900 mb-3">
         Welcome to Status Pages
         {profile?.username && (
           <span>

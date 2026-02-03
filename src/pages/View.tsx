@@ -86,7 +86,7 @@ const View = () => {
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
-      <div className="max-w-full md:max-w-5xl lg:max-w-6xl w-full">
+      <div className="page-container">
         <div className="pb-1 mb-4 md:mb-6 px-2 md:px-0 flex items-center justify-between">
           <div>
             <h1 className="page-title">Status Pages</h1>
