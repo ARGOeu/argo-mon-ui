@@ -89,7 +89,7 @@ const Projects = () => {
   }
 
   return (
-    <div className={styles.container}>
+    <div className="page-container">
       <Toaster richColors position="top-center" duration={2000} />
       <ConfirmDialog
         isOpen={deleteDialogOpen}

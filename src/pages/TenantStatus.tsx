@@ -108,7 +108,7 @@ const TenantStatus = () => {
 
   if (!isSuperAdmin) {
     return (
-      <div className={styles.container}>
+      <div className="page-container">
         <div className={styles['access-denied']}>
           <p>Access denied. This page is only available for admins.</p>
         </div>
@@ -126,7 +126,7 @@ const TenantStatus = () => {
 
   if (!tenantData) {
     return (
-      <div className={styles.container}>
+      <div className="page-container">
         <div className={styles['not-found']}>
           <p>Tenant not found</p>
         </div>
@@ -255,7 +255,7 @@ const TenantStatus = () => {
   return (
     <>
       <Toaster richColors position="top-center" duration={2000} />
-      <div className={styles.container}>
+      <div className="page-container">
         <div className={styles.header}>
           <div>
             <h1 className="page-title">Tenant Status</h1>
@@ -268,11 +268,11 @@ const TenantStatus = () => {
           </div>
           <div>
             <Button
-              variant="secondary"
-              size="sm"
               onClick={() => navigate('/tenants/view')}
+              size="sm"
+              variant="secondary"
             >
-              <ArrowLeftIcon className={styles['back-icon']} />
+              <ArrowLeftIcon className="size-4" />
               Back to Tenants
             </Button>
           </div>

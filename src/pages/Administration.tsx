@@ -102,7 +102,7 @@ const Administration = () => {
 
   if (!isSuperAdmin) {
     return (
-      <div className={styles.container}>
+      <div className="page-container">
         <div className={styles['access-denied']}>
           <p>Access denied. This page is only available for admins.</p>
         </div>
@@ -111,7 +111,7 @@ const Administration = () => {
   }
 
   return (
-    <div className={styles.container}>
+    <div className="page-container">
       <div className={styles.header}>
         <div>
           <h1 className="page-title">Administration Panel</h1>

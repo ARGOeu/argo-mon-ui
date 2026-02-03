@@ -243,7 +243,7 @@ const ManageTenantMembers = () => {
   return (
     <>
       <Toaster richColors position="top-center" duration={2000} />
-      <div className={styles.container}>
+      <div className="page-container">
         <div className={styles.header}>
           <div>
             <h1 className="page-title">Manage Members</h1>
@@ -254,7 +254,7 @@ const ManageTenantMembers = () => {
               </strong>
             </p>
           </div>
-          <Button variant="secondary" size="md" onClick={handleBack}>
+          <Button onClick={handleBack} size="sm" variant="secondary">
             <ArrowLeftIcon className="size-4" />
             Back to Tenants
           </Button>

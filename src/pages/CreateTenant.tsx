@@ -433,7 +433,7 @@ const CreateTenant = () => {
   return (
     <>
       <Toaster richColors position="top-center" duration={2000} />
-      <div className={styles.container}>
+      <div className="page-container">
         {isEditMode && isTenantLoading ? (
           <div className="loading-container">
             <ArrowPathIcon className="animate-spin size-10 text-blue-400" />

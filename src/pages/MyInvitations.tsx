@@ -43,7 +43,7 @@ const MyInvitations = () => {
   return (
     <>
       <Toaster richColors position="top-center" duration={2000} />
-      <div className={styles.container}>
+      <div className="page-container">
         <div className={styles.header}>
           <div>
             <h1 className="page-title">My Invitations</h1>

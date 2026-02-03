@@ -439,7 +439,7 @@ const Build = () => {
     <div>
       <Toaster richColors position="top-center" duration={2000} />
       <div className="flex flex-col justify-center items-center px-6">
-        <div className="max-w-7xl w-full">
+        <div className="page-container">
           <div className="pb-1 mb-3">
             <div>
               <h1 className="page-title">
