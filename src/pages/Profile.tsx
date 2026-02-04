@@ -139,19 +139,27 @@ export const Profile = () => {
   // Use displayProfile for viewing other users, profile for own profile
   const currentUsername = isViewingOtherUser
     ? displayProfile?.username || 'N/A'
-    : profile?.username || squishEmail(profile?.sub || '') || 'N/A'
+    : profile?.username || 'N/A'
   const currentFirstName = isViewingOtherUser
     ? displayProfile?.firstName || 'Not available'
-    : profile?.given_name || 'Not available'
+    : profile?.name || 'Not available'
   const currentLastName = isViewingOtherUser
     ? displayProfile?.lastName || 'Not available'
-    : profile?.family_name || 'Not available'
+    : profile?.surname || 'Not available'
   const currentEmail = isViewingOtherUser
     ? displayProfile?.email || 'Not available'
     : profile?.email || 'Not available'
-  const currentUserId = isViewingOtherUser
-    ? displayProfile?.id || 'Not available'
-    : profile?.sub || 'Not available'
+
+  const currentGroups = isViewingOtherUser
+    ? displayProfile?.tenants || []
+    : profile?.groups || []
+
+  // Remove a specific record if the name is equal to "members"
+  currentGroups.forEach((group, index) => {
+    if (group.name === 'members') {
+      currentGroups.splice(index, 1)
+    }
+  })
 
   return (
     <div className={styles.container}>
@@ -204,7 +212,7 @@ export const Profile = () => {
                 <div>
                   <label className={styles['username-label']}>Username</label>
                   <h2 className={styles['username-value']}>
-                    {currentUsername}
+                    {squishEmail(currentUsername, 10, 10)}
                   </h2>
                 </div>
               </div>
@@ -254,19 +262,6 @@ export const Profile = () => {
                       {currentEmail}
                     </p>
                   </div>
-
-                  <div className={styles['field-container']}>
-                    <label className={styles['field-label']}>User ID</label>
-                    <p
-                      className={
-                        currentUserId !== 'Not available'
-                          ? styles['field-value-break']
-                          : styles['field-value-break-unavailable']
-                      }
-                    >
-                      {currentUserId}
-                    </p>
-                  </div>
                 </div>
               </div>
 
@@ -283,61 +278,48 @@ export const Profile = () => {
                     <label className={`${styles['field-label']} mb-4`}>
                       Tenants
                     </label>
-                    {isViewingOtherUser ? (
-                      <div className={styles['tenants-section']}>
-                        {displayProfile?.tenants &&
-                        displayProfile.tenants.length > 0 ? (
-                          <div className={styles['tenants-list']}>
-                            {displayProfile.tenants.map((tenant, index) => (
-                              <div
-                                key={index}
-                                className={styles['tenant-item']}
-                              >
-                                <div className={styles['tenant-info']}>
-                                  <span className={styles['tenant-name']}>
-                                    {tenant.name}
-                                  </span>
-                                  <span
-                                    className={`${styles['role-badge']} ${
-                                      tenant.role === 'admin'
-                                        ? styles['role-admin']
-                                        : styles['role-viewer']
-                                    }`}
-                                  >
-                                    {tenant.role}
-                                  </span>
-                                </div>
-                                {isSuperAdmin && (
-                                  <button
-                                    aria-label="Remove from tenant"
-                                    className={`${styles['action-button']} ${styles.delete}`}
-                                    onClick={() =>
-                                      handleRemoveClick(
-                                        tenant.name,
-                                        tenant.role,
-                                      )
-                                    }
-                                    title="Remove user from this tenant"
-                                  >
-                                    <UserMinusIcon
-                                      className={styles['action-icon']}
-                                    />
-                                  </button>
-                                )}
+                    <div className={styles['tenants-section']}>
+                      {currentGroups && currentGroups.length > 0 ? (
+                        <div className={styles['tenants-list']}>
+                          {currentGroups.map((tenant, index) => (
+                            <div key={index} className={styles['tenant-item']}>
+                              <div className={styles['tenant-info']}>
+                                <span className={styles['tenant-name']}>
+                                  {tenant.name}
+                                </span>
+                                <span
+                                  className={`${styles['role-badge']} ${
+                                    tenant.role === 'admin'
+                                      ? styles['role-admin']
+                                      : styles['role-viewer']
+                                  }`}
+                                >
+                                  {tenant.role}
+                                </span>
                               </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <p className={styles['field-value-unavailable']}>
-                            Not a member of any tenant
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <p className={styles['field-value-unavailable']}>
-                        View tenant memberships information
-                      </p>
-                    )}
+                              {isSuperAdmin && isViewingOtherUser && (
+                                <button
+                                  aria-label="Remove from tenant"
+                                  className={`${styles['action-button']} ${styles.delete}`}
+                                  onClick={() =>
+                                    handleRemoveClick(tenant.name, tenant.role)
+                                  }
+                                  title="Remove user from this tenant"
+                                >
+                                  <UserMinusIcon
+                                    className={styles['action-icon']}
+                                  />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <p className={styles['field-value-unavailable']}>
+                          Not a member of any tenant
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>

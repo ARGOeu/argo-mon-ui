@@ -4,9 +4,11 @@ export interface UserGroup {
 }
 
 export interface UserProfile {
-  sub: string
+  id: string
   username: string
   email: string
+  name: string
+  surname: string
   roles: string[]
   groups?: UserGroup[] | null
 }

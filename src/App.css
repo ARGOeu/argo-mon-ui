@@ -1,5 +1,5 @@
 .page-container {
-  max-width: 1280px;
+  max-width: 1480px;
   margin: 0 auto;
   width: 100%;
 }
@@ -164,6 +164,6 @@ select:focus {
 
 @media (min-width: 1921px) {
   .page-container {
-    max-width: 1440px;
+    max-width: 1800px;
   }
 }

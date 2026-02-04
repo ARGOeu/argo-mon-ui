@@ -69,11 +69,9 @@ function App() {
               <Route
                 path="tenants/view"
                 element={
-                  <ProtectedRoute
-                    requiredRoles={['super_admin', 'admin', 'viewer']}
-                  >
+                  <AuthProtected>
                     <Tenants />
-                  </ProtectedRoute>
+                  </AuthProtected>
                 }
               />
               <Route
