@@ -13,7 +13,7 @@
 }
 
 .wrapper {
-  max-width: 64rem;
+  max-width: 72rem;
   width: 100%;
 }
 
@@ -62,9 +62,10 @@
 }
 
 .username-value {
-  font-size: 1.5rem;
+  font-size: 1rem;
   font-weight: 700;
   color: #1f2937;
+  word-break: break-word;
 }
 
 .profile-body {

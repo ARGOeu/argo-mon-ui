@@ -15,6 +15,7 @@ import {
 import styles from './Administration.module.css'
 import AdminInvitations from './AdminInvitations'
 import { useNavigate } from 'react-router-dom'
+import { squishEmail } from '@/utils/profile'
 
 type SortColumn = 'username' | 'firstName' | 'lastName' | 'email' | 'tenants'
 type SortDirection = 'asc' | 'desc'
@@ -222,8 +223,11 @@ const Administration = () => {
                         {filteredUsers.map((user) => (
                           <tr key={user.id} className={styles['table-row']}>
                             <td className={styles['td-username']}>
-                              <span className={styles['username-text']}>
-                                {user.username}
+                              <span
+                                className={styles['username-text']}
+                                title={user.username}
+                              >
+                                {squishEmail(user.username, 6, 6)}
                               </span>
                             </td>
                             <td className={styles['td-name']}>

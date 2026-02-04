@@ -5,14 +5,16 @@ export type AuthContextType = {
   authenticated: boolean
   token?: string
   profile?: {
-    sub?: string
+    id?: string
     username?: string
     email?: string
     name?: string
-    given_name?: string
-    family_name?: string
-    entitlements: string[]
-    roles: string[]
+    surname?: string
+    roles?: string[]
+    groups?: Array<{
+      name: string
+      role: string
+    }>
   }
   login: (redirectUri?: string) => void
   logout: () => void

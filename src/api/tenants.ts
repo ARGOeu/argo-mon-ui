@@ -414,7 +414,7 @@ export const fetchTenantMembers = async (
 
 export const addMemberDirectly = async (
   tenantId: string,
-  data: { email: string; role: string },
+  data: { username: string; email: string; role: string },
   token: string,
 ): Promise<void> => {
   const response = await fetch(

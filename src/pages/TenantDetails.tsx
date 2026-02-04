@@ -53,6 +53,9 @@ const TenantDetails = () => {
           <h1 className="page-title">Tenant Details</h1>
           <p className="page-subtitle">
             View detailed information about the tenant
+            <strong style={{ wordBreak: 'break-all' }}>
+              {tenantData?.info.name ? ` ${tenantData.info.name}` : '...'}
+            </strong>
           </p>
         </div>
         <Button

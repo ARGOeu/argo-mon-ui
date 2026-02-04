@@ -391,7 +391,10 @@ export const useAddMemberDirectly = () => {
   return useMutation<
     void,
     Error,
-    { tenantId: string; data: { email: string; role: string } }
+    {
+      tenantId: string
+      data: { username: string; email: string; role: string }
+    }
   >({
     mutationFn: ({ tenantId, data }) => {
       if (!token) {

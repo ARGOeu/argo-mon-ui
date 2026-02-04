@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import {
   useGetTenantInvitations,
@@ -9,6 +9,7 @@ import {
   useGetUserTenantById,
   useAddMemberDirectly,
   useRemoveMemberFromTenant,
+  useGetMembers,
 } from '@/hooks/useTenants'
 import { useAuth } from '@/auth/useAuth'
 import {
@@ -17,6 +18,7 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
   UserMinusIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/solid'
 import { toast, Toaster } from 'sonner'
 import Button from '@/components/Button'
@@ -46,7 +48,12 @@ const ManageTenantMembers = () => {
     email: '',
     role: 'viewer' as InvitationRole,
   })
-  const [addDirectForm, setAddDirectForm] = useState({
+  const [addDirectForm, setAddDirectForm] = useState<{
+    username: string
+    email: string
+    role: InvitationRole
+  }>({
+    username: '',
     email: '',
     role: 'viewer' as InvitationRole,
   })
@@ -54,8 +61,17 @@ const ManageTenantMembers = () => {
     email: '',
   })
   const [addDirectErrors, setAddDirectErrors] = useState({
-    email: '',
+    search: '',
   })
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchInput, setSearchInput] = useState('')
+  const [showSearchResults, setShowSearchResults] = useState(false)
+  const [selectedUser, setSelectedUser] = useState<{
+    username: string
+    email: string
+    firstName: string
+    lastName: string
+  } | null>(null)
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
   const [memberToRemove, setMemberToRemove] = useState<{
     id: string
@@ -71,9 +87,24 @@ const ManageTenantMembers = () => {
   const { data: invitationsData, isLoading: invitationsLoading } =
     useGetTenantInvitations(tenantId || '', !!tenantId)
 
+  const { data: searchResults, isLoading: searchLoading } = useGetMembers(
+    1,
+    5,
+    searchQuery,
+    !!searchQuery && showSearchResults,
+  )
+
   const createInvitationMutation = useCreateTenantInvitation()
   const addMemberDirectlyMutation = useAddMemberDirectly()
   const removeMemberMutation = useRemoveMemberFromTenant()
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setSearchQuery(searchInput)
+    }, 300)
+
+    return () => clearTimeout(timer)
+  }, [searchInput])
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -145,35 +176,53 @@ const ManageTenantMembers = () => {
   ) => {
     const { name, value } = e.target
 
-    setAddDirectForm((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-
-    if (name === 'email') {
+    if (name === 'search') {
+      setSearchInput(value)
+      setShowSearchResults(true)
       if (!value.trim()) {
-        setAddDirectErrors((prev) => ({ ...prev, email: 'Email is required' }))
-      } else if (!validateEmail(value)) {
-        setAddDirectErrors((prev) => ({
-          ...prev,
-          email: 'Invalid email format',
-        }))
-      } else {
-        setAddDirectErrors((prev) => ({ ...prev, email: '' }))
+        setShowSearchResults(false)
+        setAddDirectErrors((prev) => ({ ...prev, search: '' }))
       }
+    } else if (name === 'role') {
+      setAddDirectForm((prev) => ({
+        ...prev,
+        role: value as InvitationRole,
+      }))
     }
+  }
+
+  const handleUserSelect = (user: {
+    username: string
+    email: string
+    firstName: string
+    lastName: string
+  }) => {
+    setSelectedUser(user)
+    setAddDirectForm({
+      username: user.username,
+      email: user.email,
+      role: addDirectForm.role,
+    })
+    setSearchInput('')
+    setShowSearchResults(false)
+    setAddDirectErrors({ search: '' })
+  }
+
+  const handleClearSelectedUser = () => {
+    setSelectedUser(null)
+    setAddDirectForm({
+      username: '',
+      email: '',
+      role: addDirectForm.role,
+    })
+    setSearchInput('')
   }
 
   const handleAddDirectSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!addDirectForm.email.trim()) {
-      setAddDirectErrors({ email: 'Email is required' })
-      return
-    }
-
-    if (!validateEmail(addDirectForm.email)) {
-      setAddDirectErrors({ email: 'Invalid email format' })
+    if (!selectedUser) {
+      setAddDirectErrors({ search: 'Please select a user' })
       return
     }
 
@@ -186,6 +235,7 @@ const ManageTenantMembers = () => {
       {
         tenantId,
         data: {
+          username: addDirectForm.username,
           email: addDirectForm.email,
           role: addDirectForm.role,
         },
@@ -193,8 +243,10 @@ const ManageTenantMembers = () => {
       {
         onSuccess: () => {
           toast.success('Member added successfully!')
-          setAddDirectForm({ email: '', role: 'viewer' })
-          setAddDirectErrors({ email: '' })
+          setAddDirectForm({ username: '', email: '', role: 'viewer' })
+          setSelectedUser(null)
+          setSearchInput('')
+          setAddDirectErrors({ search: '' })
         },
         onError: (error) => {
           toast.error(`Failed to add member: ${error.message}`)
@@ -297,7 +349,6 @@ const ManageTenantMembers = () => {
                     <table className={styles.table}>
                       <thead className={styles['table-head']}>
                         <tr>
-                          <th>Username</th>
                           <th>First Name</th>
                           <th>Last Name</th>
                           <th>Email</th>
@@ -314,7 +365,6 @@ const ManageTenantMembers = () => {
                             )
                             return (
                               <tr key={member.id}>
-                                <td>{member.username}</td>
                                 <td>{member.firstName || '-'}</td>
                                 <td>{member.lastName || '-'}</td>
                                 <td>{member.email}</td>
@@ -484,7 +534,7 @@ const ManageTenantMembers = () => {
                           name="email"
                           value={inviteForm.email}
                           onChange={handleInviteFormChange}
-                          placeholder="Enter email address to invite"
+                          placeholder="Enter email address to invite..."
                           className={errors.email ? styles['input-error'] : ''}
                         />
                         {errors.email && (
@@ -541,31 +591,97 @@ const ManageTenantMembers = () => {
                     </h2>
                     <p className={styles['section-description']}>
                       Add a new member directly to this tenant without sending
-                      an invitation. The user must already have an account in
-                      the system.
+                      an invitation. Search for a registered user by email or
+                      username.
                     </p>
 
                     <div className={styles['form-fields']}>
-                      <div className={styles.field}>
-                        <label className={styles.label}>
-                          Email Address <span className="required">*</span>
-                        </label>
-                        <input
-                          type="email"
-                          name="email"
-                          value={addDirectForm.email}
-                          onChange={handleAddDirectFormChange}
-                          placeholder="Enter registered user's email address"
-                          className={
-                            addDirectErrors.email ? styles['input-error'] : ''
-                          }
-                        />
-                        {addDirectErrors.email && (
-                          <span className={styles.error}>
-                            {addDirectErrors.email}
-                          </span>
-                        )}
-                      </div>
+                      {!selectedUser ? (
+                        <div className={styles.field}>
+                          <label className={styles.label}>
+                            Search User <span className="required">*</span>
+                          </label>
+                          <div className={styles['search-wrapper']}>
+                            <input
+                              type="text"
+                              name="search"
+                              value={searchInput}
+                              onChange={handleAddDirectFormChange}
+                              placeholder="Search by email or username..."
+                              className={
+                                addDirectErrors.search
+                                  ? styles['input-error']
+                                  : ''
+                              }
+                              autoComplete="off"
+                            />
+                            {addDirectErrors.search && (
+                              <span className={styles.error}>
+                                {addDirectErrors.search}
+                              </span>
+                            )}
+
+                            {showSearchResults && (
+                              <div className={styles['search-results']}>
+                                {searchLoading ? (
+                                  <div className={styles['search-loading']}>
+                                    <ArrowPathIcon className="animate-spin size-5 text-blue-400" />
+                                    <span>Searching...</span>
+                                  </div>
+                                ) : searchResults &&
+                                  searchResults.content.length > 0 ? (
+                                  <ul className={styles['results-list']}>
+                                    {searchResults.content.map((user) => (
+                                      <li
+                                        key={user.id}
+                                        className={styles['result-item']}
+                                        onClick={() => handleUserSelect(user)}
+                                      >
+                                        <div className={styles['user-info']}>
+                                          <span className={styles['user-name']}>
+                                            {user.firstName} {user.lastName}
+                                          </span>
+                                          <span
+                                            className={styles['user-details']}
+                                          >
+                                            {user.username} • {user.email}
+                                          </span>
+                                        </div>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <div className={styles['no-results']}>
+                                    No users found
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className={styles.field}>
+                          <label className={styles.label}>Selected User</label>
+                          <div className={styles['selected-user-card']}>
+                            <div className={styles['selected-user-info']}>
+                              <span className={styles['selected-user-name']}>
+                                {selectedUser.firstName} {selectedUser.lastName}
+                              </span>
+                              <span className={styles['selected-user-details']}>
+                                {selectedUser.username} • {selectedUser.email}
+                              </span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={handleClearSelectedUser}
+                              className={styles['clear-user-button']}
+                              aria-label="Clear selected user"
+                            >
+                              <XMarkIcon className="size-5" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
 
                       <div className={styles.field}>
                         <label className={styles.label}>
@@ -591,9 +707,7 @@ const ManageTenantMembers = () => {
                         size="md"
                         type="submit"
                         disabled={
-                          !addDirectForm.email.trim() ||
-                          !!addDirectErrors.email ||
-                          addMemberDirectlyMutation.isPending
+                          !selectedUser || addMemberDirectlyMutation.isPending
                         }
                       >
                         Add Member

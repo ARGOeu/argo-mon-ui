@@ -2,16 +2,7 @@
 import { AuthContext, type AuthContextType } from './context'
 import { keycloak, initKeycloak } from './keycloak'
 import { useEffect, useRef, useState } from 'react'
-
-type KeycloakUserInfo = {
-  preferred_username: string
-  email: string
-  name: string
-  given_name: string
-  family_name: string
-  sub: string
-  entitlements: string[]
-}
+import { fetchUserProfile } from '@/api/profile'
 
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({
   children,
@@ -23,6 +14,32 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
 
   const startedRef = useRef(false)
   const refreshTimerRef = useRef<number | null>(null)
+
+  // Fetch profile data when token becomes available
+  useEffect(() => {
+    if (token && authenticated) {
+      fetchUserProfile(token)
+        .then((profileData) => {
+          // Extract unique roles from groups array
+          const roles = profileData.groups
+            ? Array.from(new Set(profileData.groups.map((group) => group.role)))
+            : []
+
+          setProfile({
+            id: profileData.id,
+            username: profileData.username,
+            email: profileData.email,
+            name: profileData.name,
+            surname: profileData.surname,
+            groups: profileData.groups || [],
+            roles: roles,
+          })
+        })
+        .catch((error) => {
+          console.error('Failed to fetch user profile:', error)
+        })
+    }
+  }, [token, authenticated])
 
   useEffect(() => {
     if (startedRef.current) return
@@ -42,43 +59,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
 
         if (auth) {
           setToken(keycloak.token)
-
-          // Load minimal profile
-          const userInfo = (await keycloak.loadUserInfo()) as KeycloakUserInfo
-
-          // Extract roles from entitlements
-          const roles =
-            userInfo.entitlements
-              ?.filter((entitlement) =>
-                entitlement.includes('group:status-pages'),
-              )
-              .map((entitlement) => {
-                const rolePart = entitlement.split('role=')[1]
-                return rolePart || null
-              })
-              .filter((role): role is string => role !== null) || []
-
-          setProfile({
-            username: userInfo.preferred_username,
-            name: userInfo.name,
-            given_name: userInfo.given_name,
-            family_name: userInfo.family_name,
-            email: userInfo.email,
-            sub: userInfo.sub,
-            entitlements: userInfo.entitlements,
-            roles: roles,
-          })
-
-          // // Refresh token every 30s; keep at least 60s of validity.
-          // refreshTimerRef.current = window.setInterval(async () => {
-          //   try {
-          //     const refreshed = await keycloak.updateToken(60);
-          //     if (refreshed) setToken(keycloak.token);
-          //   } catch {
-          //     setAuthenticated(false);
-          //     setToken(undefined);
-          //   }
-          // }, 30_000);
         }
 
         setInitialized(true)

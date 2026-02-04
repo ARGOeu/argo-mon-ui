@@ -11,7 +11,6 @@ import {
   UserGroupIcon,
   EnvelopeIcon,
 } from '@heroicons/react/16/solid'
-import { squishEmail } from './utils/profile'
 import Button from './components/Button'
 import LoginPrompt from './components/LoginPrompt'
 
@@ -112,21 +111,16 @@ export default function Layout() {
         </nav>
 
         <div className="border-t border-gray-200">
-          {authenticated && (profile?.username || profile?.sub) ? (
+          {authenticated && profile?.name ? (
             <div className="p-4">
               <div className="flex items-center justify-between gap-1 text-sm text-gray-700">
                 <Link to="/profile">
                   <div className="flex items-center gap-2 min-w-0 flex-1 hover:opacity-90 w-50">
                     <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0">
-                      {(profile.username || profile.sub || 'U')
-                        .charAt(0)
-                        .toUpperCase()}
+                      {(profile.name || 'U').charAt(0).toUpperCase()}
                     </div>
-                    <div
-                      className="truncate font-medium"
-                      title={profile.username || squishEmail(profile.sub || '')}
-                    >
-                      {profile.username || squishEmail(profile.sub || '')}
+                    <div className="truncate font-medium" title={profile.name}>
+                      {profile.name || 'User'}
                     </div>
                   </div>
                 </Link>
