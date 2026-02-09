@@ -24,6 +24,7 @@ import {
   fetchTenantMembers,
   addMemberDirectly,
   removeMemberFromTenant,
+  revokeInvitation,
 } from '@/api/tenants'
 import type {
   Job,
@@ -454,6 +455,28 @@ export const useGetTenantByName = () => {
     },
     onError: (error) => {
       console.error('Fetch tenant by name error:', error)
+    },
+  })
+}
+
+export const useRevokeInvitation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<void, Error, { tenantId: string; invitationId: string }>({
+    mutationFn: ({ tenantId, invitationId }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return revokeInvitation(tenantId, invitationId, token)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['tenant-invitations'] })
+      queryClient.invalidateQueries({ queryKey: ['admin-invitations'] })
+      queryClient.invalidateQueries({ queryKey: ['user-invitations'] })
+    },
+    onError: (error) => {
+      console.error('Revoke invitation error:', error)
     },
   })
 }

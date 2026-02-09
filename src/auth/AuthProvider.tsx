@@ -2,6 +2,7 @@
 import { AuthContext, type AuthContextType } from './context'
 import { keycloak, initKeycloak } from './keycloak'
 import { useEffect, useRef, useState } from 'react'
+import { registerUser } from '@/api/users'
 import { fetchUserProfile } from '@/api/profile'
 
 export const AuthProvider: React.FC<React.PropsWithChildren> = ({
@@ -9,11 +10,13 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
 }) => {
   const [initialized, setInitialized] = useState(false)
   const [authenticated, setAuthenticated] = useState(false)
+  const [registered, setRegistered] = useState(false)
   const [token, setToken] = useState<string | undefined>(undefined)
   const [profile, setProfile] = useState<AuthContextType['profile']>(undefined)
 
   const startedRef = useRef(false)
   const refreshTimerRef = useRef<number | null>(null)
+  const hasRegistered = useRef(false)
 
   // Fetch profile data when token becomes available
   useEffect(() => {
@@ -59,6 +62,21 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
 
         if (auth) {
           setToken(keycloak.token)
+
+          // Register user once when authenticated
+          if (!hasRegistered.current && keycloak.token) {
+            hasRegistered.current = true
+            try {
+              await registerUser(keycloak.token)
+              setRegistered(true)
+            } catch (error) {
+              console.error('User registration error:', error)
+              // Set registered to true even if registration fails to not block the app
+              setRegistered(true)
+            }
+          } else {
+            setRegistered(true)
+          }
         }
 
         setInitialized(true)
@@ -92,7 +110,15 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
 
   return (
     <AuthContext.Provider
-      value={{ initialized, authenticated, token, profile, login, logout }}
+      value={{
+        initialized,
+        authenticated,
+        registered,
+        token,
+        profile,
+        login,
+        logout,
+      }}
     >
       {children}
     </AuthContext.Provider>

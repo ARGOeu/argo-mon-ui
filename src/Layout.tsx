@@ -1,7 +1,5 @@
 import { Link, NavLink, Outlet } from 'react-router'
 import { useAuth } from './auth/useAuth'
-import { useRegisterUserMutation } from './hooks/useUsers'
-import { useEffect, useRef } from 'react'
 import {
   ArrowLeftStartOnRectangleIcon,
   ServerStackIcon,
@@ -43,25 +41,15 @@ function SidebarNavItem({
 
 export default function Layout() {
   const { authenticated, profile, login, logout } = useAuth()
-  const registerMutation = useRegisterUserMutation()
-  const hasRegistered = useRef(false)
 
   const isSuperAdmin = profile?.roles?.includes('super_admin')
   const isAdmin = profile?.roles?.includes('admin')
   const isViewer = profile?.roles?.includes('viewer')
   const hasTenantsAccess = isSuperAdmin || isAdmin || isViewer
 
-  // Register user once when authenticated
-  useEffect(() => {
-    if (authenticated && !hasRegistered.current) {
-      hasRegistered.current = true
-      registerMutation.mutate()
-    }
-  }, [authenticated, registerMutation])
-
   return (
-    <div className="min-h-screen flex">
-      <aside className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col">
+    <div className="h-screen flex overflow-hidden">
+      <aside className="w-64 bg-gray-50 border-r border-gray-200 flex flex-col overflow-y-auto overflow-x-hidden">
         <div className="px-3 border-b border-gray-200">
           <div
             className="flex items-center gap-2 cursor-pointer"
@@ -115,7 +103,7 @@ export default function Layout() {
             <div className="p-4">
               <div className="flex items-center justify-between gap-1 text-sm text-gray-700">
                 <Link to="/profile">
-                  <div className="flex items-center gap-2 min-w-0 flex-1 hover:opacity-90 w-50">
+                  <div className="flex items-center gap-2 min-w-0 flex-1 hover:opacity-90 w-48">
                     <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0">
                       {(profile.name || 'U').charAt(0).toUpperCase()}
                     </div>
@@ -125,10 +113,10 @@ export default function Layout() {
                   </div>
                 </Link>
                 <button
-                  type="button"
-                  className="p-2 hover:bg-gray-100 rounded transition-colors flex-shrink-0 cursor-pointer"
+                  className="me-2 p-1 hover:bg-gray-100 rounded transition-colors flex-shrink-0 cursor-pointer tooltip"
+                  data-tip="Logout"
                   onClick={logout}
-                  title="Logout"
+                  type="button"
                 >
                   <ArrowLeftStartOnRectangleIcon className="size-5 text-gray-600" />
                 </button>

@@ -168,14 +168,18 @@ export const Profile = () => {
         isOpen={removeDialogOpen}
         title="Remove from Tenant"
         message={
-          <>
-            Are you sure you want to remove this user from the tenant "
-            {tenantToRemove?.name}"?
-            <br />
-            <span className="text-amber-600 font-medium">
-              The user will lose access to this tenant.
-            </span>
-          </>
+          tenantToRemove ? (
+            <>
+              Are you sure you want to remove this user from tenant{' '}
+              <strong>{tenantToRemove.name}</strong> ?
+              <br />
+              <span className="text-amber-600 font-medium">
+                The user will lose access to this tenant.
+              </span>
+            </>
+          ) : (
+            ''
+          )
         }
         confirmLabel="Remove"
         cancelLabel="Cancel"
@@ -211,8 +215,11 @@ export const Profile = () => {
                 </div>
                 <div>
                   <label className={styles['username-label']}>Username</label>
-                  <h2 className={styles['username-value']}>
-                    {squishEmail(currentUsername, 10, 10)}
+                  <h2
+                    className={styles['username-value']}
+                    title={currentUsername}
+                  >
+                    {squishEmail(currentUsername, 12, 12)}
                   </h2>
                 </div>
               </div>

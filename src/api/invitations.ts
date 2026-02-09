@@ -79,17 +79,27 @@ export const createTenantInvitation = async (
 export const fetchTenantInvitations = async (
   tenantId: string,
   token: string,
+  params?: {
+    page?: number
+    size?: number
+  },
 ): Promise<PaginatedInvitationsResponse> => {
-  const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/invitations`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+  const queryParams = new URLSearchParams()
+
+  if (params?.page) queryParams.append('page', params.page.toString())
+  if (params?.size) queryParams.append('size', params.size.toString())
+
+  const url = `${BACKEND_API}/v1/tenants/${tenantId}/invitations${
+    queryParams.toString() ? `?${queryParams.toString()}` : ''
+  }`
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
     },
-  )
+  })
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useGetAdminInvitations } from '@/hooks/useInvitations'
+import { useRevokeInvitation } from '@/hooks/useTenants'
 import { ArrowPathIcon, MagnifyingGlassIcon } from '@heroicons/react/16/solid'
 import {
   ChevronUpIcon,
@@ -7,6 +8,9 @@ import {
   ChevronLeftIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline'
+import { XCircleIcon } from '@heroicons/react/24/solid'
+import { toast } from 'sonner'
+import ConfirmDialog from '@/components/ConfirmDialog'
 import styles from './AdminInvitations.module.css'
 import adminStyles from './Administration.module.css'
 
@@ -24,6 +28,13 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
   const [sortOrder, setSortOrder] = useState<SortOrder>('ASC')
   const [currentPage, setCurrentPage] = useState(1)
   const pageSize = 10
+  const [revokeDialogOpen, setRevokeDialogOpen] = useState(false)
+  const [invitationToRevoke, setInvitationToRevoke] = useState<{
+    tenantId: string
+    invitationId: string
+    tenantName: string
+    email: string
+  } | null>(null)
 
   // Debounce search input
   useEffect(() => {
@@ -43,6 +54,44 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
       page: currentPage,
       size: pageSize,
     })
+
+  const revokeInvitationMutation = useRevokeInvitation()
+
+  const handleRevokeClick = (
+    tenantId: string,
+    invitationId: string,
+    tenantName: string,
+    email: string,
+  ) => {
+    setInvitationToRevoke({ tenantId, invitationId, tenantName, email })
+    setRevokeDialogOpen(true)
+  }
+
+  const handleRevokeConfirm = () => {
+    if (!invitationToRevoke) return
+
+    revokeInvitationMutation.mutate(
+      {
+        tenantId: invitationToRevoke.tenantId,
+        invitationId: invitationToRevoke.invitationId,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Invitation revoked successfully!')
+          setRevokeDialogOpen(false)
+          setInvitationToRevoke(null)
+        },
+        onError: (error) => {
+          toast.error(`Failed to revoke invitation: ${error.message}`)
+        },
+      },
+    )
+  }
+
+  const handleRevokeCancel = () => {
+    setRevokeDialogOpen(false)
+    setInvitationToRevoke(null)
+  }
 
   const handleClearSearch = () => {
     setSearchInput('')
@@ -149,6 +198,7 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
                       {renderSortIcon('created_at')}
                     </button>
                   </th>
+                  <th className={styles['th-actions']}>Actions</th>
                 </tr>
               </thead>
               <tbody className={styles['table-body']}>
@@ -191,7 +241,9 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
                             ? 'Accepted'
                             : invitation.status === 'REJECTED'
                               ? 'Rejected'
-                              : invitation.status}
+                              : invitation.status === 'REVOKED'
+                                ? 'Revoked'
+                                : invitation.status}
                       </span>
                     </td>
                     <td className={styles['td-created']}>
@@ -205,6 +257,34 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
                           },
                         )}
                       </span>
+                    </td>
+                    <td>
+                      <div className={styles['actions-container']}>
+                        {invitation.status === 'PENDING' ? (
+                          <button
+                            onClick={() =>
+                              handleRevokeClick(
+                                invitation.tenant_id,
+                                invitation.id,
+                                invitation.tenant_name,
+                                invitation.email,
+                              )
+                            }
+                            className={`${styles['remove-button']} tooltip`}
+                            data-tip="Revoke invitation"
+                            disabled={revokeInvitationMutation.isPending}
+                          >
+                            <XCircleIcon
+                              style={{
+                                width: '1.6rem',
+                                height: '1.6rem',
+                              }}
+                            />
+                          </button>
+                        ) : (
+                          <span className={styles['empty-actions']}>-</span>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -275,6 +355,30 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
         </div>
       </div>
       {renderContent()}
+
+      <ConfirmDialog
+        isOpen={revokeDialogOpen}
+        title="Revoke Invitation"
+        message={
+          invitationToRevoke ? (
+            <>
+              Are you sure you want to revoke the invitation for{' '}
+              <strong>{invitationToRevoke.email}</strong> to join tenant{' '}
+              <strong>{invitationToRevoke.tenantName}</strong>?
+              <br />
+              <span className="text-amber-600 font-medium">
+                This action cannot be undone.
+              </span>
+            </>
+          ) : (
+            ''
+          )
+        }
+        confirmLabel="Revoke"
+        cancelLabel="Cancel"
+        onConfirm={handleRevokeConfirm}
+        onCancel={handleRevokeCancel}
+      />
     </>
   )
 }

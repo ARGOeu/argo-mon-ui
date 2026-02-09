@@ -17,7 +17,7 @@ import styles from './InvitationReview.module.css'
 export const InvitationReview = () => {
   const { id: invitationId } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const { authenticated, initialized, login } = useAuth()
+  const { authenticated, initialized, registered, login } = useAuth()
   const [isProcessing, setIsProcessing] = useState(false)
 
   const {
@@ -26,7 +26,7 @@ export const InvitationReview = () => {
     error,
   } = useGetUserInvitationById(
     invitationId || '',
-    authenticated && !!invitationId,
+    authenticated && registered && !!invitationId,
   )
 
   const respondMutation = useRespondToInvitation()
@@ -85,7 +85,7 @@ export const InvitationReview = () => {
     )
   }
 
-  if (!initialized || !authenticated || isLoading) {
+  if (!initialized || !authenticated || !registered || isLoading) {
     return (
       <div className={styles.container}>
         <div className={styles.loading}>
