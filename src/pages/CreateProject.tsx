@@ -1,12 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowPathIcon } from '@heroicons/react/16/solid'
 import {
   useCreateProjectMutation,
   useUpdateProjectMutation,
   useGetProjectById,
 } from '@/hooks/useProjects'
 import { toast, Toaster } from 'sonner'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import Button from '../components/Button'
 import styles from './CreateTenant.module.css'
 
@@ -135,7 +135,7 @@ const CreateProject = () => {
           onSuccess: () => {
             toast.success('Project updated successfully!')
             setTimeout(() => {
-              navigate(`/projects/view`)
+              navigate(`/projects`)
             }, 2000)
           },
           onError: (error: Error & { errors?: string[] }) => {
@@ -159,7 +159,7 @@ const CreateProject = () => {
         onSuccess: () => {
           toast.success('Project created successfully!')
           setTimeout(() => {
-            navigate(`/projects/view`)
+            navigate(`/projects`)
           }, 2000)
         },
         onError: (error: Error & { errors?: string[] }) => {
@@ -203,7 +203,7 @@ const CreateProject = () => {
       <div className="page-container">
         {isEditMode && isProjectLoading ? (
           <div className="loading-container">
-            <ArrowPathIcon className="animate-spin size-10 text-blue-400" />
+            <LoadingSpinner />
           </div>
         ) : (
           <>

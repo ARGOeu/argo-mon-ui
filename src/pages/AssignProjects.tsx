@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDragAndDrop } from '@formkit/drag-and-drop/react'
-import { ArrowPathIcon } from '@heroicons/react/16/solid'
 import { toast, Toaster } from 'sonner'
 import Button from '@/components/Button'
 import {
@@ -18,6 +17,7 @@ import styles from './AssignProjects.module.css'
 import { useAuth } from '@/auth/useAuth'
 import { useGetUserProfile } from '@/hooks/useProfile'
 import type { UserGroup } from '@/types/profile'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-GB', {
@@ -210,7 +210,7 @@ const AssignProjects = () => {
         onSuccess: () => {
           toast.success('Projects assigned successfully!')
           setTimeout(() => {
-            navigate('/tenants/view')
+            navigate('/tenants')
           }, 2000)
         },
         onError: (error: Error & { errors?: string[] }) => {
@@ -231,13 +231,13 @@ const AssignProjects = () => {
   }
 
   const handleCancel = () => {
-    navigate('/tenants/view')
+    navigate('/tenants')
   }
 
   if (!isInitialized) {
     return (
       <div className="loading-container">
-        <ArrowPathIcon className="animate-spin size-10 text-blue-400" />
+        <LoadingSpinner />
       </div>
     )
   }

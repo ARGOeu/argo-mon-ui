@@ -1,17 +1,14 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useAuth } from '@/auth/useAuth'
 import { useGetMembers } from '@/hooks/useTenants'
-import {
-  ArrowPathIcon,
-  MagnifyingGlassIcon,
-  UserCircleIcon,
-} from '@heroicons/react/16/solid'
+import { MagnifyingGlassIcon, UserCircleIcon } from '@heroicons/react/16/solid'
 import {
   ChevronUpIcon,
   ChevronDownIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/outline'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import styles from './Administration.module.css'
 import AdminInvitations from './AdminInvitations'
 import { useNavigate } from 'react-router-dom'
@@ -161,7 +158,7 @@ const Administration = () => {
 
           {isLoading ? (
             <div className="loading-container">
-              <ArrowPathIcon className="animate-spin size-10 text-blue-400" />
+              <LoadingSpinner />
             </div>
           ) : (
             <>

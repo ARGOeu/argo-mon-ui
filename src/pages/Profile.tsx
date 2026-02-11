@@ -1,4 +1,4 @@
-import { UserCircleIcon, ArrowPathIcon } from '@heroicons/react/16/solid'
+import { UserCircleIcon } from '@heroicons/react/16/solid'
 import { ArrowLeftIcon, UserMinusIcon } from '@heroicons/react/24/solid'
 import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useState } from 'react'
@@ -9,6 +9,7 @@ import {
   useRemoveMemberFromTenant,
 } from '@/hooks/useTenants'
 import { squishEmail } from '@/utils/profile'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { toast, Toaster } from 'sonner'
@@ -103,7 +104,7 @@ export const Profile = () => {
   if (isLoading) {
     return (
       <div className="loading-container">
-        <ArrowPathIcon className="animate-spin size-10 text-blue-400" />
+        <LoadingSpinner />
       </div>
     )
   }

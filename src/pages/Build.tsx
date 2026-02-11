@@ -1,5 +1,4 @@
 import {
-  ArrowPathIcon,
   ArrowTopRightOnSquareIcon,
   CheckCircleIcon,
   Cog6ToothIcon,
@@ -34,6 +33,7 @@ import { toast, Toaster } from 'sonner'
 import SelectGroup from '@/components/SelectGroup'
 import { BanIcon, Columns2Icon, SquareIcon } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import Button from '@/components/Button'
 import styles from './Build.module.css'
 
@@ -75,6 +75,9 @@ const Build = () => {
   const [filterItems, setFilterItems] = useState('')
   const reportsMutation = useReportsMutation()
 
+  // Track next group ID to avoid duplicate names when groups are deleted
+  const nextGroupIdRef = useRef(1)
+
   // Load existing page data in edit mode
   useEffect(() => {
     if (isEditMode && getPageQuery.data) {
@@ -90,6 +93,21 @@ const Build = () => {
       })
       setReport(pageData.report || '')
       setStatusGroups(pageData.config?.groups || [])
+
+      // Calculate the next group ID based on existing groups
+      const existingGroups = pageData.config?.groups || []
+      if (existingGroups.length > 0) {
+        const maxId = existingGroups.reduce((max, group) => {
+          const match = group.name.match(/^group-(\d+)$/)
+          if (match) {
+            const id = parseInt(match[1], 10)
+            return id > max ? id : max
+          }
+          return max
+        }, 0)
+        nextGroupIdRef.current = maxId + 1
+      }
+
       setSaved(true) // Already saved since we're editing
       setSelectIcon(pageData.config?.theming?.status.icon || 'led')
       setSelectText(pageData.config?.theming?.status.text || 'none')
@@ -116,14 +134,16 @@ const Build = () => {
   }, [isEditMode, JSON.stringify(getPageQuery.data)])
 
   const handleAddStatusGroup = () => {
+    const newGroupId = nextGroupIdRef.current
     setStatusGroups((prev) => [
       ...prev,
       {
-        name: `group-${prev.length + 1}`,
-        alias: `group-${prev.length + 1}`,
+        name: `group-${newGroupId}`,
+        alias: `group-${newGroupId}`,
         list: [],
       },
     ])
+    nextGroupIdRef.current = newGroupId + 1
   }
 
   const handleReportChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -418,7 +438,7 @@ const Build = () => {
   if (isEditMode && getPageQuery.isLoading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <ArrowPathIcon className="animate-spin size-8 text-blue-400" />
+        <LoadingSpinner size="md" />
         <span className="ml-2">Loading page data...</span>
       </div>
     )
@@ -607,7 +627,7 @@ const Build = () => {
                       >
                         {reportsMutation.isPending ? (
                           <>
-                            <ArrowPathIcon className="animate-spin size-4 text-blue-400" />
+                            <LoadingSpinner size="xs" />
                             <span>Connecting ...</span>
                           </>
                         ) : reportsMutation.data ? (
@@ -676,8 +696,7 @@ const Build = () => {
 
                           {groupsMutation.isPending && (
                             <div className="p-2 text-base mt-2 mx-auto">
-                              <ArrowPathIcon className="size-4 animate-spin inline-block me-2 text-blue-400" />{' '}
-                              Loading items...
+                              <LoadingSpinner size="xs" inline />
                             </div>
                           )}
 

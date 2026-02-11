@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
-import { ArrowPathIcon, PhotoIcon, XMarkIcon } from '@heroicons/react/16/solid'
+import { PhotoIcon, XMarkIcon } from '@heroicons/react/16/solid'
 import {
   useCreateTenantMutation,
   useUpdateTenantMutation,
@@ -15,6 +15,7 @@ import { toast, Toaster } from 'sonner'
 import Button from '../components/Button'
 import ContactInformation from '../components/ContactInformation'
 import InfrastructureMetadata from '../components/InfrastructureMetadata'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import styles from './CreateTenant.module.css'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
@@ -286,7 +287,7 @@ const CreateTenant = () => {
           onSuccess: () => {
             toast.success('Tenant updated successfully!')
             setTimeout(() => {
-              navigate(`/tenants/view`)
+              navigate(`/tenants`)
             }, 2000)
           },
           onError: (error: Error & { errors?: string[] }) => {
@@ -312,7 +313,7 @@ const CreateTenant = () => {
           onSuccess: () => {
             toast.success('Tenant created successfully!')
             setTimeout(() => {
-              navigate(`/tenants/view`)
+              navigate(`/tenants`)
             }, 2000)
           },
           onError: (error: Error & { errors?: string[] }) => {
@@ -436,7 +437,7 @@ const CreateTenant = () => {
       <div className="page-container">
         {isEditMode && isTenantLoading ? (
           <div className="loading-container">
-            <ArrowPathIcon className="animate-spin size-10 text-blue-400" />
+            <LoadingSpinner />
           </div>
         ) : (
           <>

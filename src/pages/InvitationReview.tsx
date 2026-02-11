@@ -1,16 +1,13 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import {
-  ArrowPathIcon,
-  CheckCircleIcon,
-  XCircleIcon,
-} from '@heroicons/react/24/outline'
+import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '@/auth/useAuth'
 import {
   useGetUserInvitationById,
   useRespondToInvitation,
 } from '@/hooks/useInvitations'
 import Button from '@/components/Button'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import { Toaster, toast } from 'sonner'
 import styles from './InvitationReview.module.css'
 
@@ -50,7 +47,7 @@ export const InvitationReview = () => {
         onSuccess: () => {
           toast.success('Invitation accepted successfully!')
           setTimeout(() => {
-            navigate('/tenants/view')
+            navigate('/tenants')
           }, 2000)
         },
         onError: (error) => {
@@ -89,7 +86,7 @@ export const InvitationReview = () => {
     return (
       <div className={styles.container}>
         <div className={styles.loading}>
-          <ArrowPathIcon className="animate-spin size-10 text-blue-400" />
+          <LoadingSpinner />
           <p>Loading invitation...</p>
         </div>
       </div>
@@ -148,7 +145,7 @@ export const InvitationReview = () => {
                 <Button
                   variant="primary"
                   size="md"
-                  onClick={() => navigate('/tenants/view')}
+                  onClick={() => navigate('/tenants')}
                 >
                   View Tenants
                 </Button>
@@ -204,7 +201,7 @@ export const InvitationReview = () => {
                 <label className={styles.label}>Invited On</label>
                 <div className={styles.value}>
                   {invitation?.created_at
-                    ? new Date(invitation.created_at).toLocaleString('en-US', {
+                    ? new Date(invitation.created_at).toLocaleString('en-GB', {
                         year: 'numeric',
                         month: 'long',
                         day: 'numeric',
@@ -241,7 +238,7 @@ export const InvitationReview = () => {
               {isProcessing &&
               respondMutation.variables?.data.action === 'REJECT' ? (
                 <>
-                  <ArrowPathIcon className="animate-spin size-5" />
+                  <LoadingSpinner size="sm" />
                   Rejecting...
                 </>
               ) : (
@@ -260,7 +257,7 @@ export const InvitationReview = () => {
               {isProcessing &&
               respondMutation.variables?.data.action === 'ACCEPT' ? (
                 <>
-                  <ArrowPathIcon className="animate-spin size-5" />
+                  <LoadingSpinner size="sm" />
                   Accepting...
                 </>
               ) : (

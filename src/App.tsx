@@ -67,7 +67,7 @@ function App() {
             <Route element={<Layout />}>
               <Route index element={<Home />} />
               <Route
-                path="tenants/view"
+                path="tenants"
                 element={
                   <AuthProtected>
                     <Tenants />
@@ -135,7 +135,7 @@ function App() {
                 }
               />
               <Route
-                path="projects/view"
+                path="projects"
                 element={
                   <ProtectedRoute requiredRoles={['super_admin']}>
                     <Projects />

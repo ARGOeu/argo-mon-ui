@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useGetProjects, useDeleteProjectMutation } from '@/hooks/useProjects'
 import {
-  ArrowPathIcon,
   PencilSquareIcon,
   TrashIcon,
   ChevronLeftIcon,
@@ -9,6 +8,7 @@ import {
   MagnifyingGlassIcon,
 } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { useNavigate } from 'react-router-dom'
 import { toast, Toaster } from 'sonner'
@@ -154,7 +154,7 @@ const Projects = () => {
 
       {isLoading ? (
         <div className="loading-container">
-          <ArrowPathIcon className="animate-spin size-10 text-blue-400" />
+          <LoadingSpinner />
         </div>
       ) : (
         <div className={styles.grid}>

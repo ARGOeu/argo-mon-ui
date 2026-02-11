@@ -10,7 +10,6 @@ import {
 } from '@/hooks/useTenants'
 import { useAuth } from '@/auth/useAuth'
 import {
-  ArrowPathIcon,
   ArrowLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
@@ -23,6 +22,7 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 import TenantInvitations from './TenantInvitations'
 import styles from './ManageTenantMembers.module.css'
 import type { InvitationRole } from '@/types/invitations'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 const roleOptions = [
   { label: 'Tenant Admin', value: 'admin' as InvitationRole },
@@ -282,7 +282,7 @@ const ManageTenantMembers = () => {
   }
 
   const handleBack = () => {
-    navigate('/tenants/view')
+    navigate('/tenants')
   }
 
   const isLoading = membersLoading
@@ -338,7 +338,7 @@ const ManageTenantMembers = () => {
 
         {isLoading ? (
           <div className="loading-container">
-            <ArrowPathIcon className="animate-spin size-10 text-blue-400" />
+            <LoadingSpinner />
           </div>
         ) : (
           <>
@@ -569,7 +569,7 @@ const ManageTenantMembers = () => {
                               <div className={styles['search-results']}>
                                 {searchLoading ? (
                                   <div className={styles['search-loading']}>
-                                    <ArrowPathIcon className="animate-spin size-5 text-blue-400" />
+                                    <LoadingSpinner size="sm" />
                                     <span>Searching...</span>
                                   </div>
                                 ) : searchResults &&
