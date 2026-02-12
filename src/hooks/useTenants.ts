@@ -25,6 +25,9 @@ import {
   addMemberDirectly,
   removeMemberFromTenant,
   revokeInvitation,
+  fetchTenantReports,
+  fetchTenantReportById,
+  fetchTenantMetricProfile,
 } from '@/api/tenants'
 import type {
   Job,
@@ -33,6 +36,9 @@ import type {
   TenantProjectAssignment,
   Member,
   PaginatedMembersResponse,
+  ReportListItem,
+  ReportDetail,
+  MetricProfileResponse,
 } from '@/types/tenants'
 
 export const useGetTenants = (
@@ -478,5 +484,74 @@ export const useRevokeInvitation = () => {
     onError: (error) => {
       console.error('Revoke invitation error:', error)
     },
+  })
+}
+
+export const useGetTenantReports = (
+  tenantId: string,
+  search?: string,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<ReportListItem[], Error>({
+    queryKey: ['tenant-reports', tenantId, search],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantId) {
+        throw new Error('Tenant ID is required')
+      }
+      return fetchTenantReports(tenantId, token, search)
+    },
+    retry: false,
+    enabled: enabled && !!token && !!tenantId,
+  })
+}
+
+export const useGetTenantReportById = (
+  tenantId: string,
+  reportId: string,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<ReportDetail, Error>({
+    queryKey: ['tenant-report', tenantId, reportId],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantId || !reportId) {
+        throw new Error('Tenant ID and Report ID are required')
+      }
+      return fetchTenantReportById(tenantId, reportId, token)
+    },
+    retry: false,
+    enabled: enabled && !!token && !!tenantId && !!reportId,
+  })
+}
+
+export const useGetTenantMetricProfile = (
+  tenantId: string,
+  profileId: string,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<MetricProfileResponse, Error>({
+    queryKey: ['tenant-metric-profile', tenantId, profileId],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantId || !profileId) {
+        throw new Error('Tenant ID and Profile ID are required')
+      }
+      return fetchTenantMetricProfile(tenantId, profileId, token)
+    },
+    retry: false,
+    enabled: enabled && !!token && !!tenantId && !!profileId,
   })
 }

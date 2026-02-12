@@ -6,13 +6,13 @@ export type AuthContextType = {
   registered: boolean
   token?: string
   profile?: {
-    id?: string
+    id: string
     username?: string
     email?: string
     name?: string
     surname?: string
-    roles?: string[]
-    groups?: Array<{
+    roles: string[]
+    groups: Array<{
       name: string
       role: string
     }>

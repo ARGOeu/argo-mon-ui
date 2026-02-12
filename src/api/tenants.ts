@@ -3,6 +3,9 @@ import type {
   Tenant,
   TenantList,
   PaginatedMembersResponse,
+  ReportListItem,
+  ReportDetail,
+  MetricProfileResponse,
 } from '@/types/tenants'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
@@ -483,4 +486,83 @@ export const revokeInvitation = async (
       errorData.message || `HTTP error! status: ${response.status}`,
     )
   }
+}
+
+export const fetchTenantReports = async (
+  tenantId: string,
+  token: string,
+  search?: string,
+): Promise<ReportListItem[]> => {
+  const searchParam = search ? `?search=${encodeURIComponent(search)}` : ''
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/reports${searchParam}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchTenantReportById = async (
+  tenantId: string,
+  reportId: string,
+  token: string,
+): Promise<ReportDetail> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/reports/${reportId}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchTenantMetricProfile = async (
+  tenantId: string,
+  profileId: string,
+  token: string,
+): Promise<MetricProfileResponse> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/metric-profiles/${profileId}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
 }

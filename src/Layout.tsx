@@ -77,13 +77,13 @@ export default function Layout() {
             </SidebarNavItem>
           )}
           {hasTenantsAccess && (
-            <SidebarNavItem to="/tenants/view">
+            <SidebarNavItem to="/tenants">
               <ServerStackIcon className="size-5" aria-hidden />
               Tenants
             </SidebarNavItem>
           )}
           {isSuperAdmin && (
-            <SidebarNavItem to="/projects/view">
+            <SidebarNavItem to="/projects">
               <FolderIcon className="size-5" aria-hidden />
               Projects
             </SidebarNavItem>

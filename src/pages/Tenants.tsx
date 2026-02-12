@@ -7,7 +7,6 @@ import {
 import { useGetUserProfile } from '@/hooks/useProfile'
 import { useAuth } from '@/auth/useAuth'
 import {
-  ArrowPathIcon,
   PencilSquareIcon,
   TrashIcon,
   ChevronLeftIcon,
@@ -25,6 +24,7 @@ import { toast, Toaster } from 'sonner'
 import styles from './Tenants.module.css'
 import type { UserGroup } from '@/types/profile'
 import type { Job, JobStatus } from '@/types/tenants'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 const pageSize = 9
 
@@ -259,7 +259,7 @@ const Tenants = () => {
 
       {isLoading ? (
         <div className="loading-container">
-          <ArrowPathIcon className="animate-spin size-10 text-blue-400" />
+          <LoadingSpinner />
         </div>
       ) : (
         <div className={styles.grid}>

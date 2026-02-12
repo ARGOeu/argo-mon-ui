@@ -108,3 +108,87 @@ export type PaginatedMembersResponse = {
   total_pages: number
   content: Member[]
 }
+
+export type ReportListItem = {
+  id: string
+  name: string
+  description: string
+  tenant_name: string
+  disabled: boolean
+  created_at: string
+  updated_at: string
+}
+
+export type ReportProfile = {
+  id: string
+  name: string
+  type: string
+}
+
+export type MetricProfileService = {
+  service: string
+  metrics: string[]
+}
+
+export type MetricProfileData = {
+  id: string
+  services: MetricProfileService[]
+}
+
+export type MetricProfileResponse = {
+  status: {
+    message: string
+    code: string
+  }
+  data: MetricProfileData[]
+}
+
+export type ReportTopologySchema = {
+  group: {
+    type: string
+    group?: {
+      type: string
+    }
+  }
+}
+
+export type ReportComputations = {
+  ar: boolean
+  status: boolean
+  trends: string[]
+}
+
+export type ReportThresholds = {
+  availability: number
+  reliability: number
+  uptime: number
+  unknown: number
+  downtime: number
+}
+
+export type ReportInfo = {
+  name: string
+  description: string
+  created: string
+  updated: string
+}
+
+export type ReportDetail = {
+  id: string
+  tenant: string
+  disabled: boolean
+  info: ReportInfo
+  computations: ReportComputations
+  thresholds: ReportThresholds
+  topology_schema: ReportTopologySchema
+  profiles: ReportProfile[]
+  filter_tags: string[]
+}
+
+export type ReportListResponse = {
+  size_of_page: number
+  number_of_page: number
+  total_elements: number
+  total_pages: number
+  content: ReportListItem[]
+}

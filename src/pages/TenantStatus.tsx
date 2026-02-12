@@ -7,7 +7,6 @@ import {
 import { useAuth } from '@/auth/useAuth'
 import { useState } from 'react'
 import {
-  ArrowPathIcon,
   ArrowLeftIcon,
   CheckCircleIcon,
   XCircleIcon,
@@ -17,6 +16,7 @@ import {
   ChevronUpIcon,
 } from '@heroicons/react/16/solid'
 import { toast, Toaster } from 'sonner'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import Button from '@/components/Button'
 import type { Job, JobStatus } from '@/types/tenants'
 import styles from './TenantStatus.module.css'
@@ -119,7 +119,7 @@ const TenantStatus = () => {
   if (tenantLoading) {
     return (
       <div className="loading-container">
-        <ArrowPathIcon className="animate-spin size-10 text-blue-400" />
+        <LoadingSpinner />
       </div>
     )
   }
@@ -268,7 +268,7 @@ const TenantStatus = () => {
           </div>
           <div>
             <Button
-              onClick={() => navigate('/tenants/view')}
+              onClick={() => navigate('/tenants')}
               size="sm"
               variant="secondary"
             >

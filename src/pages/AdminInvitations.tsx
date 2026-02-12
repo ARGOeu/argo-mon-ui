@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useGetAdminInvitations } from '@/hooks/useInvitations'
 import { useRevokeInvitation } from '@/hooks/useTenants'
-import { ArrowPathIcon, MagnifyingGlassIcon } from '@heroicons/react/16/solid'
+import { MagnifyingGlassIcon } from '@heroicons/react/16/solid'
 import {
   ChevronUpIcon,
   ChevronDownIcon,
@@ -10,6 +10,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { XCircleIcon } from '@heroicons/react/24/solid'
 import { toast } from 'sonner'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import styles from './AdminInvitations.module.css'
 import adminStyles from './Administration.module.css'
@@ -129,7 +130,7 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
     if (invitationsLoading) {
       return (
         <div className="loading-container">
-          <ArrowPathIcon className="animate-spin size-10 text-blue-400" />
+          <LoadingSpinner />
         </div>
       )
     }

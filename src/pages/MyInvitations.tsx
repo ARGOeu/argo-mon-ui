@@ -4,13 +4,13 @@ import {
   useRespondToInvitation,
 } from '@/hooks/useInvitations'
 import {
-  ArrowPathIcon,
   CheckCircleIcon,
   XCircleIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
 } from '@heroicons/react/24/solid'
 import { toast, Toaster } from 'sonner'
+import LoadingSpinner from '@/components/LoadingSpinner'
 import styles from './MyInvitations.module.css'
 
 const pageSize = 10
@@ -55,7 +55,7 @@ const MyInvitations = () => {
 
         {isLoading ? (
           <div className="loading-container">
-            <ArrowPathIcon className="animate-spin size-10 text-blue-400" />
+            <LoadingSpinner />
           </div>
         ) : (
           <>
