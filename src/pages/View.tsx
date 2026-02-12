@@ -11,17 +11,22 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 import { toast, Toaster } from 'sonner'
 import { useState } from 'react'
 import Button from '@/components/Button'
+import { useGetUserTenants } from '@/hooks/useTenants'
+const pageSize = 10
 
 const View = () => {
   const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 10
-  const { data } = useGetAllPagesQuery(currentPage, pageSize)
+  const [tenantId, setTenantId] = useState<string>('')
+  const { data: tenantsData } = useGetUserTenants(1, 100, undefined, true)
+  const { data } = useGetAllPagesQuery(tenantId, currentPage, pageSize)
+
   const deleteMutation = useDeletePageMutation()
   const navigate = useNavigate()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [pageToDelete, setPageToDelete] = useState<{
     id: string
     name: string
+    tenantId: string
   } | null>(null)
 
   const handlePageView = (slug: string) => {
@@ -35,8 +40,8 @@ const View = () => {
   }
 
   const handlePageDeleteClick = (id: string | undefined, name: string) => {
-    if (id) {
-      setPageToDelete({ id, name })
+    if (id && tenantId) {
+      setPageToDelete({ id, name, tenantId })
       setDeleteDialogOpen(true)
     }
   }
@@ -44,20 +49,23 @@ const View = () => {
   const handleDeleteConfirm = () => {
     if (!pageToDelete) return
 
-    deleteMutation.mutate(pageToDelete.id, {
-      onSuccess: () => {
-        toast.success('Status page deleted successfully!')
-        setDeleteDialogOpen(false)
-        setPageToDelete(null)
+    deleteMutation.mutate(
+      { tenantId: pageToDelete.tenantId, pageId: pageToDelete.id },
+      {
+        onSuccess: () => {
+          toast.success('Status page deleted successfully!')
+          setDeleteDialogOpen(false)
+          setPageToDelete(null)
 
-        if (data?.content && data.content.length === 1 && currentPage > 1) {
-          setCurrentPage((prev) => prev - 1)
-        }
+          if (data?.content && data.content.length === 1 && currentPage > 1) {
+            setCurrentPage((prev) => prev - 1)
+          }
+        },
+        onError: (error) => {
+          toast.error(`Failed to delete page: ${error.message}`)
+        },
       },
-      onError: (error) => {
-        toast.error(`Failed to delete page: ${error.message}`)
-      },
-    })
+    )
   }
 
   const handleDeleteCancel = () => {
@@ -105,119 +113,154 @@ const View = () => {
           </Button>
         </div>
 
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden max-h-[calc(100vh-200px)] flex flex-col">
-          <div className="overflow-auto flex-1">
-            <table className="w-full table-fixed">
-              <thead className="bg-gray-100 border-b border-gray-200">
-                <tr>
-                  <th className="w-[20%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 tracking-wider">
-                    Name
-                  </th>
-                  <th className="w-[20%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 tracking-wider">
-                    Path
-                  </th>
-                  <th className="hidden md:table-cell w-[15%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 tracking-wider">
-                    Report
-                  </th>
-                  <th className="hidden sm:table-cell w-[15%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 tracking-wider">
-                    Updated
-                  </th>
-                  <th className="w-[10%] px-2 lg:px-4 py-3 text-left text-sm font-semibold text-gray-700 tracking-wider">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {data?.content &&
-                  data.content?.length > 0 &&
-                  data?.content?.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-2 lg:px-4 py-3 md:py-4">
-                        <span className="text-xs md:text-sm font-medium text-gray-900 break-words">
-                          {item.name}
-                        </span>
-                      </td>
-                      <td className="px-2 lg:px-4 py-3 md:py-4">
-                        <span className="text-xs md:text-sm text-gray-700 font-mono break-all">
-                          {item.slug}
-                        </span>
-                      </td>
-                      <td className="hidden md:table-cell px-2 lg:px-4 py-4 text-sm text-gray-700">
-                        <span className="break-words">{item.report}</span>
-                      </td>
-                      <td className="hidden sm:table-cell px-2 lg:px-4 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-500">
-                        {item?.updated_at
-                          ? new Date(item.updated_at).toLocaleDateString(
-                              'en-GB',
-                              {
-                                day: 'numeric',
-                                month: 'short',
-                                year: 'numeric',
-                                timeZone: 'UTC',
-                              },
-                            )
-                          : item?.created_at
-                            ? new Date(item.created_at).toLocaleDateString(
+        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-gray-50 border-b border-gray-200 px-5 py-3">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Tenant: <span className="text-red-600">*</span>
+            </label>
+            <select
+              className="input w-full max-w-md"
+              value={tenantId}
+              onChange={(e) => {
+                setTenantId(e.target.value)
+                setCurrentPage(1)
+              }}
+            >
+              <option value="">Select a tenant</option>
+              {tenantsData?.content.map((tenant) => (
+                <option key={tenant.id} value={tenant.id}>
+                  {tenant.info.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {!tenantId && (
+            <div className="text-center py-9">
+              <p className="text-base text-gray-500">
+                Please select a tenant to view status pages
+              </p>
+            </div>
+          )}
+
+          {tenantId && (
+            <div className="max-h-[calc(100vh-280px)] overflow-auto mt-4">
+              <table className="w-full table-fixed">
+                <thead className="border-b border-gray-200 sticky top-0">
+                  <tr>
+                    <th className="w-[20%] px-2 lg:px-4 py-1 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                      Name
+                    </th>
+                    <th className="w-[20%] px-2 lg:px-4 py-1 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                      Path
+                    </th>
+                    <th className="hidden md:table-cell w-[15%] px-2 lg:px-4 py-1 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                      Report
+                    </th>
+                    <th className="hidden sm:table-cell w-[15%] px-2 lg:px-4 py-1 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                      Updated
+                    </th>
+                    <th className="w-[10%] px-2 lg:px-4 py-1 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {data?.content && data.content?.length > 0 ? (
+                    data.content.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-2 lg:px-4 py-3 md:py-4">
+                          <span className="text-xs md:text-sm text-gray-900 break-words">
+                            {item.name}
+                          </span>
+                        </td>
+                        <td className="px-2 lg:px-4 py-3 md:py-4">
+                          <span className="text-xs md:text-sm text-gray-700 font-mono break-all">
+                            {item.slug}
+                          </span>
+                        </td>
+                        <td className="hidden md:table-cell px-2 lg:px-4 py-4 text-sm text-gray-700">
+                          <span className="break-words">{item.report}</span>
+                        </td>
+                        <td className="hidden sm:table-cell px-2 lg:px-4 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-500">
+                          {item?.updated_at
+                            ? new Date(item.updated_at).toLocaleDateString(
                                 'en-GB',
                                 {
                                   day: 'numeric',
                                   month: 'short',
                                   year: 'numeric',
+                                  hour: '2-digit',
+                                  minute: '2-digit',
                                   timeZone: 'UTC',
                                 },
                               )
-                            : null}
-                      </td>
-                      <td className="px-1 lg:px-3 py-3 md:py-4 whitespace-nowrap">
-                        <div className="flex items-center gap-1">
-                          <button
-                            onClick={() => handlePageView(item.slug)}
-                            className="tooltip p-1 md:p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
-                            data-tip="View"
-                            aria-label="View Page"
-                          >
-                            <ArrowTopRightOnSquareIcon className="size-4 md:size-5" />
-                          </button>
-                          <button
-                            onClick={() => handlePageEdit(item.id)}
-                            className="tooltip p-1 md:p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
-                            data-tip="Edit"
-                            aria-label="Edit Page"
-                          >
-                            <PencilSquareIcon className="size-4 md:size-5" />
-                          </button>
-                          <button
-                            onClick={() =>
-                              handlePageDeleteClick(item.id, item.name)
-                            }
-                            className="tooltip p-1 md:p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
-                            data-tip="Delete"
-                            aria-label="Delete Page"
-                          >
-                            <TrashIcon className="size-4 md:size-5" />
-                          </button>
-                        </div>
+                            : item?.created_at
+                              ? new Date(item.created_at).toLocaleDateString(
+                                  'en-GB',
+                                  {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                    timeZone: 'UTC',
+                                  },
+                                )
+                              : null}
+                        </td>
+                        <td className="px-1 lg:px-3 py-3 md:py-4 whitespace-nowrap">
+                          <div className="flex items-center gap-1">
+                            <button
+                              onClick={() => handlePageView(item.slug)}
+                              className="tooltip p-1 md:p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                              data-tip="View"
+                              aria-label="View Page"
+                            >
+                              <ArrowTopRightOnSquareIcon className="size-4 md:size-5" />
+                            </button>
+                            <button
+                              onClick={() => handlePageEdit(item.id)}
+                              className="tooltip p-1 md:p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                              data-tip="Edit"
+                              aria-label="Edit Page"
+                            >
+                              <PencilSquareIcon className="size-4 md:size-5" />
+                            </button>
+                            <button
+                              onClick={() =>
+                                handlePageDeleteClick(item.id, item.name)
+                              }
+                              className="tooltip p-1 md:p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors cursor-pointer"
+                              data-tip="Delete"
+                              aria-label="Delete Page"
+                            >
+                              <TrashIcon className="size-4 md:size-5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="text-center py-9">
+                        <p className="text-sm md:text-base text-gray-500">
+                          No status pages found for this tenant
+                        </p>
                       </td>
                     </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
 
-        {(!data?.content || data.content.length === 0) && (
-          <div className="text-center py-6 md:py-8 bg-white rounded-lg border border-gray-200 mt-2">
-            <p className="text-sm md:text-base text-gray-500">
-              No status pages found
-            </p>
-          </div>
-        )}
-
-        {data?.content && data.content?.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-1 border border-gray-200 rounded-lg my-4">
+        {tenantId && data?.content && data.content?.length > 0 && (
+          <div className="flex items-center justify-between px-4 py-1 border border-gray-200 rounded-lg my-2">
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-700">
                 Page {currentPage} of {data.total_pages}
