@@ -20,6 +20,17 @@ export type PageContent = {
   config?: PageConfig
 }
 
+export type PageCreateRequest = {
+  id?: string
+  name: string
+  slug: string
+  tenant_id: string
+  ['report-id']: string
+  created_at?: string
+  updated_at?: string
+  config?: PageConfig
+}
+
 export type PageConfig = {
   groups?: StatusGroupType[]
   title?: string
