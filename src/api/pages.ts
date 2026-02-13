@@ -1,10 +1,10 @@
-import type { Page, PageContent } from '@/types/pages'
+import type { Page, PageContent, PageCreateRequest } from '@/types/pages'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
 export const fetchSavePage = async (
   tenantId: string,
-  data: PageContent,
+  data: PageCreateRequest,
   token: string,
 ): Promise<PageContent> => {
   const response = await fetch(`${BACKEND_API}/v1/tenants/${tenantId}/pages`, {
@@ -31,7 +31,7 @@ export const fetchSavePage = async (
 export const fetchUpdatePage = async (
   tenantId: string,
   pageId: string,
-  data: PageContent,
+  data: PageCreateRequest,
   token: string,
 ): Promise<PageContent> => {
   const response = await fetch(

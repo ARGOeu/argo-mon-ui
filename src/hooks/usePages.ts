@@ -8,7 +8,7 @@ import {
   fetchSavePage,
   fetchUpdatePage,
 } from '@/api/pages'
-import type { Page, PageContent } from '@/types/pages'
+import type { Page, PageContent, PageCreateRequest } from '@/types/pages'
 
 export const useSavePageMutation = () => {
   const queryClient = useQueryClient()
@@ -16,14 +16,14 @@ export const useSavePageMutation = () => {
   return useMutation<
     PageContent,
     Error,
-    { tenantId: string; data: PageContent }
+    { tenantId: string; data: PageCreateRequest }
   >({
     mutationFn: ({
       tenantId,
       data,
     }: {
       tenantId: string
-      data: PageContent
+      data: PageCreateRequest
     }) => {
       if (!token) {
         throw new Error('No authentication token available')
@@ -47,7 +47,7 @@ export const useUpdatePageMutation = () => {
   return useMutation<
     PageContent,
     Error,
-    { tenantId: string; pageId: string; data: PageContent }
+    { tenantId: string; pageId: string; data: PageCreateRequest }
   >({
     mutationFn: ({
       tenantId,
@@ -56,7 +56,7 @@ export const useUpdatePageMutation = () => {
     }: {
       tenantId: string
       pageId: string
-      data: PageContent
+      data: PageCreateRequest
     }) => {
       if (!token) {
         throw new Error('No authentication token available')
