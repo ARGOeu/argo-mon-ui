@@ -27,6 +27,7 @@ import MyInvitations from './pages/MyInvitations'
 import { InvitationReview } from './pages/InvitationReview'
 import { Status } from './pages/Status'
 import { AuthProvider } from './auth/AuthProvider'
+import TenantCapabilities from './pages/TenantCapabilities'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -81,6 +82,17 @@ function App() {
                   <AuthProtected>
                     <TenantDetails />
                   </AuthProtected>
+                }
+              />
+              <Route
+                path="tenants/:id/capabilities"
+                element={
+                  <ProtectedRoute
+                    requiredRoles={['super_admin', 'admin', 'viewer']}
+                    checkTenantAccess
+                  >
+                    <TenantCapabilities />
+                  </ProtectedRoute>
                 }
               />
               <Route
