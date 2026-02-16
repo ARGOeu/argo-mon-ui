@@ -17,6 +17,7 @@ import {
   UserGroupIcon,
   Bars3Icon,
   ShieldCheckIcon,
+  Square3Stack3DIcon,
 } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -417,6 +418,16 @@ const Tenants = () => {
                             />
                           </button>
                         )}
+                        <button
+                          aria-label="Capabilities"
+                          className="tooltip text-amber-600 cursor-pointer hover:bg-amber-50 rounded-[10px] p-[6px]"
+                          data-tip="Capabilities"
+                          onClick={() =>
+                            navigate(`/tenants/${tenant.id}/capabilities`)
+                          }
+                        >
+                          <Square3Stack3DIcon className="w-[1.3rem]" />
+                        </button>
                         <button
                           aria-label="Delete Tenant"
                           className={`${styles['action-button']} ${styles.delete} tooltip`}
