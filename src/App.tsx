@@ -89,7 +89,6 @@ function App() {
                 element={
                   <ProtectedRoute
                     requiredRoles={['super_admin', 'admin', 'viewer']}
-                    checkTenantAccess
                   >
                     <TenantCapabilities />
                   </ProtectedRoute>
