@@ -11,14 +11,12 @@ import {
 } from '@heroicons/react/24/solid'
 import { toast, Toaster } from 'sonner'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import { useAuth } from '@/auth/useAuth'
 import styles from './MyInvitations.module.css'
 
 const pageSize = 10
 
 const MyInvitations = () => {
   const [currentPage, setCurrentPage] = useState(1)
-  const { waitForTenantInProfile } = useAuth()
 
   const { data: invitationsData, isLoading } = useGetUserInvitations(true, {
     page: currentPage,
@@ -26,11 +24,7 @@ const MyInvitations = () => {
   })
   const respondMutation = useRespondToInvitation()
 
-  const handleRespond = (
-    invitationId: string,
-    tenantName: string,
-    action: 'ACCEPT' | 'REJECT',
-  ) => {
+  const handleRespond = (invitationId: string, action: 'ACCEPT' | 'REJECT') => {
     respondMutation.mutate(
       { invitationId, data: { action } },
       {
@@ -38,14 +32,6 @@ const MyInvitations = () => {
           toast.success(
             `Invitation ${action === 'ACCEPT' ? 'accepted' : 'rejected'} successfully!`,
           )
-          if (action === 'ACCEPT') {
-            try {
-              // Refetch profile and wait until the new tenant appears in groups
-              await waitForTenantInProfile(tenantName, 5, 2000)
-            } catch (error) {
-              console.error('Failed to refetch profile:', error)
-            }
-          }
         },
         onError: (error) => {
           toast.error(`Failed to respond to invitation: ${error.message}`)
@@ -144,11 +130,7 @@ const MyInvitations = () => {
                                 <div className={styles['actions-container']}>
                                   <button
                                     onClick={() =>
-                                      handleRespond(
-                                        invitation.id,
-                                        invitation.tenant_name,
-                                        'ACCEPT',
-                                      )
+                                      handleRespond(invitation.id, 'ACCEPT')
                                     }
                                     className={`tooltip ${styles['action-button']} ${styles['accept-button']}`}
                                     data-tip="Accept invitation"
@@ -160,11 +142,7 @@ const MyInvitations = () => {
                                   </button>
                                   <button
                                     onClick={() =>
-                                      handleRespond(
-                                        invitation.id,
-                                        invitation.tenant_name,
-                                        'REJECT',
-                                      )
+                                      handleRespond(invitation.id, 'REJECT')
                                     }
                                     className={`tooltip ${styles['action-button']} ${styles['reject-button']}`}
                                     data-tip="Reject invitation"

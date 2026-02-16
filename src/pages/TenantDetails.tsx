@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeftIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon } from '@heroicons/react/16/solid'
 import { useAuth } from '../auth/useAuth'
 import { useGetTenantById, useGetUserTenantById } from '../hooks/useTenants'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import TenantReports from './TenantReports'
 import styles from './TenantDetails.module.css'
 import Button from '@/components/Button'
@@ -16,17 +17,20 @@ const TenantDetails = () => {
 
   const isSuperAdmin = profile?.roles?.includes('super_admin')
 
-  const { data: adminTenantData, isLoading: adminLoading } = useGetTenantById(
-    id || '',
-    isSuperAdmin,
-  )
-  const { data: userTenantData, isLoading: userLoading } = useGetUserTenantById(
-    id || '',
-    !isSuperAdmin,
-  )
+  const {
+    data: adminTenantData,
+    isLoading: adminLoading,
+    error: adminError,
+  } = useGetTenantById(id || '', isSuperAdmin)
+  const {
+    data: userTenantData,
+    isLoading: userLoading,
+    error: userError,
+  } = useGetUserTenantById(id || '', !isSuperAdmin)
 
   const tenantData = isSuperAdmin ? adminTenantData : userTenantData
   const isLoading = isSuperAdmin ? adminLoading : userLoading
+  const error = isSuperAdmin ? adminError : userError
 
   if (isLoading) {
     return (
@@ -38,12 +42,21 @@ const TenantDetails = () => {
     )
   }
 
+  if (error) {
+    return (
+      <div className="page-container">
+        <ErrorDisplay error={error} context="tenant" />
+      </div>
+    )
+  }
+
   if (!tenantData) {
     return (
       <div className="page-container">
-        <div className={styles.error}>
-          <p>Tenant not found</p>
-        </div>
+        <ErrorDisplay
+          error="The tenant you are looking for does not exist or has been removed."
+          context="tenant"
+        />
       </div>
     )
   }

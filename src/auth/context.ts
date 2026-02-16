@@ -19,11 +19,6 @@ export type AuthContextType = {
   }
   login: (redirectUri?: string) => void
   logout: () => void
-  waitForTenantInProfile: (
-    tenantName?: string,
-    maxRetries?: number,
-    retryDelayMs?: number,
-  ) => Promise<void>
 }
 
 export const AuthContext = createContext<AuthContextType>({
@@ -32,5 +27,4 @@ export const AuthContext = createContext<AuthContextType>({
   registered: false,
   login: () => {},
   logout: () => {},
-  waitForTenantInProfile: async () => {},
 })

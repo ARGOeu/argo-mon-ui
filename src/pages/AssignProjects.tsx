@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDragAndDrop } from '@formkit/drag-and-drop/react'
 import { toast, Toaster } from 'sonner'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '@/components/Button'
 import {
   useGetTenantById,
@@ -35,13 +36,18 @@ const AssignProjects = () => {
   const [availableProjects, setAvailableProjects] = useState<ProjectItem[]>([])
   const [assignedProjects, setAssignedProjects] = useState<ProjectItem[]>([])
   const [isInitialized, setIsInitialized] = useState(false)
-  const { data: adminTenantData } = useGetTenantById(tenantId || '')
-  const { data: userTenantData } = useGetUserTenantById(tenantId || '')
+  const { data: adminTenantData, error: adminTenantError } = useGetTenantById(
+    tenantId || '',
+  )
+  const { data: userTenantData, error: userTenantError } = useGetUserTenantById(
+    tenantId || '',
+  )
 
   const isSuperAdmin = profile?.roles?.includes('super_admin')
   const { data: userProfileData } = useGetUserProfile()
 
   const tenantData = isSuperAdmin ? adminTenantData : userTenantData
+  const tenantError = isSuperAdmin ? adminTenantError : userTenantError
 
   const isTenantAdmin = (tenantName: string) => {
     if (!tenantName) return false
@@ -239,6 +245,17 @@ const AssignProjects = () => {
       <div className="loading-container">
         <LoadingSpinner />
       </div>
+    )
+  }
+
+  if (tenantError) {
+    return (
+      <>
+        <Toaster richColors position="top-center" duration={2000} />
+        <div className="page-container">
+          <ErrorDisplay error={tenantError} context="tenant" />
+        </div>
+      </>
     )
   }
 

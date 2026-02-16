@@ -9,13 +9,14 @@ import {
   useGetMembers,
 } from '@/hooks/useTenants'
 import { useAuth } from '@/auth/useAuth'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import {
   ArrowLeftIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
   UserMinusIcon,
   XMarkIcon,
-} from '@heroicons/react/24/solid'
+} from '@heroicons/react/16/solid'
 import { toast, Toaster } from 'sonner'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -33,7 +34,9 @@ const ManageTenantMembers = () => {
   const { id: tenantId } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const { profile } = useAuth()
-  const { data: tenantData } = useGetUserTenantById(tenantId || '')
+  const { data: tenantData, error: tenantError } = useGetUserTenantById(
+    tenantId || '',
+  )
 
   const isSuperAdmin = profile?.roles?.includes('super_admin')
 
@@ -286,6 +289,17 @@ const ManageTenantMembers = () => {
   }
 
   const isLoading = membersLoading
+
+  if (tenantError) {
+    return (
+      <>
+        <Toaster richColors position="top-center" duration={2000} />
+        <div className="page-container">
+          <ErrorDisplay error={tenantError} context="tenant" />
+        </div>
+      </>
+    )
+  }
 
   return (
     <>

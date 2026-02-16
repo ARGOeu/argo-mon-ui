@@ -1,33 +1,23 @@
 import { useEffect, useState } from 'react'
 import type { JSX } from 'react'
-import { Navigate, useLocation, useParams } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useAuth } from '@/auth/useAuth'
-import { useGetUserTenantById } from '@/hooks/useTenants'
-import type { UserGroup } from '@/types/profile'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
 type RoleProtectedProps = {
   children: JSX.Element
   requiredRoles: string[]
   redirectTo?: string
-  checkTenantAccess?: boolean
 }
 
 function ProtectedRoute({
   children,
   requiredRoles,
   redirectTo = '/',
-  checkTenantAccess = false,
 }: RoleProtectedProps) {
   const { initialized, authenticated, profile } = useAuth()
   const location = useLocation()
-  const { id: tenantId } = useParams<{ id: string }>() || {}
   const [profileTimeout, setProfileTimeout] = useState(false)
-
-  const { data: tenantData, isLoading: tenantLoading } = useGetUserTenantById(
-    tenantId || '',
-    checkTenantAccess && !!tenantId && authenticated,
-  )
 
   // Set a timeout for profile loading (5 seconds)
   useEffect(() => {
@@ -46,10 +36,7 @@ function ProtectedRoute({
     return <Navigate to="/" state={{ from: location }} replace />
   }
 
-  if (
-    (checkTenantAccess && tenantId && tenantLoading) ||
-    (!profile && !profileTimeout)
-  ) {
+  if (!profile && !profileTimeout) {
     return (
       <div
         style={{
@@ -66,29 +53,11 @@ function ProtectedRoute({
 
   const isSuperAdmin = profile?.roles?.includes('super_admin')
 
-  const hasTenantAccess = (tenantName: string) => {
-    if (!tenantName || !profile?.groups) return false
-
-    const group = profile?.groups?.find(
-      (g: UserGroup) => g?.name === tenantName,
-    )
-    return group?.role === 'admin' || group?.role === 'viewer'
-  }
-
   const hasRequiredRole = (() => {
     if (isSuperAdmin) {
       return true
     }
 
-    // For tenant-specific routes
-    if (checkTenantAccess) {
-      if (!tenantData) {
-        return false
-      }
-      return hasTenantAccess(tenantData.info.name)
-    }
-
-    // For non-tenant routes, check role requirements
     if (!requiredRoles || requiredRoles.length === 0) {
       return true
     }

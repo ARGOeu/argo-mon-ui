@@ -16,6 +16,7 @@ import View from './pages/View'
 import Tenants from './pages/Tenants'
 import CreateTenant from './pages/CreateTenant'
 import TenantStatus from './pages/TenantStatus'
+import TenantReadiness from './pages/TenantReadiness'
 import TenantDetails from './pages/TenantDetails'
 import AssignProjects from './pages/AssignProjects'
 import Projects from './pages/Projects'
@@ -77,12 +78,9 @@ function App() {
               <Route
                 path="tenants/:id/details"
                 element={
-                  <ProtectedRoute
-                    requiredRoles={['super_admin', 'admin', 'viewer']}
-                    checkTenantAccess
-                  >
+                  <AuthProtected>
                     <TenantDetails />
-                  </ProtectedRoute>
+                  </AuthProtected>
                 }
               />
               <Route
@@ -96,34 +94,25 @@ function App() {
               <Route
                 path="tenants/edit/:id"
                 element={
-                  <ProtectedRoute
-                    requiredRoles={['super_admin', 'admin']}
-                    checkTenantAccess
-                  >
+                  <AuthProtected>
                     <CreateTenant />
-                  </ProtectedRoute>
+                  </AuthProtected>
                 }
               />
               <Route
                 path="tenants/:id/projects/assign"
                 element={
-                  <ProtectedRoute
-                    requiredRoles={['super_admin', 'admin']}
-                    checkTenantAccess
-                  >
+                  <AuthProtected>
                     <AssignProjects />
-                  </ProtectedRoute>
+                  </AuthProtected>
                 }
               />
               <Route
                 path="tenants/:id/members"
                 element={
-                  <ProtectedRoute
-                    requiredRoles={['super_admin', 'admin']}
-                    checkTenantAccess
-                  >
+                  <AuthProtected>
                     <ManageTenantMembers />
-                  </ProtectedRoute>
+                  </AuthProtected>
                 }
               />
               <Route
@@ -132,6 +121,14 @@ function App() {
                   <ProtectedRoute requiredRoles={['super_admin']}>
                     <TenantStatus />
                   </ProtectedRoute>
+                }
+              />
+              <Route
+                path="tenants/:id/readiness"
+                element={
+                  <AuthProtected>
+                    <TenantReadiness />
+                  </AuthProtected>
                 }
               />
               <Route

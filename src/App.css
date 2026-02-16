@@ -162,6 +162,39 @@ select:focus {
   color: #6b7280;
 }
 
+.error-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  background-color: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 0.5rem;
+  margin: 2rem 0;
+  text-align: center;
+}
+
+.error-icon {
+  width: 2rem;
+  height: 2rem;
+  color: #dc2626;
+}
+
+.error-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #991b1b;
+}
+
+.error-message {
+  font-size: 0.9rem;
+  color: #7f1d1d;
+  max-width: 600px;
+  line-height: 1.6;
+}
+
 @media (min-width: 1921px) {
   .page-container {
     max-width: 1800px;

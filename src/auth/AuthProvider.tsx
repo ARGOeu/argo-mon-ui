@@ -135,48 +135,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       redirectUri: import.meta.env.VITE_REDIRECT_URI || window.location.origin,
     })
 
-  const delay = (ms: number): Promise<void> =>
-    new Promise((resolve) => setTimeout(resolve, ms))
-
-  const waitForTenantInProfile = async (
-    tenantName?: string,
-    maxRetries: number = 3,
-    retryDelayMs: number = 2000,
-  ): Promise<void> => {
-    if (!token) {
-      console.warn('Cannot refresh profile: no token available')
-      return
-    }
-
-    const initialProfile = await loadProfile(token)
-
-    if (!tenantName) {
-      return
-    }
-
-    if (initialProfile?.groups?.some((group) => group.name === tenantName)) {
-      return
-    }
-
-    // Retry with delays until tenant is found or max retries reached
-    let attempt = 0
-    while (attempt < maxRetries) {
-      attempt++
-      await delay(retryDelayMs)
-
-      try {
-        const updatedProfile = await loadProfile(token)
-        if (
-          updatedProfile?.groups?.some((group) => group.name === tenantName)
-        ) {
-          return
-        }
-      } catch (error) {
-        console.error('Error refreshing profile:', error)
-      }
-    }
-  }
-
   return (
     <AuthContext.Provider
       value={{
@@ -187,7 +145,6 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         profile,
         login,
         logout,
-        waitForTenantInProfile,
       }}
     >
       {children}
