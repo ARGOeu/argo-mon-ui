@@ -192,3 +192,26 @@ export type ReportListResponse = {
   total_pages: number
   content: ReportListItem[]
 }
+
+export type ReadinessCheckDetail = {
+  ready: boolean
+  message: string
+}
+
+export type TenantReadinessData = {
+  id: string
+  name: string
+  ready: boolean
+  last_check: string
+  data: ReadinessCheckDetail
+  topology: ReadinessCheckDetail
+  reports: ReadinessCheckDetail
+}
+
+export type TenantReadinessResponse = {
+  status: {
+    message: string
+    code: string
+  }
+  data: TenantReadinessData
+}

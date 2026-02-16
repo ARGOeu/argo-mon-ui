@@ -10,6 +10,7 @@ import {
 import { useGetStatusQuery } from '@/hooks/useStatus'
 import ViewGroup from '@/components/ViewGroup'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import ErrorDisplay from '@/components/ErrorDisplay'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
@@ -181,10 +182,11 @@ export const Status = () => {
             </footer>
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center mt-32 bg-white rounded-xl shadow-lg p-12">
-            <div className="text-red-600 text-xl font-semibold mb-2">
-              Failed to load status page
-            </div>
+          <div className="page-container">
+            <ErrorDisplay
+              error="Failed to load status page"
+              context="status page"
+            />
           </div>
         )}
       </div>

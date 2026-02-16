@@ -28,6 +28,7 @@ import {
   fetchTenantReports,
   fetchTenantReportById,
   fetchTenantMetricProfile,
+  fetchTenantReadiness,
 } from '@/api/tenants'
 import type {
   Job,
@@ -39,6 +40,7 @@ import type {
   ReportListItem,
   ReportDetail,
   MetricProfileResponse,
+  TenantReadinessResponse,
 } from '@/types/tenants'
 
 export const useGetTenants = (
@@ -550,5 +552,27 @@ export const useGetTenantMetricProfile = (
     },
     retry: false,
     enabled: enabled && !!token && !!tenantId && !!profileId,
+  })
+}
+
+export const useGetTenantReadiness = (
+  tenantId: string,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<TenantReadinessResponse, Error>({
+    queryKey: ['tenant-readiness', tenantId],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantId) {
+        throw new Error('Tenant ID is required')
+      }
+      return fetchTenantReadiness(tenantId, token)
+    },
+    retry: false,
+    enabled: enabled && !!token && !!tenantId,
   })
 }

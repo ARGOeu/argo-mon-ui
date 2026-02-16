@@ -138,7 +138,7 @@ const Build = () => {
       name: name,
       slug: slug,
       tenant_id: tenantId,
-      ['report-id']: report,
+      'report-id': report,
 
       config: {
         groups: statusGroups,

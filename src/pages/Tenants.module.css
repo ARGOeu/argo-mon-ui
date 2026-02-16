@@ -318,6 +318,14 @@
   background-color: #ecfdf5;
 }
 
+.action-button.readiness {
+  color: #7c3aed;
+}
+
+.action-button.readiness:hover {
+  background-color: #f5f3ff;
+}
+
 .action-button.delete {
   color: #dc2626;
 }

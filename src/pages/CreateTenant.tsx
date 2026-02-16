@@ -12,6 +12,7 @@ import {
 import type { Metadata } from '@/types/tenants'
 import { useAuth } from '@/auth/useAuth'
 import { toast, Toaster } from 'sonner'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '../components/Button'
 import ContactInformation from '../components/ContactInformation'
 import InfrastructureMetadata from '../components/InfrastructureMetadata'
@@ -74,16 +75,19 @@ const CreateTenant = () => {
   const userUpdateMutation = useUpdateUserTenantMutation()
   const updateMutation = isSuperAdmin ? adminUpdateMutation : userUpdateMutation
 
-  const { data: adminTenantData, isLoading: adminLoading } = useGetTenantById(
-    tenantId || '',
-    isSuperAdmin,
-  )
-  const { data: userTenantData, isLoading: userLoading } = useGetUserTenantById(
-    tenantId || '',
-    !isSuperAdmin,
-  )
+  const {
+    data: adminTenantData,
+    isLoading: adminLoading,
+    error: adminError,
+  } = useGetTenantById(tenantId || '', isSuperAdmin)
+  const {
+    data: userTenantData,
+    isLoading: userLoading,
+    error: userError,
+  } = useGetUserTenantById(tenantId || '', !isSuperAdmin)
   const tenantData = isSuperAdmin ? adminTenantData : userTenantData
   const isTenantLoading = isSuperAdmin ? adminLoading : userLoading
+  const tenantError = isSuperAdmin ? adminError : userError
 
   // Load tenant data in edit mode
   useEffect(() => {
@@ -441,6 +445,8 @@ const CreateTenant = () => {
           <div className="loading-container">
             <LoadingSpinner />
           </div>
+        ) : isEditMode && tenantError ? (
+          <ErrorDisplay error={tenantError} context="tenant" />
         ) : (
           <>
             <div className={styles.header}>

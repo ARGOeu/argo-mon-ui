@@ -16,6 +16,7 @@ import {
   ListBulletIcon,
   UserGroupIcon,
   Bars3Icon,
+  ShieldCheckIcon,
 } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -402,6 +403,20 @@ const Tenants = () => {
                         >
                           <ListBulletIcon className={styles['action-icon']} />
                         </button>
+                        {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
+                          <button
+                            aria-label="Check Readiness"
+                            className={`${styles['action-button']} ${styles.readiness} tooltip`}
+                            data-tip="Check Readiness"
+                            onClick={() =>
+                              navigate(`/tenants/${tenant.id}/readiness`)
+                            }
+                          >
+                            <ShieldCheckIcon
+                              className={styles['action-icon']}
+                            />
+                          </button>
+                        )}
                         <button
                           aria-label="Delete Tenant"
                           className={`${styles['action-button']} ${styles.delete} tooltip`}
