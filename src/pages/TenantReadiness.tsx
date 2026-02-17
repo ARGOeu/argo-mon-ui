@@ -1,11 +1,16 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeftIcon } from '@heroicons/react/16/solid'
-import { useGetTenantReadiness, useGetUserTenantById } from '@/hooks/useTenants'
+import {
+  useGetTenantReadiness,
+  useGetUserTenantById,
+  useCheckReadinessMutation,
+} from '@/hooks/useTenants'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '@/components/Button'
 import styles from './TenantReadiness.module.css'
 import type { ReadinessCheckDetail } from '@/types/tenants'
+import { toast, Toaster } from 'sonner'
 
 const TenantReadiness = () => {
   const { id } = useParams<{ id: string }>()
@@ -17,16 +22,37 @@ const TenantReadiness = () => {
     data: readinessData,
     isLoading: readinessLoading,
     error: readinessError,
-    refetch: refetchReadiness,
-    isFetching: isRefetching,
   } = useGetTenantReadiness(id || '')
+
+  const notifyCheckReadinessMutation = useCheckReadinessMutation()
 
   const handleBackClick = () => {
     navigate('/tenants')
   }
 
   const handleCheckReadiness = () => {
-    refetchReadiness()
+    if (!id || !tenantData?.info.name) {
+      toast.error('Tenant information is not available')
+      return
+    }
+
+    notifyCheckReadinessMutation.mutate(
+      {
+        tenantId: id,
+        tenantName: tenantData.info.name,
+      },
+      {
+        onSuccess: (data) => {
+          const message = data.jobs[0]?.message
+          if (message) {
+            toast.success(message)
+          }
+        },
+        onError: (error: Error) => {
+          toast.error(`Failed to check readiness: ${error.message}`)
+        },
+      },
+    )
   }
 
   const readiness = readinessData?.data
@@ -83,32 +109,33 @@ const TenantReadiness = () => {
   }
 
   return (
-    <div className="page-container">
-      <div className={styles.header}>
-        <div className={styles['title-section']}>
-          <div>
-            <h1 className="page-title">Tenant Readiness</h1>
-            <p className="page-subtitle">
-              View readiness checks for tenant
-              <strong style={{ wordBreak: 'break-all' }}>
-                {tenantData?.info.name ? ` ${tenantData.info.name}` : '...'}
-              </strong>
-            </p>
-          </div>
-          <Button variant="secondary" size="sm" onClick={handleBackClick}>
-            <ArrowLeftIcon className="size-4" />
-            Back to Tenants
-          </Button>
+    <div className={styles.header}>
+      <Toaster richColors position="top-center" duration={3000} />
+      <div className={styles['title-section']}>
+        <div>
+          <h1 className="page-title">Tenant Readiness</h1>
+          <p className="page-subtitle">
+            View readiness checks for tenant
+            <strong style={{ wordBreak: 'break-all' }}>
+              {tenantData?.info.name ? ` ${tenantData.info.name}` : '...'}
+            </strong>
+          </p>
         </div>
-        <div className={styles['action-section']}>
-          <Button
-            variant="primary"
-            onClick={handleCheckReadiness}
-            disabled={isRefetching}
-          >
-            {isRefetching ? 'Checking...' : 'Check Readiness'}
-          </Button>
-        </div>
+        <Button variant="secondary" size="sm" onClick={handleBackClick}>
+          <ArrowLeftIcon className="size-4" />
+          Back to Tenants
+        </Button>
+      </div>
+      <div className={styles['action-section']}>
+        <Button
+          variant="primary"
+          onClick={handleCheckReadiness}
+          disabled={notifyCheckReadinessMutation.isPending}
+        >
+          {notifyCheckReadinessMutation.isPending
+            ? 'Checking...'
+            : 'Check Readiness'}
+        </Button>
       </div>
 
       {readinessError && (

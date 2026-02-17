@@ -278,11 +278,11 @@
   background: none;
 }
 
-.action-button.invite {
+.action-button.manage-members {
   color: #7c3aed;
 }
 
-.action-button.invite:hover {
+.action-button.manage-members:hover {
   background-color: #f5f3ff;
 }
 
@@ -291,7 +291,7 @@
 }
 
 .action-button.view:hover {
-  background-color: #e0e7ff;
+  background-color: #eef2ff;
 }
 
 .action-button.assign {
@@ -315,15 +315,15 @@
 }
 
 .action-button.status:hover {
-  background-color: #ecfdf5;
+  background-color: #f0fdf4;
 }
 
 .action-button.readiness {
-  color: #7c3aed;
+  color: #0891b2;
 }
 
 .action-button.readiness:hover {
-  background-color: #f5f3ff;
+  background-color: #ecfeff;
 }
 
 .action-button.delete {
@@ -353,7 +353,7 @@
   font-size: 1.125rem;
 }
 
-@media (min-width: 768px) {
+@media (min-width: 940px) {
   .container {
     max-width: 80rem;
   }
@@ -372,7 +372,7 @@
   }
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1280px) {
   .grid {
     grid-template-columns: repeat(3, 1fr);
   }

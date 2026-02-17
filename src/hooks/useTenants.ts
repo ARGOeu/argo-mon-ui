@@ -29,6 +29,7 @@ import {
   fetchTenantReportById,
   fetchTenantMetricProfile,
   fetchTenantReadiness,
+  notifyAmsCheckReadiness,
 } from '@/api/tenants'
 import type {
   Job,
@@ -574,5 +575,26 @@ export const useGetTenantReadiness = (
     },
     retry: false,
     enabled: enabled && !!token && !!tenantId,
+    refetchInterval: 10000, // Refetch every 10 seconds
+  })
+}
+
+export const useCheckReadinessMutation = () => {
+  const { token } = useAuth()
+
+  return useMutation<
+    { jobs: Job[] },
+    Error,
+    { tenantId: string; tenantName: string }
+  >({
+    mutationFn: ({ tenantId, tenantName }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return notifyAmsCheckReadiness(tenantId, tenantName, token)
+    },
+    onError: (error) => {
+      console.error('Failed to notify AMS check readiness:', error)
+    },
   })
 }
