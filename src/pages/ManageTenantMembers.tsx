@@ -376,7 +376,7 @@ const ManageTenantMembers = () => {
                         membersData.content.length > 0 ? (
                           membersData.content.map((member) => {
                             const tenantInfo = member.tenants?.find(
-                              (t) => t.name,
+                              (t) => t.name === tenantData?.info.name,
                             )
                             return (
                               <tr key={member.id}>

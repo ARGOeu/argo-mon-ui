@@ -20,6 +20,19 @@ export type PageContent = {
   config?: PageConfig
 }
 
+export type UserPageContent = PageContent & {
+  tenant_name: string
+  tenant_id: string
+}
+
+export type UserPages = {
+  content: UserPageContent[]
+  size_of_page: number
+  number_of_page: number
+  total_elements: number
+  total_pages: number
+}
+
 export type PageCreateRequest = {
   id?: string
   name: string
