@@ -337,111 +337,112 @@ const Tenants = () => {
                                   : job.name === 'CREATE_DOMAIN_NAMES'
                                     ? 'Domain Names'
                                     : job.name}
-                              :{getStatusDisplay(job.status)}
+                              : {getStatusDisplay(job.status)}
                             </span>
                           ))}
                         </div>
                       </div>
                     )}
                 </div>
-                {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
-                  <div className={styles['card-footer']}>
-                    <button
-                      aria-label="View Tenant Details"
-                      className={`${styles['action-button']} ${styles.view} tooltip`}
-                      data-tip="View Tenant Details"
-                      onClick={() => handleViewDetails(tenant.id!)}
-                    >
-                      <Bars3Icon className={styles['action-icon']} />
-                    </button>
-                    {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
-                      <>
-                        <button
-                          aria-label="Edit Tenant"
-                          className={`${styles['action-button']} ${styles.edit} tooltip`}
-                          data-tip="Edit Tenant"
-                          onClick={() => handleEdit(tenant.id!)}
-                        >
-                          <PencilSquareIcon className={styles['action-icon']} />
-                        </button>
-                        <button
-                          aria-label="Manage Members"
-                          className={`${styles['action-button']} ${styles.invite} tooltip`}
-                          data-tip="Manage Members"
-                          onClick={() => handleManageMembers(tenant.id!)}
-                        >
-                          <UserGroupIcon className={styles['action-icon']} />
-                        </button>
-                      </>
-                    )}
-                    {isTenantAdmin(tenant.name) && (
+                <div className={styles['card-footer']}>
+                  <button
+                    aria-label="View Tenant Details"
+                    className={`${styles['action-button']} ${styles.view} tooltip`}
+                    data-tip="View Tenant Details"
+                    onClick={() => handleViewDetails(tenant.id!)}
+                  >
+                    <Bars3Icon className={styles['action-icon']} />
+                  </button>
+                  {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
+                    <>
                       <button
-                        aria-label="View Assigned Projects"
+                        aria-label="Edit Tenant"
+                        className={`${styles['action-button']} ${styles.edit} tooltip`}
+                        data-tip="Edit Tenant"
+                        onClick={() => handleEdit(tenant.id!)}
+                      >
+                        <PencilSquareIcon className={styles['action-icon']} />
+                      </button>
+                      <button
+                        aria-label="Manage Members"
+                        className={`${styles['action-button']} ${styles['manage-members']} tooltip`}
+                        data-tip="Manage Members"
+                        onClick={() => handleManageMembers(tenant.id!)}
+                      >
+                        <UserGroupIcon className={styles['action-icon']} />
+                      </button>
+                    </>
+                  )}
+                  {!isSuperAdmin && (
+                    <button
+                      aria-label="View Assigned Projects"
+                      className={`${styles['action-button']} ${styles.assign} tooltip`}
+                      data-tip="View Assigned Projects"
+                      onClick={() => handleAssignProjects(tenant.id!)}
+                    >
+                      <ListBulletIcon className={styles['action-icon']} />
+                    </button>
+                  )}
+
+                  {isSuperAdmin && (
+                    <>
+                      <button
+                        aria-label="Assign Projects"
                         className={`${styles['action-button']} ${styles.assign} tooltip`}
-                        data-tip="View Assigned Projects"
+                        data-tip="Assign Projects"
                         onClick={() => handleAssignProjects(tenant.id!)}
+                      >
+                        <PlusCircleIcon className={styles['action-icon']} />
+                      </button>
+                      <button
+                        aria-label="View Status"
+                        className={`${styles['action-button']} ${styles.status} tooltip`}
+                        data-tip="View Status"
+                        onClick={() => navigate(`/tenants/${tenant.id}/status`)}
                       >
                         <ListBulletIcon className={styles['action-icon']} />
                       </button>
-                    )}
-                    {isSuperAdmin && (
-                      <>
-                        <button
-                          aria-label="Assign Projects"
-                          className={`${styles['action-button']} ${styles.assign} tooltip`}
-                          data-tip="Assign Projects"
-                          onClick={() => handleAssignProjects(tenant.id!)}
-                        >
-                          <PlusCircleIcon className={styles['action-icon']} />
-                        </button>
-                        <button
-                          aria-label="View Status"
-                          className={`${styles['action-button']} ${styles.status} tooltip`}
-                          data-tip="View Status"
-                          onClick={() =>
-                            navigate(`/tenants/${tenant.id}/status`)
-                          }
-                        >
-                          <ListBulletIcon className={styles['action-icon']} />
-                        </button>
-                        {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
-                          <button
-                            aria-label="Check Readiness"
-                            className={`${styles['action-button']} ${styles.readiness} tooltip`}
-                            data-tip="Check Readiness"
-                            onClick={() =>
-                              navigate(`/tenants/${tenant.id}/readiness`)
-                            }
-                          >
-                            <ShieldCheckIcon
-                              className={styles['action-icon']}
-                            />
-                          </button>
-                        )}
-                        <button
-                          aria-label="Capabilities"
-                          className="tooltip text-amber-600 cursor-pointer hover:bg-amber-50 rounded-[10px] p-[6px]"
-                          data-tip="Capabilities"
-                          onClick={() =>
-                            navigate(`/tenants/${tenant.id}/capabilities`)
-                          }
-                        >
-                          <Square3Stack3DIcon className="w-[1.3rem]" />
-                        </button>
-                        <button
-                          aria-label="Delete Tenant"
-                          className={`${styles['action-button']} ${styles.delete} tooltip`}
-                          data-tip="Delete Tenant"
-                          onClick={() =>
-                            handleDeleteClick(tenant.id!, tenant.name)
-                          }
-                        >
-                          <TrashIcon className={styles['action-icon']} />
-                        </button>
-                      </>
-                    )}
-                  </div>
-                )}
+                    </>
+                  )}
+
+                  {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
+                    <button
+                      aria-label="Check Readiness"
+                      className={`${styles['action-button']} ${styles.readiness} tooltip`}
+                      data-tip="Check Readiness"
+                      onClick={() =>
+                        navigate(`/tenants/${tenant.id}/readiness`)
+                      }
+                    >
+                      <ShieldCheckIcon className={styles['action-icon']} />
+                    </button>
+                  )}
+
+                  {isSuperAdmin && (
+                    <>
+                      <button
+                        aria-label="Capabilities"
+                        className="tooltip text-amber-600 cursor-pointer hover:bg-amber-50 rounded-[10px] p-[6px]"
+                        data-tip="Capabilities"
+                        onClick={() =>
+                          navigate(`/tenants/${tenant.id}/capabilities`)
+                        }
+                      >
+                        <Square3Stack3DIcon className="w-[1.3rem]" />
+                      </button>
+                      <button
+                        aria-label="Delete Tenant"
+                        className={`${styles['action-button']} ${styles.delete} tooltip`}
+                        data-tip="Delete Tenant"
+                        onClick={() =>
+                          handleDeleteClick(tenant.id!, tenant.name)
+                        }
+                      >
+                        <TrashIcon className={styles['action-icon']} />
+                      </button>
+                    </>
+                  )}
+                </div>
               </div>
             ))
           ) : (
