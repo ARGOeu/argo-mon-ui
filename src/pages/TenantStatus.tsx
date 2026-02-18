@@ -280,165 +280,170 @@ const TenantStatus = () => {
 
         <div className={styles.content}>
           {jobs && jobs.length > 0 ? (
-            jobs.map((job) => (
-              <div key={job.name} className={styles['job-card']}>
-                <div
-                  className={styles['job-header']}
-                  onClick={() => toggleJob(job.name)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <div className={styles['job-title-wrapper']}>
-                    {getStatusIcon(job.status)}
-                    <h2 className={styles['job-title']}>
-                      {JOB_NAMES[job.name] || job.name}
-                    </h2>
-                    {job.mode === 'MANUAL' && (
-                      <span className={styles['manual-badge']}>Manual</span>
-                    )}
-                  </div>
+            jobs
+              .filter((job) => job.name !== 'CHECK_READINESS')
+              .map((job) => (
+                <div key={job.name} className={styles['job-card']}>
                   <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '0.5rem',
-                    }}
+                    className={styles['job-header']}
+                    onClick={() => toggleJob(job.name)}
+                    style={{ cursor: 'pointer' }}
                   >
-                    <span
-                      className={`${styles['job-status-badge']} ${getStatusBadgeClass(job.status)}`}
-                    >
-                      {getStatusDisplay(job.status)}
-                    </span>
-                    {expandedJobs[job.name] ? (
-                      <ChevronUpIcon className={styles['toggle-icon']} />
-                    ) : (
-                      <ChevronDownIcon className={styles['toggle-icon']} />
-                    )}
-                  </div>
-                </div>
-
-                {expandedJobs[job.name] && (
-                  <>
-                    <div className={styles['progress-container']}>
-                      <div className={styles['step-wrapper']}>
-                        {getProgressSteps(job).map((step, index, array) => (
-                          <Fragment key={step.key}>
-                            <div
-                              className={`${styles.step} ${styles[getStepStatus(job, step.key)]}`}
-                            >
-                              <div className={styles['step-indicator']} />
-                              <span className={styles['step-label']}>
-                                {step.label}
-                              </span>
-                            </div>
-                            {index < array.length - 1 && (
-                              <div className={styles['step-line']} />
-                            )}
-                          </Fragment>
-                        ))}
-                      </div>
-                    </div>
-
-                    {job.mode === 'MANUAL' && editingJob === job.name && (
-                      <div className={styles['status-change-section']}>
-                        <div className={styles['status-change-fields']}>
-                          <div className={styles['status-change-col']}>
-                            <label
-                              htmlFor={`status-${job.name}`}
-                              className={styles['detail-label']}
-                            >
-                              Change Status:
-                            </label>
-                            <select
-                              id={`status-${job.name}`}
-                              value={selectedStatus || job.status}
-                              onChange={(e) =>
-                                setSelectedStatus(e.target.value as JobStatus)
-                              }
-                              className={styles['status-change-dropdown']}
-                            >
-                              {STATUS_OPTIONS.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </select>
-                          </div>
-                          <div className={styles['status-change-col']}>
-                            <label
-                              htmlFor={`message-${job.name}`}
-                              className={styles['detail-label']}
-                            >
-                              Message:
-                            </label>
-                            <textarea
-                              id={`message-${job.name}`}
-                              value={jobMessage}
-                              onChange={(e) => setJobMessage(e.target.value)}
-                              placeholder="Enter a description for this status change"
-                              className={styles['status-message-input']}
-                              rows={2}
-                            />
-                          </div>
-                        </div>
-                        <div className={styles['status-change-actions']}>
-                          <button
-                            onClick={handleCancelEdit}
-                            className={styles['status-cancel-button']}
-                          >
-                            Cancel
-                          </button>
-                          <button
-                            onClick={() => handleSaveStatus(job)}
-                            className={styles['status-save-button']}
-                          >
-                            Save
-                          </button>
-                        </div>
-                      </div>
-                    )}
-
-                    <div className={styles['job-details']}>
-                      <div className={styles['detail-row-with-button']}>
-                        <div className={styles['detail-row']}>
-                          <span className={styles['detail-label']}>
-                            Start Time:
-                          </span>
-                          <span className={styles['detail-value']}>
-                            {formatDateTime(job.start)}
-                          </span>
-                        </div>
-                        {job.mode === 'MANUAL' && editingJob !== job.name && (
-                          <button
-                            onClick={() => handleEditClick(job)}
-                            className={styles['status-edit-button']}
-                          >
-                            Edit Status
-                          </button>
-                        )}
-                      </div>
-                      <div className={styles['detail-row']}>
-                        <span className={styles['detail-label']}>
-                          End Time:
-                        </span>
-                        <span className={styles['detail-value']}>
-                          {formatDateTime(job.end)}
-                        </span>
-                      </div>
-                      {job.message && (
-                        <div className={styles['detail-row']}>
-                          <span className={styles['detail-label']}>
-                            Message:
-                          </span>
-                          <span className={styles['detail-value']}>
-                            {job.message}
-                          </span>
-                        </div>
+                    <div className={styles['job-title-wrapper']}>
+                      {getStatusIcon(job.status)}
+                      <h2 className={styles['job-title']}>
+                        {JOB_NAMES[job.name] || job.name}
+                      </h2>
+                      {job.mode === 'MANUAL' && (
+                        <span className={styles['manual-badge']}>Manual</span>
                       )}
                     </div>
-                  </>
-                )}
-              </div>
-            ))
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '0.5rem',
+                      }}
+                    >
+                      <span
+                        className={`${styles['job-status-badge']} ${getStatusBadgeClass(job.status)}`}
+                      >
+                        {getStatusDisplay(job.status)}
+                      </span>
+                      {expandedJobs[job.name] ? (
+                        <ChevronUpIcon className={styles['toggle-icon']} />
+                      ) : (
+                        <ChevronDownIcon className={styles['toggle-icon']} />
+                      )}
+                    </div>
+                  </div>
+
+                  {expandedJobs[job.name] && (
+                    <>
+                      <div className={styles['progress-container']}>
+                        <div className={styles['step-wrapper']}>
+                          {getProgressSteps(job).map((step, index, array) => (
+                            <Fragment key={step.key}>
+                              <div
+                                className={`${styles.step} ${styles[getStepStatus(job, step.key)]}`}
+                              >
+                                <div className={styles['step-indicator']} />
+                                <span className={styles['step-label']}>
+                                  {step.label}
+                                </span>
+                              </div>
+                              {index < array.length - 1 && (
+                                <div className={styles['step-line']} />
+                              )}
+                            </Fragment>
+                          ))}
+                        </div>
+                      </div>
+
+                      {job.mode === 'MANUAL' && editingJob === job.name && (
+                        <div className={styles['status-change-section']}>
+                          <div className={styles['status-change-fields']}>
+                            <div className={styles['status-change-col']}>
+                              <label
+                                htmlFor={`status-${job.name}`}
+                                className={styles['detail-label']}
+                              >
+                                Change Status:
+                              </label>
+                              <select
+                                id={`status-${job.name}`}
+                                value={selectedStatus || job.status}
+                                onChange={(e) =>
+                                  setSelectedStatus(e.target.value as JobStatus)
+                                }
+                                className={styles['status-change-dropdown']}
+                              >
+                                {STATUS_OPTIONS.map((option) => (
+                                  <option
+                                    key={option.value}
+                                    value={option.value}
+                                  >
+                                    {option.label}
+                                  </option>
+                                ))}
+                              </select>
+                            </div>
+                            <div className={styles['status-change-col']}>
+                              <label
+                                htmlFor={`message-${job.name}`}
+                                className={styles['detail-label']}
+                              >
+                                Message:
+                              </label>
+                              <textarea
+                                id={`message-${job.name}`}
+                                value={jobMessage}
+                                onChange={(e) => setJobMessage(e.target.value)}
+                                placeholder="Enter a description for this status change"
+                                className={styles['status-message-input']}
+                                rows={2}
+                              />
+                            </div>
+                          </div>
+                          <div className={styles['status-change-actions']}>
+                            <button
+                              onClick={handleCancelEdit}
+                              className={styles['status-cancel-button']}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => handleSaveStatus(job)}
+                              className={styles['status-save-button']}
+                            >
+                              Save
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className={styles['job-details']}>
+                        <div className={styles['detail-row-with-button']}>
+                          <div className={styles['detail-row']}>
+                            <span className={styles['detail-label']}>
+                              Start Time:
+                            </span>
+                            <span className={styles['detail-value']}>
+                              {formatDateTime(job.start)}
+                            </span>
+                          </div>
+                          {job.mode === 'MANUAL' && editingJob !== job.name && (
+                            <button
+                              onClick={() => handleEditClick(job)}
+                              className={styles['status-edit-button']}
+                            >
+                              Edit Status
+                            </button>
+                          )}
+                        </div>
+                        <div className={styles['detail-row']}>
+                          <span className={styles['detail-label']}>
+                            End Time:
+                          </span>
+                          <span className={styles['detail-value']}>
+                            {formatDateTime(job.end)}
+                          </span>
+                        </div>
+                        {job.message && (
+                          <div className={styles['detail-row']}>
+                            <span className={styles['detail-label']}>
+                              Message:
+                            </span>
+                            <span className={styles['detail-value']}>
+                              {job.message}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))
           ) : (
             <div className={styles['empty-state']}>
               <p>No status information available for this tenant.</p>
