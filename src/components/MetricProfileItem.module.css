@@ -61,6 +61,7 @@
   width: 100%;
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.625rem 0.75rem;
   background-color: #fafafa;
@@ -86,6 +87,7 @@
   font-weight: 600;
   color: #374151;
   flex: 1;
+  word-break: break-all;
 }
 
 .metrics-count {

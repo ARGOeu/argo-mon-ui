@@ -23,33 +23,38 @@ export const StatusItem = (props: StatusItemProps) => {
 
   return (
     <div
-      className={`${props.dragHandle || ''} ${!props.readOnly ? 'cursor-grab' : ''} flex flex-row justify-between items-center border border-gray-200 rounded-lg px-3 py-2 ${!props.readOnly ? 'shadow-sm' : ''} align-middle bg-white ${!props.readOnly ? 'hover:bg-gray-50 hover:shadow' : ''} transition-all`}
+      className={`${props.dragHandle || ''} ${!props.readOnly ? 'cursor-grab' : ''} flex flex-row items-center gap-1 border border-gray-200 rounded-lg px-3 py-2 ${!props.readOnly ? 'shadow-sm' : ''} align-middle bg-white ${!props.readOnly ? 'hover:bg-gray-50 hover:shadow' : ''} transition-all`}
     >
       {props.dragHandle && !props.readOnly && (
-        <GripVertical className="text-gray-400 h-4 w-4 inline-block mr-2" />
+        <GripVertical className="text-gray-400 h-4 w-4 flex-shrink-0" />
       )}
-      <div className="flex-1">
-        <StatusLabel
-          group={props.group}
-          label={props.name}
-          alias={props.alias || ''}
-          onChangeAlias={handleLocalAliasChange}
-          readOnly={props.readOnly}
-        />
-      </div>
-      <div>
-        {props.status && (
-          <div
-            className={props.readOnly ? '' : 'tooltip tooltip-left'}
-            data-tip={props.readOnly ? '' : props.status}
-          >
-            <StatusIcon
-              status={props.status}
-              iconMode={props.iconMode}
-              textMode={props.textMode}
-            />
-          </div>
-        )}
+      <div className="flex-1 min-w-0 flex md:flex-row flex-col items-start sm:items-center gap-2 flex-wrap">
+        <div
+          className="flex-1 min-w-0 w-full sm:w-auto"
+          style={{ minWidth: '60px' }}
+        >
+          <StatusLabel
+            group={props.group}
+            label={props.name}
+            alias={props.alias || ''}
+            onChangeAlias={handleLocalAliasChange}
+            readOnly={props.readOnly}
+          />
+        </div>
+        <div className="flex-shrink-0">
+          {props.status && (
+            <div
+              className={props.readOnly ? '' : 'tooltip tooltip-left'}
+              data-tip={props.readOnly ? '' : props.status}
+            >
+              <StatusIcon
+                status={props.status}
+                iconMode={props.iconMode}
+                textMode={props.textMode}
+              />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

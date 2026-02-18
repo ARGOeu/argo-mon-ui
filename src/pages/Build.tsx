@@ -29,15 +29,19 @@ import { BanIcon, Columns2Icon, SquareIcon } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import Button from '@/components/Button'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import styles from './Build.module.css'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
 const Build = () => {
-  const { id: editId } = useParams<{ id?: string }>()
-  const isEditMode = Boolean(editId)
+  const { tenantId: tenantIdParam, pageId } = useParams<{
+    tenantId?: string
+    pageId?: string
+  }>()
+  const isEditMode = Boolean(pageId)
 
-  const [tenantId, setTenantId] = useState<string>('')
+  const [tenantId, setTenantId] = useState<string>(tenantIdParam || '')
   const [name, setName] = useState<string>('')
   const [slug, setSlug] = useState<string>('')
   const [statusGroups, setStatusGroups] = useState<StatusGroupType[]>([])
@@ -58,7 +62,11 @@ const Build = () => {
 
   const savePageMutation = useSavePageMutation()
   const updatePageMutation = useUpdatePageMutation()
-  const getPageQuery = useGetPageQuery(tenantId || '', editId || '')
+  const {
+    data: pageData,
+    isLoading: pageLoading,
+    error: pageError,
+  } = useGetPageQuery(tenantId || '', pageId || '')
   const groupsMutation = useGroupsMutation()
   const [filterItems, setFilterItems] = useState('')
 
@@ -75,14 +83,12 @@ const Build = () => {
 
   // Load existing page data in edit mode
   useEffect(() => {
-    if (isEditMode && getPageQuery.data) {
-      const pageData = getPageQuery.data
+    if (isEditMode && pageData) {
       // Populate form with existing data
       setName(pageData.name || 'Untitled')
       setSlug(pageData.slug || 'untitled')
       setTitle(pageData.config?.title || '')
       setDesc(pageData.config?.description || '')
-      setTenantId(pageData.tenant_id || '')
       setReport(pageData.report || '')
       setStatusGroups(pageData.config?.groups || [])
 
@@ -114,7 +120,7 @@ const Build = () => {
       setColumns(pageData.config?.theming?.columns || 'one')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditMode, JSON.stringify(getPageQuery.data)])
+  }, [isEditMode, JSON.stringify(pageData)])
 
   const handleAddStatusGroup = () => {
     const newGroupId = nextGroupIdRef.current
@@ -160,10 +166,10 @@ const Build = () => {
       },
     }
 
-    if (isEditMode && editId) {
+    if (isEditMode && pageId) {
       // Update existing page
       updatePageMutation.mutate(
-        { tenantId, pageId: editId, data: pageData },
+        { tenantId, pageId: pageId, data: pageData },
         {
           onSuccess: () => {
             toast.success('Page updated successfully!')
@@ -399,8 +405,7 @@ const Build = () => {
     setLogo('')
   }
 
-  // Show loading spinner while loading page data
-  if (isEditMode && getPageQuery.isLoading) {
+  if (isEditMode && pageLoading) {
     return (
       <div className="flex justify-center items-center h-64">
         <LoadingSpinner size="md" />
@@ -409,21 +414,14 @@ const Build = () => {
     )
   }
 
-  // Show error if page failed to load
-  if (isEditMode && getPageQuery.isError) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <div className="text-red-600">
-          Failed to load page: {getPageQuery.error?.message}
-        </div>
-      </div>
-    )
+  if (isEditMode && pageError) {
+    return <ErrorDisplay error={pageError} context="page" />
   }
 
   return (
     <div>
       <Toaster richColors position="top-center" duration={2000} />
-      <div className="flex flex-col justify-center items-center px-6">
+      <div className="flex flex-col justify-center items-center px-6 md:px-0">
         <div className="page-container">
           <div className="pb-1 mb-3">
             <div>
@@ -477,9 +475,11 @@ const Build = () => {
                   <ArrowTopRightOnSquareIcon className="size-4" />
                 </Button>
               )}
-              <Button variant="primary" size="md" onClick={handlePageSave}>
-                {isEditMode ? 'Update' : 'Save'}
-              </Button>
+              {activeTab !== 'config' && (
+                <Button variant="primary" size="md" onClick={handlePageSave}>
+                  {isEditMode ? 'Update' : 'Save'}
+                </Button>
+              )}
             </div>
           </div>
 
@@ -487,7 +487,7 @@ const Build = () => {
             className={
               activeTab === 'config'
                 ? ''
-                : 'grid grid-cols-[minmax(400px,600px)_1fr] gap-8'
+                : 'flex flex-col xl:grid xl:grid-cols-[minmax(400px,700px)_1fr] gap-8'
             }
           >
             <div
@@ -564,6 +564,7 @@ const Build = () => {
                           className="input w-full"
                           value={tenantId}
                           onChange={handleTenantChange}
+                          disabled={isEditMode}
                         >
                           <option value="">Select a tenant</option>
                           {tenantsData?.content.map((tenant) => (
@@ -572,15 +573,23 @@ const Build = () => {
                             </option>
                           ))}
                         </select>
+                        {isEditMode && (
+                          <p className="text-xs text-gray-500 mt-1">
+                            Tenant cannot be changed when editing a page
+                          </p>
+                        )}
                       </div>
 
-                      {tenantId && reportsData && reportsData.length > 0 && (
-                        <div className="p-3 bg-green-50 border border-green-200 rounded text-sm text-green-700 flex items-center">
-                          <CheckBadgeIcon className="size-5 inline-block me-2" />
-                          {reportsData.length} report
-                          {reportsData.length !== 1 ? 's' : ''} available
-                        </div>
-                      )}
+                      {!isEditMode &&
+                        tenantId &&
+                        reportsData &&
+                        reportsData.length > 0 && (
+                          <div className="p-3 bg-green-50 border border-green-200 rounded text-sm text-green-700 flex items-center">
+                            <CheckBadgeIcon className="size-5 inline-block me-2" />
+                            {reportsData.length} report
+                            {reportsData.length !== 1 ? 's' : ''} available
+                          </div>
+                        )}
 
                       {tenantId && reportsData && reportsData.length === 0 && (
                         <div className="p-3 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-700">
@@ -599,10 +608,12 @@ const Build = () => {
                 <div className="space-y-4">
                   <div>
                     <div className="border border-gray-200 rounded-lg px-5 py-4 space-y-3">
-                      <h3 className="section-title mb-0">Report Selection</h3>
-                      <p className="section-description mb-2">
-                        Choose a report and manage items.
-                      </p>
+                      <div>
+                        <h3 className="section-title mb-0">Report Selection</h3>
+                        <p className="section-description mb-2">
+                          Choose a report and manage items.
+                        </p>
+                      </div>
                       {!tenantId && (
                         <div className="text-sm text-gray-500 p-4 text-center bg-gray-50 rounded mt-6">
                           Select a tenant in the Config tab to load reports
@@ -642,7 +653,7 @@ const Build = () => {
                           </div>
 
                           {groupsMutation.isPending && (
-                            <div className="p-2 text-base mt-2 mx-auto">
+                            <div className="p-2 text-base mt-2 mx-auto text-center">
                               <LoadingSpinner size="xs" inline />
                             </div>
                           )}
@@ -714,7 +725,7 @@ const Build = () => {
                       <p className="section-description mb-2">
                         Customize colors, logo, and status display options.
                       </p>
-                      <div className="bg-white rounded-lg py-2 space-y-4 mt-4">
+                      <div className="bg-white rounded-lg py-2 space-y-3 mt-1">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
                             Color:
@@ -875,7 +886,7 @@ const Build = () => {
             </div>
 
             {activeTab !== 'config' && (
-              <div className="border border-gray-200 rounded-lg p-4 shadow-md w-full max-w-2xl self-start">
+              <div className="border border-gray-200 rounded-lg p-4 shadow-md w-full max-w-3xl self-start">
                 <header
                   style={{ backgroundColor: color }}
                   className="p-3 mb-2 rounded-lg"

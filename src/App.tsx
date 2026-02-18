@@ -199,7 +199,7 @@ function App() {
                 }
               />
               <Route
-                path="build/:id"
+                path="status-pages/tenants/:tenantId/pages/:pageId"
                 element={
                   <AuthProtected>
                     <Build />
