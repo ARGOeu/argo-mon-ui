@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useGetContactTypes } from '@/hooks/useTenants'
+import { useGetContactTypes, useGetUserContactTypes } from '@/hooks/useTenants'
+import { useAuth } from '@/auth/useAuth'
 import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid'
 import styles from '../pages/CreateTenant.module.css'
 
@@ -27,11 +28,22 @@ const ContactInformation = ({
   onContactsChange,
   onValidationChange,
 }: ContactInformationProps) => {
+  const { profile } = useAuth()
+  const isSuperAdmin = profile?.roles?.includes('super_admin')
+
   const [errors, setErrors] = useState<Array<{ email: string }>>(() =>
     contacts.map(() => ({ email: '' })),
   )
-  const { data: contactTypes, isLoading: isContactTypesLoading } =
-    useGetContactTypes()
+
+  const { data: adminContactTypes, isLoading: isAdminContactTypesLoading } =
+    useGetContactTypes(isSuperAdmin)
+  const { data: userContactTypes, isLoading: isUserContactTypesLoading } =
+    useGetUserContactTypes(!isSuperAdmin)
+
+  const contactTypes = isSuperAdmin ? adminContactTypes : userContactTypes
+  const isContactTypesLoading = isSuperAdmin
+    ? isAdminContactTypesLoading
+    : isUserContactTypesLoading
 
   const handleChange = (
     index: number,

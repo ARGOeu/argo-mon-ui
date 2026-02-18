@@ -18,6 +18,8 @@ import {
   fetchUserTenantById,
   fetchUpdateUserTenant,
   fetchUserTenantProjects,
+  fetchUserTenantStatus,
+  fetchUserContactTypes,
   fetchTenantStatus,
   updateTenantStatus,
   fetchMembers,
@@ -165,7 +167,10 @@ export const useAssignTenantProjectsMutation = () => {
   })
 }
 
-export const useGetTenantProjects = (tenantId: string) => {
+export const useGetTenantProjects = (
+  tenantId: string,
+  enabled: boolean = true,
+) => {
   const { token } = useAuth()
 
   return useInfiniteQuery<TenantList, Error>({
@@ -183,12 +188,12 @@ export const useGetTenantProjects = (tenantId: string) => {
     },
     initialPageParam: 1,
     retry: false,
-    enabled: !!token && !!tenantId,
+    enabled: enabled && !!token && !!tenantId,
     refetchOnMount: 'always',
   })
 }
 
-export const useGetContactTypes = () => {
+export const useGetContactTypes = (enabled: boolean = true) => {
   const { token } = useAuth()
 
   return useQuery<string[], Error>({
@@ -200,7 +205,7 @@ export const useGetContactTypes = () => {
       return fetchContactTypes(token)
     },
     retry: false,
-    enabled: !!token,
+    enabled: enabled && !!token,
   })
 }
 
@@ -263,7 +268,10 @@ export const useUpdateUserTenantMutation = () => {
   })
 }
 
-export const useGetUserTenantProjects = (tenantId: string) => {
+export const useGetUserTenantProjects = (
+  tenantId: string,
+  enabled: boolean = true,
+) => {
   const { token } = useAuth()
 
   return useInfiniteQuery<TenantList, Error>({
@@ -281,12 +289,53 @@ export const useGetUserTenantProjects = (tenantId: string) => {
     },
     initialPageParam: 1,
     retry: false,
-    enabled: !!token && !!tenantId,
     refetchOnMount: 'always',
+    enabled: enabled && !!token && !!tenantId,
   })
 }
 
-export const useGetTenantStatus = (id: string, refetchInterval: number = 0) => {
+export const useGetUserTenantStatus = (
+  id: string,
+  refetchInterval: number = 0,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<{ name: string; status: { jobs: Job[] } }, Error>({
+    queryKey: ['user-tenant-status', id],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchUserTenantStatus(id, token)
+    },
+    retry: false,
+    refetchInterval,
+    enabled: enabled && !!token && !!id,
+  })
+}
+
+export const useGetUserContactTypes = (enabled: boolean = true) => {
+  const { token } = useAuth()
+
+  return useQuery<string[], Error>({
+    queryKey: ['user-contact-types'],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchUserContactTypes(token)
+    },
+    retry: false,
+    enabled: enabled && !!token,
+  })
+}
+
+export const useGetTenantStatus = (
+  id: string,
+  refetchInterval: number = 0,
+  enabled: boolean = true,
+) => {
   const { token } = useAuth()
 
   return useQuery<{ name: string; status: { jobs: Job[] } }, Error>({
@@ -299,7 +348,7 @@ export const useGetTenantStatus = (id: string, refetchInterval: number = 0) => {
     },
     retry: false,
     refetchInterval,
-    enabled: !!token && !!id,
+    enabled: enabled && !!token && !!id,
   })
 }
 

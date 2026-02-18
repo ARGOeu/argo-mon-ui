@@ -13,23 +13,47 @@ import { toast, Toaster } from 'sonner'
 import { useState } from 'react'
 import Button from '@/components/Button'
 import { useGetUserTenants } from '@/hooks/useTenants'
+import { useAuth } from '@/auth/useAuth'
+import { useGetUserProfile } from '@/hooks/useProfile'
+import type { UserGroup } from '@/types/profile'
+
 const pageSize = 10
 
 const View = () => {
   const [currentPage, setCurrentPage] = useState(1)
-  const [tenantId, setTenantId] = useState<string>('all')
+  const [tenantId, setTenantId] = useState<string>('')
+  const [isAllSelected, setIsAllSelected] = useState<boolean>(true)
+
+  const { profile } = useAuth()
+  const { data: userProfileData } = useGetUserProfile()
   const { data: tenantsData } = useGetUserTenants(1, 100, undefined, true)
 
-  const isAllSelected = tenantId === 'all'
+  const isSuperAdmin = profile?.roles?.includes('super_admin')
+
+  // Check if user is admin in at least one tenant
+  const isAdminInAtLeastOneTenant = () => {
+    if (isSuperAdmin) return true
+    if (!userProfileData?.groups || userProfileData.groups.length === 0)
+      return false
+
+    return userProfileData.groups.some(
+      (group: UserGroup) => group.role === 'admin',
+    )
+  }
+
+  const canCreateStatusPage = isAdminInAtLeastOneTenant()
+
   const { data: allUserPagesData } = useGetUserPages(
     currentPage,
     pageSize,
     isAllSelected,
   )
+
   const { data: tenantPagesData } = useGetAllPagesQuery(
     tenantId,
     currentPage,
     pageSize,
+    !isAllSelected,
   )
 
   const data = isAllSelected ? allUserPagesData : tenantPagesData
@@ -127,13 +151,15 @@ const View = () => {
             <h1 className="page-title">Status Pages</h1>
             <p className="page-subtitle">View and manage your pages</p>
           </div>
-          <Button
-            variant="primary"
-            size="md"
-            onClick={() => navigate('/status-pages/build')}
-          >
-            Create Status Page
-          </Button>
+          {canCreateStatusPage && (
+            <Button
+              variant="primary"
+              size="md"
+              onClick={() => navigate('/status-pages/build')}
+            >
+              Create Status Page
+            </Button>
+          )}
         </div>
 
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
@@ -145,6 +171,13 @@ const View = () => {
               className="input w-full max-w-md"
               value={tenantId}
               onChange={(e) => {
+                if (e.target.value === 'all') {
+                  setIsAllSelected(true)
+                  setTenantId('')
+                  setCurrentPage(1)
+                  return
+                }
+                setIsAllSelected(false)
                 setTenantId(e.target.value)
                 setCurrentPage(1)
               }}

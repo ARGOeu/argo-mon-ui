@@ -18,6 +18,7 @@ import {
   Bars3Icon,
   ShieldCheckIcon,
   Square3Stack3DIcon,
+  ClipboardDocumentListIcon,
 } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -319,7 +320,7 @@ const Tenants = () => {
                   <p className={styles['tenant-description']}>
                     {tenant.description}
                   </p>
-                  {isSuperAdmin &&
+                  {(isSuperAdmin || isTenantAdmin(tenant.name)) &&
                     tenant.status?.jobs &&
                     tenant.status.jobs.length > 0 && (
                       <div className={styles['status-section']}>
@@ -384,7 +385,9 @@ const Tenants = () => {
                       data-tip="View Assigned Projects"
                       onClick={() => handleAssignProjects(tenant.id!)}
                     >
-                      <ListBulletIcon className={styles['action-icon']} />
+                      <ClipboardDocumentListIcon
+                        className={styles['action-icon']}
+                      />
                     </button>
                   )}
 
@@ -398,6 +401,11 @@ const Tenants = () => {
                       >
                         <PlusCircleIcon className={styles['action-icon']} />
                       </button>
+                    </>
+                  )}
+
+                  {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
+                    <>
                       <button
                         aria-label="View Status"
                         className={`${styles['action-button']} ${styles.status} tooltip`}
@@ -406,24 +414,16 @@ const Tenants = () => {
                       >
                         <ListBulletIcon className={styles['action-icon']} />
                       </button>
-                    </>
-                  )}
-
-                  {(isSuperAdmin || isTenantAdmin(tenant.name)) && (
-                    <button
-                      aria-label="Check Readiness"
-                      className={`${styles['action-button']} ${styles.readiness} tooltip`}
-                      data-tip="Check Readiness"
-                      onClick={() =>
-                        navigate(`/tenants/${tenant.id}/readiness`)
-                      }
-                    >
-                      <ShieldCheckIcon className={styles['action-icon']} />
-                    </button>
-                  )}
-
-                  {isSuperAdmin && (
-                    <>
+                      <button
+                        aria-label="Check Readiness"
+                        className={`${styles['action-button']} ${styles.readiness} tooltip`}
+                        data-tip="Check Readiness"
+                        onClick={() =>
+                          navigate(`/tenants/${tenant.id}/readiness`)
+                        }
+                      >
+                        <ShieldCheckIcon className={styles['action-icon']} />
+                      </button>
                       <button
                         aria-label="Capabilities"
                         className="tooltip text-amber-600 cursor-pointer hover:bg-amber-50 rounded-[10px] p-[6px]"
@@ -434,17 +434,18 @@ const Tenants = () => {
                       >
                         <Square3Stack3DIcon className="w-[1.3rem]" />
                       </button>
-                      <button
-                        aria-label="Delete Tenant"
-                        className={`${styles['action-button']} ${styles.delete} tooltip`}
-                        data-tip="Delete Tenant"
-                        onClick={() =>
-                          handleDeleteClick(tenant.id!, tenant.name)
-                        }
-                      >
-                        <TrashIcon className={styles['action-icon']} />
-                      </button>
                     </>
+                  )}
+
+                  {isSuperAdmin && (
+                    <button
+                      aria-label="Delete Tenant"
+                      className={`${styles['action-button']} ${styles.delete} tooltip`}
+                      data-tip="Delete Tenant"
+                      onClick={() => handleDeleteClick(tenant.id!, tenant.name)}
+                    >
+                      <TrashIcon className={styles['action-icon']} />
+                    </button>
                   )}
                 </div>
               </div>

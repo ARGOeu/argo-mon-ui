@@ -3,13 +3,11 @@ import { useAuth } from './auth/useAuth'
 import {
   ArrowLeftStartOnRectangleIcon,
   ServerStackIcon,
-  WrenchScrewdriverIcon,
   RectangleStackIcon,
   FolderIcon,
   UserGroupIcon,
   EnvelopeIcon,
 } from '@heroicons/react/16/solid'
-import Button from './components/Button'
 import LoginPrompt from './components/LoginPrompt'
 
 function SidebarNavItem({
@@ -60,38 +58,44 @@ export default function Layout() {
           </div>
         </div>
 
-        <nav className="flex-1 py-4 flex flex-col gap-y-1">
-          {isSuperAdmin && (
-            <SidebarNavItem to="/administration">
-              <UserGroupIcon className="size-5" aria-hidden />
-              Administration
-            </SidebarNavItem>
-          )}
-          {authenticated && (
+        {authenticated ? (
+          <nav className="flex-1 py-4 flex flex-col gap-y-1">
+            {isSuperAdmin && (
+              <SidebarNavItem to="/administration">
+                <UserGroupIcon className="size-5" aria-hidden />
+                Administration
+              </SidebarNavItem>
+            )}
             <SidebarNavItem to="/my-invitations">
               <EnvelopeIcon className="size-5" aria-hidden />
               My Invitations
             </SidebarNavItem>
-          )}
-          <SidebarNavItem to="/tenants">
-            <ServerStackIcon className="size-5" aria-hidden />
-            Tenants
-          </SidebarNavItem>
-          {isSuperAdmin && (
-            <SidebarNavItem to="/projects">
-              <FolderIcon className="size-5" aria-hidden />
-              Projects
+            <SidebarNavItem to="/tenants">
+              <ServerStackIcon className="size-5" aria-hidden />
+              Tenants
             </SidebarNavItem>
-          )}
-          <SidebarNavItem to="/status-pages/view">
-            <RectangleStackIcon className="size-5" aria-hidden />
-            Status Pages
-          </SidebarNavItem>
-          <SidebarNavItem to="/status-pages/build">
-            <WrenchScrewdriverIcon className="size-5" aria-hidden />
-            Build Status Page
-          </SidebarNavItem>
-        </nav>
+            {isSuperAdmin && (
+              <SidebarNavItem to="/projects">
+                <FolderIcon className="size-5" aria-hidden />
+                Projects
+              </SidebarNavItem>
+            )}
+            <SidebarNavItem to="/status-pages/view">
+              <RectangleStackIcon className="size-5" aria-hidden />
+              Status Pages
+            </SidebarNavItem>
+          </nav>
+        ) : (
+          <div className="flex-1 flex items-start justify-center px-6 pt-20">
+            <div className="text-center text-gray-500 text-sm">
+              <ServerStackIcon className="size-12 mx-auto mb-3 text-blue-700" />
+              <p className="font-medium text-gray-700 mb-1">
+                Status Pages Management
+              </p>
+              <p>Please login to access the application</p>
+            </div>
+          </div>
+        )}
 
         <div className="border-t border-gray-200">
           {authenticated && profile?.name ? (
@@ -117,18 +121,7 @@ export default function Layout() {
                 </button>
               </div>
             </div>
-          ) : (
-            <div className="p-4">
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={() => login()}
-                className="w-full"
-              >
-                Login
-              </Button>
-            </div>
-          )}
+          ) : null}
         </div>
       </aside>
 

@@ -306,6 +306,49 @@ export const fetchUserTenantProjects = async (
   return response.json()
 }
 
+export const fetchUserTenantStatus = async (
+  id: string,
+  token: string,
+): Promise<{ name: string; status: { jobs: Job[] } }> => {
+  const response = await fetch(`${BACKEND_API}/v1/tenants/${id}/status`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchUserContactTypes = async (
+  token: string,
+): Promise<string[]> => {
+  const response = await fetch(`${BACKEND_API}/v1/tenants/contact-types`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
 export const fetchTenantStatus = async (
   id: string,
   token: string,

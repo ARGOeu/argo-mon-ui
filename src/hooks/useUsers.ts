@@ -36,6 +36,7 @@ export const useGetUserPages = (
       return fetchUserPages(token, page, size)
     },
     retry: false,
+    refetchOnMount: 'always',
     enabled: enabled && !!token,
   })
 }

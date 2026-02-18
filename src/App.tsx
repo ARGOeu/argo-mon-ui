@@ -87,11 +87,9 @@ function App() {
               <Route
                 path="tenants/:id/capabilities"
                 element={
-                  <ProtectedRoute
-                    requiredRoles={['super_admin', 'admin', 'viewer']}
-                  >
+                  <AuthProtected>
                     <TenantCapabilities />
-                  </ProtectedRoute>
+                  </AuthProtected>
                 }
               />
               <Route
@@ -129,9 +127,9 @@ function App() {
               <Route
                 path="tenants/:id/status"
                 element={
-                  <ProtectedRoute requiredRoles={['super_admin']}>
+                  <AuthProtected>
                     <TenantStatus />
-                  </ProtectedRoute>
+                  </AuthProtected>
                 }
               />
               <Route

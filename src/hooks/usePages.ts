@@ -76,6 +76,7 @@ export const useGetAllPagesQuery = (
   tenantId: string,
   page: number = 1,
   size: number = 10,
+  enabled: boolean = true,
 ) => {
   const { token } = useAuth()
 
@@ -90,7 +91,8 @@ export const useGetAllPagesQuery = (
       }
       return fetchPages(tenantId, token, page, size)
     },
-    enabled: !!token && !!tenantId,
+    retry: false,
+    enabled: enabled && !!token && !!tenantId,
   })
 }
 
@@ -111,6 +113,7 @@ export const useGetPageQuery = (tenantId: string, pageId: string) => {
       }
       return fetchPage(tenantId, pageId, token)
     },
+    retry: false,
     enabled: !!token && !!tenantId && !!pageId,
   })
 }
@@ -168,6 +171,7 @@ export const useCheckSlugQuery = (
       }
       return fetchCheckSlug(tenantId, slug, token)
     },
+    retry: false,
     enabled: !!token && !!tenantId && !!slug && enabled,
   })
 }
