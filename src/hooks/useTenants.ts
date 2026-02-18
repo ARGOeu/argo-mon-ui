@@ -286,7 +286,7 @@ export const useGetUserTenantProjects = (tenantId: string) => {
   })
 }
 
-export const useGetTenantStatus = (id: string) => {
+export const useGetTenantStatus = (id: string, refetchInterval: number = 0) => {
   const { token } = useAuth()
 
   return useQuery<{ name: string; status: { jobs: Job[] } }, Error>({
@@ -298,6 +298,7 @@ export const useGetTenantStatus = (id: string) => {
       return fetchTenantStatus(id, token)
     },
     retry: false,
+    refetchInterval,
     enabled: !!token && !!id,
   })
 }
@@ -559,6 +560,7 @@ export const useGetTenantMetricProfile = (
 export const useGetTenantReadiness = (
   tenantId: string,
   enabled: boolean = true,
+  refetchInterval: number = 0,
 ) => {
   const { token } = useAuth()
 
@@ -575,7 +577,7 @@ export const useGetTenantReadiness = (
     },
     retry: false,
     enabled: enabled && !!token && !!tenantId,
-    refetchInterval: 10000, // Refetch every 10 seconds
+    refetchInterval,
   })
 }
 

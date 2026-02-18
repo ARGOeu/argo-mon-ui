@@ -324,22 +324,26 @@ const Tenants = () => {
                     tenant.status.jobs.length > 0 && (
                       <div className={styles['status-section']}>
                         <div className={styles['status-list']}>
-                          {tenant.status.jobs.map((job: Job) => (
-                            <span
-                              key={job.name}
-                              className={`${styles['status-badge']} ${getStatusBadgeClass(job.status)}`}
-                              title={`${JOB_NAMES[job.name] || job.name}: ${getStatusDisplay(job.status)}`}
-                            >
-                              {job.name === 'INIT_AMS'
-                                ? 'AMS'
-                                : job.name === 'INIT_MONGO'
-                                  ? 'MongoDB'
-                                  : job.name === 'CREATE_DOMAIN_NAMES'
-                                    ? 'Domain Names'
-                                    : job.name}
-                              : {getStatusDisplay(job.status)}
-                            </span>
-                          ))}
+                          {tenant.status.jobs
+                            .filter(
+                              (job: Job) => job.name !== 'CHECK_READINESS',
+                            )
+                            .map((job: Job) => (
+                              <span
+                                key={job.name}
+                                className={`${styles['status-badge']} ${getStatusBadgeClass(job.status)}`}
+                                title={`${JOB_NAMES[job.name] || job.name}: ${getStatusDisplay(job.status)}`}
+                              >
+                                {job.name === 'INIT_AMS'
+                                  ? 'AMS'
+                                  : job.name === 'INIT_MONGO'
+                                    ? 'MongoDB'
+                                    : job.name === 'CREATE_DOMAIN_NAMES'
+                                      ? 'Domain Names'
+                                      : job.name}
+                                : {getStatusDisplay(job.status)}
+                              </span>
+                            ))}
                         </div>
                       </div>
                     )}
