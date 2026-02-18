@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { useGetContactTypes } from '@/hooks/useTenants'
+import { useGetContactTypes, useGetUserContactTypes } from '@/hooks/useTenants'
+import { useAuth } from '@/auth/useAuth'
 import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid'
 import type { Metadata } from '@/types/tenants'
 import styles from '../pages/CreateTenant.module.css'
@@ -36,6 +37,9 @@ const InfrastructureMetadata = ({
   onMetadataChange,
   onValidationChange,
 }: InfrastructureMetadataProps) => {
+  const { profile } = useAuth()
+  const isSuperAdmin = profile?.roles?.includes('super_admin')
+
   const [errors, setErrors] = useState(() => ({
     uiUrl: '',
     poemUrl: '',
@@ -43,8 +47,16 @@ const InfrastructureMetadata = ({
     authUrl: '',
     internalListsEmails: metadata.internalLists.map(() => ({ email: '' })),
   }))
-  const { data: contactTypes, isLoading: isContactTypesLoading } =
-    useGetContactTypes()
+
+  const { data: adminContactTypes, isLoading: isAdminContactTypesLoading } =
+    useGetContactTypes(isSuperAdmin)
+  const { data: userContactTypes, isLoading: isUserContactTypesLoading } =
+    useGetUserContactTypes(!isSuperAdmin)
+
+  const contactTypes = isSuperAdmin ? adminContactTypes : userContactTypes
+  const isContactTypesLoading = isSuperAdmin
+    ? isAdminContactTypesLoading
+    : isUserContactTypesLoading
 
   const urlErrorMesage =
     'Please enter a valid URL (must start with http:// or https://)'

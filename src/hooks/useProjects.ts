@@ -34,7 +34,7 @@ export const useGetProjects = (
   })
 }
 
-export const useGetAllProjects = () => {
+export const useGetAllProjects = (enabled: boolean = true) => {
   const { token } = useAuth()
 
   return useInfiniteQuery<ProjectList, Error>({
@@ -52,8 +52,8 @@ export const useGetAllProjects = () => {
     },
     initialPageParam: 1,
     retry: false,
-    enabled: !!token,
     refetchOnMount: 'always',
+    enabled: enabled && !!token,
   })
 }
 

@@ -1,14 +1,15 @@
 .header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: flex-start;
   margin-bottom: 1.5rem;
   padding-bottom: 1rem;
 }
 
-.button-group {
+.save-button-container {
   display: flex;
-  gap: 1rem;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
 }
 
 .content {
