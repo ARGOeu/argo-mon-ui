@@ -206,8 +206,7 @@ const TenantReadiness = () => {
               notifyCheckReadinessMutation.isPending ||
               checkReadinessJob?.status === 'IN_PROGRESS' ||
               checkReadinessJob?.status === 'INITIALISING' ||
-              checkReadinessJob?.status === 'INITIALISED' ||
-              checkReadinessJob?.status === 'COMPLETED'
+              checkReadinessJob?.status === 'INITIALISED'
             }
           >
             {notifyCheckReadinessMutation.isPending

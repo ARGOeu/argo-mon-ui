@@ -63,8 +63,8 @@
 .report-item-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  gap: 0.5rem;
+  align-items: start;
+  gap: 1rem;
 }
 
 .report-name {

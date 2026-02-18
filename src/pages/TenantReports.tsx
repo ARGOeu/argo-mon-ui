@@ -68,6 +68,11 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
               >
                 <div className={styles['report-item-header']}>
                   <span className={styles['report-name']}>{report.name}</span>
+                  {report.disabled ? (
+                    <span className={styles['status-disabled']}>Inactive</span>
+                  ) : (
+                    <span className={styles['status-enabled']}>Active</span>
+                  )}
                 </div>
                 {report.description && (
                   <p className={styles['report-item-description']}>
@@ -105,7 +110,7 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
                 <div className={styles['meta-item']}>
                   <span className={styles['meta-label']}>Status:</span>
                   {reportDetail.disabled ? (
-                    <span className={styles['status-disabled']}>Disabled</span>
+                    <span className={styles['status-disabled']}>Inactive</span>
                   ) : (
                     <span className={styles['status-enabled']}>Active</span>
                   )}

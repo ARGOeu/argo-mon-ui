@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { ArrowLeftIcon } from '@heroicons/react/16/solid'
 import { useAuth } from '../auth/useAuth'
 import { useGetTenantById, useGetUserTenantById } from '../hooks/useTenants'
@@ -12,8 +12,18 @@ import Button from '@/components/Button'
 const TenantDetails = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const location = useLocation()
   const { profile } = useAuth()
-  const [activeTab, setActiveTab] = useState<'details' | 'reports'>('details')
+  const [activeTab, setActiveTab] = useState<'info' | 'reports'>('info')
+
+  useEffect(() => {
+    const hash = location?.hash
+    if (hash?.startsWith('#reports')) {
+      setActiveTab('reports')
+    } else {
+      setActiveTab('info')
+    }
+  }, [location.hash])
 
   const isSuperAdmin = profile?.roles?.includes('super_admin')
 
@@ -87,20 +97,26 @@ const TenantDetails = () => {
 
       <div className={styles.tabs}>
         <button
-          className={`${styles.tab} ${activeTab === 'details' ? styles['tab-active'] : ''}`}
-          onClick={() => setActiveTab('details')}
+          className={`${styles.tab} ${activeTab === 'info' ? styles['tab-active'] : ''}`}
+          onClick={() => {
+            setActiveTab('info')
+            window.location.hash = 'info'
+          }}
         >
-          Tenant Details
+          Tenant Info
         </button>
         <button
           className={`${styles.tab} ${activeTab === 'reports' ? styles['tab-active'] : ''}`}
-          onClick={() => setActiveTab('reports')}
+          onClick={() => {
+            setActiveTab('reports')
+            window.location.hash = 'reports'
+          }}
         >
           Reports
         </button>
       </div>
 
-      {activeTab === 'details' && (
+      {activeTab === 'info' && (
         <>
           {/* Tenant Information */}
           <div className={styles.section}>
@@ -136,7 +152,11 @@ const TenantDetails = () => {
                     <div className={styles['info-group']}>
                       <label className={styles.label}>Created At</label>
                       <p className={styles.value}>
-                        {new Date(info.created_at).toLocaleString()}
+                        {new Date(info.created_at).toLocaleString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
                       </p>
                     </div>
                   )}
@@ -144,7 +164,11 @@ const TenantDetails = () => {
                     <div className={styles['info-group']}>
                       <label className={styles.label}>Last Updated</label>
                       <p className={styles.value}>
-                        {new Date(info.updated_at).toLocaleString()}
+                        {new Date(info.updated_at).toLocaleString('en-GB', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })}
                       </p>
                     </div>
                   )}
