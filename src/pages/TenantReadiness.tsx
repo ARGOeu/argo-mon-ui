@@ -108,7 +108,8 @@ const TenantReadiness = () => {
       },
       {
         onSuccess: (data) => {
-          const message = data.jobs[0]?.message
+          const job = data.jobs?.find((j) => j.name === 'CHECK_READINESS')
+          const message = job?.message
           if (message) {
             toast.success(message)
           }

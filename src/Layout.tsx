@@ -129,7 +129,9 @@ export default function Layout() {
 
       {/* Page content */}
       <main className="flex-1 bg-white overflow-auto">
-        <div className={`${tDetsRoute ? '' : 'container mx-auto p-6'}`}>
+        <div
+          className={`${tDetsRoute ? 'mx-auto px-6' : 'container mx-auto p-6'}`}
+        >
           {!authenticated ? (
             <LoginPrompt
               title="Authentication Required"

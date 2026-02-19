@@ -1,3 +1,4 @@
+import type { ProjectList } from '@/types/projects'
 import type {
   Job,
   Tenant,
@@ -284,7 +285,7 @@ export const fetchUserTenantProjects = async (
   token: string,
   page: number = 1,
   size: number = 10,
-): Promise<TenantList> => {
+): Promise<ProjectList> => {
   const response = await fetch(
     `${BACKEND_API}/v1/tenants/${tenantId}/projects?page=${page}&size=${size}`,
     {

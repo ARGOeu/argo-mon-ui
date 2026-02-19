@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 import { PhotoIcon, XMarkIcon } from '@heroicons/react/16/solid'
+import { ArrowLeftIcon } from '@heroicons/react/16/solid'
 import {
   useCreateTenantMutation,
   useUpdateTenantMutation,
@@ -468,13 +469,24 @@ const CreateTenant = () => {
                     'Fill in the details to create a new tenant'
                   )}
                 </p>
-                <div className={styles.legend}>
-                  <span className={styles['legend-indicator']} />
-                  <span className={styles['legend-separator']}>:</span>
-                  <span className={styles['legend-text']}>
-                    Indicates required fields are missing or invalid
-                  </span>
-                </div>
+              </div>
+              <Button
+                onClick={() => navigate('/tenants')}
+                size="sm"
+                variant="secondary"
+              >
+                <ArrowLeftIcon className="size-4" />
+                Back to Tenants
+              </Button>
+            </div>
+
+            <div className={styles['action-bar']}>
+              <div className={styles.legend}>
+                <span className={styles['legend-indicator']} />
+                <span className={styles['legend-separator']}>:</span>
+                <span className={styles['legend-text']}>
+                  Indicates required fields are missing or invalid
+                </span>
               </div>
               <Button
                 variant="primary"
