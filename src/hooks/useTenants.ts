@@ -45,6 +45,7 @@ import type {
   MetricProfileResponse,
   TenantReadinessResponse,
 } from '@/types/tenants'
+import type { ProjectList } from '@/types/projects'
 
 export const useGetTenants = (
   page: number = 1,
@@ -280,7 +281,7 @@ export const useGetUserTenantProjects = (
 ) => {
   const { token } = useAuth()
 
-  return useInfiniteQuery<TenantList, Error>({
+  return useInfiniteQuery<ProjectList, Error>({
     queryKey: ['user-tenant-projects', tenantId],
     queryFn: ({ pageParam = 1 }) => {
       if (!token) {

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
+import { ArrowLeftIcon } from '@heroicons/react/16/solid'
 import {
   useCreateProjectMutation,
   useUpdateProjectMutation,
@@ -218,6 +219,17 @@ const CreateProject = () => {
                     : 'Fill in the details to create a new project'}
                 </p>
               </div>
+              <Button
+                onClick={() => navigate('/projects')}
+                size="sm"
+                variant="secondary"
+              >
+                <ArrowLeftIcon className="size-4" />
+                Back to Projects
+              </Button>
+            </div>
+
+            <div className={styles['project-action-bar']}>
               <Button
                 variant="primary"
                 size="md"

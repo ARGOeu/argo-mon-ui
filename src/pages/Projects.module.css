@@ -207,7 +207,7 @@
   }
 
   .grid {
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 360px), 1fr));
   }
 
   .action-button {
@@ -217,11 +217,5 @@
   .action-icon {
     width: 1.25rem;
     height: 1.25rem;
-  }
-}
-
-@media (min-width: 1280px) {
-  .grid {
-    grid-template-columns: repeat(3, 1fr);
   }
 }

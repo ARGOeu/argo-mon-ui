@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams, useLocation, Link } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { useGetTenantById, useGetUserTenantById } from '../hooks/useTenants'
+import { useGetUserTenantProjects } from '../hooks/useTenants'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import TenantReports from './TenantReports'
@@ -12,6 +13,14 @@ import {
   MailIcon,
   ShieldCheck,
 } from 'lucide-react'
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+  })
+}
 
 const TenantDetails = () => {
   const { id } = useParams<{ id: string }>()
@@ -42,9 +51,25 @@ const TenantDetails = () => {
     error: userError,
   } = useGetUserTenantById(id || '', !isSuperAdmin)
 
+  const {
+    data: projectsData,
+    isLoading: projectsLoading,
+    fetchNextPage: fetchNextProjectsPage,
+    hasNextPage: hasNextProjectsPage,
+  } = useGetUserTenantProjects(id || '', true)
+
   const tenantData = isSuperAdmin ? adminTenantData : userTenantData
   const isLoading = isSuperAdmin ? adminLoading : userLoading
   const error = isSuperAdmin ? adminError : userError
+
+  useEffect(() => {
+    if (hasNextProjectsPage) {
+      fetchNextProjectsPage()
+    }
+  }, [projectsData, hasNextProjectsPage, fetchNextProjectsPage])
+
+  const projects =
+    projectsData?.pages?.flatMap((page) => page.content || []) || []
 
   if (isLoading) {
     return (
@@ -78,11 +103,10 @@ const TenantDetails = () => {
   const { contacts, metadata } = tenantData
 
   return (
-    // this is a temporary fix to negate the parent's layout global padding to every page
-    <div>
+    <div className="page-container">
       <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
         <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
-          <div className="flex items-center gap-2 text-sm font-medium text-slate-500 uppercase tracking-wider">
+          <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 uppercase tracking-wider">
             <Link
               to="/tenants"
               className="hover:text-blue-600 flex items-center gap-1"
@@ -90,27 +114,29 @@ const TenantDetails = () => {
               <ArrowLeft size={12} /> Tenants
             </Link>
             <span className="text-gray-300">/</span>
-            <span className="text-slate-800">{tenantData.info.name}</span>
+            <span className="text-slate-800 truncate max-w-[120px] sm:max-w-none">
+              {tenantData.info.name}
+            </span>
           </div>
         </div>
 
-        <div className="px-4 py-3 flex items-center gap-6">
+        <div className="px-4 py-3 flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-6">
           <div className="flex-shrink-0 w-16 h-16 bg-white border border-gray-200 rounded flex items-center justify-center p-1 shadow-sm">
             <img
-              src="https://core-proxy.sandbox.eosc-beyond.eu/static/images/logo.png"
+              src={tenantData.info.image}
               alt="Logo"
               className="object-contain"
             />
           </div>
 
-          <div className="flex-shrink-0 border-r border-gray-100 pr-6 mr-2">
-            <div className="flex items-center gap-2">
+          <div className="flex-shrink-0 lg:border-r border-gray-100 lg:pr-6 lg:mr-2 w-full lg:w-auto">
+            <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-lg font-bold leading-none">
                 {tenantData.info.name}
               </h1>
               <span className="flex items-center gap-1 px-1.5 py-0.5 bg-emerald-50 text-emerald-700 text-[10px] font-bold rounded border border-emerald-100">
                 {/* This is a placeholder */}
-                <ShieldCheck size={10} /> ACTIVE
+                <ShieldCheck size={12} /> ACTIVE
               </span>
             </div>
             <p className="text-sm text-gray-500 mt-1 max-w-md">
@@ -118,59 +144,61 @@ const TenantDetails = () => {
             </p>
           </div>
 
-          <div className="flex items-center gap-8 flex-grow">
+          <div className="flex flex-wrap items-start gap-4 sm:gap-6 lg:gap-8 flex-grow w-full lg:w-auto">
             {tenantData.info.website && (
-              <div className="flex flex-col">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
+              <div className="flex flex-col min-w-[120px]">
+                <span className="text-[12px] font-bold text-gray-400 uppercase tracking-tight">
                   Website
                 </span>
                 <a
                   href={tenantData.info.website}
-                  className="text-xs text-blue-600 flex items-center gap-1 font-medium hover:underline"
+                  className="text-sm text-blue-600 flex items-center gap-1 font-medium hover:underline break-words"
                 >
-                  {tenantData.info.website?.replace('https://www.', '')}{' '}
-                  <ArrowUpRightFromSquare />
+                  <span className="break-words">
+                    {tenantData.info.website?.replace('https://www.', '')}
+                  </span>
+                  <ArrowUpRightFromSquare size={14} className="flex-shrink-0" />
                 </a>
               </div>
             )}
 
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
+            <div className="flex flex-col min-w-[120px]">
+              <span className="text-[12px] font-bold text-gray-400 uppercase tracking-tight">
                 ID
               </span>
-              <span className="text-xs font-semibold flex items-center gap-1 text-slate-700">
+              <span className="text-sm font-semibold flex items-center gap-1 text-slate-700 break-words">
                 {tenantData.id}
               </span>
             </div>
 
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
+            <div className="flex flex-col min-w-[120px]">
+              <span className="text-[12px] font-bold text-gray-400 uppercase tracking-tight">
                 Email
               </span>
-              <span className="text-xs font-semibold flex items-center gap-1 text-slate-700">
-                <MailIcon size={12} className="text-slate-400" />{' '}
-                {tenantData.info.email}
+              <span className="text-sm font-semibold flex items-center gap-1 text-slate-700">
+                <MailIcon size={12} className="text-slate-400 flex-shrink-0" />{' '}
+                <span className="break-words">{tenantData.info.email}</span>
               </span>
             </div>
 
-            <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
+            <div className="flex flex-col min-w-[140px]">
+              <span className="text-[12px] font-bold text-gray-400 uppercase tracking-tight">
                 Created / Updated
               </span>
-              <span className="text-xs font-medium text-slate-600">
-                {tenantData.info.created_at?.split('T')[0]}{' '}
+              <span className="text-sm font-medium text-slate-600">
+                {formatDate(tenantData.info.created_at || '')}{' '}
                 <span className="text-gray-300 mx-1">|</span>{' '}
-                {tenantData.info.updated_at?.split('T')[0]}
+                {formatDate(tenantData.info.updated_at || '')}
               </span>
             </div>
           </div>
         </div>
 
-        <div className="px-4 flex gap-6">
+        <div className={styles.tabs}>
           {['info', 'reports'].map((tab) => (
             <button
               key={tab}
-              className={`py-2 text-[12px] cursor-pointer font-bold border-b-2 transition-colors ${tab === activeTab ? 'border-blue-600 text-blue-600' : 'border-transparent text-gray-400 hover:text-gray-600'}`}
+              className={`${styles.tab} ${activeTab === tab ? styles['tab-active'] : ''}`}
               onClick={() => {
                 if (tab === 'info' || tab === 'reports') {
                   setActiveTab(tab)
@@ -184,9 +212,51 @@ const TenantDetails = () => {
         </div>
       </header>
 
-      <div className="p-4">
+      <div className="py-4 px-2">
         {activeTab === 'info' && (
           <>
+            <div className={styles.section}>
+              <div className={styles['section-header']}>
+                <h2 className={styles['section-title']}>Projects</h2>
+              </div>
+              {projectsLoading ? (
+                <div className={styles.card}>
+                  <LoadingSpinner size="sm" inline />
+                </div>
+              ) : projects && projects.length > 0 ? (
+                <div className={styles['contacts-grid']}>
+                  {projects.map((project) => (
+                    <div key={project.id} className={styles['card']}>
+                      <div className={styles['contact-info']}>
+                        <p className={styles['contact-name']}>{project.name}</p>
+                        {project.description && (
+                          <p className={styles['contact-email']}>
+                            {project.description}
+                          </p>
+                        )}
+                        <div className={styles['project-dates']}>
+                          <span>
+                            {formatDate(project.start_date)} -{' '}
+                            {formatDate(project.end_date)}
+                          </span>
+                          {project.sustainability_end_date && (
+                            <span className={styles['project-sustainability']}>
+                              Sustainability:{' '}
+                              {formatDate(project.sustainability_end_date)}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className={styles['empty-state-card']}>
+                  <p className={styles['no-data']}>No projects assigned</p>
+                </div>
+              )}
+            </div>
+
             {/* Contacts */}
             <div className={styles.section}>
               <div className={styles['section-header']}>
