@@ -97,6 +97,9 @@ export const useCreateTenantMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['tenant'] })
+      queryClient.invalidateQueries({ queryKey: ['user-tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['user-tenant'] })
     },
     onError: (error) => {
       console.error('Tenant create error:', error)
@@ -117,6 +120,9 @@ export const useUpdateTenantMutation = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['tenant'] })
+      queryClient.invalidateQueries({ queryKey: ['user-tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['user-tenant'] })
     },
     onError: (error) => {
       console.error('Tenant update error:', error)
