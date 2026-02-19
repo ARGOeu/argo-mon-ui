@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet } from 'react-router'
+import { Link, NavLink, Outlet, useMatch } from 'react-router'
 import { useAuth } from './auth/useAuth'
 import {
   ArrowLeftStartOnRectangleIcon,
@@ -41,6 +41,8 @@ export default function Layout() {
   const { authenticated, profile, login, logout } = useAuth()
 
   const isSuperAdmin = profile?.roles?.includes('super_admin')
+  // check to see if we are on tenant details route
+  const tDetsRoute = useMatch('/tenants/:id/details')
 
   return (
     <div className="h-screen flex overflow-hidden">
@@ -52,7 +54,7 @@ export default function Layout() {
           >
             <img
               src="/ARGO_LOGO_COLOR_ENG_TITLE.png"
-              alt="ARGO Logo"
+              alt="tenant logo"
               className="h-18 w-auto"
             />
           </div>
@@ -127,7 +129,7 @@ export default function Layout() {
 
       {/* Page content */}
       <main className="flex-1 bg-white overflow-auto">
-        <div className="container mx-auto p-6">
+        <div className={`${tDetsRoute ? '' : 'container mx-auto p-6'}`}>
           {!authenticated ? (
             <LoginPrompt
               title="Authentication Required"
