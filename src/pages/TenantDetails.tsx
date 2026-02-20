@@ -1,18 +1,15 @@
 import { useState, useEffect } from 'react'
-import { useParams, useLocation, Link } from 'react-router-dom'
+import { useParams, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/useAuth'
 import { useGetTenantById, useGetUserTenantById } from '../hooks/useTenants'
 import { useGetUserTenantProjects } from '../hooks/useTenants'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
-import TenantReports from './TenantReports'
+import Button from '@/components/Button'
+import { ArrowLeftIcon } from '@heroicons/react/16/solid'
+import { ArrowUpRightFromSquare, MailIcon, ShieldCheck } from 'lucide-react'
 import styles from './TenantDetails.module.css'
-import {
-  ArrowLeft,
-  ArrowUpRightFromSquare,
-  MailIcon,
-  ShieldCheck,
-} from 'lucide-react'
+import TenantReports from './TenantReports'
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-GB', {
@@ -24,7 +21,7 @@ const formatDate = (dateString: string) => {
 
 const TenantDetails = () => {
   const { id } = useParams<{ id: string }>()
-
+  const navigate = useNavigate()
   const location = useLocation()
   const { profile } = useAuth()
   const [activeTab, setActiveTab] = useState<'info' | 'reports'>('info')
@@ -71,6 +68,14 @@ const TenantDetails = () => {
   const projects =
     projectsData?.pages?.flatMap((page) => page.content || []) || []
 
+  const handleBack = () => {
+    navigate('/tenants')
+  }
+
+  const handleEdit = () => {
+    navigate(`/tenants/edit/${id}`)
+  }
+
   if (isLoading) {
     return (
       <div className="page-container">
@@ -103,9 +108,9 @@ const TenantDetails = () => {
   const { contacts, metadata } = tenantData
 
   return (
-    <div className="page-container">
-      <header className="bg-white border-b border-gray-200 shadow-sm sticky top-0 z-10">
-        <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
+    <div className="w-[100%] max-w-[1480px]">
+      <header className="bg-white border-b-2 border-gray-200 my-1">
+        {/* <div className="flex items-center justify-between px-4 py-2 border-b border-gray-200">
           <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-slate-500 uppercase tracking-wider">
             <Link
               to="/tenants"
@@ -118,9 +123,9 @@ const TenantDetails = () => {
               {tenantData.info.name}
             </span>
           </div>
-        </div>
+        </div> */}
 
-        <div className="px-4 py-3 flex flex-col lg:flex-row items-start lg:items-center gap-4 lg:gap-6">
+        <div className="px-6 py-3 flex flex-col xl:flex-row items-start xl:items-center gap-4 xl:gap-6">
           <div className="flex-shrink-0 w-16 h-16 bg-white border border-gray-200 rounded flex items-center justify-center p-1 shadow-sm">
             <img
               src={tenantData.info.image}
@@ -129,7 +134,7 @@ const TenantDetails = () => {
             />
           </div>
 
-          <div className="flex-shrink-0 lg:border-r border-gray-100 lg:pr-6 lg:mr-2 w-full lg:w-auto">
+          <div className="flex-shrink-0 xl:border-r border-gray-100 xl:pr-6 xl:mr-2 w-full xl:w-auto">
             <div className="flex items-center gap-2 flex-wrap">
               <h1 className="text-lg font-bold leading-none">
                 {tenantData.info.name}
@@ -139,12 +144,15 @@ const TenantDetails = () => {
                 <ShieldCheck size={12} /> ACTIVE
               </span>
             </div>
-            <p className="text-sm text-gray-500 mt-1 max-w-md">
+            <p
+              className="text-sm text-gray-500 mt-1 max-w-md line-clamp-3"
+              title={tenantData.info.description}
+            >
               {tenantData.info.description}
             </p>
           </div>
 
-          <div className="flex flex-wrap items-start gap-4 sm:gap-6 lg:gap-8 flex-grow w-full lg:w-auto">
+          <div className="flex flex-wrap items-start gap-4 sm:gap-6 xl:gap-8 flex-grow w-full xl:w-auto">
             {tenantData.info.website && (
               <div className="flex flex-col min-w-[120px]">
                 <span className="text-[12px] font-bold text-gray-400 uppercase tracking-tight">
@@ -180,17 +188,26 @@ const TenantDetails = () => {
                 <span className="break-words">{tenantData.info.email}</span>
               </span>
             </div>
+          </div>
 
-            <div className="flex flex-col min-w-[140px]">
-              <span className="text-[12px] font-bold text-gray-400 uppercase tracking-tight">
-                Created / Updated
-              </span>
-              <span className="text-sm font-medium text-slate-600">
-                {formatDate(tenantData.info.created_at || '')}{' '}
-                <span className="text-gray-300 mx-1">|</span>{' '}
-                {formatDate(tenantData.info.updated_at || '')}
-              </span>
-            </div>
+          <div className="flex flex-row gap-3 ml-auto self-start xl:flex-col xl:items-end flex-shrink-0">
+            <Button
+              onClick={handleBack}
+              size="sm"
+              variant="secondary"
+              className="whitespace-nowrap"
+            >
+              <ArrowLeftIcon className="size-4" style={{ flexShrink: 0 }} />
+              Back to Tenants
+            </Button>
+            <Button
+              onClick={handleEdit}
+              size="sm"
+              variant="primary"
+              className="whitespace-nowrap"
+            >
+              Edit Tenant
+            </Button>
           </div>
         </div>
 
@@ -212,7 +229,7 @@ const TenantDetails = () => {
         </div>
       </header>
 
-      <div className="py-4 px-2">
+      <div className="py-4 px-10">
         {activeTab === 'info' && (
           <>
             <div className={styles.section}>
@@ -230,7 +247,10 @@ const TenantDetails = () => {
                       <div className={styles['contact-info']}>
                         <p className={styles['contact-name']}>{project.name}</p>
                         {project.description && (
-                          <p className={styles['contact-email']}>
+                          <p
+                            className={`${styles['contact-email']} line-clamp-8`}
+                            title={project.description}
+                          >
                             {project.description}
                           </p>
                         )}
@@ -390,8 +410,25 @@ const TenantDetails = () => {
                           <div className={styles['card-row']}>
                             <div className={styles['info-group']}>
                               <label className={styles.label}>Feed</label>
-                              <p className={styles.value}>
-                                {metadata.instance.topology.feed || (
+                              <p className={`${styles.value} max-w-[45%]`}>
+                                {metadata.instance.topology.feed ? (
+                                  metadata.instance.topology.feed.startsWith(
+                                    'http',
+                                  ) ? (
+                                    <a
+                                      href={metadata.instance.topology.feed}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className={`${styles.link} break-words`}
+                                    >
+                                      {metadata.instance.topology.feed}
+                                    </a>
+                                  ) : (
+                                    <span className="break-words">
+                                      {metadata.instance.topology.feed}
+                                    </span>
+                                  )
+                                ) : (
                                   <span className={styles['no-data']}>
                                     Not provided
                                   </span>
@@ -482,6 +519,30 @@ const TenantDetails = () => {
                   </p>
                 </div>
               )}
+            </div>
+
+            <div className={styles.section}>
+              <div className={styles['section-header']}>
+                <h2 className={styles['section-title']}>
+                  Additional Information
+                </h2>
+              </div>
+              <div className={styles.card}>
+                <div className={styles['card-row']}>
+                  <div className={styles['info-group']}>
+                    <label className={styles.label}>Created</label>
+                    <p className={styles.value}>
+                      {formatDate(tenantData.info.created_at || '')}
+                    </p>
+                  </div>
+                  <div className={styles['info-group']}>
+                    <label className={styles.label}>Updated</label>
+                    <p className={styles.value}>
+                      {formatDate(tenantData.info.updated_at || '')}
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </>
         )}
