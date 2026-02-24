@@ -173,7 +173,7 @@ function App() {
                 }
               />
               <Route
-                path="administration/users/:id"
+                path="administration/users/:username"
                 element={
                   <ProtectedRoute requiredRoles={['super_admin']}>
                     <Profile />

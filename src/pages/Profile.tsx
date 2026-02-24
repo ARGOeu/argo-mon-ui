@@ -4,7 +4,7 @@ import { Navigate, useNavigate, useParams } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../auth/useAuth'
 import {
-  useGetUserProfileById,
+  useGetUserProfileByUsername,
   useGetTenantByName,
   useRemoveMemberFromTenant,
 } from '@/hooks/useTenants'
@@ -16,7 +16,7 @@ import { toast, Toaster } from 'sonner'
 import styles from './Profile.module.css'
 
 export const Profile = () => {
-  const { id: userId } = useParams<{ id: string }>()
+  const { username } = useParams<{ username: string }>()
 
   const { profile } = useAuth()
   const navigate = useNavigate()
@@ -33,17 +33,17 @@ export const Profile = () => {
     data: userProfileData,
     isLoading,
     error,
-  } = useGetUserProfileById(userId || '', !!userId && isSuperAdmin)
+  } = useGetUserProfileByUsername(username || '', !!username && isSuperAdmin)
 
   const getTenantByNameMutation = useGetTenantByName()
   const removeMemberMutation = useRemoveMemberFromTenant()
 
-  if (userId && !isSuperAdmin) {
+  if (username && !isSuperAdmin) {
     return <Navigate to="/profile" replace />
   }
 
   // Determine which profile to display based on route
-  const isViewingOtherUser = !!userId
+  const isViewingOtherUser = !!username
   const displayProfile = isViewingOtherUser ? userProfileData : null
 
   const handleBack = () => {
@@ -56,6 +56,8 @@ export const Profile = () => {
   }
 
   const handleRemoveConfirm = () => {
+    const userId = userProfileData?.id || ''
+
     if (!tenantToRemove || !userId) return
 
     // Get the tenant ID by name
