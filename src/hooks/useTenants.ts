@@ -428,7 +428,7 @@ export const useGetTenantMembers = (
   })
 }
 
-export const useGetUserProfileById = (
+export const useGetUserProfileByUsername = (
   username: string,
   enabled: boolean = true,
 ) => {
