@@ -11,12 +11,14 @@ const ErrorDisplay = ({ error, context = 'data' }: ErrorDisplayProps) => {
   const errorMessage =
     typeof error === 'string' ? error : error?.message || 'An error occurred'
 
+  const errorMessageLower = errorMessage.toLowerCase()
+
   const isUnauthorized =
-    errorMessage.includes('401') ||
-    errorMessage.toLowerCase().includes('unauthorized')
+    errorMessageLower.includes('status code 401') ||
+    errorMessageLower.includes('unauthorized')
   const isForbidden =
-    errorMessage.includes('403') ||
-    errorMessage.toLowerCase().includes('forbidden')
+    errorMessageLower.includes('status code 403') ||
+    errorMessageLower.includes('forbidden')
 
   const getTitle = () => {
     if (isUnauthorized) return 'Authentication Required'
