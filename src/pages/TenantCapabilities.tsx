@@ -1,4 +1,5 @@
 import LoadingSpinner from '@/components/LoadingSpinner'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import { useGetUserTenantById } from '@/hooks/useTenants'
 import {
   ArrowBigUp,
@@ -216,7 +217,7 @@ const CapabilityCard = ({
 
 const TenantCapabilities = () => {
   const { id } = useParams<{ id: string }>()
-  const { data: tenantData, isLoading } = useGetUserTenantById(id || '')
+  const { data: tenantData, isLoading, error } = useGetUserTenantById(id || '')
 
   if (isLoading) {
     return (
@@ -226,10 +227,21 @@ const TenantCapabilities = () => {
     )
   }
 
+  if (error) {
+    return (
+      <div className="container">
+        <ErrorDisplay error={error} context="tenant" />
+      </div>
+    )
+  }
+
   if (!tenantData) {
     return (
       <div className="container">
-        <p className="text-slate-500 text-center">Tenant not found</p>
+        <ErrorDisplay
+          error="The tenant you are looking for does not exist or has been removed."
+          context="tenant"
+        />
       </div>
     )
   }

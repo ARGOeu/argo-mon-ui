@@ -14,6 +14,7 @@ import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { toast, Toaster } from 'sonner'
 import styles from './Profile.module.css'
+import ErrorDisplay from '@/components/ErrorDisplay'
 
 export const Profile = () => {
   const { username } = useParams<{ username: string }>()
@@ -125,15 +126,7 @@ export const Profile = () => {
               Back to Administration
             </Button>
           </div>
-
-          <div className={styles['error-container']}>
-            <h3 className={styles['error-title']}>
-              Error Loading User Profile
-            </h3>
-            <p className={styles['error-message']}>
-              {error.message || 'Failed to load user profile'}
-            </p>
-          </div>
+          <ErrorDisplay error={error.message} context="user profile" />
         </div>
       </div>
     )

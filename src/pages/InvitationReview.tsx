@@ -8,6 +8,7 @@ import {
 } from '@/hooks/useInvitations'
 import Button from '@/components/Button'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import { Toaster, toast } from 'sonner'
 import styles from './InvitationReview.module.css'
 
@@ -100,17 +101,22 @@ export const InvitationReview = () => {
         <Toaster richColors position="top-center" duration={2000} />
         <div className={styles.container}>
           <div className={styles.card}>
-            <div className={styles.errorIcon}>
-              <XCircleIcon className={styles.icon} />
+            <ErrorDisplay
+              error={
+                error ||
+                'This invitation may have expired or is no longer valid.'
+              }
+              context="invitation"
+            />
+            <div style={{ marginTop: '1.5rem' }}>
+              <Button
+                variant="secondary"
+                size="md"
+                onClick={() => navigate('/')}
+              >
+                Go to Home
+              </Button>
             </div>
-            <h1 className={styles.title}>Invitation Not Found</h1>
-            <p className={styles.errorMessage}>
-              {error.message ||
-                'This invitation may have expired or is no longer valid.'}
-            </p>
-            <Button variant="secondary" size="md" onClick={() => navigate('/')}>
-              Go to Home
-            </Button>
           </div>
         </div>
       </>

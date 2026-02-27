@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useGetTenantReports, useGetTenantReportById } from '@/hooks/useTenants'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import MetricProfileItem from '@/components/MetricProfileItem'
 import styles from './TenantReports.module.css'
 
@@ -10,14 +11,21 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
     Record<string, Set<string>>
   >({})
 
-  const { data: reportsData, isLoading: reportsLoading } = useGetTenantReports(
-    tenantId,
-    undefined,
-    true,
-  )
+  const {
+    data: reportsData,
+    isLoading: reportsLoading,
+    error: reportsError,
+  } = useGetTenantReports(tenantId, undefined, true)
 
-  const { data: reportDetail, isLoading: reportDetailLoading } =
-    useGetTenantReportById(tenantId, selectedReportId || '', !!selectedReportId)
+  const {
+    data: reportDetail,
+    isLoading: reportDetailLoading,
+    error: reportDetailError,
+  } = useGetTenantReportById(
+    tenantId,
+    selectedReportId || '',
+    !!selectedReportId,
+  )
 
   // Auto-select first report when reports data loads
   useEffect(() => {
@@ -54,7 +62,9 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
     <div className={styles['reports-container']}>
       <div className={styles['reports-sidebar']}>
         <h3 className={styles['sidebar-title']}>Available Reports</h3>
-        {reportsLoading ? (
+        {reportsError ? (
+          <ErrorDisplay error={reportsError} context="reports" />
+        ) : reportsLoading ? (
           <div className={styles['sidebar-loading']}>
             <LoadingSpinner size="sm" />
           </div>
@@ -88,7 +98,9 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
       </div>
 
       <div className={styles['reports-content']}>
-        {reportDetailLoading ? (
+        {reportDetailError ? (
+          <ErrorDisplay error={reportDetailError} context="report details" />
+        ) : reportDetailLoading ? (
           <div className="loading-container">
             <LoadingSpinner />
           </div>

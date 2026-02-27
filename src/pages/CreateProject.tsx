@@ -8,6 +8,7 @@ import {
 } from '@/hooks/useProjects'
 import { toast, Toaster } from 'sonner'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '../components/Button'
 import styles from './CreateTenant.module.css'
 
@@ -32,9 +33,11 @@ const CreateProject = () => {
 
   const createMutation = useCreateProjectMutation()
   const updateMutation = useUpdateProjectMutation()
-  const { data: projectData, isLoading: isProjectLoading } = useGetProjectById(
-    projectId || '',
-  )
+  const {
+    data: projectData,
+    isLoading: isProjectLoading,
+    error: projectError,
+  } = useGetProjectById(projectId || '')
 
   // Load project data in edit mode
   useEffect(() => {
@@ -206,6 +209,8 @@ const CreateProject = () => {
           <div className="loading-container">
             <LoadingSpinner />
           </div>
+        ) : isEditMode && projectError ? (
+          <ErrorDisplay error={projectError} context="project" />
         ) : (
           <>
             <div className={styles.header}>

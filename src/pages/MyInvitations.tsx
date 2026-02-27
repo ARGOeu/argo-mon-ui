@@ -11,6 +11,7 @@ import {
 } from '@heroicons/react/24/solid'
 import { toast, Toaster } from 'sonner'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import styles from './MyInvitations.module.css'
 
 const pageSize = 10
@@ -18,7 +19,11 @@ const pageSize = 10
 const MyInvitations = () => {
   const [currentPage, setCurrentPage] = useState(1)
 
-  const { data: invitationsData, isLoading } = useGetUserInvitations(true, {
+  const {
+    data: invitationsData,
+    isLoading,
+    error: invitationsError,
+  } = useGetUserInvitations(true, {
     page: currentPage,
     size: pageSize,
   })
@@ -57,6 +62,8 @@ const MyInvitations = () => {
           <div className="loading-container">
             <LoadingSpinner />
           </div>
+        ) : invitationsError ? (
+          <ErrorDisplay error={invitationsError} context="invitations" />
         ) : (
           <>
             {invitationsData?.content && invitationsData.content.length > 0 ? (

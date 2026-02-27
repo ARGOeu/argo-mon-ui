@@ -9,6 +9,7 @@ import {
 } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { useNavigate } from 'react-router-dom'
 import { toast, Toaster } from 'sonner'
@@ -20,7 +21,11 @@ const Projects = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchInput, setSearchInput] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
-  const { data, isLoading } = useGetProjects(currentPage, pageSize, searchQuery)
+  const {
+    data,
+    isLoading,
+    error: projectsError,
+  } = useGetProjects(currentPage, pageSize, searchQuery)
   const deleteMutation = useDeleteProjectMutation()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [projectToDelete, setProjectToDelete] = useState<{
@@ -156,6 +161,8 @@ const Projects = () => {
         <div className="loading-container">
           <LoadingSpinner />
         </div>
+      ) : projectsError ? (
+        <ErrorDisplay error={projectsError} context="projects" />
       ) : (
         <div className={styles.grid}>
           {data?.content && data.content.length > 0

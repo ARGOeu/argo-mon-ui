@@ -11,6 +11,7 @@ import {
 import { XCircleIcon } from '@heroicons/react/24/solid'
 import { toast } from 'sonner'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import styles from './AdminInvitations.module.css'
 import adminStyles from './Administration.module.css'
@@ -47,14 +48,17 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
     return () => clearTimeout(timer)
   }, [searchInput])
 
-  const { data: invitationsData, isLoading: invitationsLoading } =
-    useGetAdminInvitations(isSuperAdmin, {
-      search: debouncedSearch || undefined,
-      sort: sortColumn || undefined,
-      order: sortColumn ? sortOrder : undefined,
-      page: currentPage,
-      size: pageSize,
-    })
+  const {
+    data: invitationsData,
+    isLoading: invitationsLoading,
+    error: invitationsError,
+  } = useGetAdminInvitations(isSuperAdmin, {
+    search: debouncedSearch || undefined,
+    sort: sortColumn || undefined,
+    order: sortColumn ? sortOrder : undefined,
+    page: currentPage,
+    size: pageSize,
+  })
 
   const revokeInvitationMutation = useRevokeInvitation()
 
@@ -133,6 +137,10 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
           <LoadingSpinner />
         </div>
       )
+    }
+
+    if (invitationsError) {
+      return <ErrorDisplay error={invitationsError} context="invitations" />
     }
 
     if (!invitationsData?.content || invitationsData.content.length === 0) {
