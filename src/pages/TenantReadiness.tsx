@@ -1,6 +1,6 @@
+import { useState, useEffect, useRef } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { ArrowLeftIcon } from '@heroicons/react/16/solid'
-import { useMemo } from 'react'
 import {
   useGetTenantReadiness,
   useGetUserTenantById,
@@ -14,9 +14,13 @@ import styles from './TenantReadiness.module.css'
 import type { ReadinessCheckDetail, JobStatus } from '@/types/tenants'
 import { toast } from 'sonner'
 
+const READINESS_CHECK_INTERVAL_MS = 10000
+
 const TenantReadiness = () => {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [isRecentlyChecked, setIsRecentlyChecked] = useState(false)
 
   const { data: tenantData, isLoading: tenantLoading } = useGetUserTenantById(
     id || '',
@@ -26,42 +30,16 @@ const TenantReadiness = () => {
     data: readinessData,
     isLoading: readinessLoading,
     error: readinessError,
-  } = useGetTenantReadiness(id || '', true, 10000)
+  } = useGetTenantReadiness(id || '', true, READINESS_CHECK_INTERVAL_MS)
 
-  const { data: statusData } = useGetUserTenantStatus(id || '', 0)
-
-  // Compute refetch interval based on CHECK_READINESS job status
-  const statusRefetchInterval = useMemo(() => {
-    const job = statusData?.status?.jobs?.find(
-      (j) => j.name === 'CHECK_READINESS',
-    )
-
-    if (!job?.status) return 0
-
-    const status = job.status
-    // Don't refetch for terminal or unknown states
-    if (
-      status === 'UNKNOWN' ||
-      status === 'FAILED' ||
-      status === 'FAILED_INITIALISATION' ||
-      status === 'COMPLETED'
-    ) {
-      return 0
-    }
-
-    return 10000
-  }, [statusData])
-
-  const { data: statusDataWithRefetch } = useGetUserTenantStatus(
+  const { data: statusData } = useGetUserTenantStatus(
     id || '',
-    statusRefetchInterval,
+    READINESS_CHECK_INTERVAL_MS,
   )
-
-  const activeStatusData = statusDataWithRefetch || statusData
 
   const notifyCheckReadinessMutation = useCheckReadinessMutation()
 
-  const checkReadinessJob = activeStatusData?.status?.jobs?.find(
+  const checkReadinessJob = statusData?.status?.jobs?.find(
     (job) => job.name === 'CHECK_READINESS',
   )
 
@@ -69,11 +47,30 @@ const TenantReadiness = () => {
     navigate('/tenants')
   }
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [])
+
   const handleCheckReadiness = () => {
     if (!id || !tenantData?.info.name) {
       toast.error('Tenant information is not available')
       return
     }
+
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current)
+    }
+
+    setIsRecentlyChecked(true)
+
+    timeoutRef.current = setTimeout(() => {
+      setIsRecentlyChecked(false)
+      timeoutRef.current = null
+    }, READINESS_CHECK_INTERVAL_MS)
 
     notifyCheckReadinessMutation.mutate(
       {
@@ -206,7 +203,8 @@ const TenantReadiness = () => {
               notifyCheckReadinessMutation.isPending ||
               checkReadinessJob?.status === 'IN_PROGRESS' ||
               checkReadinessJob?.status === 'INITIALISING' ||
-              checkReadinessJob?.status === 'INITIALISED'
+              checkReadinessJob?.status === 'INITIALISED' ||
+              isRecentlyChecked
             }
           >
             {notifyCheckReadinessMutation.isPending
