@@ -9,6 +9,7 @@ import {
   ChevronRightIcon,
 } from '@heroicons/react/24/outline'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import styles from './Administration.module.css'
 import AdminInvitations from './AdminInvitations'
 import { useNavigate } from 'react-router-dom'
@@ -20,6 +21,7 @@ type SortDirection = 'asc' | 'desc'
 const Administration = () => {
   const [activeTab, setActiveTab] = useState<'users' | 'invitations'>('users')
   const [searchInput, setSearchInput] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [currentPage, setCurrentPage] = useState(1)
@@ -29,12 +31,20 @@ const Administration = () => {
   const { profile } = useAuth()
   const isSuperAdmin = profile?.roles?.includes('super_admin')
 
-  const { data: usersData, isLoading } = useGetMembers(
-    currentPage,
-    pageSize,
-    searchInput,
-    isSuperAdmin,
-  )
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(searchInput)
+      setCurrentPage(1)
+    }, 500)
+
+    return () => clearTimeout(timer)
+  }, [searchInput])
+
+  const {
+    data: usersData,
+    isLoading,
+    error: usersError,
+  } = useGetMembers(currentPage, pageSize, debouncedSearch, isSuperAdmin)
 
   const filteredUsers = useMemo(() => {
     const membersData = usersData?.content || []
@@ -66,6 +76,7 @@ const Administration = () => {
 
   const handleClearSearch = () => {
     setSearchInput('')
+    setDebouncedSearch('')
     setCurrentPage(1)
   }
 
@@ -77,10 +88,6 @@ const Administration = () => {
       setSortDirection('asc')
     }
   }
-
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchInput])
 
   const renderSortIcon = (column: SortColumn) => {
     if (sortColumn !== column) {
@@ -160,6 +167,8 @@ const Administration = () => {
             <div className="loading-container">
               <LoadingSpinner />
             </div>
+          ) : usersError ? (
+            <ErrorDisplay error={usersError} context="users" />
           ) : (
             <>
               {filteredUsers.length > 0 ? (

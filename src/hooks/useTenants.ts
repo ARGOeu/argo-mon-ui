@@ -53,8 +53,6 @@ export const useCreateTenantMutation = () => {
       return fetchCreateTenant(data, token)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tenants'] })
-      queryClient.invalidateQueries({ queryKey: ['tenant'] })
       queryClient.invalidateQueries({ queryKey: ['user-tenants'] })
       queryClient.invalidateQueries({ queryKey: ['user-tenant'] })
     },
@@ -76,7 +74,8 @@ export const useDeleteTenantMutation = () => {
       return fetchDeleteTenant(id, token)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['user-tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['user-tenant'] })
     },
     onError: (error) => {
       console.error('Tenant delete error:', error)

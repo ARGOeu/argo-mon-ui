@@ -89,7 +89,11 @@ const Build = () => {
       setSlug(pageData.slug || 'untitled')
       setTitle(pageData.config?.title || '')
       setDesc(pageData.config?.description || '')
-      setReport(pageData.report || '')
+      setReport(reportsData?.find((r) => r.name === pageData.report)?.id || '')
+
+      if (!tenantId) {
+        setTenantId(pageData.tenant_id)
+      }
       setStatusGroups(pageData.config?.groups || [])
 
       // Calculate the next group ID based on existing groups
@@ -119,8 +123,7 @@ const Build = () => {
       }
       setColumns(pageData.config?.theming?.columns || 'one')
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isEditMode, JSON.stringify(pageData)])
+  }, [isEditMode, tenantId, pageData, reportsData])
 
   const handleAddStatusGroup = () => {
     const newGroupId = nextGroupIdRef.current

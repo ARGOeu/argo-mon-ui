@@ -18,6 +18,7 @@ import {
 } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import { useNavigate } from 'react-router-dom'
 import { toast, Toaster } from 'sonner'
 import styles from './Tenants.module.css'
@@ -72,7 +73,7 @@ const Tenants = () => {
 
   const isSuperAdmin = profile?.roles?.includes('super_admin')
 
-  const { data, isLoading } = useGetUserTenants(
+  const { data, isLoading, error } = useGetUserTenants(
     currentPage,
     pageSize,
     searchQuery,
@@ -242,6 +243,8 @@ const Tenants = () => {
         <div className="loading-container">
           <LoadingSpinner />
         </div>
+      ) : error ? (
+        <ErrorDisplay error={error} context="tenants" />
       ) : (
         <div className={styles.grid}>
           {tenants && tenants?.length > 0
@@ -443,7 +446,7 @@ const Tenants = () => {
             : null}
         </div>
       )}
-      {!tenants || tenants?.length === 0 ? (
+      {!error && (!tenants || tenants?.length === 0) ? (
         <div className={styles['empty-state']}>
           <p className={styles['empty-text']}>No tenants found</p>
         </div>
