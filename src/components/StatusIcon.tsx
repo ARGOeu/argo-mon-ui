@@ -26,7 +26,7 @@ export const StatusIcon = (props: StatusIconProps) => {
       case 'MISSING':
         return <ExclamationCircleIcon className="size-4 text-info" />
       case 'UNKNOWN':
-        return <QuestionMarkCircleIcon className="size-4 text-gray-400" />
+        return <QuestionMarkCircleIcon className="size-4 text-subtle" />
       case 'DOWNTIME':
         return <ArrowDownCircleIcon className="size-4 text-black" />
     }
@@ -41,9 +41,9 @@ export const StatusIcon = (props: StatusIconProps) => {
       case 'WARNING':
         return <span className="text-amber-700 text-sm ">{status}</span>
       case 'MISSING':
-        return <span className="text-blue-700 text-sm ">{status}</span>
+        return <span className="text-brand text-sm ">{status}</span>
       case 'UNKNOWN':
-        return <span className="text-gray-700 text-sm ">{status}</span>
+        return <span className="text-body text-sm ">{status}</span>
       case 'DOWNTIME':
         return <span className="text-black text-sm ">{status}</span>
     }

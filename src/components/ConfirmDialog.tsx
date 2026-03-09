@@ -1,6 +1,5 @@
 import { XMarkIcon } from '@heroicons/react/16/solid'
 import Button from './Button'
-import styles from './ConfirmDialog.module.css'
 
 type ConfirmDialogProps = {
   isOpen: boolean
@@ -24,28 +23,38 @@ const ConfirmDialog = ({
   if (!isOpen) return null
 
   return (
-    <div className={styles.overlay} onClick={onCancel}>
-      <div className={styles.dialog} onClick={(e) => e.stopPropagation()}>
-        <div className={styles.header}>
-          <h3 className={styles.title}>{title}</h3>
+    <div
+      className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+      onClick={onCancel}
+    >
+      <div
+        className="bg-white rounded-lg shadow-xl max-w-[30rem] w-full overflow-hidden mb-32"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between px-4 py-2.5 border-b border-line">
+          <h3 className="text-xl font-semibold text-foreground m-0">{title}</h3>
           <button
-            className={styles['close-button']}
+            className="p-1 rounded-full text-muted bg-transparent border-none cursor-pointer transition-colors hover:bg-gray-100 hover:text-foreground"
             onClick={onCancel}
             aria-label="Close dialog"
           >
-            <XMarkIcon className={styles['close-icon']} />
+            <XMarkIcon className="size-6" />
           </button>
         </div>
 
-        <div className={styles.content}>
+        <div className="px-5 py-3">
           {typeof message === 'string' ? (
-            <p className={styles.message}>{message}</p>
+            <p className="text-base text-muted leading-relaxed overflow-hidden text-ellipsis">
+              {message}
+            </p>
           ) : (
-            <div className={styles.message}>{message}</div>
+            <div className="text-base text-muted leading-relaxed overflow-hidden text-ellipsis">
+              {message}
+            </div>
           )}
         </div>
 
-        <div className={styles.actions}>
+        <div className="flex justify-between gap-6 px-5 py-3 mt-2 bg-surface-muted border-t border-line">
           <Button onClick={onCancel} size="sm" variant="outline-secondary">
             {cancelLabel}
           </Button>

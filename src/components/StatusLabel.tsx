@@ -50,7 +50,7 @@ const StatusLabel = (props: StatusLabelProps) => {
             value={tempLabel}
             onChange={(e) => setTempLabel(e.target.value)}
             onKeyDown={handleKeyDown}
-            className="font-medium bg-gray-50 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center w-full"
+            className="font-medium bg-surface-muted border border-line-strong rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center w-full"
             autoFocus
             onBlur={handleSave}
           />
@@ -64,7 +64,7 @@ const StatusLabel = (props: StatusLabelProps) => {
                 data-tip={props.readOnly ? '' : 'edit'}
               >
                 <span
-                  className={`${props.isGroupLabel ? 'font-bold text-xl' : 'font-medium text-sm'} ${props.readOnly ? 'text-gray-700' : 'text-gray-600'} ${!props.readOnly ? 'cursor-pointer border-b border-transparent hover:border-black hover:border-dashed' : ''} tracking-wide break-words`}
+                  className={`${props.isGroupLabel ? 'font-bold text-xl' : 'font-medium text-sm'} ${props.readOnly ? 'text-body' : 'text-muted'} ${!props.readOnly ? 'cursor-pointer border-b border-transparent hover:border-black hover:border-dashed' : ''} tracking-wide break-words`}
                   style={{
                     wordBreak: 'break-word',
                     overflowWrap: 'break-word',
@@ -76,7 +76,7 @@ const StatusLabel = (props: StatusLabelProps) => {
               </div>
             ) : (
               <span
-                className="font-medium text-gray-600 border-b border-transparent text-sm tracking-wide break-words"
+                className="font-medium text-muted border-b border-transparent text-sm tracking-wide break-words"
                 style={{
                   wordBreak: 'break-word',
                   overflowWrap: 'break-word',

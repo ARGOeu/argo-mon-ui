@@ -1,27 +1,27 @@
 import { useState } from 'react'
 import { useGetTenantInvitations } from '@/hooks/useInvitations'
 import { useRevokeInvitation } from '@/hooks/useTenants'
-import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  XCircleIcon,
-} from '@heroicons/react/24/solid'
+import { XCircleIcon } from '@heroicons/react/24/solid'
 import { toast } from 'sonner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import ConfirmDialog from '@/components/ConfirmDialog'
-import styles from './TenantInvitations.module.css'
+import DataTable, { thBase, tdBase } from '@/components/DataTable'
+import Pagination from '@/components/Pagination'
+import Badge from '@/components/Badge'
+import { roleBadgeClass, invitationStatusBadgeClass } from '@/utils/badges'
 
 interface TenantInvitationsProps {
   tenantId: string
   tenantName: string
 }
 
+const pageSize = 10
+
 const TenantInvitations = ({
   tenantId,
   tenantName,
 }: TenantInvitationsProps) => {
   const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 10
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false)
   const [invitationToRevoke, setInvitationToRevoke] = useState<{
     invitationId: string
@@ -63,145 +63,112 @@ const TenantInvitations = ({
 
   return (
     <>
-      <h2 className={styles['section-title']}>Tenant Invitations</h2>
+      <h2 className="section-title">Tenant Invitations</h2>
       {invitationsError ? (
         <ErrorDisplay error={invitationsError} context="invitations" />
       ) : (
         <>
-          <div className={styles['table-wrapper']}>
-            <table className={styles.table}>
-              <thead className={styles['table-head']}>
-                <tr>
-                  <th>Email</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Created At</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
-              <tbody className={styles['table-body']}>
-                {invitationsData && invitationsData.content.length > 0 ? (
-                  invitationsData.content.map((invitation) => (
-                    <tr key={invitation.id}>
-                      <td>{invitation.email}</td>
-                      <td>
-                        <span
-                          className={`${styles['role-badge']} ${styles[`role-${invitation.role}`]}`}
+          <DataTable>
+            <thead className="bg-surface-muted border-b border-line">
+              <tr>
+                <th className={thBase}>Email</th>
+                <th className={thBase}>Role</th>
+                <th className={thBase}>Status</th>
+                <th className={thBase}>Created At</th>
+                <th className={thBase}>Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-100">
+              {invitationsData && invitationsData.content.length > 0 ? (
+                invitationsData.content.map((invitation) => (
+                  <tr key={invitation.id} className="hover:bg-surface-muted">
+                    <td className={tdBase}>{invitation.email}</td>
+                    <td className={tdBase}>
+                      <Badge
+                        className={
+                          roleBadgeClass[invitation.role] ??
+                          'bg-gray-100 text-muted'
+                        }
+                      >
+                        {invitation.role === 'admin'
+                          ? 'Tenant Admin'
+                          : 'Member'}
+                      </Badge>
+                    </td>
+                    <td className={tdBase}>
+                      <Badge
+                        className={
+                          invitationStatusBadgeClass[invitation.status] ??
+                          'bg-gray-100 text-muted'
+                        }
+                      >
+                        {invitation.status === 'PENDING'
+                          ? 'Pending'
+                          : invitation.status === 'ACCEPTED'
+                            ? 'Accepted'
+                            : invitation.status === 'REJECTED'
+                              ? 'Rejected'
+                              : invitation.status === 'REVOKED'
+                                ? 'Revoked'
+                                : invitation.status}
+                      </Badge>
+                    </td>
+                    <td className={tdBase}>
+                      {new Date(invitation.created_at).toLocaleDateString(
+                        'en-US',
+                        {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        },
+                      )}
+                    </td>
+                    <td className={tdBase}>
+                      {invitation.status === 'PENDING' ? (
+                        <button
+                          onClick={() =>
+                            handleRevokeClick(invitation.id, invitation.email)
+                          }
+                          className="ml-2 inline-flex items-center justify-center p-1.5 rounded-md text-red-500 bg-transparent border-none cursor-pointer transition-all hover:bg-red-50 active:scale-95 tooltip"
+                          data-tip="Revoke invitation"
+                          disabled={revokeInvitationMutation.isPending}
                         >
-                          {invitation.role === 'admin'
-                            ? 'Tenant Admin'
-                            : 'Member'}
+                          <XCircleIcon className="size-6" />
+                        </button>
+                      ) : (
+                        <span className="text-subtle text-sm inline-block ml-6">
+                          -
                         </span>
-                      </td>
-                      <td>
-                        <span
-                          className={`${styles['status-badge']} ${
-                            invitation.status === 'PENDING'
-                              ? styles['status-pending']
-                              : invitation.status === 'ACCEPTED'
-                                ? styles['status-accepted']
-                                : styles['status-rejected']
-                          }`}
-                        >
-                          {invitation.status === 'PENDING'
-                            ? 'Pending'
-                            : invitation.status === 'ACCEPTED'
-                              ? 'Accepted'
-                              : invitation.status === 'REJECTED'
-                                ? 'Rejected'
-                                : invitation.status === 'REVOKED'
-                                  ? 'Revoked'
-                                  : invitation.status}
-                        </span>
-                      </td>
-                      <td>
-                        {new Date(invitation.created_at).toLocaleDateString(
-                          'en-US',
-                          {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          },
-                        )}
-                      </td>
-                      <td>
-                        {invitation.status === 'PENDING' ? (
-                          <button
-                            onClick={() =>
-                              handleRevokeClick(invitation.id, invitation.email)
-                            }
-                            className={`${styles['remove-button']} tooltip`}
-                            data-tip="Revoke invitation"
-                            disabled={revokeInvitationMutation.isPending}
-                          >
-                            <XCircleIcon
-                              style={{
-                                width: '1.6rem',
-                                height: '1.6rem',
-                              }}
-                            />
-                          </button>
-                        ) : (
-                          <span
-                            style={{
-                              color: '#9ca3af',
-                              fontSize: '0.875rem',
-                              display: 'inline-block',
-                              marginLeft: '1.4rem',
-                            }}
-                          >
-                            -
-                          </span>
-                        )}
-                      </td>
-                    </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td colSpan={5} className={styles['empty-state']}>
-                      No invitations
+                      )}
                     </td>
                   </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                ))
+              ) : (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="text-center text-subtle italic py-8"
+                  >
+                    No invitations
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </DataTable>
 
           {invitationsData?.content && invitationsData.content.length > 0 && (
-            <div className="pagination-container">
-              <div className="pagination-info">
-                <span className="pagination-text">
-                  Page {currentPage} of {invitationsData.total_pages}
-                </span>
-                <span className="pagination-count">
-                  ({invitationsData.total_elements} total invitations)
-                </span>
-              </div>
-              <div className="pagination-buttons">
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
-                  disabled={currentPage === 1}
-                  className="pagination-button"
-                  aria-label="Previous page"
-                >
-                  <ChevronLeftIcon className="pagination-icon" />
-                </button>
-                <button
-                  onClick={() =>
-                    setCurrentPage((prev) =>
-                      Math.min(invitationsData.total_pages, prev + 1),
-                    )
-                  }
-                  disabled={currentPage >= invitationsData.total_pages}
-                  className="pagination-button"
-                  aria-label="Next page"
-                >
-                  <ChevronRightIcon className="pagination-icon" />
-                </button>
-              </div>
-            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={invitationsData.total_pages}
+              totalElements={invitationsData.total_elements}
+              itemLabel="invitations"
+              onPrev={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+              onNext={() =>
+                setCurrentPage((prev) =>
+                  Math.min(invitationsData.total_pages, prev + 1),
+                )
+              }
+            />
           )}
         </>
       )}

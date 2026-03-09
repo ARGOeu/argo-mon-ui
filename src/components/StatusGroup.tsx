@@ -69,7 +69,7 @@ export default function StatusGroup(props: StatusGroupProps) {
             onClick={props.onRemove}
             data-tip="Remove group"
           >
-            <TrashIcon className="size-4 text-gray-400 hover:text-gray-600" />
+            <TrashIcon className="size-4 text-subtle hover:text-muted" />
           </Button>
         )}
       </div>
@@ -96,7 +96,7 @@ export default function StatusGroup(props: StatusGroupProps) {
             </li>
           ))}
           {orderedItems.length === 0 && !props.readOnly && (
-            <li className="text-xs text-gray-400 max-h-[300px] px-3 py-4 rounded border border-dashed border-gray-300 text-center">
+            <li className="text-xs text-subtle max-h-[300px] px-3 py-4 rounded border border-dashed border-line-strong text-center">
               Drop items here
             </li>
           )}

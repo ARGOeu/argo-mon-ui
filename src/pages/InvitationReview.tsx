@@ -9,8 +9,13 @@ import {
 import Button from '@/components/Button'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
-import { Toaster, toast } from 'sonner'
-import styles from './InvitationReview.module.css'
+import { toast } from 'sonner'
+
+const containerClass =
+  'min-h-screen flex items-center justify-center p-4 sm:p-8 bg-gradient-to-br from-[#f5f7fa] to-[#e9ecef]'
+
+const cardClass =
+  'bg-white rounded-xl shadow-lg px-6 sm:px-10 py-6 max-w-[600px] w-full'
 
 export const InvitationReview = () => {
   const { id: invitationId } = useParams<{ id: string }>()
@@ -86,8 +91,8 @@ export const InvitationReview = () => {
 
   if (!initialized || !authenticated || !registered || isLoading) {
     return (
-      <div className={styles.container}>
-        <div className={styles.loading}>
+      <div className={containerClass}>
+        <div className="flex flex-col items-center gap-4 text-muted">
           <LoadingSpinner />
           <p>Loading invitation...</p>
         </div>
@@ -98,9 +103,8 @@ export const InvitationReview = () => {
   if (error) {
     return (
       <>
-        <Toaster richColors position="top-center" duration={2000} />
-        <div className={styles.container}>
-          <div className={styles.card}>
+        <div className={containerClass}>
+          <div className={cardClass}>
             <ErrorDisplay
               error={
                 error ||
@@ -108,7 +112,7 @@ export const InvitationReview = () => {
               }
               context="invitation"
             />
-            <div style={{ marginTop: '1.5rem' }}>
+            <div className="mt-6">
               <Button
                 variant="secondary"
                 size="md"
@@ -128,30 +132,31 @@ export const InvitationReview = () => {
 
     return (
       <>
-        <Toaster richColors position="top-center" duration={2000} />
-        <div className={styles.container}>
-          <div className={styles.card}>
-            <div
-              className={
-                isPreviouslyAccepted ? styles.successIcon : styles.warningIcon
-              }
-            >
+        <div className={containerClass}>
+          <div className={cardClass}>
+            <div className="flex justify-center mb-6">
               {isPreviouslyAccepted ? (
-                <CheckCircleIcon className={styles.icon} />
+                <CheckCircleIcon className="size-16 text-emerald-500" />
               ) : (
-                <XCircleIcon className={styles.icon} />
+                <XCircleIcon className="size-16 text-amber-500" />
               )}
             </div>
-            <h1 className={styles.title}>Invitation Processed</h1>
-            <p className={styles.message}>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 m-0 mb-1">
+              Invitation Processed
+            </h1>
+            <p className="text-base text-muted text-center mt-4 mb-8 leading-relaxed">
               You have {invitation.status.toLowerCase()} this invitation to join{' '}
-              <strong>{invitation.tenant_name}</strong>.
+              <strong className="text-gray-800 font-semibold">
+                {invitation.tenant_name}
+              </strong>
+              .
             </p>
-            <div className={styles.actions}>
+            <div className="flex flex-col sm:flex-row justify-between flex-wrap gap-3">
               {isPreviouslyAccepted && (
                 <Button
                   variant="primary"
                   size="md"
+                  className="w-full sm:w-auto"
                   onClick={() => navigate('/tenants')}
                 >
                   View Tenants
@@ -160,6 +165,7 @@ export const InvitationReview = () => {
               <Button
                 variant="secondary"
                 size="md"
+                className="w-full sm:w-auto"
                 onClick={() => navigate('/')}
               >
                 Go to Home
@@ -173,40 +179,51 @@ export const InvitationReview = () => {
 
   return (
     <>
-      <Toaster richColors position="top-center" duration={2000} />
-      <div className={styles.container}>
-        <div className={styles.card}>
-          <div className={styles.header}>
-            <h1 className={styles.title}>Tenant Invitation</h1>
-            <p className={styles.subtitle}>
+      <div className={containerClass}>
+        <div className={cardClass}>
+          <div className="text-center mb-4 pb-3 border-b-2 border-line">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-800 m-0 mb-1">
+              Tenant Invitation
+            </h1>
+            <p className="text-base text-muted m-0">
               Review and respond to this invitation
             </p>
           </div>
 
-          <div className={styles.content}>
-            <div className={styles.section}>
-              <div className={styles.field}>
-                <label className={styles.label}>Tenant Name</label>
-                <div className={styles.value}>
+          <div className="mb-6">
+            <div className="flex flex-col gap-2">
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-body tracking-wide">
+                  Tenant Name
+                </label>
+                <div className="text-sm text-gray-800 px-3 py-2 bg-surface-muted rounded-md border border-line">
                   {invitation?.tenant_name || 'N/A'}
                 </div>
               </div>
 
-              <div className={styles.field}>
-                <label className={styles.label}>Role</label>
-                <div className={styles.value}>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-body tracking-wide">
+                  Role
+                </label>
+                <div className="text-sm text-gray-800 px-3 py-2 bg-surface-muted rounded-md border border-line">
                   {invitation?.role === 'admin' ? 'Tenant Admin' : 'Member'}
                 </div>
               </div>
 
-              <div className={styles.field}>
-                <label className={styles.label}>Email</label>
-                <div className={styles.value}>{invitation?.email || 'N/A'}</div>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-body tracking-wide">
+                  Email
+                </label>
+                <div className="text-sm text-gray-800 px-3 py-2 bg-surface-muted rounded-md border border-line">
+                  {invitation?.email || 'N/A'}
+                </div>
               </div>
 
-              <div className={styles.field}>
-                <label className={styles.label}>Invited On</label>
-                <div className={styles.value}>
+              <div className="flex flex-col gap-1">
+                <label className="text-sm font-semibold text-body tracking-wide">
+                  Invited On
+                </label>
+                <div className="text-sm text-gray-800 px-3 py-2 bg-surface-muted rounded-md border border-line">
                   {invitation?.created_at
                     ? new Date(invitation.created_at).toLocaleString('en-GB', {
                         year: 'numeric',
@@ -220,8 +237,8 @@ export const InvitationReview = () => {
               </div>
             </div>
 
-            <div className={styles.infoBox}>
-              <p>
+            <div className="mt-4 p-4 bg-brand-subtle border border-blue-200 rounded-lg">
+              <p className="m-0 text-sm text-blue-800 leading-relaxed">
                 By accepting this invitation, you will become a{' '}
                 <strong>
                   {invitation?.role === 'admin' ? 'Tenant Admin' : 'Member'}
@@ -235,10 +252,11 @@ export const InvitationReview = () => {
             </div>
           </div>
 
-          <div className={styles.actions}>
+          <div className="flex flex-col sm:flex-row justify-between flex-wrap gap-3">
             <Button
               variant="secondary"
               size="md"
+              className="w-full sm:w-auto"
               onClick={handleReject}
               disabled={isProcessing}
             >
@@ -258,6 +276,7 @@ export const InvitationReview = () => {
             <Button
               variant="primary"
               size="md"
+              className="w-full sm:w-auto"
               onClick={handleAccept}
               disabled={isProcessing}
             >

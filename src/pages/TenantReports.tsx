@@ -3,7 +3,14 @@ import { useGetTenantReports, useGetTenantReportById } from '@/hooks/useTenants'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import MetricProfileItem from '@/components/MetricProfileItem'
-import styles from './TenantReports.module.css'
+import Badge from '@/components/Badge'
+
+const cardClass =
+  'bg-white border border-line rounded-lg px-4 py-3 flex flex-col gap-2'
+const simpleItemClass =
+  'flex items-center justify-between px-3 py-2 bg-surface-subtle border border-line rounded-md gap-2'
+const simpleItemTitleClass =
+  'text-sm font-semibold text-body leading-[1.4] flex-1 break-words'
 
 const TenantReports = ({ tenantId }: { tenantId: string }) => {
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
@@ -59,33 +66,45 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
   }
 
   return (
-    <div className={styles['reports-container']}>
-      <div className={styles['reports-sidebar']}>
-        <h3 className={styles['sidebar-title']}>Available Reports</h3>
+    <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 lg:gap-10 lg:min-h-[500px]">
+      <div className="bg-surface-muted rounded-lg p-4 h-fit max-h-[400px] lg:max-h-[calc(100vh-300px)] overflow-y-auto">
+        <h3 className="text-base font-semibold text-foreground mb-2">
+          Available Reports
+        </h3>
         {reportsError ? (
           <ErrorDisplay error={reportsError} context="reports" />
         ) : reportsLoading ? (
-          <div className={styles['sidebar-loading']}>
+          <div className="flex justify-center py-8">
             <LoadingSpinner size="sm" />
           </div>
         ) : reportsData && reportsData.length > 0 ? (
-          <ul className={styles['reports-list']}>
+          <ul className="flex flex-col gap-2">
             {reportsData.map((report) => (
               <li
                 key={report.id}
-                className={`${styles['report-item']} ${selectedReportId === report.id ? styles['report-item-active'] : ''}`}
+                className={`p-3 bg-white border rounded-md cursor-pointer transition-all ${
+                  selectedReportId === report.id
+                    ? 'border-blue-500 bg-brand-subtle hover:opacity-85'
+                    : 'border-line hover:border-line-strong hover:bg-surface-subtle'
+                }`}
                 onClick={() => setSelectedReportId(report.id)}
               >
-                <div className={styles['report-item-header']}>
-                  <span className={styles['report-name']}>{report.name}</span>
+                <div className="flex justify-between items-start gap-4">
+                  <span className="text-sm font-semibold text-foreground break-words">
+                    {report.name}
+                  </span>
                   {report.disabled ? (
-                    <span className={styles['status-disabled']}>Inactive</span>
+                    <Badge className="bg-red-100 text-red-800 border border-red-300">
+                      Inactive
+                    </Badge>
                   ) : (
-                    <span className={styles['status-enabled']}>Active</span>
+                    <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      Active
+                    </Badge>
                   )}
                 </div>
                 {report.description && (
-                  <p className={styles['report-item-description']}>
+                  <p className="text-xs text-muted mt-2 leading-[1.4]">
                     {report.description}
                   </p>
                 )}
@@ -93,11 +112,13 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
             ))}
           </ul>
         ) : (
-          <p className={styles['no-data']}>No reports available</p>
+          <p className="text-sm text-subtle italic text-center">
+            No reports available
+          </p>
         )}
       </div>
 
-      <div className={styles['reports-content']}>
+      <div className="flex flex-col gap-2">
         {reportDetailError ? (
           <ErrorDisplay error={reportDetailError} context="report details" />
         ) : reportDetailLoading ? (
@@ -107,35 +128,45 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
         ) : reportDetail ? (
           <>
             {/* Info Header */}
-            <div className={styles['report-info-header']}>
-              <h1 className={styles['report-main-title']}>
+            <div className="mb-1 pb-1">
+              <h1 className="text-xl font-bold text-foreground leading-[1.3]">
                 {reportDetail.info.name}
               </h1>
-              <p className={styles['report-subtitle']}>
+              <p className="text-base text-muted mb-2.5 leading-normal">
                 {reportDetail.info.description || (
-                  <span className={styles['no-data']}>
+                  <span className="text-sm text-subtle italic">
                     No description available
                   </span>
                 )}
               </p>
-              <div className={styles['report-meta-row']}>
-                <div className={styles['meta-item']}>
-                  <span className={styles['meta-label']}>Status:</span>
+              <div className="flex flex-wrap gap-y-2 gap-x-4 items-center">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-semibold text-muted">
+                    Status:
+                  </span>
                   {reportDetail.disabled ? (
-                    <span className={styles['status-disabled']}>Inactive</span>
+                    <Badge className="bg-red-100 text-red-800 border border-red-300">
+                      Inactive
+                    </Badge>
                   ) : (
-                    <span className={styles['status-enabled']}>Active</span>
+                    <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      Active
+                    </Badge>
                   )}
                 </div>
-                <div className={styles['meta-item']}>
-                  <span className={styles['meta-label']}>Report ID:</span>
-                  <span className={styles['meta-value']}>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-semibold text-muted">
+                    Report ID:
+                  </span>
+                  <span className="text-sm text-foreground">
                     {reportDetail.id}
                   </span>
                 </div>
-                <div className={styles['meta-item']}>
-                  <span className={styles['meta-label']}>Created:</span>
-                  <span className={styles['meta-value']}>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-semibold text-muted">
+                    Created:
+                  </span>
+                  <span className="text-sm text-foreground">
                     {new Date(reportDetail.info.created).toLocaleString(
                       'en-GB',
                       {
@@ -148,9 +179,11 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
                     )}
                   </span>
                 </div>
-                <div className={styles['meta-item']}>
-                  <span className={styles['meta-label']}>Last Updated:</span>
-                  <span className={styles['meta-value']}>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-semibold text-muted">
+                    Last Updated:
+                  </span>
+                  <span className="text-sm text-foreground">
                     {new Date(reportDetail.info.updated).toLocaleString(
                       'en-GB',
                       {
@@ -170,11 +203,13 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
             {reportDetail.profiles &&
               reportDetail.profiles.filter((p) => p.type === 'metric').length >
                 0 && (
-                <div className={styles.section}>
-                  <div className={styles['section-header']}>
-                    <h2 className={styles['section-title']}>Metric Profile</h2>
+                <div className="mb-2">
+                  <div className="mb-1">
+                    <h2 className="text-lg font-semibold text-foreground">
+                      Metric Profile
+                    </h2>
                   </div>
-                  <div className={styles['metric-profiles-container']}>
+                  <div className="flex flex-col gap-4">
                     {reportDetail.profiles
                       .filter((p) => p.type === 'metric')
                       .map((profile) => (
@@ -203,35 +238,36 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
                 .length > 0 ||
                 reportDetail.profiles.filter((p) => p.type === 'operations')
                   .length > 0) && (
-                <div className={styles.section}>
-                  <div className={styles['section-header']}>
-                    <h2 className={styles['section-title']}>Profiles</h2>
+                <div className="mb-2">
+                  <div className="mb-1">
+                    <h2 className="text-lg font-semibold text-foreground">
+                      Profiles
+                    </h2>
                   </div>
-                  <div className={`${styles.card} ${styles['profiles-card']}`}>
-                    <div className={styles['profiles-two-column']}>
+                  <div className={cardClass}>
+                    <div className="flex flex-wrap gap-6">
                       {/* Aggregation Profiles */}
                       {reportDetail.profiles.filter(
                         (p) => p.type === 'aggregation',
                       ).length > 0 && (
                         <div>
-                          <div className={styles['profiles-grid-simple']}>
+                          <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
                             {reportDetail.profiles
                               .filter((p) => p.type === 'aggregation')
                               .map((profile) => (
                                 <div
                                   key={profile.id}
-                                  className={styles['profile-simple-item']}
+                                  className={simpleItemClass}
                                 >
-                                  <span
-                                    className={styles['profile-simple-name']}
-                                  >
+                                  <span className={simpleItemTitleClass}>
                                     {profile.name}
                                   </span>
-                                  <span
-                                    className={`${styles['profile-type-badge-simple']} ${styles['badge-aggregation']}`}
+                                  <Badge
+                                    size="lg"
+                                    className="bg-brand-muted text-blue-800 border border-blue-300"
                                   >
                                     Aggregation
-                                  </span>
+                                  </Badge>
                                 </div>
                               ))}
                           </div>
@@ -243,24 +279,23 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
                         (p) => p.type === 'operations',
                       ).length > 0 && (
                         <div>
-                          <div className={styles['profiles-grid-simple']}>
+                          <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
                             {reportDetail.profiles
                               .filter((p) => p.type === 'operations')
                               .map((profile) => (
                                 <div
                                   key={profile.id}
-                                  className={styles['profile-simple-item']}
+                                  className={simpleItemClass}
                                 >
-                                  <span
-                                    className={styles['profile-simple-name']}
-                                  >
+                                  <span className={simpleItemTitleClass}>
                                     {profile.name}
                                   </span>
-                                  <span
-                                    className={`${styles['profile-type-badge-simple']} ${styles['badge-operations']}`}
+                                  <Badge
+                                    size="lg"
+                                    className="bg-brand-muted text-blue-800 border border-blue-300"
                                   >
                                     Operations
-                                  </span>
+                                  </Badge>
                                 </div>
                               ))}
                           </div>
@@ -272,33 +307,39 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
               )}
 
             {/* Topology Schema */}
-            <div className={styles.section}>
-              <div className={styles['section-header']}>
-                <h2 className={styles['section-title']}>Topology Schema</h2>
+            <div className="mb-2">
+              <div className="mb-1">
+                <h2 className="text-lg font-semibold text-foreground">
+                  Topology Schema
+                </h2>
               </div>
-              <div className={`${styles.card} ${styles['topology-card']}`}>
-                <div className={styles['topology-tree']}>
-                  <div className={styles['topology-node']}>
-                    <div className={styles['topology-node-icon']}>●</div>
-                    <div className={styles['topology-node-content']}>
-                      <span className={styles['topology-node-label']}>
+              <div className={cardClass}>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-3">
+                    <div className="text-base text-blue-500 leading-none shrink-0">
+                      ●
+                    </div>
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-sm font-semibold text-muted">
                         Group
                       </span>
-                      <span className={styles['topology-node-value']}>
+                      <span className="inline-flex items-center px-3 py-1 text-sm font-semibold rounded-md bg-brand-muted text-blue-800 border border-blue-300">
                         {reportDetail.topology_schema.group.type}
                       </span>
                     </div>
                   </div>
                   {reportDetail.topology_schema.group.group && (
-                    <div className={styles['topology-node-child']}>
-                      <div className={styles['topology-connector']}></div>
-                      <div className={styles['topology-node']}>
-                        <div className={styles['topology-node-icon']}>●</div>
-                        <div className={styles['topology-node-content']}>
-                          <span className={styles['topology-node-label']}>
+                    <div className="flex items-center ml-2">
+                      <div className="w-6 h-8 border-l-2 border-b-2 border-line-strong rounded-bl-lg -mr-3 shrink-0"></div>
+                      <div className="flex items-center gap-3">
+                        <div className="text-base text-blue-500 leading-none shrink-0">
+                          ●
+                        </div>
+                        <div className="flex items-center gap-3 flex-wrap">
+                          <span className="text-sm font-semibold text-muted">
                             Subgroup
                           </span>
-                          <span className={styles['topology-node-value']}>
+                          <span className="inline-flex items-center px-3 py-1 text-sm font-semibold rounded-md bg-brand-muted text-blue-800 border border-blue-300">
                             {reportDetail.topology_schema.group.group.type}
                           </span>
                         </div>
@@ -310,48 +351,54 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
             </div>
 
             {/* Computations */}
-            <div className={styles.section}>
-              <div className={styles['section-header']}>
-                <h2 className={styles['section-title']}>Computations</h2>
+            <div className="mb-2">
+              <div className="mb-1">
+                <h2 className="text-lg font-semibold text-foreground">
+                  Computations
+                </h2>
               </div>
-              <div className={`${styles.card} ${styles['computations-card']}`}>
-                <div className={styles['computations-grid']}>
+              <div className={cardClass}>
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
                   {/* AR Computation */}
-                  <div className={styles['computation-item']}>
-                    <span className={styles['computation-title']}>
+                  <div className={simpleItemClass}>
+                    <span className={simpleItemTitleClass}>
                       Availability & Reliability
                     </span>
                     {reportDetail.computations.ar ? (
-                      <span className={styles['status-enabled']}>Enabled</span>
+                      <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        Enabled
+                      </Badge>
                     ) : (
-                      <span className={styles['status-disabled']}>
+                      <Badge className="bg-red-100 text-red-800 border border-red-300">
                         Disabled
-                      </span>
+                      </Badge>
                     )}
                   </div>
 
                   {/* Status Computation */}
-                  <div className={styles['computation-item']}>
-                    <span className={styles['computation-title']}>Status</span>
+                  <div className={simpleItemClass}>
+                    <span className={simpleItemTitleClass}>Status</span>
                     {reportDetail.computations.status ? (
-                      <span className={styles['status-enabled']}>Enabled</span>
+                      <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300">
+                        Enabled
+                      </Badge>
                     ) : (
-                      <span className={styles['status-disabled']}>
+                      <Badge className="bg-red-100 text-red-800 border border-red-300">
                         Disabled
-                      </span>
+                      </Badge>
                     )}
                   </div>
 
                   {/* Trends */}
                   {reportDetail.computations.trends &&
                     reportDetail.computations.trends.map((trend) => (
-                      <div key={trend} className={styles['computation-item']}>
-                        <span className={styles['computation-title']}>
+                      <div key={trend} className={simpleItemClass}>
+                        <span className={simpleItemTitleClass}>
                           {trend.charAt(0).toUpperCase() + trend.slice(1)}
                         </span>
-                        <span className={styles['status-enabled']}>
+                        <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300">
                           Enabled
-                        </span>
+                        </Badge>
                       </div>
                     ))}
                 </div>
@@ -359,53 +406,66 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
             </div>
 
             {/* Thresholds */}
-            <div className={styles.section}>
-              <div className={styles['section-header']}>
-                <h2 className={styles['section-title']}>Thresholds</h2>
+            <div className="mb-2">
+              <div className="mb-1">
+                <h2 className="text-lg font-semibold text-foreground">
+                  Thresholds
+                </h2>
               </div>
-              <div className={`${styles.card} ${styles['thresholds-card']}`}>
-                <div className={styles['thresholds-grid']}>
-                  <div className={styles['threshold-item']}>
-                    <span className={styles['threshold-title']}>
-                      Availability
-                    </span>
-                    <span className={styles['threshold-value']}>
+              <div className={cardClass}>
+                <div className="grid grid-cols-[repeat(auto-fill,minmax(180px,1fr))] gap-3">
+                  <div className={simpleItemClass}>
+                    <span className={simpleItemTitleClass}>Availability</span>
+                    <Badge
+                      size="lg"
+                      className="bg-green-100 text-green-700 border border-green-300"
+                    >
                       {reportDetail.thresholds.availability}%
-                    </span>
+                    </Badge>
                   </div>
-                  <div className={styles['threshold-item']}>
-                    <span className={styles['threshold-title']}>
-                      Reliability
-                    </span>
-                    <span className={styles['threshold-value']}>
+                  <div className={simpleItemClass}>
+                    <span className={simpleItemTitleClass}>Reliability</span>
+                    <Badge
+                      size="lg"
+                      className="bg-green-100 text-green-700 border border-green-300"
+                    >
                       {reportDetail.thresholds.reliability}%
-                    </span>
+                    </Badge>
                   </div>
-                  <div className={styles['threshold-item']}>
-                    <span className={styles['threshold-title']}>Uptime</span>
-                    <span className={styles['threshold-value']}>
+                  <div className={simpleItemClass}>
+                    <span className={simpleItemTitleClass}>Uptime</span>
+                    <Badge
+                      size="lg"
+                      className="bg-green-100 text-green-700 border border-green-300"
+                    >
                       {reportDetail.thresholds.uptime}
-                    </span>
+                    </Badge>
                   </div>
-                  <div className={styles['threshold-item']}>
-                    <span className={styles['threshold-title']}>Unknown</span>
-                    <span className={styles['threshold-value']}>
+                  <div className={simpleItemClass}>
+                    <span className={simpleItemTitleClass}>Unknown</span>
+                    <Badge
+                      size="lg"
+                      className="bg-green-100 text-green-700 border border-green-300"
+                    >
                       {reportDetail.thresholds.unknown}
-                    </span>
+                    </Badge>
                   </div>
-                  <div className={styles['threshold-item']}>
-                    <span className={styles['threshold-title']}>Downtime</span>
-                    <span className={styles['threshold-value']}>
+                  <div className={simpleItemClass}>
+                    <span className={simpleItemTitleClass}>Downtime</span>
+                    <Badge
+                      size="lg"
+                      className="bg-green-100 text-green-700 border border-green-300"
+                    >
                       {reportDetail.thresholds.downtime}
-                    </span>
+                    </Badge>
                   </div>
                 </div>
               </div>
             </div>
           </>
         ) : (
-          <div className={styles.card}>
-            <p className={styles['no-data']}>
+          <div className={cardClass}>
+            <p className="text-sm text-subtle italic text-center">
               {selectedReportId
                 ? 'Select a report from the list'
                 : 'No report selected'}

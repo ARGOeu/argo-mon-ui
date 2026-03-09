@@ -4,16 +4,16 @@ import {
   ArrowTopRightOnSquareIcon,
   PencilSquareIcon,
   TrashIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
 } from '@heroicons/react/16/solid'
 import { useNavigate } from 'react-router-dom'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import { toast, Toaster } from 'sonner'
+import { toast } from 'sonner'
 import { useState } from 'react'
 import Button from '@/components/Button'
+import PageHeader from '@/components/PageHeader'
+import Pagination from '@/components/Pagination'
 import { useGetUserTenants } from '@/hooks/useTenants'
 import { useAuth } from '@/auth/useAuth'
 import { useGetUserProfile } from '@/hooks/useProfile'
@@ -125,7 +125,6 @@ const View = () => {
 
   return (
     <div className="flex flex-col justify-center items-center">
-      <Toaster richColors position="top-center" duration={2000} />
       <ConfirmDialog
         isOpen={deleteDialogOpen}
         title="Delete Status Page"
@@ -149,11 +148,11 @@ const View = () => {
         onCancel={handleDeleteCancel}
       />
       <div className="page-container">
-        <div className="pb-1 mb-4 md:mb-6 px-2 md:px-0 flex items-center justify-between">
-          <div>
-            <h1 className="page-title">Status Pages</h1>
-            <p className="page-subtitle">View and manage your pages</p>
-          </div>
+        <PageHeader
+          title="Status Pages"
+          subtitle="View and manage your pages"
+          className="pb-1 mb-4 md:mb-6 px-2 md:px-0 flex items-center justify-between"
+        >
           {canCreateStatusPage && (
             <Button
               variant="primary"
@@ -163,15 +162,15 @@ const View = () => {
               Create Status Page
             </Button>
           )}
-        </div>
+        </PageHeader>
 
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-          <div className="bg-gray-50 border-b border-gray-200 px-5 py-3">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+        <div className="bg-white border border-line rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-surface-muted border-b border-line px-5 py-3">
+            <label className="block text-sm font-medium text-body mb-2">
               Tenants:
             </label>
             <select
-              className="input w-full max-w-md"
+              className="w-full max-w-md"
               value={tenantId}
               onChange={(e) => {
                 if (e.target.value === 'all') {
@@ -205,35 +204,35 @@ const View = () => {
           ) : (
             <div className="max-h-[calc(100vh-280px)] overflow-x-auto overflow-y-auto mt-4">
               <table className="w-full table-fixed min-w-[800px]">
-                <thead className="border-b border-gray-200 ">
+                <thead className="border-b border-line ">
                   <tr>
                     <th
-                      className={`${isAllSelected ? 'w-[18%]' : 'w-[22%]'} px-2 lg:px-4 py-1 text-left text-sm font-semibold text-gray-900 tracking-wider`}
+                      className={`${isAllSelected ? 'w-[18%]' : 'w-[22%]'} px-2 lg:px-4 py-1 text-left text-sm font-semibold text-foreground tracking-wider`}
                     >
                       Name
                     </th>
                     <th
-                      className={`${isAllSelected ? 'w-[18%]' : 'w-[22%]'} px-2 lg:px-4 py-1 text-left text-sm font-semibold text-gray-900 tracking-wider`}
+                      className={`${isAllSelected ? 'w-[18%]' : 'w-[22%]'} px-2 lg:px-4 py-1 text-left text-sm font-semibold text-foreground tracking-wider`}
                     >
                       Path
                     </th>
                     <th
-                      className={`${isAllSelected ? 'w-[15%]' : 'w-[18%]'} px-2 lg:px-4 py-1 text-left text-sm font-semibold text-gray-900 tracking-wider`}
+                      className={`${isAllSelected ? 'w-[15%]' : 'w-[18%]'} px-2 lg:px-4 py-1 text-left text-sm font-semibold text-foreground tracking-wider`}
                     >
                       Report
                     </th>
                     {isAllSelected && (
-                      <th className="w-[17%] px-2 lg:px-4 py-1 text-left text-sm font-semibold text-gray-900 tracking-wider">
+                      <th className="w-[17%] px-2 lg:px-4 py-1 text-left text-sm font-semibold text-foreground tracking-wider">
                         Tenant Name
                       </th>
                     )}
                     <th
-                      className={`${isAllSelected ? 'w-[15%]' : 'w-[18%]'} px-2 lg:px-4 py-1 text-left text-sm font-semibold text-gray-900 tracking-wider`}
+                      className={`${isAllSelected ? 'w-[15%]' : 'w-[18%]'} px-2 lg:px-4 py-1 text-left text-sm font-semibold text-foreground tracking-wider`}
                     >
                       Updated
                     </th>
                     <th
-                      className={`${isAllSelected ? 'w-[12%]' : 'w-[15%]'} px-2 lg:px-4 py-1 text-left text-sm font-semibold text-gray-900 tracking-wider`}
+                      className={`${isAllSelected ? 'w-[12%]' : 'w-[15%]'} px-2 lg:px-4 py-1 text-left text-sm font-semibold text-foreground tracking-wider`}
                     >
                       Actions
                     </th>
@@ -244,29 +243,29 @@ const View = () => {
                     data.content.map((item) => (
                       <tr
                         key={item.id}
-                        className="hover:bg-gray-50 transition-colors"
+                        className="hover:bg-surface-muted transition-colors"
                       >
                         <td className="px-2 lg:px-4 py-3 md:py-4">
-                          <span className="text-xs md:text-sm text-gray-900 break-words">
+                          <span className="text-xs md:text-sm text-foreground break-words">
                             {item.name}
                           </span>
                         </td>
                         <td className="px-2 lg:px-4 py-3 md:py-4">
-                          <span className="text-xs md:text-sm text-gray-700 font-mono break-all">
+                          <span className="text-xs md:text-sm text-body font-mono break-all">
                             {item.slug}
                           </span>
                         </td>
-                        <td className="px-2 lg:px-4 py-4 text-sm text-gray-700">
+                        <td className="px-2 lg:px-4 py-4 text-sm text-body">
                           <span className="break-words">{item.report}</span>
                         </td>
                         {isAllSelected && (
-                          <td className="px-2 lg:px-4 py-4 text-sm text-gray-700">
+                          <td className="px-2 lg:px-4 py-4 text-sm text-body">
                             <span className="break-words">
                               {'tenant_name' in item ? item.tenant_name : ''}
                             </span>
                           </td>
                         )}
-                        <td className="px-2 lg:px-4 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm text-gray-500">
+                        <td className="px-2 lg:px-4 py-3 md:py-4 whitespace-nowrap text-xs md:text-sm text-muted">
                           {item?.updated_at
                             ? new Date(item.updated_at).toLocaleDateString(
                                 'en-GB',
@@ -293,7 +292,7 @@ const View = () => {
                           <div className="flex items-center gap-1">
                             <button
                               onClick={() => handlePageView(item.slug)}
-                              className="tooltip p-1 md:p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors cursor-pointer"
+                              className="tooltip p-1 md:p-1.5 text-blue-600 hover:bg-brand-subtle rounded-lg transition-colors cursor-pointer"
                               data-tip="View"
                               aria-label="View Page"
                             >
@@ -303,7 +302,7 @@ const View = () => {
                               onClick={() =>
                                 handlePageEdit(item.id, item.tenant_id)
                               }
-                              className="tooltip p-1 md:p-1.5 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                              className="tooltip p-1 md:p-1.5 text-muted hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
                               data-tip="Edit"
                               aria-label="Edit Page"
                             >
@@ -333,7 +332,7 @@ const View = () => {
                         colSpan={isAllSelected ? 6 : 5}
                         className="text-center py-9"
                       >
-                        <p className="text-sm md:text-base text-gray-500">
+                        <p className="text-sm md:text-base text-muted">
                           {isAllSelected
                             ? 'No status pages found'
                             : 'No status pages found for this tenant'}
@@ -348,36 +347,17 @@ const View = () => {
         </div>
 
         {tenantId && data?.content && data.content?.length > 0 && (
-          <div className="flex items-center justify-between px-4 py-1 border border-gray-200 rounded-lg my-2">
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-700">
-                Page {currentPage} of {data.total_pages}
-              </span>
-              <span className="text-sm text-gray-500">
-                ({data.total_elements} total status pages)
-              </span>
-            </div>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="p-1 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                aria-label="Previous page"
-              >
-                <ChevronLeftIcon className="size-5 text-gray-600" />
-              </button>
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) => Math.min(data.total_pages, prev + 1))
-                }
-                disabled={currentPage >= data.total_pages}
-                className="p-1 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-                aria-label="Next page"
-              >
-                <ChevronRightIcon className="size-5 text-gray-600" />
-              </button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={data.total_pages}
+            totalElements={data.total_elements}
+            itemLabel="status pages"
+            className="py-1 my-2"
+            onPrev={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            onNext={() =>
+              setCurrentPage((prev) => Math.min(data.total_pages, prev + 1))
+            }
+          />
         )}
       </div>
     </div>

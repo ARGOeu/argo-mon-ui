@@ -12,18 +12,21 @@ import { useAuth } from '@/auth/useAuth'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import {
   ArrowLeftIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   UserMinusIcon,
   XMarkIcon,
 } from '@heroicons/react/16/solid'
-import { toast, Toaster } from 'sonner'
+import { toast } from 'sonner'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import TenantInvitations from './TenantInvitations'
-import styles from './ManageTenantMembers.module.css'
-import type { InvitationRole } from '@/types/invitations'
+import PageHeader from '@/components/PageHeader'
+import Tabs from '@/components/Tabs'
+import DataTable from '@/components/DataTable'
+import Pagination from '@/components/Pagination'
+import Badge from '@/components/Badge'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { roleBadgeClass } from '@/utils/badges'
+import type { InvitationRole } from '@/types/invitations'
 
 const roleOptions = [
   { label: 'Tenant Admin', value: 'admin' as InvitationRole },
@@ -293,7 +296,6 @@ const ManageTenantMembers = () => {
   if (tenantError) {
     return (
       <>
-        <Toaster richColors position="top-center" duration={2000} />
         <div className="page-container">
           <ErrorDisplay error={tenantError} context="tenant" />
         </div>
@@ -303,52 +305,42 @@ const ManageTenantMembers = () => {
 
   return (
     <>
-      <Toaster richColors position="top-center" duration={2000} />
       <div className="page-container">
-        <div className={styles.header}>
-          <div>
-            <h1 className="page-title">Manage Members</h1>
-            <p className="page-subtitle">
+        <PageHeader
+          title="Manage Members"
+          subtitle={
+            <>
               View members and send invitations for tenant
-              <strong style={{ wordBreak: 'break-all' }}>
+              <strong className="break-all">
                 {tenantData?.info.name ? ` ${tenantData.info.name}` : '...'}
               </strong>
-            </p>
-          </div>
+            </>
+          }
+          className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-2 pb-2"
+        >
           <Button onClick={handleBack} size="sm" variant="secondary">
             <ArrowLeftIcon className="size-4" />
             Back to Tenants
           </Button>
-        </div>
+        </PageHeader>
 
-        <div className={styles.tabs}>
-          <button
-            className={`${styles.tab} ${activeTab === 'members' ? styles['tab-active'] : ''}`}
-            onClick={() => setActiveTab('members')}
-          >
-            Members
-          </button>
-          <button
-            className={`${styles.tab} ${activeTab === 'invite' ? styles['tab-active'] : ''}`}
-            onClick={() => setActiveTab('invite')}
-          >
-            Invite Member
-          </button>
-          {isSuperAdmin && (
-            <button
-              className={`${styles.tab} ${activeTab === 'add-direct' ? styles['tab-active'] : ''}`}
-              onClick={() => setActiveTab('add-direct')}
-            >
-              Add Member
-            </button>
-          )}
-          <button
-            className={`${styles.tab} ${activeTab === 'invitations' ? styles['tab-active'] : ''}`}
-            onClick={() => setActiveTab('invitations')}
-          >
-            Invitations
-          </button>
-        </div>
+        <Tabs
+          tabs={[
+            { id: 'members', label: 'Members' },
+            { id: 'invite', label: 'Invite Member' },
+            ...(isSuperAdmin
+              ? [{ id: 'add-direct', label: 'Add Member' }]
+              : []),
+            { id: 'invitations', label: 'Invitations' },
+          ]}
+          activeTab={activeTab}
+          onChange={(id) =>
+            setActiveTab(
+              id as 'members' | 'invite' | 'add-direct' | 'invitations',
+            )
+          }
+          className="mb-4"
+        />
 
         {isLoading ? (
           <div className="loading-container">
@@ -357,134 +349,129 @@ const ManageTenantMembers = () => {
         ) : (
           <>
             {activeTab === 'members' && (
-              <div className={styles['tab-content']}>
-                <div className={styles['members-section']}>
-                  <h2 className={styles['section-title']}>Tenant Members</h2>
-                  <div className={styles['table-wrapper']}>
-                    <table className={styles.table}>
-                      <thead className={styles['table-head']}>
+              <div className="animate-fade-in">
+                <div className="mb-10">
+                  <h2 className="text-lg font-semibold text-gray-800 mb-2.5">
+                    Tenant Members
+                  </h2>
+                  <DataTable tableClassName="min-w-[700px]">
+                    <thead className="bg-surface-muted border-b border-line">
+                      <tr>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-body whitespace-nowrap">
+                          First Name
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-body whitespace-nowrap">
+                          Last Name
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-body whitespace-nowrap">
+                          Email
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-body whitespace-nowrap">
+                          Role
+                        </th>
+                        <th className="px-4 py-3 text-left text-sm font-semibold text-body whitespace-nowrap">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-100">
+                      {membersData?.content &&
+                      membersData.content.length > 0 ? (
+                        membersData.content.map((member) => {
+                          const tenantInfo = member.tenants?.find(
+                            (t) => t.name === tenantData?.info.name,
+                          )
+                          return (
+                            <tr
+                              key={member.id}
+                              className="hover:bg-surface-muted"
+                            >
+                              <td className="px-4 py-3.5 text-sm text-gray-800 break-words">
+                                {member.firstName || '-'}
+                              </td>
+                              <td className="px-4 py-3.5 text-sm text-gray-800 break-words">
+                                {member.lastName || '-'}
+                              </td>
+                              <td className="px-4 py-3.5 text-sm text-gray-800 break-words">
+                                {member.email}
+                              </td>
+                              <td className="px-4 py-3.5 text-sm text-gray-800">
+                                <Badge
+                                  className={
+                                    roleBadgeClass[
+                                      tenantInfo?.role ?? 'viewer'
+                                    ] ?? 'bg-gray-100 text-muted'
+                                  }
+                                >
+                                  {tenantInfo?.role === 'admin'
+                                    ? 'Tenant Admin'
+                                    : 'Member'}
+                                </Badge>
+                              </td>
+                              <td className="px-4 py-3.5 text-sm text-gray-800">
+                                <button
+                                  onClick={() =>
+                                    handleRemoveClick(member.id, member.email)
+                                  }
+                                  className="ml-2 inline-flex items-center justify-center p-1.5 bg-transparent rounded-md text-red-500 border-none cursor-pointer transition-all hover:bg-red-50 active:scale-95 tooltip"
+                                  data-tip="Remove member"
+                                >
+                                  <UserMinusIcon className="w-[1.2rem] h-[1.2rem]" />
+                                </button>
+                              </td>
+                            </tr>
+                          )
+                        })
+                      ) : (
                         <tr>
-                          <th>First Name</th>
-                          <th>Last Name</th>
-                          <th>Email</th>
-                          <th>Role</th>
-                          <th>Actions</th>
+                          <td
+                            colSpan={6}
+                            className="text-center !text-subtle italic !p-8"
+                          >
+                            No members found for this tenant
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody className={styles['table-body']}>
-                        {membersData?.content &&
-                        membersData.content.length > 0 ? (
-                          membersData.content.map((member) => {
-                            const tenantInfo = member.tenants?.find(
-                              (t) => t.name === tenantData?.info.name,
-                            )
-                            return (
-                              <tr key={member.id}>
-                                <td>{member.firstName || '-'}</td>
-                                <td>{member.lastName || '-'}</td>
-                                <td>{member.email}</td>
-                                <td>
-                                  <span
-                                    className={`${styles['role-badge']} ${styles[`role-${tenantInfo?.role || 'viewer'}`]}`}
-                                  >
-                                    {tenantInfo?.role === 'admin'
-                                      ? 'Tenant Admin'
-                                      : 'Member'}
-                                  </span>
-                                </td>
-                                <td>
-                                  <button
-                                    onClick={() =>
-                                      handleRemoveClick(member.id, member.email)
-                                    }
-                                    className={`${styles['remove-button']} tooltip`}
-                                    data-tip="Remove member"
-                                  >
-                                    <UserMinusIcon
-                                      style={{
-                                        width: '1.2rem',
-                                        height: '1.2rem',
-                                      }}
-                                    />
-                                  </button>
-                                </td>
-                              </tr>
-                            )
-                          })
-                        ) : (
-                          <tr>
-                            <td colSpan={6} className={styles['empty-state']}>
-                              No members found for this tenant
-                            </td>
-                          </tr>
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                      )}
+                    </tbody>
+                  </DataTable>
 
                   {membersData?.content && membersData.content.length > 0 && (
-                    <div className="pagination-container">
-                      <div className="pagination-info">
-                        <span className="pagination-text">
-                          Page {currentMembersPage} of {membersData.total_pages}
-                        </span>
-                        <span className="pagination-count">
-                          ({membersData.total_elements} total members)
-                        </span>
-                      </div>
-                      <div className="pagination-buttons">
-                        <button
-                          onClick={() =>
-                            setCurrentMembersPage((prev) =>
-                              Math.max(1, prev - 1),
-                            )
-                          }
-                          disabled={currentMembersPage === 1}
-                          className="pagination-button"
-                          aria-label="Previous page"
-                        >
-                          <ChevronLeftIcon className="pagination-icon" />
-                        </button>
-                        <button
-                          onClick={() =>
-                            setCurrentMembersPage((prev) =>
-                              Math.min(membersData.total_pages, prev + 1),
-                            )
-                          }
-                          disabled={
-                            currentMembersPage >= membersData.total_pages
-                          }
-                          className="pagination-button"
-                          aria-label="Next page"
-                        >
-                          <ChevronRightIcon className="pagination-icon" />
-                        </button>
-                      </div>
-                    </div>
+                    <Pagination
+                      currentPage={currentMembersPage}
+                      totalPages={membersData.total_pages}
+                      totalElements={membersData.total_elements}
+                      itemLabel="members"
+                      className="py-1 my-4"
+                      onPrev={() =>
+                        setCurrentMembersPage((prev) => Math.max(1, prev - 1))
+                      }
+                      onNext={() =>
+                        setCurrentMembersPage((prev) =>
+                          Math.min(membersData.total_pages, prev + 1),
+                        )
+                      }
+                    />
                   )}
                 </div>
               </div>
             )}
 
             {activeTab === 'invite' && (
-              <div className={styles['tab-content']}>
-                <form
-                  onSubmit={handleInviteSubmit}
-                  className={styles['invite-form']}
-                >
-                  <div className={styles['form-section']}>
-                    <h2 className={styles['section-title']}>
+              <div className="animate-fade-in">
+                <form onSubmit={handleInviteSubmit} className="max-w-xl">
+                  <div className="bg-surface-subtle border border-line rounded-lg p-6">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-2.5">
                       Invite New Member
                     </h2>
-                    <p className={styles['section-description']}>
+                    <p className="text-sm text-muted mb-6 leading-relaxed">
                       Send an invitation to a new member to join this tenant.
                       They will receive an email with instructions to accept the
                       invitation.
                     </p>
 
-                    <div className={styles['form-fields']}>
-                      <div className={styles.field}>
-                        <label className={styles.label}>
+                    <div className="max-w-[400px] flex flex-col gap-5 mb-6">
+                      <div className="flex flex-col">
+                        <label className="text-sm font-medium text-body mb-1.5">
                           Email Address <span className="required">*</span>
                         </label>
                         <input
@@ -493,15 +480,21 @@ const ManageTenantMembers = () => {
                           value={inviteForm.email}
                           onChange={handleInviteFormChange}
                           placeholder="Enter email address to invite..."
-                          className={errors.email ? styles['input-error'] : ''}
+                          className={
+                            errors.email
+                              ? '!border-red-500 focus:!border-red-500 focus:!ring-red-500/10'
+                              : ''
+                          }
                         />
                         {errors.email && (
-                          <span className={styles.error}>{errors.email}</span>
+                          <span className="text-xs text-red-500 mt-1">
+                            {errors.email}
+                          </span>
                         )}
                       </div>
 
-                      <div className={styles.field}>
-                        <label className={styles.label}>
+                      <div className="flex flex-col">
+                        <label className="text-sm font-medium text-body mb-1.5">
                           Role <span className="required">*</span>
                         </label>
                         <select
@@ -518,7 +511,7 @@ const ManageTenantMembers = () => {
                       </div>
                     </div>
 
-                    <div className={styles['form-actions']}>
+                    <div className="flex justify-start">
                       <Button
                         variant="primary"
                         size="md"
@@ -538,28 +531,25 @@ const ManageTenantMembers = () => {
             )}
 
             {activeTab === 'add-direct' && isSuperAdmin && (
-              <div className={styles['tab-content']}>
-                <form
-                  onSubmit={handleAddDirectSubmit}
-                  className={styles['invite-form']}
-                >
-                  <div className={styles['form-section']}>
-                    <h2 className={styles['section-title']}>
+              <div className="animate-fade-in">
+                <form onSubmit={handleAddDirectSubmit} className="max-w-xl">
+                  <div className="bg-surface-subtle border border-line rounded-lg p-6">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-2.5">
                       Add a Member Directly
                     </h2>
-                    <p className={styles['section-description']}>
+                    <p className="text-sm text-muted mb-6 leading-relaxed">
                       Add a new member directly to this tenant without sending
                       an invitation. Search for a registered user by email or
                       name.
                     </p>
 
-                    <div className={styles['form-fields']}>
+                    <div className="max-w-[400px] flex flex-col gap-5 mb-6">
                       {!selectedUser ? (
-                        <div className={styles.field}>
-                          <label className={styles.label}>
+                        <div className="flex flex-col">
+                          <label className="text-sm font-medium text-body mb-1.5">
                             Search User <span className="required">*</span>
                           </label>
-                          <div className={styles['search-wrapper']}>
+                          <div className="relative">
                             <input
                               type="text"
                               name="search"
@@ -568,40 +558,38 @@ const ManageTenantMembers = () => {
                               placeholder="Search by email or name..."
                               className={
                                 addDirectErrors.search
-                                  ? styles['input-error']
-                                  : ''
+                                  ? '!border-red-500 focus:!border-red-500 focus:!ring-red-500/10 w-full'
+                                  : 'w-full'
                               }
                               autoComplete="off"
                             />
                             {addDirectErrors.search && (
-                              <span className={styles.error}>
+                              <span className="text-xs text-red-500 mt-1">
                                 {addDirectErrors.search}
                               </span>
                             )}
 
                             {showSearchResults && (
-                              <div className={styles['search-results']}>
+                              <div className="absolute top-full left-0 right-0 bg-white border border-line-strong rounded-lg mt-1 max-h-[300px] overflow-y-auto shadow-md z-10">
                                 {searchLoading ? (
-                                  <div className={styles['search-loading']}>
+                                  <div className="flex items-center justify-center gap-2 p-4 text-muted text-sm">
                                     <LoadingSpinner size="sm" />
                                     <span>Searching...</span>
                                   </div>
                                 ) : searchResults &&
                                   searchResults.content.length > 0 ? (
-                                  <ul className={styles['results-list']}>
+                                  <ul className="list-none m-0 p-0">
                                     {searchResults.content.map((user) => (
                                       <li
                                         key={user.id}
-                                        className={styles['result-item']}
+                                        className="px-4 py-3 cursor-pointer transition-colors border-b border-gray-100 hover:bg-surface-muted last:border-b-0"
                                         onClick={() => handleUserSelect(user)}
                                       >
-                                        <div className={styles['user-info']}>
-                                          <span className={styles['user-name']}>
+                                        <div className="flex flex-col gap-1">
+                                          <span className="text-sm font-semibold text-foreground">
                                             {user.firstName} {user.lastName}
                                           </span>
-                                          <span
-                                            className={styles['user-details']}
-                                          >
+                                          <span className="text-xs text-muted">
                                             {user.email}
                                           </span>
                                         </div>
@@ -609,7 +597,7 @@ const ManageTenantMembers = () => {
                                     ))}
                                   </ul>
                                 ) : (
-                                  <div className={styles['no-results']}>
+                                  <div className="p-4 text-center text-subtle text-sm italic">
                                     No users found
                                   </div>
                                 )}
@@ -618,21 +606,23 @@ const ManageTenantMembers = () => {
                           </div>
                         </div>
                       ) : (
-                        <div className={styles.field}>
-                          <label className={styles.label}>Selected User</label>
-                          <div className={styles['selected-user-card']}>
-                            <div className={styles['selected-user-info']}>
-                              <span className={styles['selected-user-name']}>
+                        <div className="flex flex-col">
+                          <label className="text-sm font-medium text-body mb-1.5">
+                            Selected User
+                          </label>
+                          <div className="flex items-center justify-between px-4 py-3 bg-surface-muted border border-line rounded-lg">
+                            <div className="flex flex-col gap-1">
+                              <span className="text-sm font-semibold text-foreground">
                                 {selectedUser.firstName} {selectedUser.lastName}
                               </span>
-                              <span className={styles['selected-user-details']}>
+                              <span className="text-xs text-muted">
                                 {selectedUser.email}
                               </span>
                             </div>
                             <button
                               type="button"
                               onClick={handleClearSelectedUser}
-                              className={styles['clear-user-button']}
+                              className="flex items-center justify-center p-1 bg-transparent border-none rounded-md text-muted cursor-pointer transition-all hover:bg-gray-200 hover:text-body"
                               aria-label="Clear selected user"
                             >
                               <XMarkIcon className="size-5" />
@@ -641,8 +631,8 @@ const ManageTenantMembers = () => {
                         </div>
                       )}
 
-                      <div className={styles.field}>
-                        <label className={styles.label}>
+                      <div className="flex flex-col">
+                        <label className="text-sm font-medium text-body mb-1.5">
                           Role <span className="required">*</span>
                         </label>
                         <select
@@ -659,7 +649,7 @@ const ManageTenantMembers = () => {
                       </div>
                     </div>
 
-                    <div className={styles['form-actions']}>
+                    <div className="flex justify-start">
                       <Button
                         variant="primary"
                         size="md"
@@ -677,7 +667,7 @@ const ManageTenantMembers = () => {
             )}
 
             {activeTab === 'invitations' && (
-              <div className={styles['tab-content']}>
+              <div className="animate-fade-in">
                 <TenantInvitations
                   tenantId={tenantId || ''}
                   tenantName={tenantData?.info.name || ''}

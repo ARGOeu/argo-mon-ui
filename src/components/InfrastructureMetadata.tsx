@@ -2,7 +2,17 @@ import { useState } from 'react'
 import { useGetUserContactTypes } from '@/hooks/useTenants'
 import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid'
 import type { Metadata } from '@/types/tenants'
-import styles from '../pages/CreateTenant.module.css'
+
+const sectionClass =
+  'grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 md:gap-8 mb-6 animate-fade-in'
+const sectionContentClass =
+  'bg-surface-subtle border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
+const fieldGridClass =
+  'grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3'
+const iconButtonClass =
+  'flex items-center justify-center size-7 rounded-md bg-blue-500 text-white border-none cursor-pointer hover:bg-blue-600'
+const iconButtonDangerClass =
+  'flex items-center justify-center size-7 rounded-md bg-red-500 text-white border-none cursor-pointer hover:bg-red-600'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -198,18 +208,20 @@ const InfrastructureMetadata = ({
 
   return (
     <>
-      <div className={styles.section}>
-        <div className={styles['section-info']}>
+      <div className={sectionClass}>
+        <div className="pt-2 pl-2">
           <h2 className="section-title">Instance URLs</h2>
           <p className="section-description">
             Primary instance URL configurations
           </p>
         </div>
 
-        <div className={styles['section-content']}>
-          <div className={styles['field-grid']}>
-            <div className={styles.field}>
-              <label className={styles.label}>UI URL</label>
+        <div className={sectionContentClass}>
+          <div className={fieldGridClass}>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-body mb-1">
+                UI URL
+              </label>
               <input
                 type="url"
                 name="ui_url"
@@ -224,8 +236,10 @@ const InfrastructureMetadata = ({
               )}
             </div>
 
-            <div className={styles.field}>
-              <label className={styles.label}>POEM URL</label>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-body mb-1">
+                POEM URL
+              </label>
               <input
                 type="url"
                 name="poem_url"
@@ -243,18 +257,18 @@ const InfrastructureMetadata = ({
         </div>
       </div>
 
-      <div className={styles.section}>
-        <div className={styles['section-info']}>
+      <div className={sectionClass}>
+        <div className="pt-2 pl-2">
           <h2 className="section-title">Topology</h2>
           <p className="section-description">Topology configuration settings</p>
         </div>
 
-        <div className={styles['section-content']}>
-          <div className={styles['field-grid']}>
-            <div className={styles.field}>
-              <label className={styles.label}>Type</label>
+        <div className={sectionContentClass}>
+          <div className={fieldGridClass}>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-body mb-1">Type</label>
               {isContactTypesLoading ? (
-                <div className="text-sm text-gray-500">Loading...</div>
+                <div className="text-sm text-muted">Loading...</div>
               ) : (
                 <select
                   name="topology_type"
@@ -268,8 +282,10 @@ const InfrastructureMetadata = ({
               )}
             </div>
 
-            <div className={styles.field}>
-              <label className={styles.label}>Service URL</label>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-body mb-1">
+                Service URL
+              </label>
               <input
                 type="url"
                 name="topology_url"
@@ -284,8 +300,10 @@ const InfrastructureMetadata = ({
               )}
             </div>
 
-            <div className={styles.field}>
-              <label className={styles.label}>Data Feed</label>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-body mb-1">
+                Data Feed
+              </label>
               <input
                 type="text"
                 name="topology_feed"
@@ -298,60 +316,52 @@ const InfrastructureMetadata = ({
         </div>
       </div>
 
-      <div className={styles.section}>
-        <div className={styles['section-info']}>
+      <div className={sectionClass}>
+        <div className="pt-2 pl-2">
           <h2 className="section-title">Internal Lists</h2>
           <p className="section-description">Internal mailing lists</p>
         </div>
 
-        <div className={styles['section-content']}>
+        <div className={sectionContentClass}>
           {metadata.internalLists.map((list, index) => (
             <div
               key={index}
-              className={styles['contact-group']}
-              style={{
-                borderBottom:
-                  index === metadata.internalLists.length - 1
-                    ? 'none'
-                    : '1px solid #e5e7eb',
-                marginBottom:
-                  index === metadata.internalLists.length - 1 ? '0' : '0.5rem',
-                paddingBottom:
-                  index === metadata.internalLists.length - 1 ? '0' : '1rem',
-              }}
+              className="flex flex-col gap-2 pb-4 mb-2 border-b border-line last:border-b-0 last:mb-0 last:pb-0"
             >
-              <div className={styles['contact-header']}>
-                <span className={styles['contact-label']}>
+              <div className="flex justify-between items-center mb-1.5">
+                <span className="text-base font-semibold text-body">
                   Internal List {index + 1}
                 </span>
-                <div className={styles['contact-actions']}>
+                <div className="flex gap-2">
                   {index === metadata.internalLists.length - 1 &&
                     metadata.internalLists.length < 5 && (
                       <button
                         type="button"
                         onClick={handleAddInternalList}
-                        className={styles['icon-button']}
+                        className={iconButtonClass}
                         title="Add internal list"
                       >
-                        <PlusIcon className={styles['icon']} />
+                        <PlusIcon className="size-5" />
                       </button>
                     )}
                   {metadata.internalLists.length > 1 && (
                     <button
                       type="button"
                       onClick={() => handleRemoveInternalList(index)}
-                      className={styles['icon-button-danger']}
+                      className={iconButtonDangerClass}
                       title="Remove internal list"
                     >
-                      <TrashIcon className={styles['icon']} />
+                      <TrashIcon className="size-5" />
                     </button>
                   )}
                 </div>
               </div>
 
-              <div className={styles['field-grid']}>
-                <div className={styles.field}>
-                  <label className={styles.label}>Email</label>
+              <div className={fieldGridClass}>
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-body mb-1">
+                    Email
+                  </label>
                   <input
                     type="email"
                     name="email"
@@ -366,24 +376,22 @@ const InfrastructureMetadata = ({
                   )}
                 </div>
 
-                <div className={styles.field}>
-                  <label className={styles.label}>Type</label>
+                <div className="flex flex-col">
+                  <label className="text-sm font-medium text-body mb-1">
+                    Type
+                  </label>
                   {isContactTypesLoading ? (
-                    <div className="text-sm text-gray-500">Loading...</div>
+                    <div className="text-sm text-muted">Loading...</div>
                   ) : (
                     <select
                       name="type"
                       value={list.type}
                       onChange={(e) => handleInternalListChange(index, e)}
-                      style={{ textTransform: 'capitalize' }}
+                      className="capitalize"
                     >
                       <option value="">Select type</option>
                       {contactTypes?.map((type) => (
-                        <option
-                          key={type}
-                          value={type}
-                          style={{ textTransform: 'capitalize' }}
-                        >
+                        <option key={type} value={type} className="capitalize">
                           {type.toLowerCase()}
                         </option>
                       ))}
@@ -396,18 +404,20 @@ const InfrastructureMetadata = ({
         </div>
       </div>
 
-      <div className={styles.section}>
-        <div className={styles['section-info']}>
+      <div className={sectionClass}>
+        <div className="pt-2 pl-2">
           <h2 className="section-title">Authentication Metadata</h2>
           <p className="section-description">
             Authentication configuration settings
           </p>
         </div>
 
-        <div className={styles['section-content']}>
-          <div className={styles['field-grid']}>
-            <div className={styles.field}>
-              <label className={styles.label}>Auth Name</label>
+        <div className={sectionContentClass}>
+          <div className={fieldGridClass}>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-body mb-1">
+                Auth Name
+              </label>
               <input
                 type="text"
                 name="auth_name"
@@ -417,8 +427,10 @@ const InfrastructureMetadata = ({
               />
             </div>
 
-            <div className={styles.field}>
-              <label className={styles.label}>Auth URL</label>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-body mb-1">
+                Auth URL
+              </label>
               <input
                 type="url"
                 name="auth_url"

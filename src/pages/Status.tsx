@@ -25,7 +25,7 @@ export const Status = () => {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center mt-32">
             <LoadingSpinner />
-            <div className="text-lg text-gray-600">Loading status page...</div>
+            <div className="text-lg text-muted">Loading status page...</div>
           </div>
         ) : statusData ? (
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
@@ -72,11 +72,11 @@ export const Status = () => {
                 }}
               >
                 <div className="space-y-3">
-                  <h1 className="text-4xl font-semibold text-gray-600 mb-1">
+                  <h1 className="text-4xl font-semibold text-muted mb-1">
                     {statusData.title}
                   </h1>
                   {statusData.description && (
-                    <p className="text-lg text-gray-700 max-w-2xl mx-auto">
+                    <p className="text-lg text-body max-w-2xl mx-auto">
                       {statusData.description}
                     </p>
                   )}
@@ -91,9 +91,7 @@ export const Status = () => {
                     ) : (
                       <div className="status status-lg status-success"></div>
                     )}
-                    <span className="text-gray-600 font-medium">
-                      Operational
-                    </span>
+                    <span className="text-muted font-medium">Operational</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {statusData?.theming?.status.icon === 'icon' ? (
@@ -101,7 +99,7 @@ export const Status = () => {
                     ) : (
                       <div className="status status-lg status-error"></div>
                     )}
-                    <span className="text-gray-600 font-medium">Critical</span>
+                    <span className="text-muted font-medium">Critical</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {statusData?.theming?.status.icon === 'icon' ? (
@@ -109,7 +107,7 @@ export const Status = () => {
                     ) : (
                       <div className="status status-lg status-warning"></div>
                     )}
-                    <span className="text-gray-600 font-medium">Warning</span>
+                    <span className="text-muted font-medium">Warning</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {statusData?.theming?.status.icon === 'icon' ? (
@@ -117,7 +115,7 @@ export const Status = () => {
                     ) : (
                       <div className="status status-lg status-info"></div>
                     )}
-                    <span className="text-gray-600 font-medium">Missing</span>
+                    <span className="text-muted font-medium">Missing</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {statusData?.theming?.status.icon === 'icon' ? (
@@ -125,15 +123,15 @@ export const Status = () => {
                     ) : (
                       <div className="status status-lg status-neutral"></div>
                     )}
-                    <span className="text-gray-600 font-medium">Downtime</span>
+                    <span className="text-muted font-medium">Downtime</span>
                   </div>
                   <div className="flex items-center gap-2">
                     {statusData?.theming?.status.icon === 'icon' ? (
-                      <QuestionMarkCircleIcon className="size-4 text-gray-400" />
+                      <QuestionMarkCircleIcon className="size-4 text-subtle" />
                     ) : (
                       <div className="status status-lg status-unknown"></div>
                     )}
-                    <span className="text-gray-600 font-medium">Unknown</span>
+                    <span className="text-muted font-medium">Unknown</span>
                   </div>
                 </div>
               </div>
@@ -157,13 +155,13 @@ export const Status = () => {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-muted">
                   No status information available
                 </div>
               )}
             </main>
-            <footer className="p-8 mt-8 bg-gray-50 border-t border-gray-200">
-              <div className="text-center text-sm font-medium text-gray-500 tracking-wide">
+            <footer className="p-8 mt-8 bg-surface-muted border-t border-line">
+              <div className="text-center text-sm font-medium text-muted tracking-wide">
                 Last updated:{' '}
                 {new Date().toLocaleDateString('en-GB', {
                   day: 'numeric',

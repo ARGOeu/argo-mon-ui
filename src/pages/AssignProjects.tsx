@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useDragAndDrop } from '@formkit/drag-and-drop/react'
-import { toast, Toaster } from 'sonner'
+import { toast } from 'sonner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '@/components/Button'
 import {
@@ -13,9 +13,9 @@ import { useGetAllProjects } from '@/hooks/useProjects'
 import { GripVertical } from 'lucide-react'
 import { ArrowLeftIcon } from '@heroicons/react/16/solid'
 import type { ProjectItem } from '@/types/projects'
-import styles from './AssignProjects.module.css'
 import { useAuth } from '@/auth/useAuth'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import PageHeader from '@/components/PageHeader'
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-GB', {
@@ -24,6 +24,15 @@ const formatDate = (dateString: string) => {
     year: 'numeric',
   })
 }
+
+const columnClass =
+  'flex flex-col bg-white border border-line rounded-lg overflow-hidden'
+
+const columnHeaderClass =
+  'flex justify-between items-center px-5 py-3.5 bg-gray-100 border-b border-line'
+
+const listContainerClass =
+  'bg-surface-muted min-h-[300px] max-h-[400px] md:min-h-[400px] md:max-h-[500px] overflow-y-auto'
 
 const AssignProjects = () => {
   const { profile } = useAuth()
@@ -217,7 +226,6 @@ const AssignProjects = () => {
   if (tenantError) {
     return (
       <>
-        <Toaster richColors position="top-center" duration={2000} />
         <div className="page-container">
           <ErrorDisplay error={tenantError} context="tenant" />
         </div>
@@ -227,33 +235,31 @@ const AssignProjects = () => {
 
   return (
     <>
-      <Toaster richColors position="top-center" duration={2000} />
       <div className="page-container">
-        <div className={styles.header}>
-          <div>
-            <h1 className="page-title">
+        <PageHeader
+          title={
+            isReadOnly ? 'View Assigned Projects' : 'Assign Projects to Tenant'
+          }
+          subtitle={
+            <span>
               {isReadOnly
-                ? 'View Assigned Projects'
-                : 'Assign Projects to Tenant'}
-            </h1>
-            <p className="page-subtitle lg:me-30 md:me-20 sm:me-10">
-              {isReadOnly
-                ? `Viewing projects assigned to tenant `
+                ? 'Viewing projects assigned to tenant '
                 : 'Drag and drop projects to assign or remove them from tenant '}
-              <strong style={{ wordBreak: 'break-all' }}>
+              <strong className="break-all">
                 {tenantData?.info.name ? ` ${tenantData.info.name}` : '...'}
               </strong>
-            </p>
-          </div>
-
+            </span>
+          }
+          className="flex flex-col gap-4 items-stretch pb-4 mb-4 md:flex-row md:items-start md:justify-between"
+        >
           <Button onClick={handleCancel} size="sm" variant="secondary">
             <ArrowLeftIcon className="size-4" />
             Back to Tenants
           </Button>
-        </div>
+        </PageHeader>
 
         {!isReadOnly && (
-          <div className={styles['save-button-container']}>
+          <div className="flex justify-end mb-4">
             <Button
               variant="primary"
               size="md"
@@ -269,36 +275,36 @@ const AssignProjects = () => {
         )}
 
         <div
-          className={styles.content}
-          style={
-            isReadOnly
-              ? {
-                  maxWidth: '600px',
-                  margin: '0 auto',
-                }
-              : {}
-          }
+          className={`grid gap-6 ${isReadOnly ? 'max-w-[600px] mx-auto grid-cols-1' : 'grid-cols-1 md:grid-cols-2'}`}
         >
           {!isReadOnly && (
-            <div className={styles.column}>
-              <div className={styles['column-header']}>
-                <h2 className={styles['column-title']}>Available Projects</h2>
-                <span className={styles['column-count']}>
+            <div className={columnClass}>
+              <div className={columnHeaderClass}>
+                <h2 className="font-semibold text-body m-0 tracking-wide">
+                  Available Projects
+                </h2>
+                <span className="text-xs font-semibold text-muted bg-white px-2 py-1 rounded-md border border-line min-w-[1.75rem] text-center">
                   {availableItems.length}
                 </span>
               </div>
-              <div className={styles['list-container']}>
-                <ul ref={availableRef} className={styles.list}>
+              <div className={listContainerClass}>
+                <ul
+                  ref={availableRef}
+                  className="list-none p-3 m-0 flex flex-col gap-2"
+                >
                   {availableItems.length > 0 ? (
                     availableItems.map((project) => (
-                      <li key={project.id} className={styles['project-item']}>
+                      <li
+                        key={project.id}
+                        className="group px-4 py-2 bg-white border border-line rounded-md !cursor-grab transition-all flex items-center gap-3 shadow-sm hover:border-line-strong hover:shadow-md active:shadow-lg active:scale-[1.01]"
+                      >
                         <div className="dnd-handle flex items-center gap-2 flex-grow-1">
-                          <GripVertical className={styles['drag-handle']} />
-                          <div className={styles['project-info']}>
-                            <span className={styles['project-name']}>
+                          <GripVertical className="w-[1.4rem] h-[1.4rem] text-subtle shrink-0 transition-colors group-hover:text-muted" />
+                          <div className="flex flex-col gap-1 flex-1 min-w-0">
+                            <span className="text-sm font-medium text-foreground leading-[1.4] overflow-hidden text-ellipsis whitespace-nowrap tracking-[0.02rem]">
                               {project.name}
                             </span>
-                            <span className={styles['project-date']}>
+                            <span className="text-xs font-normal text-muted leading-[1.3]">
                               {formatDate(project.start_date)} -{' '}
                               {formatDate(project.end_date)}
                             </span>
@@ -307,7 +313,7 @@ const AssignProjects = () => {
                       </li>
                     ))
                   ) : (
-                    <li className={styles['empty-state']}>
+                    <li className="py-8 px-4 text-center text-sm text-subtle border-2 border-dashed border-line rounded-md bg-white m-2">
                       No available projects
                     </li>
                   )}
@@ -317,41 +323,36 @@ const AssignProjects = () => {
           )}
 
           <div
-            className={styles.column}
-            style={
-              isReadOnly
-                ? {
-                    gridColumn: '1 / -1',
-                  }
-                : {}
-            }
+            className={`${columnClass} ${isReadOnly ? 'col-span-full' : ''}`}
           >
-            <div className={styles['column-header']}>
-              <h2 className={styles['column-title']}>
-                {isReadOnly ? 'Assigned Projects' : 'Assigned Projects'}
+            <div className={columnHeaderClass}>
+              <h2 className="font-semibold text-body m-0 tracking-wide">
+                Assigned Projects
               </h2>
-              <span className={styles['column-count']}>
+              <span className="text-xs font-semibold text-muted bg-white px-2 py-1 rounded-md border border-line min-w-[1.75rem] text-center">
                 {assignedItems.length}
               </span>
             </div>
-            <div className={styles['list-container']}>
-              <ul ref={assignedRef} className={styles.list}>
+            <div className={listContainerClass}>
+              <ul
+                ref={assignedRef}
+                className="list-none p-3 m-0 flex flex-col gap-2"
+              >
                 {assignedItems.length > 0 ? (
                   assignedItems.map((project) => (
                     <li
                       key={project.id}
-                      className={`${styles['project-item']} ${isReadOnly ? styles['read-only'] : ''}`}
-                      style={isReadOnly ? { cursor: 'default' } : {}}
+                      className={`group px-4 py-2 bg-white border border-line rounded-md transition-all flex items-center gap-3 shadow-sm ${isReadOnly ? '!cursor-default' : '!cursor-grab hover:border-line-strong hover:shadow-md active:shadow-lg active:scale-[1.01]'}`}
                     >
                       <div className="dnd-handle flex items-center gap-2 flex-grow-1">
                         {!isReadOnly && (
-                          <GripVertical className={styles['drag-handle']} />
+                          <GripVertical className="w-[1.4rem] h-[1.4rem] text-subtle shrink-0 transition-colors group-hover:text-muted" />
                         )}
-                        <div className={styles['project-info']}>
-                          <span className={styles['project-name']}>
+                        <div className="flex flex-col gap-1 flex-1 min-w-0">
+                          <span className="text-sm font-medium text-foreground leading-[1.4] overflow-hidden text-ellipsis whitespace-nowrap tracking-[0.02rem]">
                             {project.name}
                           </span>
-                          <span className={styles['project-date']}>
+                          <span className="text-xs font-normal text-muted leading-[1.3]">
                             {formatDate(project.start_date)} -{' '}
                             {formatDate(project.end_date)}
                           </span>
@@ -360,7 +361,7 @@ const AssignProjects = () => {
                     </li>
                   ))
                 ) : (
-                  <li className={styles['empty-state']}>
+                  <li className="py-8 px-4 text-center text-sm text-subtle border-2 border-dashed border-line rounded-md bg-white m-2">
                     {isReadOnly
                       ? 'No projects assigned to this tenant'
                       : 'Drag projects here to assign'}

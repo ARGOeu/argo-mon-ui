@@ -1,21 +1,32 @@
 import { useState, useEffect } from 'react'
 import { useGetProjects, useDeleteProjectMutation } from '@/hooks/useProjects'
-import {
-  PencilSquareIcon,
-  TrashIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  MagnifyingGlassIcon,
-} from '@heroicons/react/16/solid'
+import { PencilSquareIcon, TrashIcon } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import ConfirmDialog from '@/components/ConfirmDialog'
+import PageHeader from '@/components/PageHeader'
+import SearchInput from '@/components/SearchInput'
+import Pagination from '@/components/Pagination'
+import Card from '@/components/Card'
 import { useNavigate } from 'react-router-dom'
-import { toast, Toaster } from 'sonner'
-import styles from './Projects.module.css'
+import { toast } from 'sonner'
 
 const pageSize = 9
+
+const actionButtonBase =
+  'p-1 min-[840px]:p-1.5 rounded-lg transition-all cursor-pointer border-none bg-transparent tooltip'
+
+const actionIconClass = 'size-4 min-[840px]:size-5'
+
+const formatDate = (dateString: string) => {
+  return new Date(dateString).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  })
+}
 
 const Projects = () => {
   const [currentPage, setCurrentPage] = useState(1)
@@ -83,19 +94,8 @@ const Projects = () => {
     setSearchQuery('')
   }
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
-    return date.toLocaleDateString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      timeZone: 'UTC',
-    })
-  }
-
   return (
     <div className="page-container">
-      <Toaster richColors position="top-center" duration={2000} />
       <ConfirmDialog
         isOpen={deleteDialogOpen}
         title="Delete Project"
@@ -118,13 +118,10 @@ const Projects = () => {
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
-      <div className={styles.header}>
-        <div>
-          <h1 className="page-title">Projects</h1>
-          <p className="page-subtitle">
-            Manage and create projects for the monitoring service
-          </p>
-        </div>
+      <PageHeader
+        title="Projects"
+        subtitle="Manage and create projects for the monitoring service"
+      >
         <Button
           variant="primary"
           size="md"
@@ -132,30 +129,15 @@ const Projects = () => {
         >
           Create New Project
         </Button>
-      </div>
+      </PageHeader>
 
-      <div className={styles['search-container']}>
-        <div className={styles['search-input-wrapper']}>
-          <MagnifyingGlassIcon className={styles['search-icon']} />
-          <input
-            type="text"
-            placeholder="Search projects..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className={styles['search-input']}
-          />
-          {searchInput && (
-            <button
-              type="button"
-              onClick={handleClearSearch}
-              className={styles['clear-button']}
-              aria-label="Clear search"
-            >
-              ×
-            </button>
-          )}
-        </div>
-      </div>
+      <SearchInput
+        value={searchInput}
+        onChange={setSearchInput}
+        onClear={handleClearSearch}
+        placeholder="Search projects..."
+        maxWidth="max-w-md"
+      />
 
       {isLoading ? (
         <div className="loading-container">
@@ -164,118 +146,109 @@ const Projects = () => {
       ) : projectsError ? (
         <ErrorDisplay error={projectsError} context="projects" />
       ) : (
-        <div className={styles.grid}>
+        <div className="grid grid-cols-1 min-[840px]:grid-cols-[repeat(auto-fit,minmax(min(100%,320px),440px))] gap-6">
           {data?.content && data.content.length > 0
             ? data.content.map((project) => (
-                <div key={project.id} className={styles.card}>
-                  <div className={styles['card-content']}>
-                    <div className={styles['card-header']}>
+                <Card
+                  key={project.id}
+                  footer={
+                    <>
+                      <button
+                        aria-label="Edit Project"
+                        className={`${actionButtonBase} text-muted hover:bg-gray-200`}
+                        data-tip="Edit"
+                        onClick={() => handleEdit(project.id!)}
+                      >
+                        <PencilSquareIcon className={actionIconClass} />
+                      </button>
+                      <button
+                        aria-label="Delete Project"
+                        className={`${actionButtonBase} text-red-600 hover:bg-red-50`}
+                        data-tip="Delete"
+                        onClick={() =>
+                          handleDeleteClick(project.id!, project.name)
+                        }
+                      >
+                        <TrashIcon className={actionIconClass} />
+                      </button>
+                    </>
+                  }
+                >
+                  <div className="py-2 px-4">
+                    <div className="flex items-center justify-between mb-2">
                       <h3
-                        className={styles['project-name']}
+                        className="text-xl font-semibold text-foreground overflow-hidden text-ellipsis whitespace-nowrap"
                         title={project.name}
                       >
                         {project.name}
                       </h3>
                     </div>
 
-                    <div className={styles['dates-section']}>
-                      <div className={styles['date-row']}>
-                        <span className={styles['label']}>Start Date:</span>
-                        <span className={styles['date-value']}>
+                    <div className="flex flex-col gap-2 mb-2">
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-sm font-medium text-muted min-w-[150px]">
+                          Start Date:
+                        </span>
+                        <span className="text-sm font-medium text-foreground">
                           {formatDate(project.start_date)}
                         </span>
                       </div>
-                      <div className={styles['date-row']}>
-                        <span className={styles['label']}>End Date:</span>
-                        <span className={styles['date-value']}>
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-sm font-medium text-muted min-w-[150px]">
+                          End Date:
+                        </span>
+                        <span className="text-sm font-medium text-foreground">
                           {formatDate(project.end_date)}
                         </span>
                       </div>
-                      <div className={styles['date-row']}>
-                        <span className={styles['label']}>
+                      <div className="flex items-center justify-between gap-4">
+                        <span className="text-sm font-medium text-muted min-w-[150px]">
                           Sustainability End Date:
                         </span>
-                        <span className={styles['date-value']}>
+                        <span className="text-sm font-medium text-foreground">
                           {formatDate(project.sustainability_end_date)}
                         </span>
                       </div>
                     </div>
 
-                    <div className={styles['policy-section']}>
-                      <div className={styles['label']}>
+                    <div className="mt-2 mb-1 pt-2 border-t border-gray-100">
+                      <div className="text-sm font-medium text-muted min-w-[150px]">
                         Data Retention Policy:
                       </div>
                       <p
-                        className={styles['policy-text']}
+                        className="text-sm font-medium text-muted line-clamp-2 leading-relaxed"
                         title={project.data_retention_policy}
                       >
                         {project.data_retention_policy}
                       </p>
                     </div>
                   </div>
-
-                  <div className={styles['card-footer']}>
-                    <button
-                      aria-label="Edit Project"
-                      className={`${styles['action-button']} ${styles.edit} tooltip`}
-                      data-tip="Edit"
-                      onClick={() => handleEdit(project.id!)}
-                    >
-                      <PencilSquareIcon className={styles['action-icon']} />
-                    </button>
-                    <button
-                      aria-label="Delete Project"
-                      className={`${styles['action-button']} ${styles.delete} tooltip`}
-                      data-tip="Delete"
-                      onClick={() =>
-                        handleDeleteClick(project.id!, project.name)
-                      }
-                    >
-                      <TrashIcon className={styles['action-icon']} />
-                    </button>
-                  </div>
-                </div>
+                </Card>
               ))
             : null}
         </div>
       )}
-      {!data || data?.content?.length === 0 ? (
-        <div className={styles['empty-state']}>
-          <p className={styles['empty-text']}>No projects found</p>
+
+      {!projectsError &&
+      !isLoading &&
+      (!data || data?.content?.length === 0) ? (
+        <div className="text-center p-8 bg-surface-muted rounded-lg border border-line">
+          <p className="text-muted text-lg">No projects found</p>
         </div>
       ) : null}
 
       {data?.content && data.content.length > 0 && (
-        <div className="flex items-center justify-between px-4 py-1 border border-gray-200 rounded-lg my-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700">
-              Page {currentPage} of {data.total_pages}
-            </span>
-            <span className="text-sm text-gray-500">
-              ({data.total_elements} total projects)
-            </span>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="p-1 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-              aria-label="Previous page"
-            >
-              <ChevronLeftIcon className="size-5 text-gray-600" />
-            </button>
-            <button
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(data.total_pages, prev + 1))
-              }
-              disabled={currentPage >= data.total_pages}
-              className="p-1 rounded-lg border border-gray-300 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
-              aria-label="Next page"
-            >
-              <ChevronRightIcon className="size-5 text-gray-600" />
-            </button>
-          </div>
-        </div>
+        <Pagination
+          currentPage={currentPage}
+          totalPages={data.total_pages}
+          totalElements={data.total_elements}
+          itemLabel="projects"
+          className="py-1 my-4"
+          onPrev={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+          onNext={() =>
+            setCurrentPage((prev) => Math.min(data.total_pages, prev + 1))
+          }
+        />
       )}
     </div>
   )
