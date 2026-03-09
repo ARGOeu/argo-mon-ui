@@ -219,7 +219,7 @@ const Build = () => {
   }
 
   useEffect(() => {
-    if (!report && !tenantId && !groupsMutation.isPending)
+    if (report && tenantId && !groupsMutation.isPending)
       groupsMutation.mutate({ tenantId, reportId: report })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [report, tenantId])

@@ -9,11 +9,9 @@ import {
   Square3Stack3DIcon,
   ClipboardDocumentListIcon,
 } from '@heroicons/react/16/solid'
+import IconButton from '@/components/IconButton'
 
-const actionButtonBase =
-  'p-1 min-[940px]:p-1.5 rounded-lg transition-all cursor-pointer border-none bg-transparent tooltip'
-
-const actionIconClass = 'size-4 min-[940px]:size-5'
+const actionIconClass = 'size-4.5 min-[940px]:size-5'
 
 interface TenantCardFooterProps {
   isSuperAdmin: boolean
@@ -41,96 +39,78 @@ const TenantCardFooter = ({
   onDelete,
 }: TenantCardFooterProps) => (
   <>
-    <button
-      aria-label="View Tenant Details"
-      className={`${actionButtonBase} text-indigo-500 hover:bg-indigo-100`}
-      data-tip="View Tenant Details"
+    <IconButton
+      label="View Tenant Details"
+      icon={<Bars3Icon className={actionIconClass} />}
       onClick={onViewDetails}
-    >
-      <Bars3Icon className={actionIconClass} />
-    </button>
+      className="text-indigo-500 hover:bg-indigo-100"
+    />
 
     {(isSuperAdmin || isAdmin) && (
       <>
-        <button
-          aria-label="Edit Tenant"
-          className={`${actionButtonBase} text-muted hover:bg-gray-200`}
-          data-tip="Edit Tenant"
+        <IconButton
+          label="Edit Tenant"
+          icon={<PencilSquareIcon className={actionIconClass} />}
           onClick={onEdit}
-        >
-          <PencilSquareIcon className={actionIconClass} />
-        </button>
-        <button
-          aria-label="Manage Members"
-          className={`${actionButtonBase} text-violet-700 hover:bg-violet-100`}
-          data-tip="Manage Members"
+          className="text-muted hover:bg-gray-200"
+        />
+        <IconButton
+          label="Manage Members"
+          icon={<UserGroupIcon className={actionIconClass} />}
           onClick={onManageMembers}
-        >
-          <UserGroupIcon className={actionIconClass} />
-        </button>
+          className="text-violet-700 hover:bg-violet-100"
+        />
       </>
     )}
 
     {!isSuperAdmin && (
-      <button
-        aria-label="View Assigned Projects"
-        className={`${actionButtonBase} text-blue-600 hover:bg-brand-muted`}
-        data-tip="View Assigned Projects"
+      <IconButton
+        label="View Assigned Projects"
+        icon={<ClipboardDocumentListIcon className={actionIconClass} />}
         onClick={onAssignProjects}
-      >
-        <ClipboardDocumentListIcon className={actionIconClass} />
-      </button>
+        className="text-blue-600 hover:bg-brand-muted"
+      />
     )}
 
     {isSuperAdmin && (
-      <button
-        aria-label="Assign Projects"
-        className={`${actionButtonBase} text-blue-600 hover:bg-brand-muted`}
-        data-tip="Assign Projects"
+      <IconButton
+        label="Assign Projects"
+        icon={<PlusCircleIcon className={actionIconClass} />}
         onClick={onAssignProjects}
-      >
-        <PlusCircleIcon className={actionIconClass} />
-      </button>
+        className="text-blue-600 hover:bg-brand-muted"
+      />
     )}
 
     {(isSuperAdmin || isAdmin) && (
       <>
-        <button
-          aria-label="View Status"
-          className={`${actionButtonBase} text-emerald-600 hover:bg-green-50`}
-          data-tip="View Status"
+        <IconButton
+          label="View Status"
+          icon={<ListBulletIcon className={actionIconClass} />}
           onClick={onViewStatus}
-        >
-          <ListBulletIcon className={actionIconClass} />
-        </button>
-        <button
-          aria-label="Check Readiness"
-          className={`${actionButtonBase} text-cyan-600 hover:bg-cyan-50`}
-          data-tip="Check Readiness"
+          className="text-emerald-600 hover:bg-green-50"
+        />
+        <IconButton
+          label="Check Readiness"
+          icon={<ShieldCheckIcon className={actionIconClass} />}
           onClick={onReadiness}
-        >
-          <ShieldCheckIcon className={actionIconClass} />
-        </button>
-        <button
-          aria-label="Capabilities"
-          className={`${actionButtonBase} text-amber-600 hover:bg-amber-50`}
-          data-tip="Capabilities"
+          className="text-cyan-600 hover:bg-cyan-50"
+        />
+        <IconButton
+          label="Capabilities"
+          icon={<Square3Stack3DIcon className={actionIconClass} />}
           onClick={onCapabilities}
-        >
-          <Square3Stack3DIcon className="w-[1.3rem]" />
-        </button>
+          className="text-amber-600 hover:bg-amber-50"
+        />
       </>
     )}
 
     {isSuperAdmin && (
-      <button
-        aria-label="Delete Tenant"
-        className={`${actionButtonBase} text-red-600 hover:bg-red-50`}
-        data-tip="Delete Tenant"
+      <IconButton
+        label="Delete Tenant"
+        icon={<TrashIcon className={actionIconClass} />}
         onClick={onDelete}
-      >
-        <TrashIcon className={actionIconClass} />
-      </button>
+        className="text-red-600 hover:bg-red-50"
+      />
     )}
   </>
 )
