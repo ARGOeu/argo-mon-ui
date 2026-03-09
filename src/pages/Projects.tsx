@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useGetProjects, useDeleteProjectMutation } from '@/hooks/useProjects'
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
+import IconButton from '@/components/IconButton'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -13,9 +14,6 @@ import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 const pageSize = 9
-
-const actionButtonBase =
-  'p-1 min-[840px]:p-1.5 rounded-lg transition-all cursor-pointer border-none bg-transparent tooltip'
 
 const actionIconClass = 'size-4 min-[840px]:size-5'
 
@@ -153,24 +151,20 @@ const Projects = () => {
                   key={project.id}
                   footer={
                     <>
-                      <button
-                        aria-label="Edit Project"
-                        className={`${actionButtonBase} text-muted hover:bg-gray-200`}
-                        data-tip="Edit"
+                      <IconButton
+                        label="Edit Project"
+                        icon={<PencilSquareIcon className={actionIconClass} />}
                         onClick={() => handleEdit(project.id!)}
-                      >
-                        <PencilSquareIcon className={actionIconClass} />
-                      </button>
-                      <button
-                        aria-label="Delete Project"
-                        className={`${actionButtonBase} text-red-600 hover:bg-red-50`}
-                        data-tip="Delete"
+                        className="text-muted hover:bg-gray-200"
+                      />
+                      <IconButton
+                        label="Delete Project"
+                        icon={<TrashIcon className={actionIconClass} />}
                         onClick={() =>
                           handleDeleteClick(project.id!, project.name)
                         }
-                      >
-                        <TrashIcon className={actionIconClass} />
-                      </button>
+                        className="text-red-600 hover:bg-red-50"
+                      />
                     </>
                   }
                 >

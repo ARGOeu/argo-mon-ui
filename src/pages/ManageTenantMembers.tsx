@@ -459,7 +459,7 @@ const ManageTenantMembers = () => {
             {activeTab === 'invite' && (
               <div className="animate-fade-in">
                 <form onSubmit={handleInviteSubmit} className="max-w-xl">
-                  <div className="bg-surface-subtle border border-line rounded-lg p-6">
+                  <div className="bg-surface-subtle border border-line rounded-lg px-6 py-4">
                     <h2 className="text-lg font-semibold text-gray-800 mb-2.5">
                       Invite New Member
                     </h2>
@@ -511,7 +511,7 @@ const ManageTenantMembers = () => {
                       </div>
                     </div>
 
-                    <div className="flex justify-start">
+                    <div className="flex justify-start pb-1">
                       <Button
                         variant="primary"
                         size="md"
@@ -533,7 +533,7 @@ const ManageTenantMembers = () => {
             {activeTab === 'add-direct' && isSuperAdmin && (
               <div className="animate-fade-in">
                 <form onSubmit={handleAddDirectSubmit} className="max-w-xl">
-                  <div className="bg-surface-subtle border border-line rounded-lg p-6">
+                  <div className="bg-surface-subtle border border-line rounded-lg px-6 py-4">
                     <h2 className="text-lg font-semibold text-gray-800 mb-2.5">
                       Add a Member Directly
                     </h2>
@@ -649,7 +649,7 @@ const ManageTenantMembers = () => {
                       </div>
                     </div>
 
-                    <div className="flex justify-start">
+                    <div className="flex justify-start pb-1">
                       <Button
                         variant="primary"
                         size="md"

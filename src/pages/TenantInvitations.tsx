@@ -63,7 +63,9 @@ const TenantInvitations = ({
 
   return (
     <>
-      <h2 className="section-title">Tenant Invitations</h2>
+      <h2 className="text-lg font-semibold text-gray-800 mb-2.5">
+        Tenant Invitations
+      </h2>
       {invitationsError ? (
         <ErrorDisplay error={invitationsError} context="invitations" />
       ) : (
