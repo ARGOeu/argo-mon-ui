@@ -1,7 +1,15 @@
 import { useState } from 'react'
 import { useGetUserContactTypes } from '@/hooks/useTenants'
 import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid'
-import styles from '../pages/CreateTenant.module.css'
+
+const sectionClass =
+  'grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 md:gap-8 mb-6 animate-fade-in'
+const sectionContentClass =
+  'bg-surface-subtle border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
+const iconButtonClass =
+  'flex items-center justify-center size-7 rounded-md bg-blue-500 text-white border-none cursor-pointer hover:bg-blue-600'
+const iconButtonDangerClass =
+  'flex items-center justify-center size-7 rounded-md bg-red-500 text-white border-none cursor-pointer hover:bg-red-600'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -80,45 +88,48 @@ const ContactInformation = ({
   }
 
   return (
-    <div className={styles.section}>
-      <div className={styles['section-info']}>
+    <div className={sectionClass}>
+      <div className="pt-2 pl-2">
         <h2 className="section-title">Contact Information</h2>
         <p className="section-description">Contact details for the tenant</p>
       </div>
 
-      <div className={styles['section-content']}>
+      <div className={sectionContentClass}>
         {contacts.map((contact, index) => (
-          <div key={index} className={styles['contact-group']}>
-            <div className={styles['contact-header']}>
-              <span className={styles['contact-label']}>
+          <div
+            key={index}
+            className="flex flex-col gap-2 pb-4 mb-2 border-b border-line last:border-b-0 last:mb-0 last:pb-0"
+          >
+            <div className="flex justify-between items-center mb-1.5">
+              <span className="text-base font-semibold text-body">
                 Contact {index + 1}
               </span>
-              <div className={styles['contact-actions']}>
+              <div className="flex gap-2">
                 {index === contacts.length - 1 && contacts.length < 5 && (
                   <button
                     type="button"
                     onClick={handleAddContact}
-                    className={styles['icon-button']}
+                    className={iconButtonClass}
                     title="Add contact"
                   >
-                    <PlusIcon className={styles['icon']} />
+                    <PlusIcon className="size-5" />
                   </button>
                 )}
                 {contacts.length > 1 && (
                   <button
                     type="button"
                     onClick={() => handleRemoveContact(index)}
-                    className={styles['icon-button-danger']}
+                    className={iconButtonDangerClass}
                     title="Remove contact"
                   >
-                    <TrashIcon className={styles['icon']} />
+                    <TrashIcon className="size-5" />
                   </button>
                 )}
               </div>
             </div>
 
-            <div className={styles.field}>
-              <label className={styles.label}>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-body mb-1">
                 Name <span className="required">*</span>
               </label>
               <input
@@ -130,8 +141,8 @@ const ContactInformation = ({
               />
             </div>
 
-            <div className={styles.field}>
-              <label className={styles.label}>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-body mb-1">
                 Email <span className="required">*</span>
               </label>
               <input
@@ -148,26 +159,22 @@ const ContactInformation = ({
               )}
             </div>
 
-            <div className={styles.field}>
-              <label className={styles.label}>
+            <div className="flex flex-col">
+              <label className="text-sm font-medium text-body mb-1">
                 Type <span className="required">*</span>
               </label>
               {isContactTypesLoading ? (
-                <div className="text-sm text-gray-500">Loading...</div>
+                <div className="text-sm text-muted">Loading...</div>
               ) : (
                 <select
                   name="type"
                   value={contact.type}
                   onChange={(e) => handleChange(index, e)}
-                  style={{ textTransform: 'capitalize' }}
+                  className="capitalize"
                 >
                   <option value="">Select contact type</option>
                   {contactTypes?.map((type) => (
-                    <option
-                      key={type}
-                      value={type}
-                      style={{ textTransform: 'capitalize' }}
-                    >
+                    <option key={type} value={type} className="capitalize">
                       {type.toLowerCase()}
                     </option>
                   ))}

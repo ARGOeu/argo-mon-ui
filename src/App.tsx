@@ -1,10 +1,4 @@
-import {
-  BrowserRouter,
-  Navigate,
-  Outlet,
-  Route,
-  Routes,
-} from 'react-router-dom'
+import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Layout from './Layout'
 import { Home } from './pages/Home'
@@ -28,6 +22,7 @@ import { InvitationReview } from './pages/InvitationReview'
 import { Status } from './pages/Status'
 import { AuthProvider } from './auth/AuthProvider'
 import TenantCapabilities from './pages/TenantCapabilities'
+import NotFound from './pages/NotFound'
 import { Toaster } from 'sonner'
 
 const queryClient = new QueryClient({
@@ -223,7 +218,7 @@ function App() {
                     </AuthProtected>
                   }
                 />
-                <Route path="*" element={<Navigate to="/" replace />} />
+                <Route path="*" element={<NotFound />} />
               </Route>
             </Route>
           </Routes>

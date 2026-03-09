@@ -12,9 +12,16 @@ import { squishEmail } from '@/utils/profile'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
-import { toast, Toaster } from 'sonner'
-import styles from './Profile.module.css'
+import { toast } from 'sonner'
 import ErrorDisplay from '@/components/ErrorDisplay'
+import PageHeader from '@/components/PageHeader'
+import Badge from '@/components/Badge'
+import { roleBadgeClass } from '@/utils/badges'
+
+const fieldValueClass = 'text-sm text-gray-800 font-medium'
+const fieldValueUnavailableClass = 'text-sm text-subtle italic'
+
+const profileGridClass = 'grid grid-cols-[200px_1fr] gap-6'
 
 export const Profile = () => {
   const { username } = useParams<{ username: string }>()
@@ -114,18 +121,18 @@ export const Profile = () => {
 
   if (isViewingOtherUser && error) {
     return (
-      <div className={styles.container}>
-        <div className={styles.wrapper}>
-          <div className={styles.header}>
-            <div className={styles['header-content']}>
-              <h1 className="page-title">Manage User</h1>
-              <p className="page-subtitle">View and manage user account</p>
-            </div>
+      <div className="flex flex-col justify-center items-center">
+        <div className="max-w-6xl w-full">
+          <PageHeader
+            title="Manage User"
+            subtitle="View and manage user account"
+            className="flex justify-between items-start mb-6"
+          >
             <Button variant="secondary" size="md" onClick={handleBack}>
               <ArrowLeftIcon className="size-4" />
               Back to Administration
             </Button>
-          </div>
+          </PageHeader>
           <ErrorDisplay error={error.message} context="user profile" />
         </div>
       </div>
@@ -158,8 +165,7 @@ export const Profile = () => {
   })
 
   return (
-    <div className={styles.container}>
-      <Toaster richColors position="top-center" duration={2000} />
+    <div className="flex flex-col justify-center items-center">
       <ConfirmDialog
         isOpen={removeDialogOpen}
         title="Remove from Tenant"
@@ -182,37 +188,37 @@ export const Profile = () => {
         onConfirm={handleRemoveConfirm}
         onCancel={handleRemoveCancel}
       />
-      <div className={styles.wrapper}>
-        <div className={styles.header}>
-          <div className={styles['header-content']}>
-            <h1 className="page-title">
-              {isViewingOtherUser ? 'Manage User' : 'Profile'}
-            </h1>
-            <p className="page-subtitle">
-              {isViewingOtherUser
-                ? 'View and manage user account'
-                : 'View your account information'}
-            </p>
-          </div>
+      <div className="max-w-6xl w-full">
+        <PageHeader
+          title={isViewingOtherUser ? 'Manage User' : 'Profile'}
+          subtitle={
+            isViewingOtherUser
+              ? 'View and manage user account'
+              : 'View your account information'
+          }
+          className="flex justify-between items-start mb-6"
+        >
           {isViewingOtherUser && (
             <Button variant="secondary" size="md" onClick={handleBack}>
               <ArrowLeftIcon className="size-4" />
               Back to Administration
             </Button>
           )}
-        </div>
+        </PageHeader>
 
         {(profile || displayProfile) && (
-          <div className={styles['profile-card']}>
-            <div className={styles['profile-header']}>
-              <div className={styles['profile-header-content']}>
-                <div className={styles['icon-wrapper']}>
-                  <UserCircleIcon className={styles.icon} />
+          <div className="bg-white border border-line rounded-lg shadow-sm overflow-hidden">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-line">
+              <div className="flex items-center gap-4">
+                <div className="bg-white rounded-full p-3 shadow-sm">
+                  <UserCircleIcon className="size-12 text-blue-600" />
                 </div>
                 <div>
-                  <label className={styles['username-label']}>Username</label>
+                  <label className="text-base font-medium text-muted">
+                    Username
+                  </label>
                   <h2
-                    className={styles['username-value']}
+                    className="text-base font-bold text-gray-800 break-words"
                     title={currentUsername}
                   >
                     {squishEmail(currentUsername, 12, 12)}
@@ -221,45 +227,53 @@ export const Profile = () => {
               </div>
             </div>
 
-            <div className={styles['profile-body']}>
-              <div className={styles['profile-grid']}>
+            <div className="px-8 py-6">
+              <div className={profileGridClass}>
                 <div>
-                  <h3 className={styles['section-title']}>Account Details</h3>
+                  <h3 className="text-sm font-semibold text-body uppercase tracking-wider">
+                    Account Details
+                  </h3>
                 </div>
-                <div className={styles['details-container']}>
-                  <div className={styles['field-container']}>
-                    <label className={styles['field-label']}>First Name</label>
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-muted">
+                      First Name
+                    </label>
                     <p
                       className={
                         currentFirstName !== 'Not available'
-                          ? styles['field-value']
-                          : styles['field-value-unavailable']
+                          ? fieldValueClass
+                          : fieldValueUnavailableClass
                       }
                     >
                       {currentFirstName}
                     </p>
                   </div>
 
-                  <div className={styles['field-container']}>
-                    <label className={styles['field-label']}>Last Name</label>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-muted">
+                      Last Name
+                    </label>
                     <p
                       className={
                         currentLastName !== 'Not available'
-                          ? styles['field-value']
-                          : styles['field-value-unavailable']
+                          ? fieldValueClass
+                          : fieldValueUnavailableClass
                       }
                     >
                       {currentLastName}
                     </p>
                   </div>
 
-                  <div className={styles['field-container']}>
-                    <label className={styles['field-label']}>Email</label>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-muted">
+                      Email
+                    </label>
                     <p
                       className={
                         currentEmail !== 'Not available'
-                          ? styles['field-value']
-                          : styles['field-value-unavailable']
+                          ? fieldValueClass
+                          : fieldValueUnavailableClass
                       }
                     >
                       {currentEmail}
@@ -268,59 +282,61 @@ export const Profile = () => {
                 </div>
               </div>
 
-              <div className={styles['section-divider']}></div>
+              <div className="h-px bg-gray-200 my-6" />
 
-              <div className={styles['profile-grid']}>
+              <div className={profileGridClass}>
                 <div>
-                  <h3 className={styles['section-title']}>
+                  <h3 className="text-sm font-semibold text-body uppercase tracking-wider">
                     Tenant Memberships
                   </h3>
                 </div>
-                <div className={styles['details-container']}>
-                  <div className={styles['field-container']}>
-                    <label className={`${styles['field-label']} mb-4`}>
+                <div className="flex flex-col gap-3">
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-muted mb-4">
                       Tenants
                     </label>
-                    <div className={styles['tenants-section']}>
+                    <div className="flex flex-col gap-4">
                       {currentGroups && currentGroups.length > 0 ? (
-                        <div className={styles['tenants-list']}>
+                        <div className="flex flex-col gap-3">
                           {currentGroups.map((tenant, index) => (
-                            <div key={index} className={styles['tenant-item']}>
-                              <div className={styles['tenant-info']}>
-                                <span className={styles['tenant-name']}>
+                            <div
+                              key={index}
+                              className="w-fit flex items-center justify-between px-3 py-2 bg-surface-muted border border-line rounded-lg transition-all hover:bg-gray-100"
+                            >
+                              <div className="flex items-center gap-5 flex-1">
+                                <span className="text-sm font-medium text-gray-800">
                                   {tenant.name}
                                 </span>
-                                <span
-                                  className={`${styles['role-badge']} ${
-                                    tenant.role === 'admin'
-                                      ? styles['role-admin']
-                                      : styles['role-viewer']
-                                  }`}
+                                <Badge
+                                  size="xs"
+                                  className={
+                                    roleBadgeClass[tenant.role] ??
+                                    roleBadgeClass['viewer']
+                                  }
                                 >
                                   {tenant.role === 'super_admin'
                                     ? 'Super Admin'
                                     : tenant.role}
-                                </span>
+                                </Badge>
                               </div>
                               {isSuperAdmin && isViewingOtherUser && (
                                 <button
                                   aria-label="Remove from tenant"
-                                  className={`${styles['action-button']} ${styles.delete}`}
+                                  className="p-1 rounded-md cursor-pointer transition-all text-red-600 hover:bg-red-50 border-none bg-transparent ml-4 tooltip"
+                                  data-tip="Remove user from this tenant"
                                   onClick={() =>
                                     handleRemoveClick(tenant.name, tenant.role)
                                   }
                                   title="Remove user from this tenant"
                                 >
-                                  <UserMinusIcon
-                                    className={styles['action-icon']}
-                                  />
+                                  <UserMinusIcon className="size-5" />
                                 </button>
                               )}
                             </div>
                           ))}
                         </div>
                       ) : (
-                        <p className={styles['field-value-unavailable']}>
+                        <p className={fieldValueUnavailableClass}>
                           Not a member of any tenant
                         </p>
                       )}

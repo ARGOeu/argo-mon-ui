@@ -23,10 +23,10 @@ export const StatusItem = (props: StatusItemProps) => {
 
   return (
     <div
-      className={`${props.dragHandle || ''} ${!props.readOnly ? 'cursor-grab' : ''} flex flex-row items-center gap-1 border border-gray-200 rounded-lg px-3 py-2 ${!props.readOnly ? 'shadow-sm' : ''} align-middle bg-white ${!props.readOnly ? 'hover:bg-gray-50 hover:shadow' : ''} transition-all`}
+      className={`${props.dragHandle || ''} ${!props.readOnly ? 'cursor-grab' : ''} flex flex-row items-center gap-1 border border-line rounded-lg px-3 py-2 ${!props.readOnly ? 'shadow-sm' : ''} align-middle bg-white ${!props.readOnly ? 'hover:bg-surface-muted hover:shadow' : ''} transition-all`}
     >
       {props.dragHandle && !props.readOnly && (
-        <GripVertical className="text-gray-400 h-4 w-4 flex-shrink-0" />
+        <GripVertical className="text-subtle h-4 w-4 flex-shrink-0" />
       )}
       <div className="flex-1 min-w-0 flex md:flex-row flex-col items-start sm:items-center gap-2 flex-wrap">
         <div

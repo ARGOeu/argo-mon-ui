@@ -1,20 +1,20 @@
 import { useState, useEffect } from 'react'
 import { useGetAdminInvitations } from '@/hooks/useInvitations'
 import { useRevokeInvitation } from '@/hooks/useTenants'
-import { MagnifyingGlassIcon } from '@heroicons/react/16/solid'
-import {
-  ChevronUpIcon,
-  ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-} from '@heroicons/react/24/outline'
+import SearchInput from '@/components/SearchInput'
+import DataTable, {
+  thBase,
+  tdBase,
+  SortableColumnHeader,
+} from '@/components/DataTable'
 import { XCircleIcon } from '@heroicons/react/24/solid'
 import { toast } from 'sonner'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import ConfirmDialog from '@/components/ConfirmDialog'
-import styles from './AdminInvitations.module.css'
-import adminStyles from './Administration.module.css'
+import Pagination from '@/components/Pagination'
+import Badge from '@/components/Badge'
+import { roleBadgeClass, invitationStatusBadgeClass } from '@/utils/badges'
 
 interface AdminInvitationsProps {
   isSuperAdmin: boolean
@@ -23,13 +23,14 @@ interface AdminInvitationsProps {
 type SortColumn = 'tenant_name' | 'email' | 'role' | 'status' | 'created_at'
 type SortOrder = 'ASC' | 'DESC'
 
+const pageSize = 10
+
 const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null)
   const [sortOrder, setSortOrder] = useState<SortOrder>('ASC')
   const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 10
   const [revokeDialogOpen, setRevokeDialogOpen] = useState(false)
   const [invitationToRevoke, setInvitationToRevoke] = useState<{
     tenantId: string
@@ -114,22 +115,6 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
     setCurrentPage(1)
   }
 
-  const renderSortIcon = (column: SortColumn) => {
-    if (sortColumn !== column) {
-      return (
-        <span className={adminStyles['sort-icon-container']}>
-          <ChevronUpIcon className={adminStyles['sort-icon-inactive']} />
-          <ChevronDownIcon className={adminStyles['sort-icon-inactive']} />
-        </span>
-      )
-    }
-    return sortOrder === 'ASC' ? (
-      <ChevronUpIcon className={adminStyles['sort-icon-active']} />
-    ) : (
-      <ChevronDownIcon className={adminStyles['sort-icon-active']} />
-    )
-  }
-
   const renderContent = () => {
     if (invitationsLoading) {
       return (
@@ -145,8 +130,8 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
 
     if (!invitationsData?.content || invitationsData.content.length === 0) {
       return (
-        <div className={styles['empty-state']}>
-          <p className={styles['empty-text']}>
+        <div className="bg-surface-muted border border-line rounded-lg p-12 text-center">
+          <p className="text-muted text-base m-0">
             {searchInput
               ? 'No invitations found matching your search'
               : 'No invitations found'}
@@ -157,184 +142,151 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
 
     return (
       <>
-        <div className={styles['table-wrapper']}>
-          <div className={styles['table-scroll']}>
-            <table className={styles.table}>
-              <thead className={styles['table-head']}>
-                <tr>
-                  <th className={styles['th-tenant-name']}>
-                    <button
-                      onClick={() => handleSort('tenant_name')}
-                      className={adminStyles['sort-button']}
-                    >
-                      Tenant Name
-                      {renderSortIcon('tenant_name')}
-                    </button>
-                  </th>
-                  <th className={styles['th-email']}>
-                    <button
-                      onClick={() => handleSort('email')}
-                      className={adminStyles['sort-button']}
-                    >
-                      Email
-                      {renderSortIcon('email')}
-                    </button>
-                  </th>
-                  <th className={styles['th-role']}>
-                    <button
-                      onClick={() => handleSort('role')}
-                      className={adminStyles['sort-button']}
-                    >
-                      Role
-                      {renderSortIcon('role')}
-                    </button>
-                  </th>
-                  <th className={styles['th-status']}>
-                    <button
-                      onClick={() => handleSort('status')}
-                      className={adminStyles['sort-button']}
-                    >
-                      Status
-                      {renderSortIcon('status')}
-                    </button>
-                  </th>
-                  <th className={styles['th-created']}>
-                    <button
-                      onClick={() => handleSort('created_at')}
-                      className={adminStyles['sort-button']}
-                    >
-                      Created At
-                      {renderSortIcon('created_at')}
-                    </button>
-                  </th>
-                  <th className={styles['th-actions']}>Actions</th>
-                </tr>
-              </thead>
-              <tbody className={styles['table-body']}>
-                {invitationsData.content.map((invitation) => (
-                  <tr key={invitation.id} className={styles['table-row']}>
-                    <td className={styles['td-tenant-name']}>
-                      <span className={styles['tenant-name-text']}>
-                        {invitation.tenant_name}
-                      </span>
-                    </td>
-                    <td className={styles['td-email']}>
-                      <span className={styles['email-text']}>
-                        {invitation.email}
-                      </span>
-                    </td>
-                    <td className={styles['td-role']}>
-                      <span
-                        className={`${styles['role-badge']} ${
-                          invitation.role === 'admin'
-                            ? styles['role-admin']
-                            : styles['role-viewer']
-                        }`}
+        <DataTable tableClassName="table-fixed min-w-[700px]">
+          <thead className="bg-gray-100 border-b border-line">
+            <tr>
+              <th className={`${thBase} w-[22%]`}>
+                <SortableColumnHeader
+                  isActive={sortColumn === 'tenant_name'}
+                  isAscending={sortOrder === 'ASC'}
+                  onClick={() => handleSort('tenant_name')}
+                >
+                  Tenant Name
+                </SortableColumnHeader>
+              </th>
+              <th className={`${thBase} w-[22%]`}>
+                <SortableColumnHeader
+                  isActive={sortColumn === 'email'}
+                  isAscending={sortOrder === 'ASC'}
+                  onClick={() => handleSort('email')}
+                >
+                  Email
+                </SortableColumnHeader>
+              </th>
+              <th className={`${thBase} w-[15%]`}>
+                <SortableColumnHeader
+                  isActive={sortColumn === 'role'}
+                  isAscending={sortOrder === 'ASC'}
+                  onClick={() => handleSort('role')}
+                >
+                  Role
+                </SortableColumnHeader>
+              </th>
+              <th className={`${thBase} w-[15%]`}>
+                <SortableColumnHeader
+                  isActive={sortColumn === 'status'}
+                  isAscending={sortOrder === 'ASC'}
+                  onClick={() => handleSort('status')}
+                >
+                  Status
+                </SortableColumnHeader>
+              </th>
+              <th className={`${thBase} w-[15%]`}>
+                <SortableColumnHeader
+                  isActive={sortColumn === 'created_at'}
+                  isAscending={sortOrder === 'ASC'}
+                  onClick={() => handleSort('created_at')}
+                >
+                  Created At
+                </SortableColumnHeader>
+              </th>
+              <th className={`${thBase} w-[12%]`}>Actions</th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {invitationsData.content.map((invitation) => (
+              <tr
+                key={invitation.id}
+                className="transition-colors hover:bg-surface-muted"
+              >
+                <td className={tdBase}>
+                  <span className="break-words">{invitation.tenant_name}</span>
+                </td>
+                <td className={tdBase}>
+                  <span className="text-muted break-all text-sm">
+                    {invitation.email}
+                  </span>
+                </td>
+                <td className={tdBase}>
+                  <Badge
+                    size="xs"
+                    className={
+                      roleBadgeClass[invitation.role] ??
+                      'bg-gray-100 text-muted'
+                    }
+                  >
+                    {invitation.role === 'admin' ? 'Admin' : 'Viewer'}
+                  </Badge>
+                </td>
+                <td className={tdBase}>
+                  <Badge
+                    size="xs"
+                    className={`capitalize ${invitationStatusBadgeClass[invitation.status] ?? 'bg-gray-100 text-muted'}`}
+                  >
+                    {invitation.status === 'PENDING'
+                      ? 'Pending'
+                      : invitation.status === 'ACCEPTED'
+                        ? 'Accepted'
+                        : invitation.status === 'REJECTED'
+                          ? 'Rejected'
+                          : invitation.status === 'REVOKED'
+                            ? 'Revoked'
+                            : invitation.status}
+                  </Badge>
+                </td>
+                <td className={tdBase}>
+                  <span className="text-muted text-sm">
+                    {new Date(invitation.created_at).toLocaleDateString(
+                      'en-US',
+                      {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      },
+                    )}
+                  </span>
+                </td>
+                <td className={tdBase}>
+                  <div className="flex items-center gap-1 ml-3">
+                    {invitation.status === 'PENDING' ? (
+                      <button
+                        onClick={() =>
+                          handleRevokeClick(
+                            invitation.tenant_id,
+                            invitation.id,
+                            invitation.tenant_name,
+                            invitation.email,
+                          )
+                        }
+                        className="inline-flex items-center justify-center p-1.5 bg-transparent rounded-md text-red-500 border-none cursor-pointer transition-all hover:bg-red-50 active:scale-95 tooltip"
+                        data-tip="Revoke invitation"
+                        disabled={revokeInvitationMutation.isPending}
                       >
-                        {invitation.role === 'admin' ? 'Admin' : 'Viewer'}
-                      </span>
-                    </td>
-                    <td className={styles['td-status']}>
-                      <span
-                        className={`${styles['status-badge']} ${
-                          invitation.status === 'PENDING'
-                            ? styles['status-pending']
-                            : invitation.status === 'ACCEPTED'
-                              ? styles['status-accepted']
-                              : styles['status-rejected']
-                        }`}
-                      >
-                        {invitation.status === 'PENDING'
-                          ? 'Pending'
-                          : invitation.status === 'ACCEPTED'
-                            ? 'Accepted'
-                            : invitation.status === 'REJECTED'
-                              ? 'Rejected'
-                              : invitation.status === 'REVOKED'
-                                ? 'Revoked'
-                                : invitation.status}
-                      </span>
-                    </td>
-                    <td className={styles['td-created']}>
-                      <span className={styles['date-text']}>
-                        {new Date(invitation.created_at).toLocaleDateString(
-                          'en-US',
-                          {
-                            year: 'numeric',
-                            month: 'short',
-                            day: 'numeric',
-                          },
-                        )}
-                      </span>
-                    </td>
-                    <td>
-                      <div className={styles['actions-container']}>
-                        {invitation.status === 'PENDING' ? (
-                          <button
-                            onClick={() =>
-                              handleRevokeClick(
-                                invitation.tenant_id,
-                                invitation.id,
-                                invitation.tenant_name,
-                                invitation.email,
-                              )
-                            }
-                            className={`${styles['remove-button']} tooltip`}
-                            data-tip="Revoke invitation"
-                            disabled={revokeInvitationMutation.isPending}
-                          >
-                            <XCircleIcon
-                              style={{
-                                width: '1.6rem',
-                                height: '1.6rem',
-                              }}
-                            />
-                          </button>
-                        ) : (
-                          <span className={styles['empty-actions']}>-</span>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                        <XCircleIcon className="size-6" />
+                      </button>
+                    ) : (
+                      <span className="ml-3.5 block text-muted text-sm">-</span>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </DataTable>
 
         {invitationsData.content && invitationsData.content.length > 0 && (
-          <div className="pagination-container">
-            <div className="pagination-info">
-              <span className="pagination-text">
-                Page {currentPage} of {invitationsData.total_pages}
-              </span>
-              <span className="pagination-count">
-                ({invitationsData.total_elements} total invitations)
-              </span>
-            </div>
-            <div className="pagination-buttons">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                className="pagination-button"
-                aria-label="Previous page"
-              >
-                <ChevronLeftIcon className="pagination-icon" />
-              </button>
-              <button
-                onClick={() =>
-                  setCurrentPage((prev) =>
-                    Math.min(invitationsData.total_pages, prev + 1),
-                  )
-                }
-                disabled={currentPage >= invitationsData.total_pages}
-                className="pagination-button"
-                aria-label="Next page"
-              >
-                <ChevronRightIcon className="pagination-icon" />
-              </button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={invitationsData.total_pages}
+            totalElements={invitationsData.total_elements}
+            itemLabel="invitations"
+            onPrev={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            onNext={() =>
+              setCurrentPage((prev) =>
+                Math.min(invitationsData.total_pages, prev + 1),
+              )
+            }
+          />
         )}
       </>
     )
@@ -342,27 +294,13 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
 
   return (
     <>
-      <div className={styles['search-container']}>
-        <div className={styles['search-input-wrapper']}>
-          <MagnifyingGlassIcon className={styles['search-icon']} />
-          <input
-            type="text"
-            placeholder="Search invitations by tenant name or email..."
-            value={searchInput}
-            onChange={(e) => setSearchInput(e.target.value)}
-            className={styles['search-input']}
-          />
-          {searchInput && (
-            <button
-              onClick={handleClearSearch}
-              className={styles['clear-button']}
-              aria-label="Clear search"
-            >
-              ×
-            </button>
-          )}
-        </div>
-      </div>
+      <SearchInput
+        value={searchInput}
+        onChange={setSearchInput}
+        onClear={handleClearSearch}
+        placeholder="Search invitations by tenant name or email..."
+        maxWidth="max-w-[24rem]"
+      />
       {renderContent()}
 
       <ConfirmDialog

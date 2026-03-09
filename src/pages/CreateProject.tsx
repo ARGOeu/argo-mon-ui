@@ -6,11 +6,16 @@ import {
   useUpdateProjectMutation,
   useGetProjectById,
 } from '@/hooks/useProjects'
-import { toast, Toaster } from 'sonner'
+import { toast } from 'sonner'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '../components/Button'
-import styles from './CreateTenant.module.css'
+import PageHeader from '@/components/PageHeader'
+
+const sectionClass =
+  'grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 md:gap-8 mb-6 animate-fade-in'
+const sectionContentClass =
+  'bg-surface-subtle border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
 
 const CreateProject = () => {
   const { id: projectId } = useParams<{ id?: string }>()
@@ -203,7 +208,6 @@ const CreateProject = () => {
 
   return (
     <>
-      <Toaster richColors position="top-center" duration={2000} />
       <div className="page-container">
         {isEditMode && isProjectLoading ? (
           <div className="loading-container">
@@ -213,17 +217,15 @@ const CreateProject = () => {
           <ErrorDisplay error={projectError} context="project" />
         ) : (
           <>
-            <div className={styles.header}>
-              <div>
-                <h1 className="page-title">
-                  {isEditMode ? 'Edit Project' : 'Create New Project'}
-                </h1>
-                <p className="page-subtitle">
-                  {isEditMode
-                    ? 'Update the project information'
-                    : 'Fill in the details to create a new project'}
-                </p>
-              </div>
+            <PageHeader
+              title={isEditMode ? 'Edit Project' : 'Create New Project'}
+              subtitle={
+                isEditMode
+                  ? 'Update the project information'
+                  : 'Fill in the details to create a new project'
+              }
+              className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-1 pb-1"
+            >
               <Button
                 onClick={() => navigate('/projects')}
                 size="sm"
@@ -232,9 +234,9 @@ const CreateProject = () => {
                 <ArrowLeftIcon className="size-4" />
                 Back to Projects
               </Button>
-            </div>
+            </PageHeader>
 
-            <div className={styles['project-action-bar']}>
+            <div className="flex justify-end mb-4">
               <Button
                 variant="primary"
                 size="md"
@@ -258,18 +260,18 @@ const CreateProject = () => {
               </Button>
             </div>
 
-            <form onSubmit={handleSubmit} className={styles.form}>
-              <div className={styles.section}>
-                <div className={styles['section-info']}>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-7">
+              <div className={sectionClass}>
+                <div className="pt-2 pl-2">
                   <h2 className="section-title">Project Information</h2>
                   <p className="section-description">
                     Basic information for the project
                   </p>
                 </div>
 
-                <div className={styles['section-content']}>
-                  <div className={styles.field}>
-                    <label className={styles.label}>
+                <div className={sectionContentClass}>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-body mb-1">
                       Name <span className="required">*</span>
                     </label>
                     <input
@@ -282,8 +284,8 @@ const CreateProject = () => {
                       required
                     />
                   </div>
-                  <div className={styles.field}>
-                    <label className={styles.label}>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-body mb-1">
                       Description <span className="required">*</span>
                     </label>
                     <textarea
@@ -296,8 +298,8 @@ const CreateProject = () => {
                     />
                   </div>
 
-                  <div className={styles.field}>
-                    <label className={styles.label}>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-body mb-1">
                       Start Date <span className="required">*</span>
                     </label>
                     <input
@@ -310,8 +312,8 @@ const CreateProject = () => {
                     />
                   </div>
 
-                  <div className={styles.field}>
-                    <label className={styles.label}>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-body mb-1">
                       End Date <span className="required">*</span>
                     </label>
                     <input
@@ -329,8 +331,8 @@ const CreateProject = () => {
                     )}
                   </div>
 
-                  <div className={styles.field}>
-                    <label className={styles.label}>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-body mb-1">
                       Sustainability End Date{' '}
                       <span className="required">*</span>
                     </label>
@@ -349,8 +351,8 @@ const CreateProject = () => {
                     )}
                   </div>
 
-                  <div className={styles.field}>
-                    <label className={styles.label}>
+                  <div className="flex flex-col">
+                    <label className="text-sm font-medium text-body mb-1">
                       Data Retention Policy <span className="required">*</span>
                     </label>
                     <textarea

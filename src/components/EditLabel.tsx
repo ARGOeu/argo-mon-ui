@@ -52,7 +52,7 @@ const EditLabel = (props: EditLabelProps) => {
               value={tempLabel}
               onChange={(e) => setTempLabel(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="flex-1 min-w-[500px] font-semibold bg-gray-50 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+              className="flex-1 min-w-[500px] font-semibold bg-surface-muted border border-line-strong rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
               autoFocus
               onBlur={handleSave}
             />
@@ -62,7 +62,7 @@ const EditLabel = (props: EditLabelProps) => {
               value={tempLabel}
               onChange={(e) => setTempLabel(e.target.value)}
               onKeyDown={handleKeyDown}
-              className="flex-1 font-semibold bg-gray-50 border border-gray-300 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
+              className="flex-1 font-semibold bg-surface-muted border border-line-strong rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-blue-500 text-center"
               autoFocus
               onBlur={handleSave}
             />

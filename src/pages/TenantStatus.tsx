@@ -15,12 +15,14 @@ import {
   ChevronDownIcon,
   ChevronUpIcon,
 } from '@heroicons/react/16/solid'
-import { toast, Toaster } from 'sonner'
+import { toast } from 'sonner'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '@/components/Button'
+import PageHeader from '@/components/PageHeader'
+import Badge from '@/components/Badge'
+import { formatDateTime } from '@/utils/formatDateTime'
 import type { Job, JobStatus } from '@/types/tenants'
-import styles from './TenantStatus.module.css'
 
 const JOB_NAMES: Record<string, string> = {
   INIT_AMS: 'ARGO Messaging Service (AMS) Status',
@@ -28,54 +30,29 @@ const JOB_NAMES: Record<string, string> = {
   CREATE_DOMAIN_NAMES: 'Domain Names Creation Status',
 }
 
-const getStatusDisplay = (status: JobStatus): string => {
-  if (status === 'UNKNOWN') return 'Unknown'
-  if (status === 'INITIALISING') return 'Initialising'
-  if (status === 'INITIALISED') return 'Initialised'
-  if (status === 'FAILED_INITIALISATION') return 'Failed Initialisation'
-  if (status === 'IN_PROGRESS') return 'In Progress'
-  if (status === 'COMPLETED') return 'Completed'
-  if (status === 'FAILED') return 'Failed'
-  return status
+const JOB_STATUS_BADGE_CLASS: Record<string, string> = {
+  UNKNOWN: 'bg-gray-100 text-muted',
+  INITIALISING: 'bg-indigo-100 text-indigo-700',
+  INITIALISED: 'bg-brand-muted text-blue-600',
+  FAILED_INITIALISATION: 'bg-red-100 text-red-800',
+  IN_PROGRESS: 'bg-brand-muted text-brand',
+  COMPLETED: 'bg-emerald-100 text-emerald-800',
+  FAILED: 'bg-red-100 text-red-800',
 }
 
 const getStatusIcon = (status: JobStatus) => {
   if (status === 'COMPLETED')
-    return <CheckCircleIcon className={styles['status-icon-completed']} />
+    return <CheckCircleIcon className="size-6 text-emerald-600" />
   if (status === 'FAILED' || status === 'FAILED_INITIALISATION')
-    return <XCircleIcon className={styles['status-icon-failed']} />
+    return <XCircleIcon className="size-6 text-red-600" />
   if (status === 'INITIALISING')
-    return <ClockIcon className={styles[`status-icon-initialising`]} />
+    return <ClockIcon className="size-6 text-violet-600" />
   if (status === 'INITIALISED')
-    return <ClockIcon className={styles['status-icon-initialised']} />
+    return <ClockIcon className="size-6 text-blue-500" />
   if (status === 'IN_PROGRESS')
-    return <ClockIcon className={styles['status-icon-in-progress']} />
+    return <ClockIcon className="size-6 text-blue-600" />
 
-  return <QuestionMarkCircleIcon className={styles['status-icon-unknown']} />
-}
-
-const getStatusBadgeClass = (status: JobStatus): string => {
-  if (status === 'UNKNOWN') return styles['status-unknown']
-  if (status === 'INITIALISING') return styles['status-initialising']
-  if (status === 'INITIALISED') return styles['status-initialised']
-  if (status === 'FAILED_INITIALISATION')
-    return styles['status-failed-initialisation']
-  if (status === 'IN_PROGRESS') return styles['status-in-progress']
-  if (status === 'COMPLETED') return styles['status-completed']
-  if (status === 'FAILED') return styles['status-failed']
-  return ''
-}
-
-const formatDateTime = (dateString?: string) => {
-  if (!dateString) return 'N/A'
-  return new Date(dateString).toLocaleString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
+  return <QuestionMarkCircleIcon className="size-6 text-subtle" />
 }
 
 const STATUS_OPTIONS: { value: JobStatus; label: string }[] = [
@@ -231,29 +208,28 @@ const TenantStatus = () => {
 
   return (
     <>
-      <Toaster richColors position="top-center" duration={2000} />
       <div className="page-container">
-        <div className={styles.header}>
-          <div>
-            <h1 className="page-title">Tenant Status</h1>
-            <p className="page-subtitle">
+        <PageHeader
+          title="Tenant Status"
+          subtitle={
+            <>
               View and manage status for tenant
-              <strong style={{ wordBreak: 'break-all' }}>
+              <strong className="break-all">
                 {tenantData?.info.name ? ` ${tenantData.info.name}` : '...'}
               </strong>
-            </p>
-          </div>
-          <div>
-            <Button
-              onClick={() => navigate('/tenants')}
-              size="sm"
-              variant="secondary"
-            >
-              <ArrowLeftIcon className="size-4" />
-              Back to Tenants
-            </Button>
-          </div>
-        </div>
+            </>
+          }
+          className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between pb-2 mb-6 max-w-[1040px] mx-auto"
+        >
+          <Button
+            onClick={() => navigate('/tenants')}
+            size="sm"
+            variant="secondary"
+          >
+            <ArrowLeftIcon className="size-4" />
+            Back to Tenants
+          </Button>
+        </PageHeader>
 
         {statusLoading && (
           <div className="loading-container">
@@ -266,75 +242,120 @@ const TenantStatus = () => {
             <ErrorDisplay error={statusError} context="tenant status" />
           </div>
         ) : (
-          <div className={styles.content}>
+          <div className="flex flex-col gap-6 max-w-[1040px] mx-auto">
             {jobs && jobs.length > 0 ? (
               jobs
                 .filter((job) => job.name !== 'CHECK_READINESS')
                 .map((job) => (
-                  <div key={job.name} className={styles['job-card']}>
+                  <div
+                    key={job.name}
+                    className="bg-white border border-line rounded-lg px-3 py-2 shadow-sm"
+                  >
                     <div
-                      className={styles['job-header']}
+                      className="flex justify-between items-center p-1.5 rounded-xl transition-all hover:bg-surface-muted cursor-pointer"
                       onClick={() => toggleJob(job.name)}
-                      style={{ cursor: 'pointer' }}
                     >
-                      <div className={styles['job-title-wrapper']}>
+                      <div className="flex items-center gap-2 capitalize">
                         {getStatusIcon(job.status)}
-                        <h2 className={styles['job-title']}>
-                          {JOB_NAMES[job.name] || job.name}
+                        <h2 className="text-lg font-semibold text-foreground">
+                          {JOB_NAMES[job.name] ||
+                            job.name?.toLowerCase().replaceAll('_', ' ')}
                         </h2>
                         {job.mode === 'MANUAL' && (
-                          <span className={styles['manual-badge']}>Manual</span>
+                          <Badge
+                            size="xs"
+                            className="bg-amber-100 text-amber-800 ml-2"
+                          >
+                            Manual
+                          </Badge>
                         )}
                       </div>
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '0.5rem',
-                        }}
-                      >
-                        <span
-                          className={`${styles['job-status-badge']} ${getStatusBadgeClass(job.status)}`}
+                      <div className="flex items-center gap-2">
+                        <Badge
+                          size="lg"
+                          className={`capitalize ${JOB_STATUS_BADGE_CLASS[job.status] ?? 'bg-gray-100 text-muted'}`}
                         >
-                          {getStatusDisplay(job.status)}
-                        </span>
+                          {job.status?.toLowerCase()}
+                        </Badge>
                         {expandedJobs[job.name] ? (
-                          <ChevronUpIcon className={styles['toggle-icon']} />
+                          <ChevronUpIcon className="size-5 text-muted transition-transform" />
                         ) : (
-                          <ChevronDownIcon className={styles['toggle-icon']} />
+                          <ChevronDownIcon className="size-5 text-muted transition-transform" />
                         )}
                       </div>
                     </div>
 
                     {expandedJobs[job.name] && (
                       <>
-                        <div className={styles['progress-container']}>
-                          <div className={styles['step-wrapper']}>
-                            {getProgressSteps(job).map((step, index, array) => (
-                              <Fragment key={step.key}>
-                                <div
-                                  className={`${styles.step} ${styles[getStepStatus(job, step.key)]}`}
-                                >
-                                  <div className={styles['step-indicator']} />
-                                  <span className={styles['step-label']}>
-                                    {step.label}
-                                  </span>
-                                </div>
-                                {index < array.length - 1 && (
-                                  <div className={styles['step-line']} />
-                                )}
-                              </Fragment>
-                            ))}
+                        <div className="mt-3 mb-4 px-4 bg-surface-muted rounded-lg border border-line">
+                          <div className="flex items-center overflow-x-auto py-4 md:justify-between">
+                            {getProgressSteps(job).map((step, index, array) => {
+                              const stepStatus = getStepStatus(job, step.key)
+                              return (
+                                <Fragment key={step.key}>
+                                  <div className="flex flex-col items-center gap-2 shrink-0 min-w-[80px]">
+                                    <div
+                                      className={`w-7 h-7 rounded-full border-2 transition-all relative flex items-center justify-center ${
+                                        stepStatus === 'active'
+                                          ? 'border-blue-500 bg-blue-500 animate-pulse-ring'
+                                          : stepStatus === 'completed'
+                                            ? 'border-emerald-500 bg-emerald-500'
+                                            : stepStatus === 'failed'
+                                              ? 'border-red-500 bg-red-500'
+                                              : 'border-line-strong bg-white'
+                                      }`}
+                                    >
+                                      {stepStatus === 'active' && (
+                                        <span className="absolute top-1/2 left-1/2 w-2 h-2 bg-white rounded-full animate-pulse-dot" />
+                                      )}
+                                      {stepStatus === 'completed' && (
+                                        <span className="text-white text-sm font-bold leading-none">
+                                          ✓
+                                        </span>
+                                      )}
+                                      {stepStatus === 'failed' && (
+                                        <span className="text-white text-sm font-bold leading-none">
+                                          ✕
+                                        </span>
+                                      )}
+                                    </div>
+                                    <span
+                                      className={`text-sm text-center whitespace-nowrap ${
+                                        stepStatus === 'active'
+                                          ? 'text-blue-500 font-semibold'
+                                          : stepStatus === 'completed'
+                                            ? 'text-emerald-500 font-semibold'
+                                            : stepStatus === 'failed'
+                                              ? 'text-red-500 font-semibold'
+                                              : 'text-muted font-medium'
+                                      }`}
+                                    >
+                                      {step.label}
+                                    </span>
+                                  </div>
+                                  {index < array.length - 1 && (
+                                    <div
+                                      className={`flex-1 h-0.5 mx-2.5 relative -top-2 ${
+                                        stepStatus === 'completed' ||
+                                        stepStatus === 'active'
+                                          ? 'bg-gray-300'
+                                          : 'bg-gray-200'
+                                      }`}
+                                    />
+                                  )}
+                                </Fragment>
+                              )
+                            })}
                           </div>
                         </div>
 
                         {job.mode === 'MANUAL' && editingJob === job.name && (
-                          <div className={styles['status-change-section']}>
-                            <div className={styles['status-change-fields']}>
-                              <div className={styles['status-change-col']}>
+                          <div className="w-full flex flex-col gap-3 mb-3">
+                            <div className="flex flex-col gap-4">
+                              <div className="flex flex-col gap-1 flex-1">
                                 <label
                                   htmlFor={`status-${job.name}`}
-                                  className={styles['detail-label']}
+                                  className="text-sm font-semibold text-muted px-1"
                                 >
                                   Change Status:
                                 </label>
@@ -346,7 +367,7 @@ const TenantStatus = () => {
                                       e.target.value as JobStatus,
                                     )
                                   }
-                                  className={styles['status-change-dropdown']}
+                                  className="w-full px-3 py-2 text-sm font-medium border border-line-strong rounded-md bg-white text-muted cursor-pointer transition-all focus:outline-none focus:border-blue-500 focus:ring-3 focus:ring-blue-500/10"
                                 >
                                   {STATUS_OPTIONS.map((option) => (
                                     <option
@@ -358,10 +379,10 @@ const TenantStatus = () => {
                                   ))}
                                 </select>
                               </div>
-                              <div className={styles['status-change-col']}>
+                              <div className="flex flex-col gap-1 flex-1">
                                 <label
                                   htmlFor={`message-${job.name}`}
-                                  className={styles['detail-label']}
+                                  className="text-sm font-semibold text-muted px-1"
                                 >
                                   Message:
                                 </label>
@@ -372,21 +393,21 @@ const TenantStatus = () => {
                                     setJobMessage(e.target.value)
                                   }
                                   placeholder="Enter a description for this status change"
-                                  className={styles['status-message-input']}
+                                  className="w-full px-3 py-2 text-sm border border-line-strong rounded-md bg-white text-muted resize-y leading-[1.5] transition-all focus:outline-none focus:border-blue-500 focus:ring-3 focus:ring-blue-500/10 placeholder:text-subtle"
                                   rows={2}
                                 />
                               </div>
                             </div>
-                            <div className={styles['status-change-actions']}>
+                            <div className="flex gap-2 justify-end">
                               <button
                                 onClick={handleCancelEdit}
-                                className={styles['status-cancel-button']}
+                                className="px-4 py-2 text-sm font-semibold text-body bg-white border border-line-strong rounded-md cursor-pointer transition-all hover:bg-surface-muted hover:border-gray-400 active:bg-gray-100"
                               >
                                 Cancel
                               </button>
                               <button
                                 onClick={() => handleSaveStatus(job)}
-                                className={styles['status-save-button']}
+                                className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 border-none rounded-md cursor-pointer transition-all hover:bg-brand active:bg-blue-800"
                               >
                                 Save
                               </button>
@@ -394,13 +415,13 @@ const TenantStatus = () => {
                           </div>
                         )}
 
-                        <div className={styles['job-details']}>
-                          <div className={styles['detail-row-with-button']}>
-                            <div className={styles['detail-row']}>
-                              <span className={styles['detail-label']}>
+                        <div className="flex flex-col gap-2">
+                          <div className="flex justify-between items-center gap-4 py-1.5 pb-2 border-b border-gray-50 last:border-b-0">
+                            <div className="grid grid-cols-1 gap-1 md:grid-cols-[120px_1fr] md:gap-3">
+                              <span className="text-sm font-semibold text-muted px-1">
                                 Start Time:
                               </span>
-                              <span className={styles['detail-value']}>
+                              <span className="text-sm text-muted break-words">
                                 {formatDateTime(job.start)}
                               </span>
                             </div>
@@ -409,26 +430,26 @@ const TenantStatus = () => {
                               editingJob !== job.name && (
                                 <button
                                   onClick={() => handleEditClick(job)}
-                                  className={styles['status-edit-button']}
+                                  className="w-fit px-3 py-1.5 text-sm font-semibold text-blue-600 bg-white border border-blue-600 rounded-md cursor-pointer transition-all hover:bg-brand-subtle active:bg-brand-muted"
                                 >
                                   Edit Status
                                 </button>
                               )}
                           </div>
-                          <div className={styles['detail-row']}>
-                            <span className={styles['detail-label']}>
+                          <div className="grid grid-cols-1 gap-1 md:grid-cols-[120px_1fr] md:gap-3 py-1.5 border-b border-gray-50 last:border-b-0">
+                            <span className="text-sm font-semibold text-muted px-1">
                               End Time:
                             </span>
-                            <span className={styles['detail-value']}>
+                            <span className="text-sm text-muted break-words">
                               {formatDateTime(job.end)}
                             </span>
                           </div>
                           {job.message && (
-                            <div className={styles['detail-row']}>
-                              <span className={styles['detail-label']}>
+                            <div className="grid grid-cols-1 gap-1 md:grid-cols-[120px_1fr] md:gap-3 py-1.5 border-b border-gray-50 last:border-b-0">
+                              <span className="text-sm font-semibold text-muted px-1">
                                 Message:
                               </span>
-                              <span className={styles['detail-value']}>
+                              <span className="text-sm text-muted break-words">
                                 {job.message}
                               </span>
                             </div>
@@ -439,8 +460,10 @@ const TenantStatus = () => {
                   </div>
                 ))
             ) : (
-              <div className={styles['empty-state']}>
-                <p>No status information available for this tenant.</p>
+              <div className="bg-surface-muted border border-line rounded-lg p-12 text-center">
+                <p className="text-muted">
+                  No status information available for this tenant.
+                </p>
               </div>
             )}
           </div>

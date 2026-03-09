@@ -39,7 +39,7 @@ const SelectGroup = ({ children, selected, onChange }: SelectGroupProps) => {
   }
 
   return (
-    <div className="flex flex-row gap-2">
+    <div className="flex flex-row gap-2 flex-wrap">
       {items.map((item: SelectItemData) => {
         const isSelected = selected === item.value
 

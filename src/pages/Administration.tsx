@@ -1,22 +1,25 @@
 import { useState, useMemo, useEffect } from 'react'
 import { useAuth } from '@/auth/useAuth'
 import { useGetMembers } from '@/hooks/useTenants'
-import { MagnifyingGlassIcon, UserCircleIcon } from '@heroicons/react/16/solid'
-import {
-  ChevronUpIcon,
-  ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-} from '@heroicons/react/24/outline'
+import { UserCircleIcon } from '@heroicons/react/16/solid'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
-import styles from './Administration.module.css'
 import AdminInvitations from './AdminInvitations'
+import PageHeader from '@/components/PageHeader'
+import SearchInput from '@/components/SearchInput'
+import Tabs from '@/components/Tabs'
+import DataTable, { thBase, SortableColumnHeader } from '@/components/DataTable'
+import Pagination from '@/components/Pagination'
 import { useNavigate } from 'react-router-dom'
 import { squishEmail } from '@/utils/profile'
 
 type SortColumn = 'username' | 'firstName' | 'lastName' | 'email' | 'tenants'
 type SortDirection = 'asc' | 'desc'
+
+const pageSize = 10
+
+const tenantBadgeBase =
+  'inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap'
 
 const Administration = () => {
   const [activeTab, setActiveTab] = useState<'users' | 'invitations'>('users')
@@ -25,7 +28,6 @@ const Administration = () => {
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [currentPage, setCurrentPage] = useState(1)
-  const pageSize = 10
   const navigate = useNavigate()
 
   const { profile } = useAuth()
@@ -89,27 +91,13 @@ const Administration = () => {
     }
   }
 
-  const renderSortIcon = (column: SortColumn) => {
-    if (sortColumn !== column) {
-      return (
-        <span className={styles['sort-icon-container']}>
-          <ChevronUpIcon className={styles['sort-icon-inactive']} />
-          <ChevronDownIcon className={styles['sort-icon-inactive']} />
-        </span>
-      )
-    }
-    return sortDirection === 'asc' ? (
-      <ChevronUpIcon className={styles['sort-icon-active']} />
-    ) : (
-      <ChevronDownIcon className={styles['sort-icon-active']} />
-    )
-  }
-
   if (!isSuperAdmin) {
     return (
       <div className="page-container">
-        <div className={styles['access-denied']}>
-          <p>Access denied. This page is only available for admins.</p>
+        <div className="bg-red-100 border border-red-200 rounded-lg p-8 text-center mt-8">
+          <p className="text-red-800 font-medium text-base m-0">
+            Access denied. This page is only available for admins.
+          </p>
         </div>
       </div>
     )
@@ -117,51 +105,31 @@ const Administration = () => {
 
   return (
     <div className="page-container">
-      <div className={styles.header}>
-        <div>
-          <h1 className="page-title">Administration Panel</h1>
-          <p className="page-subtitle">Central management and configuration</p>
-        </div>
-      </div>
+      <PageHeader
+        title="Administration Panel"
+        subtitle="Central management and configuration"
+        className="mb-6"
+      />
 
-      <div className={styles.tabs}>
-        <button
-          className={`${styles.tab} ${activeTab === 'users' ? styles['tab-active'] : ''}`}
-          onClick={() => setActiveTab('users')}
-        >
-          Users
-        </button>
-        <button
-          className={`${styles.tab} ${activeTab === 'invitations' ? styles['tab-active'] : ''}`}
-          onClick={() => setActiveTab('invitations')}
-        >
-          Invitations
-        </button>
-      </div>
+      <Tabs
+        tabs={[
+          { id: 'users', label: 'Users' },
+          { id: 'invitations', label: 'Invitations' },
+        ]}
+        activeTab={activeTab}
+        onChange={(id) => setActiveTab(id as 'users' | 'invitations')}
+        className="mb-4"
+      />
 
       {activeTab === 'users' && (
         <>
-          <div className={styles['search-container']}>
-            <div className={styles['search-input-wrapper']}>
-              <MagnifyingGlassIcon className={styles['search-icon']} />
-              <input
-                type="text"
-                placeholder="Search users by username or email..."
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className={styles['search-input']}
-              />
-              {searchInput && (
-                <button
-                  onClick={handleClearSearch}
-                  className={styles['clear-button']}
-                  aria-label="Clear search"
-                >
-                  ×
-                </button>
-              )}
-            </div>
-          </div>
+          <SearchInput
+            value={searchInput}
+            onChange={setSearchInput}
+            onClear={handleClearSearch}
+            placeholder="Search users by username or email..."
+            maxWidth="max-w-[24rem]"
+          />
 
           {isLoading ? (
             <div className="loading-container">
@@ -172,139 +140,136 @@ const Administration = () => {
           ) : (
             <>
               {filteredUsers.length > 0 ? (
-                <div className={styles['table-wrapper']}>
-                  <div className={styles['table-scroll']}>
-                    <table className={styles.table}>
-                      <thead className={styles['table-head']}>
-                        <tr>
-                          <th className={styles['th-username']}>
-                            <button
-                              className={styles['sort-button']}
-                              onClick={() => handleSort('username')}
-                            >
-                              <span>Username</span>
-                              {renderSortIcon('username')}
-                            </button>
-                          </th>
-                          <th className={styles['th-name']}>
-                            <button
-                              className={styles['sort-button']}
-                              onClick={() => handleSort('firstName')}
-                            >
-                              <span>First Name</span>
-                              {renderSortIcon('firstName')}
-                            </button>
-                          </th>
-                          <th className={styles['th-name']}>
-                            <button
-                              className={styles['sort-button']}
-                              onClick={() => handleSort('lastName')}
-                            >
-                              <span>Last Name</span>
-                              {renderSortIcon('lastName')}
-                            </button>
-                          </th>
-                          <th className={styles['th-email']}>
-                            <button
-                              className={styles['sort-button']}
-                              onClick={() => handleSort('email')}
-                            >
-                              <span>Email</span>
-                              {renderSortIcon('email')}
-                            </button>
-                          </th>
-                          <th className={styles['th-tenants']}>
-                            <button
-                              className={styles['sort-button']}
-                              onClick={() => handleSort('tenants')}
-                            >
-                              <span>Tenants</span>
-                              {renderSortIcon('tenants')}
-                            </button>
-                          </th>
-                          <th className={styles['th-actions']}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className={styles['table-body']}>
-                        {filteredUsers.map((user) => (
-                          <tr key={user.id} className={styles['table-row']}>
-                            <td className={styles['td-username']}>
-                              <span
-                                className={styles['username-text']}
-                                title={user.username}
-                              >
-                                {squishEmail(user.username, 8, 8)}
-                              </span>
-                            </td>
-                            <td className={styles['td-name']}>
-                              <span className={styles['name-text']}>
-                                {user.firstName}
-                              </span>
-                            </td>
-                            <td className={styles['td-name']}>
-                              <span className={styles['name-text']}>
-                                {user.lastName}
-                              </span>
-                            </td>
-                            <td className={styles['td-email']}>
-                              <span className={styles['email-text']}>
-                                {user.email}
-                              </span>
-                            </td>
-                            <td className={styles['td-tenants']}>
-                              <div className={styles['tenants-container']}>
-                                {user.tenants && user.tenants.length > 0 ? (
-                                  user.tenants.map((tenant, index) => (
-                                    <span
-                                      key={index}
-                                      className={`tooltip ${styles['tenant-badge']} ${
-                                        tenant.role === 'admin'
-                                          ? styles['tenant-badge-admin']
-                                          : styles['tenant-badge-viewer']
-                                      }`}
-                                      data-tip={
-                                        tenant.role === 'admin'
-                                          ? 'Tenant Admin'
-                                          : 'Tenant Member'
-                                      }
-                                    >
-                                      {tenant.name}
-                                    </span>
-                                  ))
-                                ) : (
-                                  <span className={styles['no-tenants']}>
-                                    No tenants
-                                  </span>
-                                )}
-                              </div>
-                            </td>
-                            <td className={styles['td-actions']}>
-                              <div className={styles['actions-container']}>
-                                <button
-                                  onClick={() =>
-                                    navigate(
-                                      `/administration/users/${encodeURIComponent(user?.username?.split('@')[0] || '')}`,
-                                    )
+                <DataTable tableClassName="table-fixed min-w-[700px]">
+                  <thead className="bg-gray-100 border-b border-line">
+                    <tr>
+                      <th className={`${thBase} w-[15%]`}>
+                        <SortableColumnHeader
+                          isActive={sortColumn === 'username'}
+                          isAscending={sortDirection === 'asc'}
+                          onClick={() => handleSort('username')}
+                        >
+                          Username
+                        </SortableColumnHeader>
+                      </th>
+                      <th className={`${thBase} w-[18%]`}>
+                        <SortableColumnHeader
+                          isActive={sortColumn === 'firstName'}
+                          isAscending={sortDirection === 'asc'}
+                          onClick={() => handleSort('firstName')}
+                        >
+                          First Name
+                        </SortableColumnHeader>
+                      </th>
+                      <th className={`${thBase} w-[18%]`}>
+                        <SortableColumnHeader
+                          isActive={sortColumn === 'lastName'}
+                          isAscending={sortDirection === 'asc'}
+                          onClick={() => handleSort('lastName')}
+                        >
+                          Last Name
+                        </SortableColumnHeader>
+                      </th>
+                      <th className={`${thBase} w-[30%]`}>
+                        <SortableColumnHeader
+                          isActive={sortColumn === 'email'}
+                          isAscending={sortDirection === 'asc'}
+                          onClick={() => handleSort('email')}
+                        >
+                          Email
+                        </SortableColumnHeader>
+                      </th>
+                      <th className={`${thBase} w-[20%]`}>
+                        <SortableColumnHeader
+                          isActive={sortColumn === 'tenants'}
+                          isAscending={sortDirection === 'asc'}
+                          onClick={() => handleSort('tenants')}
+                        >
+                          Tenants
+                        </SortableColumnHeader>
+                      </th>
+                      <th className={`${thBase} w-[15%]`}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {filteredUsers.map((user) => (
+                      <tr
+                        key={user.id}
+                        className="transition-colors hover:bg-surface-muted"
+                      >
+                        <td className="px-4 py-3 break-words text-sm">
+                          <span
+                            className="font-medium text-foreground break-words"
+                            title={user.username}
+                          >
+                            {squishEmail(user.username, 8, 8)}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 break-words text-sm">
+                          <span className="text-body break-words">
+                            {user.firstName}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 break-words text-sm">
+                          <span className="text-body break-words">
+                            {user.lastName}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 break-words text-sm">
+                          <span className="text-muted break-all">
+                            {user.email}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3 break-words text-sm">
+                          <div className="flex flex-wrap gap-1.5">
+                            {user.tenants && user.tenants.length > 0 ? (
+                              user.tenants.map((tenant, index) => (
+                                <span
+                                  key={index}
+                                  className={`tooltip ${tenantBadgeBase} ${
+                                    tenant.role === 'admin'
+                                      ? 'bg-amber-100 text-amber-700'
+                                      : 'bg-brand-muted text-blue-800'
+                                  }`}
+                                  data-tip={
+                                    tenant.role === 'admin'
+                                      ? 'Tenant Admin'
+                                      : 'Tenant Member'
                                   }
-                                  className={`tooltip ${styles['action-button']}`}
-                                  data-tip="Manage user"
-                                  aria-label="Manage user"
                                 >
-                                  <UserCircleIcon
-                                    className={styles['action-icon']}
-                                  />
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                                  {tenant.name}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-subtle text-sm italic">
+                                No tenants
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3 break-words text-sm">
+                          <div className="flex items-center gap-1 ml-2.5">
+                            <button
+                              onClick={() =>
+                                navigate(
+                                  `/administration/users/${encodeURIComponent(user?.username?.split('@')[0] || '')}`,
+                                )
+                              }
+                              className="tooltip p-1.5 text-muted bg-transparent border-none rounded-lg flex items-center justify-center cursor-pointer transition-all hover:bg-gray-200 hover:text-foreground"
+                              data-tip="Manage user"
+                              aria-label="Manage user"
+                            >
+                              <UserCircleIcon className="size-[1.125rem] md:size-[1.375rem]" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </DataTable>
               ) : (
-                <div className={styles['empty-state']}>
-                  <p className={styles['empty-text']}>
+                <div className="bg-surface-muted border border-line rounded-lg p-12 text-center">
+                  <p className="text-muted text-base m-0">
                     {searchInput
                       ? 'No users found matching your search'
                       : 'No users available'}
@@ -313,36 +278,14 @@ const Administration = () => {
               )}
 
               {filteredUsers.length > 0 && usersData && (
-                <div className="pagination-container">
-                  <div className="pagination-info">
-                    <span className="pagination-text">
-                      Page {currentPage} of {usersData.total_pages}
-                    </span>
-                    <span className="pagination-count">
-                      ({usersData.total_elements} total users)
-                    </span>
-                  </div>
-                  <div className="pagination-buttons">
-                    <button
-                      onClick={() =>
-                        setCurrentPage((prev) => Math.max(1, prev - 1))
-                      }
-                      disabled={currentPage === 1}
-                      className="pagination-button"
-                      aria-label="Previous page"
-                    >
-                      <ChevronLeftIcon className="pagination-icon" />
-                    </button>
-                    <button
-                      onClick={() => setCurrentPage((prev) => prev + 1)}
-                      disabled={currentPage >= usersData.total_pages}
-                      className="pagination-button"
-                      aria-label="Next page"
-                    >
-                      <ChevronRightIcon className="pagination-icon" />
-                    </button>
-                  </div>
-                </div>
+                <Pagination
+                  currentPage={currentPage}
+                  totalPages={usersData.total_pages}
+                  totalElements={usersData.total_elements}
+                  itemLabel="users"
+                  onPrev={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                  onNext={() => setCurrentPage((prev) => prev + 1)}
+                />
               )}
             </>
           )}

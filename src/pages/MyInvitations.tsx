@@ -3,16 +3,15 @@ import {
   useGetUserInvitations,
   useRespondToInvitation,
 } from '@/hooks/useInvitations'
-import {
-  CheckCircleIcon,
-  XCircleIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-} from '@heroicons/react/24/solid'
-import { toast, Toaster } from 'sonner'
+import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid'
+import { toast } from 'sonner'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
-import styles from './MyInvitations.module.css'
+import PageHeader from '@/components/PageHeader'
+import DataTable, { thBase, tdBase } from '@/components/DataTable'
+import Pagination from '@/components/Pagination'
+import Badge from '@/components/Badge'
+import { roleBadgeClass, invitationStatusBadgeClass } from '@/utils/badges'
 
 const pageSize = 10
 
@@ -47,16 +46,12 @@ const MyInvitations = () => {
 
   return (
     <>
-      <Toaster richColors position="top-center" duration={2000} />
       <div className="page-container">
-        <div className={styles.header}>
-          <div>
-            <h1 className="page-title">My Invitations</h1>
-            <p className="page-subtitle">
-              View and respond to your tenant invitations
-            </p>
-          </div>
-        </div>
+        <PageHeader
+          title="My Invitations"
+          subtitle="View and respond to your tenant invitations"
+          className="mb-8"
+        />
 
         {isLoading ? (
           <div className="loading-container">
@@ -68,151 +63,130 @@ const MyInvitations = () => {
           <>
             {invitationsData?.content && invitationsData.content.length > 0 ? (
               <>
-                <div className={styles['table-wrapper']}>
-                  <div className={styles['table-scroll']}>
-                    <table className={styles.table}>
-                      <thead className={styles['table-head']}>
-                        <tr>
-                          <th className={styles['th-tenant-name']}>
-                            Tenant Name
-                          </th>
-                          <th className={styles['th-email']}>Email</th>
-                          <th className={styles['th-role']}>Role</th>
-                          <th className={styles['th-status']}>Status</th>
-                          <th className={styles['th-created']}>Created At</th>
-                          <th className={styles['th-actions']}>Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className={styles['table-body']}>
-                        {invitationsData.content.map((invitation) => (
-                          <tr
-                            key={invitation.id}
-                            className={styles['table-row']}
+                <DataTable
+                  className=""
+                  tableClassName="table-fixed min-w-[700px]"
+                >
+                  <thead className="bg-gray-100 border-b border-line">
+                    <tr>
+                      <th className={`${thBase} w-[20%]`}>Tenant Name</th>
+                      <th className={`${thBase} w-[20%]`}>Email</th>
+                      <th className={`${thBase} w-[15%]`}>Role</th>
+                      <th className={`${thBase} w-[15%]`}>Status</th>
+                      <th className={`${thBase} w-[15%]`}>Created At</th>
+                      <th className={`${thBase} w-[15%]`}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {invitationsData.content.map((invitation) => (
+                      <tr
+                        key={invitation.id}
+                        className="transition-colors hover:bg-surface-muted"
+                      >
+                        <td className={tdBase}>
+                          <span className="break-words">
+                            {invitation.tenant_name}
+                          </span>
+                        </td>
+                        <td className={tdBase}>
+                          <span className="text-muted break-all text-sm">
+                            {invitation.email}
+                          </span>
+                        </td>
+                        <td className={tdBase}>
+                          <Badge
+                            size="xs"
+                            className={
+                              roleBadgeClass[invitation.role] ??
+                              'bg-gray-100 text-muted'
+                            }
                           >
-                            <td>
-                              <span className={styles['tenant-name-text']}>
-                                {invitation.tenant_name}
-                              </span>
-                            </td>
-                            <td>
-                              <span className={styles['email-text']}>
-                                {invitation.email}
-                              </span>
-                            </td>
-                            <td>
-                              <span
-                                className={`${styles['role-badge']} ${styles[`role-${invitation.role}`]}`}
+                            {invitation.role === 'admin'
+                              ? 'Tenant Admin'
+                              : 'Member'}
+                          </Badge>
+                        </td>
+                        <td className={tdBase}>
+                          <Badge
+                            size="xs"
+                            className={`capitalize ${invitationStatusBadgeClass[invitation.status] ?? 'bg-gray-100 text-muted'}`}
+                          >
+                            {invitation.status === 'PENDING'
+                              ? 'Pending'
+                              : invitation.status === 'ACCEPTED'
+                                ? 'Accepted'
+                                : invitation.status === 'REJECTED'
+                                  ? 'Rejected'
+                                  : invitation.status}
+                          </Badge>
+                        </td>
+                        <td className={tdBase}>
+                          <span className="text-muted text-sm">
+                            {new Date(invitation.created_at).toLocaleDateString(
+                              'en-US',
+                              {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                              },
+                            )}
+                          </span>
+                        </td>
+                        <td className={tdBase}>
+                          {invitation.status === 'PENDING' ? (
+                            <div className="flex items-center gap-5 flex-col md:flex-row md:gap-5">
+                              <button
+                                onClick={() =>
+                                  handleRespond(invitation.id, 'ACCEPT')
+                                }
+                                className="tooltip p-1 rounded-lg border flex items-center justify-center cursor-pointer transition-all w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-50 border-emerald-500 text-emerald-600 hover:enabled:bg-emerald-100 hover:enabled:border-emerald-600 hover:enabled:text-emerald-700"
+                                data-tip="Accept invitation"
+                                disabled={respondMutation.isPending}
                               >
-                                {invitation.role === 'admin'
-                                  ? 'Tenant Admin'
-                                  : 'Member'}
-                              </span>
-                            </td>
-                            <td>
-                              <span
-                                className={`${styles['status-badge']} ${styles[`status-${invitation.status.toLowerCase()}`]}`}
+                                <CheckCircleIcon className="size-6 shrink-0" />
+                              </button>
+                              <button
+                                onClick={() =>
+                                  handleRespond(invitation.id, 'REJECT')
+                                }
+                                className="tooltip p-1 rounded-lg border flex items-center justify-center cursor-pointer transition-all w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed bg-red-50 border-red-500 text-red-600 hover:enabled:bg-red-100 hover:enabled:border-red-600 hover:enabled:text-red-700"
+                                data-tip="Reject invitation"
+                                disabled={respondMutation.isPending}
                               >
-                                {invitation.status === 'PENDING'
-                                  ? 'Pending'
-                                  : invitation.status === 'ACCEPTED'
-                                    ? 'Accepted'
-                                    : invitation.status === 'REJECTED'
-                                      ? 'Rejected'
-                                      : invitation.status}
-                              </span>
-                            </td>
-                            <td>
-                              <span className={styles['date-text']}>
-                                {new Date(
-                                  invitation.created_at,
-                                ).toLocaleDateString('en-US', {
-                                  year: 'numeric',
-                                  month: 'short',
-                                  day: 'numeric',
-                                })}
-                              </span>
-                            </td>
-                            <td>
-                              {invitation.status === 'PENDING' ? (
-                                <div className={styles['actions-container']}>
-                                  <button
-                                    onClick={() =>
-                                      handleRespond(invitation.id, 'ACCEPT')
-                                    }
-                                    className={`tooltip ${styles['action-button']} ${styles['accept-button']}`}
-                                    data-tip="Accept invitation"
-                                    disabled={respondMutation.isPending}
-                                  >
-                                    <CheckCircleIcon
-                                      className={styles['action-icon']}
-                                    />
-                                  </button>
-                                  <button
-                                    onClick={() =>
-                                      handleRespond(invitation.id, 'REJECT')
-                                    }
-                                    className={`tooltip ${styles['action-button']} ${styles['reject-button']}`}
-                                    data-tip="Reject invitation"
-                                    disabled={respondMutation.isPending}
-                                  >
-                                    <XCircleIcon
-                                      className={styles['action-icon']}
-                                    />
-                                  </button>
-                                </div>
-                              ) : (
-                                <span className={styles['empty-actions']}>
-                                  -
-                                </span>
-                              )}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
+                                <XCircleIcon className="size-6 shrink-0" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="w-1/2 block text-muted text-sm text-center">
+                              -
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </DataTable>
 
                 {invitationsData.content.length > 0 && (
-                  <div className="pagination-container">
-                    <div className="pagination-info">
-                      <span className="pagination-text">
-                        Page {currentPage} of {invitationsData.total_pages}
-                      </span>
-                      <span className="pagination-count">
-                        ({invitationsData.total_elements} total invitations)
-                      </span>
-                    </div>
-                    <div className="pagination-buttons">
-                      <button
-                        onClick={() =>
-                          setCurrentPage((prev) => Math.max(1, prev - 1))
-                        }
-                        disabled={currentPage === 1}
-                        className="pagination-button"
-                        aria-label="Previous page"
-                      >
-                        <ChevronLeftIcon className="pagination-icon" />
-                      </button>
-                      <button
-                        onClick={() =>
-                          setCurrentPage((prev) =>
-                            Math.min(invitationsData.total_pages, prev + 1),
-                          )
-                        }
-                        disabled={currentPage >= invitationsData.total_pages}
-                        className="pagination-button"
-                        aria-label="Next page"
-                      >
-                        <ChevronRightIcon className="pagination-icon" />
-                      </button>
-                    </div>
-                  </div>
+                  <Pagination
+                    currentPage={currentPage}
+                    totalPages={invitationsData.total_pages}
+                    totalElements={invitationsData.total_elements}
+                    itemLabel="invitations"
+                    onPrev={() =>
+                      setCurrentPage((prev) => Math.max(1, prev - 1))
+                    }
+                    onNext={() =>
+                      setCurrentPage((prev) =>
+                        Math.min(invitationsData.total_pages, prev + 1),
+                      )
+                    }
+                  />
                 )}
               </>
             ) : (
-              <div className={styles['empty-state']}>
-                <p className={styles['empty-text']}>No invitations found</p>
+              <div className="bg-surface-muted border border-line rounded-lg py-8 px-12 text-center">
+                <p className="text-muted text-base m-0">No invitations found</p>
               </div>
             )}
           </>

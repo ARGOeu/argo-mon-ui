@@ -9,15 +9,21 @@ import {
   useUpdateUserTenantMutation,
 } from '@/hooks/useTenants'
 import type { Metadata } from '@/types/tenants'
-import { toast, Toaster } from 'sonner'
+import { toast } from 'sonner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '../components/Button'
 import ContactInformation from '../components/ContactInformation'
 import InfrastructureMetadata from '../components/InfrastructureMetadata'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import styles from './CreateTenant.module.css'
+import PageHeader from '@/components/PageHeader'
+import Tabs from '@/components/Tabs'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
+
+const sectionClass =
+  'grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 md:gap-8 mb-6 animate-fade-in'
+const sectionContentClass =
+  'bg-surface-subtle border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -424,7 +430,6 @@ const CreateTenant = () => {
 
   return (
     <>
-      <Toaster richColors position="top-center" duration={2000} />
       <div className="page-container">
         {isEditMode && isTenantLoading ? (
           <div className="loading-container">
@@ -434,26 +439,22 @@ const CreateTenant = () => {
           <ErrorDisplay error={tenantError} context="tenant" />
         ) : (
           <>
-            <div className={styles.header}>
-              <div>
-                <h1 className="page-title">
-                  {isEditMode ? 'Edit Tenant' : 'Create New Tenant'}
-                </h1>
-                <p className="page-subtitle">
-                  {isEditMode ? (
-                    <>
-                      Update information for tenant
-                      <strong style={{ wordBreak: 'break-all' }}>
-                        {tenantData?.info.name
-                          ? ` ${tenantData.info.name}`
-                          : ''}
-                      </strong>
-                    </>
-                  ) : (
-                    'Fill in the details to create a new tenant'
-                  )}
-                </p>
-              </div>
+            <PageHeader
+              title={isEditMode ? 'Edit Tenant' : 'Create New Tenant'}
+              subtitle={
+                isEditMode ? (
+                  <>
+                    Update information for tenant
+                    <strong className="break-all">
+                      {tenantData?.info.name ? ` ${tenantData.info.name}` : ''}
+                    </strong>
+                  </>
+                ) : (
+                  'Fill in the details to create a new tenant'
+                )
+              }
+              className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-1 pb-1"
+            >
               <Button
                 onClick={() => navigate('/tenants')}
                 size="sm"
@@ -462,13 +463,13 @@ const CreateTenant = () => {
                 <ArrowLeftIcon className="size-4" />
                 Back to Tenants
               </Button>
-            </div>
+            </PageHeader>
 
-            <div className={styles['action-bar']}>
-              <div className={styles.legend}>
-                <span className={styles['legend-indicator']} />
-                <span className={styles['legend-separator']}>:</span>
-                <span className={styles['legend-text']}>
+            <div className="flex justify-between items-center">
+              <div className="flex items-center gap-[3px]">
+                <span className="inline-block size-[6px] rounded-full bg-red-500 shrink-0" />
+                <span className="text-sm text-muted font-medium">:</span>
+                <span className="text-sm text-subtle">
                   Indicates required fields are missing or invalid
                 </span>
               </div>
@@ -503,60 +504,43 @@ const CreateTenant = () => {
               </Button>
             </div>
 
-            <form onSubmit={handleSubmit} className={styles.form}>
-              <div className={styles.tabs}>
-                <button
-                  type="button"
-                  className={`${styles.tab} ${activeTab === 'info' ? styles['tab-active'] : ''}`}
-                  onClick={() => setActiveTab('info')}
-                >
-                  Tenant Details
-                  <span
-                    className={`${styles['tab-indicator']} ${
-                      hasTenantDetailsErrors()
-                        ? styles['tab-indicator-visible']
-                        : ''
-                    }`}
-                  />
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.tab} ${activeTab === 'contact' ? styles['tab-active'] : ''}`}
-                  onClick={() => setActiveTab('contact')}
-                >
-                  Contact Information
-                  <span
-                    className={`${styles['tab-indicator']} ${
-                      hasContactErrors() ? styles['tab-indicator-visible'] : ''
-                    }`}
-                  />
-                </button>
-                <button
-                  type="button"
-                  className={`${styles.tab} ${activeTab === 'metadata' ? styles['tab-active'] : ''}`}
-                  onClick={() => setActiveTab('metadata')}
-                >
-                  Infrastructure Settings
-                  <span
-                    className={`${styles['tab-indicator']} ${
-                      hasMetadataErrors() ? styles['tab-indicator-visible'] : ''
-                    }`}
-                  />
-                </button>
-              </div>
+            <form onSubmit={handleSubmit} className="flex flex-col gap-7">
+              <Tabs
+                tabs={[
+                  {
+                    id: 'info',
+                    label: 'Tenant Details',
+                    hasError: hasTenantDetailsErrors(),
+                  },
+                  {
+                    id: 'contact',
+                    label: 'Contact Information',
+                    hasError: hasContactErrors(),
+                  },
+                  {
+                    id: 'metadata',
+                    label: 'Infrastructure Settings',
+                    hasError: hasMetadataErrors(),
+                  },
+                ]}
+                activeTab={activeTab}
+                onChange={(id) =>
+                  setActiveTab(id as 'info' | 'contact' | 'metadata')
+                }
+              />
 
-              <div style={{ display: activeTab === 'info' ? 'block' : 'none' }}>
-                <div className={styles.section}>
-                  <div className={styles['section-info']}>
+              <div className={activeTab === 'info' ? 'block' : 'hidden'}>
+                <div className={sectionClass}>
+                  <div className="pt-2 pl-2">
                     <h2 className="section-title">Tenant Information</h2>
                     <p className="section-description">
                       Basic details and identification
                     </p>
                   </div>
 
-                  <div className={styles['section-content']}>
-                    <div className={styles.field}>
-                      <label className={styles.label}>
+                  <div className={sectionContentClass}>
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-body mb-1">
                         Name <span className="required">*</span>
                       </label>
                       <input
@@ -575,8 +559,8 @@ const CreateTenant = () => {
                       )}
                     </div>
 
-                    <div className={styles.field}>
-                      <label className={styles.label}>
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-body mb-1">
                         Email <span className="required">*</span>
                       </label>
                       <input
@@ -594,8 +578,8 @@ const CreateTenant = () => {
                       )}
                     </div>
 
-                    <div className={styles.field}>
-                      <label className={styles.label}>
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-body mb-1">
                         Description <span className="required">*</span>
                       </label>
                       <textarea
@@ -610,44 +594,46 @@ const CreateTenant = () => {
                   </div>
                 </div>
 
-                <div className={styles.section}>
-                  <div className={styles['section-info']}>
+                <div className={sectionClass}>
+                  <div className="pt-2 pl-2">
                     <h2 className="section-title">Additional Details</h2>
                     <p className="section-description">
                       Optional media and website links
                     </p>
                   </div>
 
-                  <div className={styles['section-content']}>
-                    <div className={styles.field}>
-                      <label className={styles.label}>Image</label>
+                  <div className={sectionContentClass}>
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-body mb-1">
+                        Image
+                      </label>
                       <div
                         {...getRootProps()}
-                        className={`${styles.dropzone} ${isDragActive ? styles['dropzone-active'] : ''}`}
+                        className={`border-2 border-dashed rounded-lg p-2 text-center cursor-pointer transition-all min-h-[80px] flex flex-col items-center justify-center ${isDragActive ? 'border-blue-500 bg-brand-muted' : 'border-line-strong bg-white hover:border-gray-400 hover:bg-gray-100'}`}
                       >
                         <input {...getInputProps()} />
                         {imagePreview ? (
-                          <div className={styles['image-preview']}>
+                          <div className="flex flex-col items-center gap-1 w-full relative">
                             <button
                               type="button"
                               onClick={handleRemoveImage}
-                              className={styles['remove-image-button']}
+                              className="absolute top-0 right-0 bg-gray-600 border-2 border-white rounded-full size-7 flex items-center justify-center cursor-pointer z-10 shadow-md hover:bg-gray-700 hover:shadow-lg"
                               aria-label="Remove image"
                             >
-                              <XMarkIcon className={styles['remove-icon']} />
+                              <XMarkIcon className="size-5 text-white" />
                             </button>
                             <img
-                              className={styles['preview-image']}
+                              className="size-20 rounded-lg object-contain"
                               src={imagePreview}
                             />
-                            <p className={styles['dropzone-text']}>
+                            <p className="text-sm text-muted m-0">
                               Drop image here or click to upload
                             </p>
                           </div>
                         ) : (
                           <>
-                            <PhotoIcon className={styles['upload-icon']} />
-                            <p className={styles['upload-text']}>
+                            <PhotoIcon className="size-12 text-subtle mx-auto mb-0.5" />
+                            <p className="text-sm text-muted m-0">
                               {isDragActive
                                 ? 'Drop image here'
                                 : 'Drop image here or click to upload'}
@@ -655,8 +641,12 @@ const CreateTenant = () => {
                           </>
                         )}
                       </div>
-                      <div className={styles['or-divider']}>
-                        <span>OR</span>
+                      <div className="flex items-center my-1">
+                        <div className="flex-1 border-b border-line" />
+                        <span className="px-4 text-xs text-subtle font-medium uppercase">
+                          OR
+                        </span>
+                        <div className="flex-1 border-b border-line" />
                       </div>
                       <input
                         type="url"
@@ -666,8 +656,10 @@ const CreateTenant = () => {
                       />
                     </div>
 
-                    <div className={`${styles.field} mt-2`}>
-                      <label className={styles.label}>Website</label>
+                    <div className="flex flex-col mt-2">
+                      <label className="text-sm font-medium text-body mb-1">
+                        Website
+                      </label>
                       <input
                         type="url"
                         name="website"
@@ -685,9 +677,7 @@ const CreateTenant = () => {
                 </div>
               </div>
 
-              <div
-                style={{ display: activeTab === 'contact' ? 'block' : 'none' }}
-              >
+              <div className={activeTab === 'contact' ? 'block' : 'hidden'}>
                 <ContactInformation
                   contacts={contacts}
                   onContactsChange={setContacts}
@@ -696,9 +686,7 @@ const CreateTenant = () => {
                 />
               </div>
 
-              <div
-                style={{ display: activeTab === 'metadata' ? 'block' : 'none' }}
-              >
+              <div className={activeTab === 'metadata' ? 'block' : 'hidden'}>
                 <InfrastructureMetadata
                   metadata={metadata}
                   onMetadataChange={setMetadata}

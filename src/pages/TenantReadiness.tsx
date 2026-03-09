@@ -10,7 +10,9 @@ import {
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '@/components/Button'
-import styles from './TenantReadiness.module.css'
+import PageHeader from '@/components/PageHeader'
+import Badge from '@/components/Badge'
+import { formatDateTime } from '@/utils/formatDateTime'
 import type { ReadinessCheckDetail, JobStatus } from '@/types/tenants'
 import { toast } from 'sonner'
 
@@ -95,22 +97,6 @@ const TenantReadiness = () => {
   const readiness = readinessData?.data
   const hasError = readinessError || !tenantData
 
-  const formatDateTime = (dateString?: string) => {
-    if (!dateString) return 'N/A'
-    return new Date(dateString).toLocaleString('en-GB', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-    })
-  }
-
-  const getReadinessClass = (ready: boolean) => {
-    return ready ? styles['status-ready'] : styles['status-not-ready']
-  }
-
   const getJobStatusDisplay = (status: JobStatus): string => {
     if (status === 'UNKNOWN') return 'Unknown'
     if (status === 'INITIALISING') return 'Initialising'
@@ -123,14 +109,13 @@ const TenantReadiness = () => {
   }
 
   const getJobStatusClass = (status: JobStatus): string => {
-    if (status === 'COMPLETED') return styles['job-status-completed']
-    if (status === 'IN_PROGRESS') return styles['job-status-in-progress']
-    if (status === 'INITIALISING') return styles['job-status-initialising']
-    if (status === 'INITIALISED') return styles['job-status-initialised']
-    if (status === 'FAILED') return styles['job-status-failed']
-    if (status === 'FAILED_INITIALISATION')
-      return styles['job-status-failed-initialisation']
-    return styles['job-status-unknown']
+    if (status === 'COMPLETED') return 'bg-emerald-100 text-emerald-800'
+    if (status === 'IN_PROGRESS') return 'bg-brand-muted text-brand'
+    if (status === 'INITIALISING') return 'bg-indigo-100 text-indigo-700'
+    if (status === 'INITIALISED') return 'bg-brand-muted text-blue-600'
+    if (status === 'FAILED') return 'bg-red-100 text-red-800'
+    if (status === 'FAILED_INITIALISATION') return 'bg-red-100 text-red-800'
+    return 'bg-gray-100 text-muted'
   }
 
   const shouldShowJobStatus = (status?: JobStatus): boolean => {
@@ -150,21 +135,26 @@ const TenantReadiness = () => {
       : 'No additional details provided'
 
     return (
-      <div className={styles['check-card']}>
-        <div className={styles['check-header']}>
-          <div className={styles['check-title-wrapper']}>
-            <h3 className={styles['check-title']}>{title}</h3>
+      <div className="bg-white border border-line rounded-lg p-4 shadow-sm transition-all hover:shadow-md">
+        <div className="flex flex-col items-start gap-2 md:flex-row md:justify-between md:items-center md:gap-0 mb-3">
+          <div className="flex items-center gap-2.5">
+            <h3 className="text-base font-semibold text-foreground m-0">
+              {title}
+            </h3>
           </div>
-          <span
-            className={`${styles['status-badge']} ${getReadinessClass(detail.ready)}`}
+          <Badge
+            size="lg"
+            className={
+              detail.ready
+                ? 'bg-emerald-50 text-emerald-700'
+                : 'bg-red-50 text-red-600'
+            }
           >
             {detail.ready ? 'Ready' : 'Not Ready'}
-          </span>
+          </Badge>
         </div>
         <div
-          className={`${styles['check-message']} ${
-            !hasMessage ? styles['check-message-empty'] : ''
-          }`}
+          className={`text-sm leading-relaxed ${hasMessage ? 'text-muted' : 'text-subtle italic'}`}
         >
           {displayMessage}
         </div>
@@ -173,32 +163,35 @@ const TenantReadiness = () => {
   }
 
   return (
-    <div className={styles.header}>
-      <div className={styles['title-section']}>
-        <div>
-          <h1 className="page-title">Tenant Readiness</h1>
-          <p className="page-subtitle">
+    <div className="max-w-[1240px] flex flex-col gap-4 mx-auto mb-6">
+      <PageHeader
+        title="Tenant Readiness"
+        subtitle={
+          <>
             View readiness checks for tenant
-            <strong style={{ wordBreak: 'break-all' }}>
+            <strong className="break-all">
               {tenantData?.info.name ? ` ${tenantData.info.name}` : '...'}
             </strong>
-          </p>
-        </div>
+          </>
+        }
+        className="flex flex-col gap-4 items-stretch md:flex-row md:items-start md:justify-between"
+      >
         <Button variant="secondary" size="sm" onClick={handleBackClick}>
           <ArrowLeftIcon className="size-4" />
           Back to Tenants
         </Button>
-      </div>
-      <div className={styles['action-section']}>
-        <div className={styles['action-wrapper']}>
-          <div className={styles['action-label']}>
-            <p className={styles['action-description']}>
+      </PageHeader>
+      <div className="flex items-center">
+        <div className="flex flex-col gap-2 mb-2">
+          <div className="flex flex-col gap-1 max-w-full">
+            <p className="text-sm text-muted leading-relaxed m-0">
               Trigger a manual readiness check to verify tenant status
             </p>
           </div>
           <Button
             variant="primary"
             onClick={handleCheckReadiness}
+            className="w-fit min-w-[200px]"
             disabled={
               notifyCheckReadinessMutation.isPending ||
               checkReadinessJob?.status === 'IN_PROGRESS' ||
@@ -214,15 +207,16 @@ const TenantReadiness = () => {
           {checkReadinessJob &&
             checkReadinessJob.status &&
             shouldShowJobStatus(checkReadinessJob.status) && (
-              <div className={styles['job-status-info']}>
-                <span
-                  className={`${styles['job-status-badge']} ${getJobStatusClass(checkReadinessJob.status)}`}
+              <div className="flex flex-col gap-2 p-3 bg-surface-muted border border-line rounded-lg my-2 max-w-[500px] min-w-[320px] shadow-sm">
+                <Badge
+                  size="lg"
+                  className={`w-fit shadow-sm ${getJobStatusClass(checkReadinessJob.status)}`}
                 >
                   {getJobStatusDisplay(checkReadinessJob.status)}
-                </span>
+                </Badge>
                 {checkReadinessJob.message &&
                   checkReadinessJob.message.trim().length > 0 && (
-                    <span className={styles['job-status-message']}>
+                    <span className="text-sm text-muted leading-relaxed break-words">
                       {checkReadinessJob.message}
                     </span>
                   )}
@@ -249,7 +243,7 @@ const TenantReadiness = () => {
       )}
 
       {!hasError && readiness && (
-        <div className={styles.content}>
+        <div className="max-w-[1240px] flex flex-col gap-3">
           <div>
             <h2 className="section-title">Readiness Check Results</h2>
             <p className="section-description">
@@ -257,34 +251,45 @@ const TenantReadiness = () => {
               checks.
             </p>
           </div>
-          <div className={styles['overall-status-card']}>
-            <div className={styles['overall-status-header']}>
-              <div className={styles['overall-status-title-wrapper']}>
-                <h2 className={styles['overall-status-title']}>
+          <div className="bg-white border-2 border-line rounded-xl p-6 shadow-md">
+            <div className="flex flex-col items-start gap-3 md:flex-row md:justify-between md:items-center md:gap-0 mb-3 pb-3 border-b-2 border-gray-100">
+              <div className="flex items-center gap-3">
+                <h2 className="text-xl font-bold text-foreground m-0">
                   Overall Tenant Status
                 </h2>
               </div>
-              <span
-                className={`${styles['status-badge']} ${getReadinessClass(readiness.ready)}`}
+              <Badge
+                size="lg"
+                className={
+                  readiness.ready
+                    ? 'bg-emerald-50 text-emerald-700'
+                    : 'bg-red-50 text-red-600'
+                }
               >
                 {readiness.ready ? 'Ready' : 'Not Ready'}
-              </span>
+              </Badge>
             </div>
-            <div className={styles['overall-status-info']}>
-              <div className={styles['info-row']}>
-                <span className={styles['info-label']}>Tenant Name:</span>
-                <span className={styles['info-value']}>{readiness.name}</span>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-muted min-w-[120px]">
+                  Tenant Name:
+                </span>
+                <span className="text-sm text-foreground font-medium">
+                  {readiness.name}
+                </span>
               </div>
-              <div className={styles['info-row']}>
-                <span className={styles['info-label']}>Last Check:</span>
-                <span className={styles['info-value']}>
+              <div className="flex items-center gap-2">
+                <span className="text-sm font-semibold text-muted min-w-[120px]">
+                  Last Check:
+                </span>
+                <span className="text-sm text-foreground font-medium">
                   {formatDateTime(readiness.last_check)}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className={styles['checks-grid']}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {renderCheckDetail('Data Availability', readiness.data)}
             {renderCheckDetail('Topology Configuration', readiness.topology)}
             {renderCheckDetail('Reports', readiness.reports)}

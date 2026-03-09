@@ -6,7 +6,7 @@ export function Home() {
 
   return (
     <div className="page-container">
-      <h1 className="text-2xl font-semibold text-gray-900 mb-3">
+      <h1 className="text-2xl font-semibold text-foreground mb-3">
         Welcome to Status Pages
         {profile?.name && (
           <span>
@@ -19,7 +19,7 @@ export function Home() {
         )}
       </h1>
 
-      <p className="text-gray-600 mb-6">
+      <p className="text-muted mb-6">
         Create and manage your status pages to monitor your services
       </p>
     </div>
