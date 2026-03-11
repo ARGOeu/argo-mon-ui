@@ -10,7 +10,6 @@ import PageHeader from '@/components/PageHeader'
 import SearchInput from '@/components/SearchInput'
 import Pagination from '@/components/Pagination'
 import Card from '@/components/Card'
-import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 const pageSize = 9
@@ -42,8 +41,6 @@ const Projects = () => {
     name: string
   } | null>(null)
 
-  const navigate = useNavigate()
-
   // Debounced search effect
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -53,10 +50,6 @@ const Projects = () => {
 
     return () => clearTimeout(timer)
   }, [searchInput])
-
-  const handleEdit = (projectId: string) => {
-    navigate(`/projects/edit/${projectId}`)
-  }
 
   const handleDeleteClick = (id: string, name: string) => {
     setProjectToDelete({ id, name })
@@ -117,14 +110,11 @@ const Projects = () => {
         onCancel={handleDeleteCancel}
       />
       <PageHeader
+        className="mb-6"
         title="Projects"
         subtitle="Manage and create projects for the monitoring service"
       >
-        <Button
-          variant="primary"
-          size="md"
-          onClick={() => navigate('/projects/create')}
-        >
+        <Button variant="primary" size="md" href="/projects/create">
           Create New Project
         </Button>
       </PageHeader>
@@ -154,7 +144,7 @@ const Projects = () => {
                       <IconButton
                         label="Edit Project"
                         icon={<PencilSquareIcon className={actionIconClass} />}
-                        onClick={() => handleEdit(project.id!)}
+                        href={`/projects/edit/${project.id}`}
                         className="text-muted hover:bg-gray-200"
                       />
                       <IconButton

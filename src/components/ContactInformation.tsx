@@ -5,7 +5,7 @@ import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid'
 const sectionClass =
   'grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 md:gap-8 mb-6 animate-fade-in'
 const sectionContentClass =
-  'bg-surface-subtle border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
+  'bg-surface-muted border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
 const iconButtonClass =
   'flex items-center justify-center size-7 rounded-md bg-blue-500 text-white border-none cursor-pointer hover:bg-blue-600'
 const iconButtonDangerClass =

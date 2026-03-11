@@ -13,7 +13,6 @@ import Card from '@/components/Card'
 import TenantCardFooter from '@/components/TenantCardFooter'
 import Badge from '@/components/Badge'
 import { roleBadgeClass } from '@/utils/badges'
-import { useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import type { UserGroup } from '@/types/profile'
 import type { Job, JobStatus } from '@/types/tenants'
@@ -21,7 +20,7 @@ import type { Job, JobStatus } from '@/types/tenants'
 const pageSize = 9
 
 const getStatusBadgeClass = (status: JobStatus): string => {
-  if (status === 'UNKNOWN') return 'bg-gray-100 text-subtle'
+  if (status === 'UNKNOWN') return 'bg-surface-strong text-subtle'
   if (status === 'INITIALISING') return 'bg-amber-100 text-amber-700'
   if (status === 'INITIALISED') return 'bg-brand-muted text-blue-600'
   if (status === 'FAILED_INITIALISATION') return 'bg-red-50 text-red-500'
@@ -42,7 +41,6 @@ const Tenants = () => {
   } | null>(null)
 
   const { profile } = useAuth()
-  const navigate = useNavigate()
   const { data: userProfileData } = useGetUserProfile()
 
   const isSuperAdmin = profile?.roles?.includes('super_admin')
@@ -94,34 +92,6 @@ const Tenants = () => {
         status: tenant?.status,
       }))) ||
     []
-
-  const handleEdit = (tenantId: string) => {
-    navigate(`/tenants/edit/${tenantId}`)
-  }
-
-  const handleAssignProjects = (tenantId: string) => {
-    navigate(`/tenants/${tenantId}/projects/assign`)
-  }
-
-  const handleManageMembers = (tenantId: string) => {
-    navigate(`/tenants/${tenantId}/members`)
-  }
-
-  const handleViewDetails = (tenantId: string) => {
-    navigate(`/tenants/${tenantId}/details`)
-  }
-
-  const handleViewStatus = (tenantId: string) => {
-    navigate(`/tenants/${tenantId}/status`)
-  }
-
-  const handleReadiness = (tenantId: string) => {
-    navigate(`/tenants/${tenantId}/readiness`)
-  }
-
-  const handleCapabilities = (tenantId: string) => {
-    navigate(`/tenants/${tenantId}/capabilities`)
-  }
 
   const handleDeleteClick = (id: string, name: string) => {
     setTenantToDelete({ id, name })
@@ -182,6 +152,7 @@ const Tenants = () => {
         onCancel={handleDeleteCancel}
       />
       <PageHeader
+        className="mb-6"
         title="Tenants"
         subtitle={
           isSuperAdmin
@@ -190,11 +161,7 @@ const Tenants = () => {
         }
       >
         {isSuperAdmin && (
-          <Button
-            variant="primary"
-            size="md"
-            onClick={() => navigate('/tenants/create')}
-          >
+          <Button variant="primary" size="md" href="/tenants/create">
             Create New Tenant
           </Button>
         )}
@@ -224,13 +191,7 @@ const Tenants = () => {
                     <TenantCardFooter
                       isSuperAdmin={!!isSuperAdmin}
                       isAdmin={isTenantAdmin(tenant.name)}
-                      onViewDetails={() => handleViewDetails(tenant.id!)}
-                      onEdit={() => handleEdit(tenant.id!)}
-                      onManageMembers={() => handleManageMembers(tenant.id!)}
-                      onAssignProjects={() => handleAssignProjects(tenant.id!)}
-                      onViewStatus={() => handleViewStatus(tenant.id!)}
-                      onReadiness={() => handleReadiness(tenant.id!)}
-                      onCapabilities={() => handleCapabilities(tenant.id!)}
+                      tenantId={tenant.id!}
                       onDelete={() =>
                         handleDeleteClick(tenant.id!, tenant.name)
                       }
@@ -265,7 +226,7 @@ const Tenants = () => {
                             const role = getRoleForTenant(tenant.name)
                             return role ? (
                               <Badge
-                                className={`shrink-0 mt-0.5 ${roleBadgeClass[role.toLowerCase()] ?? 'bg-gray-100 text-muted'}`}
+                                className={`shrink-0 mt-0.5 ${roleBadgeClass[role.toLowerCase()] ?? 'bg-surface-strong text-muted'}`}
                               >
                                 {role.toLowerCase() === 'admin'
                                   ? 'Admin'

@@ -89,7 +89,7 @@ const TenantInvitations = ({
                       <Badge
                         className={
                           roleBadgeClass[invitation.role] ??
-                          'bg-gray-100 text-muted'
+                          'bg-surface-strong text-muted'
                         }
                       >
                         {invitation.role === 'admin'
@@ -101,7 +101,7 @@ const TenantInvitations = ({
                       <Badge
                         className={
                           invitationStatusBadgeClass[invitation.status] ??
-                          'bg-gray-100 text-muted'
+                          'bg-surface-strong text-muted'
                         }
                       >
                         {invitation.status === 'PENDING'

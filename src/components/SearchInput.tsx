@@ -25,13 +25,13 @@ const SearchInput = ({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full py-2 pl-10 pr-10 border border-line-strong rounded-lg text-sm transition-all focus:outline-none focus:border-blue-500 focus:ring-[3px] focus:ring-blue-500/10"
+        className="w-full py-2 pl-10 pr-10 border border-line-strong rounded-lg text-sm"
       />
       {value && (
         <button
           type="button"
           onClick={onClear}
-          className="absolute right-2 top-1/2 -translate-y-1/2 size-6 flex items-center justify-center p-3 bg-transparent border-none text-muted text-2xl cursor-pointer rounded-full transition-all hover:bg-gray-100 hover:text-body"
+          className="absolute right-2 top-1/2 -translate-y-1/2 size-6 flex items-center justify-center p-3 bg-transparent border-none text-muted text-2xl cursor-pointer rounded-full transition-all hover:bg-surface-strong hover:text-body"
           aria-label="Clear search"
         >
           ×

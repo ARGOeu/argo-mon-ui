@@ -3,7 +3,7 @@ import {
   useGetUserInvitations,
   useRespondToInvitation,
 } from '@/hooks/useInvitations'
-import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/solid'
+import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/16/solid'
 import { toast } from 'sonner'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
@@ -11,6 +11,7 @@ import PageHeader from '@/components/PageHeader'
 import DataTable, { thBase, tdBase } from '@/components/DataTable'
 import Pagination from '@/components/Pagination'
 import Badge from '@/components/Badge'
+import IconButton from '@/components/IconButton'
 import { roleBadgeClass, invitationStatusBadgeClass } from '@/utils/badges'
 
 const pageSize = 10
@@ -50,7 +51,7 @@ const MyInvitations = () => {
         <PageHeader
           title="My Invitations"
           subtitle="View and respond to your tenant invitations"
-          className="mb-8"
+          className="mb-6"
         />
 
         {isLoading ? (
@@ -67,7 +68,7 @@ const MyInvitations = () => {
                   className=""
                   tableClassName="table-fixed min-w-[700px]"
                 >
-                  <thead className="bg-gray-100 border-b border-line">
+                  <thead className="bg-surface-strong border-b border-line">
                     <tr>
                       <th className={`${thBase} w-[20%]`}>Tenant Name</th>
                       <th className={`${thBase} w-[20%]`}>Email</th>
@@ -98,7 +99,7 @@ const MyInvitations = () => {
                             size="xs"
                             className={
                               roleBadgeClass[invitation.role] ??
-                              'bg-gray-100 text-muted'
+                              'bg-surface-strong text-muted'
                             }
                           >
                             {invitation.role === 'admin'
@@ -109,7 +110,7 @@ const MyInvitations = () => {
                         <td className={tdBase}>
                           <Badge
                             size="xs"
-                            className={`capitalize ${invitationStatusBadgeClass[invitation.status] ?? 'bg-gray-100 text-muted'}`}
+                            className={`capitalize ${invitationStatusBadgeClass[invitation.status] ?? 'bg-surface-strong text-muted'}`}
                           >
                             {invitation.status === 'PENDING'
                               ? 'Pending'
@@ -134,30 +135,32 @@ const MyInvitations = () => {
                         </td>
                         <td className={tdBase}>
                           {invitation.status === 'PENDING' ? (
-                            <div className="flex items-center gap-5 flex-col md:flex-row md:gap-5">
-                              <button
+                            <div className="flex items-center gap-2 flex-col md:flex-row">
+                              <IconButton
+                                label="Accept invitation"
+                                icon={
+                                  <CheckCircleIcon className="size-7 shrink-0" />
+                                }
                                 onClick={() =>
                                   handleRespond(invitation.id, 'ACCEPT')
                                 }
-                                className="tooltip p-1 rounded-lg border flex items-center justify-center cursor-pointer transition-all w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed bg-emerald-50 border-emerald-500 text-emerald-600 hover:enabled:bg-emerald-100 hover:enabled:border-emerald-600 hover:enabled:text-emerald-700"
-                                data-tip="Accept invitation"
                                 disabled={respondMutation.isPending}
-                              >
-                                <CheckCircleIcon className="size-6 shrink-0" />
-                              </button>
-                              <button
+                                className="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 w-auto"
+                              />
+                              <IconButton
+                                label="Reject invitation"
+                                icon={
+                                  <XCircleIcon className="size-7 shrink-0" />
+                                }
                                 onClick={() =>
                                   handleRespond(invitation.id, 'REJECT')
                                 }
-                                className="tooltip p-1 rounded-lg border flex items-center justify-center cursor-pointer transition-all w-full md:w-auto disabled:opacity-50 disabled:cursor-not-allowed bg-red-50 border-red-500 text-red-600 hover:enabled:bg-red-100 hover:enabled:border-red-600 hover:enabled:text-red-700"
-                                data-tip="Reject invitation"
                                 disabled={respondMutation.isPending}
-                              >
-                                <XCircleIcon className="size-6 shrink-0" />
-                              </button>
+                                className="text-red-600 bg-red-50 hover:bg-red-100 w-auto"
+                              />
                             </div>
                           ) : (
-                            <span className="w-1/2 block text-muted text-sm text-center">
+                            <span className="w-1/3 block text-muted text-sm text-center">
                               -
                             </span>
                           )}

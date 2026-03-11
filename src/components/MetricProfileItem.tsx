@@ -61,7 +61,7 @@ const MetricProfileItem = ({
                   className="border border-line rounded-md overflow-hidden"
                 >
                   <button
-                    className="w-full flex items-center flex-wrap gap-2 px-3 py-2.5 bg-surface-subtle border-none cursor-pointer text-left transition-colors hover:bg-gray-100"
+                    className="w-full flex items-center flex-wrap gap-2 px-3 py-2.5 bg-surface-muted border-none cursor-pointer text-left transition-colors hover:bg-surface-strong"
                     onClick={() => onToggleService(service.service)}
                   >
                     <span className="text-[0.625rem] text-muted leading-none shrink-0">

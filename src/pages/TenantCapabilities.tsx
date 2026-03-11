@@ -4,7 +4,6 @@ import PageHeader from '@/components/PageHeader'
 import { useGetUserTenantById } from '@/hooks/useTenants'
 import {
   ArrowBigUp,
-  ArrowLeftIcon,
   Check,
   ChevronRight,
   ClockIcon,
@@ -16,7 +15,7 @@ import {
   ZapIcon,
 } from 'lucide-react'
 import { useEffect, useRef, useState, type ReactElement } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
@@ -250,7 +249,7 @@ const TenantCapabilities = () => {
   return (
     <div className="min-h-scrdeen">
       <PageHeader
-        className="max-w-7xl mx-auto flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-4 pb-2"
+        className="max-w-7xl mx-auto mb-4 pb-2"
         title="Capabilities"
         subtitle={
           <>
@@ -258,15 +257,8 @@ const TenantCapabilities = () => {
             <strong>{tenantData.info.name}</strong>
           </>
         }
-      >
-        <Link
-          to="/tenants"
-          className="inline-flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-800 text-white text-sm font-normal rounded-lg transition-colors duration-200 no-underline"
-        >
-          <ArrowLeftIcon className="size-4" />
-          <span>Back to Tenants</span>
-        </Link>
-      </PageHeader>
+        navigateTo={{ label: 'Back to Tenants', to: '/tenants' }}
+      />
 
       <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-4">
         <CapabilityCard

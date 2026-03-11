@@ -1,4 +1,4 @@
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import {
   useGetUserTenantById,
   useGetUserTenantStatus,
@@ -7,7 +7,6 @@ import {
 import { useAuth } from '@/auth/useAuth'
 import { useState, Fragment } from 'react'
 import {
-  ArrowLeftIcon,
   CheckCircleIcon,
   XCircleIcon,
   ClockIcon,
@@ -18,9 +17,9 @@ import {
 import { toast } from 'sonner'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
-import Button from '@/components/Button'
 import PageHeader from '@/components/PageHeader'
 import Badge from '@/components/Badge'
+import Button from '@/components/Button'
 import { formatDateTime } from '@/utils/formatDateTime'
 import type { Job, JobStatus } from '@/types/tenants'
 
@@ -31,7 +30,7 @@ const JOB_NAMES: Record<string, string> = {
 }
 
 const JOB_STATUS_BADGE_CLASS: Record<string, string> = {
-  UNKNOWN: 'bg-gray-100 text-muted',
+  UNKNOWN: 'bg-surface-strong text-muted',
   INITIALISING: 'bg-indigo-100 text-indigo-700',
   INITIALISED: 'bg-brand-muted text-blue-600',
   FAILED_INITIALISATION: 'bg-red-100 text-red-800',
@@ -67,7 +66,6 @@ const STATUS_OPTIONS: { value: JobStatus; label: string }[] = [
 
 const TenantStatus = () => {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const { profile } = useAuth()
 
   const isSuperAdmin = profile?.roles?.includes('super_admin')
@@ -219,17 +217,9 @@ const TenantStatus = () => {
               </strong>
             </>
           }
-          className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between pb-2 mb-6 max-w-[1040px] mx-auto"
-        >
-          <Button
-            onClick={() => navigate('/tenants')}
-            size="sm"
-            variant="secondary"
-          >
-            <ArrowLeftIcon className="size-4" />
-            Back to Tenants
-          </Button>
-        </PageHeader>
+          className="pb-2 mb-4 max-w-[1040px] mx-auto"
+          navigateTo={{ label: 'Back to Tenants', to: '/tenants' }}
+        />
 
         {statusLoading && (
           <div className="loading-container">
@@ -273,7 +263,7 @@ const TenantStatus = () => {
                       <div className="flex items-center gap-2">
                         <Badge
                           size="lg"
-                          className={`capitalize ${JOB_STATUS_BADGE_CLASS[job.status] ?? 'bg-gray-100 text-muted'}`}
+                          className={`capitalize ${JOB_STATUS_BADGE_CLASS[job.status] ?? 'bg-surface-strong text-muted'}`}
                         >
                           {job.status?.toLowerCase()}
                         </Badge>
@@ -367,7 +357,7 @@ const TenantStatus = () => {
                                       e.target.value as JobStatus,
                                     )
                                   }
-                                  className="w-full px-3 py-2 text-sm font-medium border border-line-strong rounded-md bg-white text-muted cursor-pointer transition-all focus:outline-none focus:border-blue-500 focus:ring-3 focus:ring-blue-500/10"
+                                  className="w-full px-3 py-2 text-sm font-medium"
                                 >
                                   {STATUS_OPTIONS.map((option) => (
                                     <option
@@ -393,24 +383,21 @@ const TenantStatus = () => {
                                     setJobMessage(e.target.value)
                                   }
                                   placeholder="Enter a description for this status change"
-                                  className="w-full px-3 py-2 text-sm border border-line-strong rounded-md bg-white text-muted resize-y leading-[1.5] transition-all focus:outline-none focus:border-blue-500 focus:ring-3 focus:ring-blue-500/10 placeholder:text-subtle"
+                                  className="w-full px-3 py-2 text-sm leading-[1.5]"
                                   rows={2}
                                 />
                               </div>
                             </div>
-                            <div className="flex gap-2 justify-end">
-                              <button
+                            <div className="flex gap-4 justify-end">
+                              <Button
                                 onClick={handleCancelEdit}
-                                className="px-4 py-2 text-sm font-semibold text-body bg-white border border-line-strong rounded-md cursor-pointer transition-all hover:bg-surface-muted hover:border-gray-400 active:bg-gray-100"
+                                variant="outline-secondary"
                               >
                                 Cancel
-                              </button>
-                              <button
-                                onClick={() => handleSaveStatus(job)}
-                                className="px-4 py-2 text-sm font-semibold text-white bg-blue-600 border-none rounded-md cursor-pointer transition-all hover:bg-brand active:bg-blue-800"
-                              >
+                              </Button>
+                              <Button onClick={() => handleSaveStatus(job)}>
                                 Save
-                              </button>
+                              </Button>
                             </div>
                           </div>
                         )}
@@ -428,12 +415,13 @@ const TenantStatus = () => {
                             {isSuperAdmin &&
                               job.mode === 'MANUAL' &&
                               editingJob !== job.name && (
-                                <button
+                                <Button
                                   onClick={() => handleEditClick(job)}
-                                  className="w-fit px-3 py-1.5 text-sm font-semibold text-blue-600 bg-white border border-blue-600 rounded-md cursor-pointer transition-all hover:bg-brand-subtle active:bg-brand-muted"
+                                  size="sm"
+                                  variant="outline-primary"
                                 >
                                   Edit Status
-                                </button>
+                                </Button>
                               )}
                           </div>
                           <div className="grid grid-cols-1 gap-1 md:grid-cols-[120px_1fr] md:gap-3 py-1.5 border-b border-gray-50 last:border-b-0">
@@ -459,13 +447,13 @@ const TenantStatus = () => {
                     )}
                   </div>
                 ))
-            ) : (
+            ) : !statusLoading && !statusError ? (
               <div className="bg-surface-muted border border-line rounded-lg p-12 text-center">
                 <p className="text-muted">
                   No status information available for this tenant.
                 </p>
               </div>
-            )}
+            ) : null}
           </div>
         )}
       </div>

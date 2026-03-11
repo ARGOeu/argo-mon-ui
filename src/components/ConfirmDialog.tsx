@@ -1,5 +1,5 @@
 import { XMarkIcon } from '@heroicons/react/16/solid'
-import Button from './Button'
+import Button from '@/components/Button'
 
 type ConfirmDialogProps = {
   isOpen: boolean
@@ -34,7 +34,7 @@ const ConfirmDialog = ({
         <div className="flex items-center justify-between px-4 py-2.5 border-b border-line">
           <h3 className="text-xl font-semibold text-foreground m-0">{title}</h3>
           <button
-            className="p-1 rounded-full text-muted bg-transparent border-none cursor-pointer transition-colors hover:bg-gray-100 hover:text-foreground"
+            className="p-1 rounded-full text-muted bg-transparent border-none cursor-pointer transition-colors hover:bg-surface-strong hover:text-foreground"
             onClick={onCancel}
             aria-label="Close dialog"
           >

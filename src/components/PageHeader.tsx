@@ -1,20 +1,38 @@
+import { ArrowLeftIcon } from '@heroicons/react/16/solid'
+import { Link } from 'react-router-dom'
 import type { ReactNode } from 'react'
+
+interface NavigateTo {
+  label: string
+  to: string
+}
 
 interface PageHeaderProps {
   title: ReactNode
   subtitle?: ReactNode
   children?: ReactNode
   className?: string
+  navigateTo?: NavigateTo
 }
 
 const PageHeader = ({
   title,
   subtitle,
   children,
-  className = 'flex justify-between items-center mb-6',
+  className,
+  navigateTo,
 }: PageHeaderProps) => (
-  <div className={className}>
+  <div className={`flex justify-between items-center ${className ?? ''}`}>
     <div>
+      {navigateTo && (
+        <Link
+          to={navigateTo.to}
+          className="inline-flex items-center gap-1.5 text-base text-subtle hover:text-foreground no-underline mb-1 transition-colors"
+        >
+          <ArrowLeftIcon className="size-4" />
+          {navigateTo.label}
+        </Link>
+      )}
       <h1 className="text-[1.75rem] leading-8 font-bold text-gray-800">
         {title}
       </h1>

@@ -151,14 +151,10 @@ const View = () => {
         <PageHeader
           title="Status Pages"
           subtitle="View and manage your pages"
-          className="pb-1 mb-4 md:mb-6 px-2 md:px-0 flex items-center justify-between"
+          className="pb-1 mb-4 md:mb-6 px-2 md:px-0"
         >
           {canCreateStatusPage && (
-            <Button
-              variant="primary"
-              size="md"
-              onClick={() => navigate('/status-pages/build')}
-            >
+            <Button variant="primary" size="md" href="/status-pages/build">
               Create Status Page
             </Button>
           )}
@@ -302,7 +298,7 @@ const View = () => {
                               onClick={() =>
                                 handlePageEdit(item.id, item.tenant_id)
                               }
-                              className="tooltip p-1 md:p-1.5 text-muted hover:bg-gray-100 rounded-lg transition-colors cursor-pointer"
+                              className="tooltip p-1 md:p-1.5 text-muted hover:bg-surface-strong rounded-lg transition-colors cursor-pointer"
                               data-tip="Edit"
                               aria-label="Edit Page"
                             >

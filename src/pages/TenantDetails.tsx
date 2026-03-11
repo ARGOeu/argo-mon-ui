@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useLocation, useNavigate } from 'react-router-dom'
+import { useParams, useLocation, Link } from 'react-router-dom'
 import { useGetUserTenantById } from '../hooks/useTenants'
 import { useGetUserTenantProjects } from '../hooks/useTenants'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -37,7 +37,6 @@ const noDataClass = 'text-sm text-subtle italic'
 
 const TenantDetails = () => {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const location = useLocation()
   const [activeTab, setActiveTab] = useState<'info' | 'reports'>('info')
 
@@ -67,14 +66,6 @@ const TenantDetails = () => {
 
   const projects =
     projectsData?.pages?.flatMap((page) => page.content || []) || []
-
-  const handleBack = () => {
-    navigate('/tenants')
-  }
-
-  const handleEdit = () => {
-    navigate(`/tenants/edit/${id}`)
-  }
 
   if (isLoading) {
     return (
@@ -109,23 +100,40 @@ const TenantDetails = () => {
 
   return (
     <div className="w-[100%] max-w-[1480px]">
-      <header className="bg-white my-1">
-        <div className="px-6 py-3 flex flex-col xl:flex-row items-start xl:items-center gap-4 xl:gap-6">
-          {tenantData?.info?.image ? (
-            <div className="flex-shrink-0 w-16 h-16 bg-white border border-line rounded flex items-center justify-center p-1 shadow-sm">
-              <img
-                src={tenantData.info.image}
-                alt="Logo"
-                className="object-contain"
-              />
-            </div>
-          ) : (
-            <div className="size-16 rounded-lg bg-slate-500 flex items-center justify-center flex-shrink-0">
-              <span className="text-2xl font-bold text-white">
-                {tenantData.info.name.charAt(0).toUpperCase()}
-              </span>
-            </div>
-          )}
+      <header className="px-6">
+        <Link
+          to="/tenants"
+          className="inline-flex items-center gap-1.5 text-base text-subtle hover:text-foreground no-underline transition-colors py-2"
+        >
+          <ArrowLeftIcon className="size-4" />
+          Back to Tenants
+        </Link>
+        <div className="flex flex-col xl:flex-row items-start xl:items-center gap-4 xl:gap-6">
+          <div className="flex w-full items-start justify-between xl:contents">
+            {tenantData?.info?.image ? (
+              <div className="flex-shrink-0 w-16 h-16 bg-white border border-line rounded flex items-center justify-center p-1 shadow-sm">
+                <img
+                  src={tenantData.info.image}
+                  alt="Logo"
+                  className="object-contain"
+                />
+              </div>
+            ) : (
+              <div className="size-16 rounded-lg bg-slate-500 flex items-center justify-center flex-shrink-0">
+                <span className="text-2xl font-bold text-white">
+                  {tenantData.info.name.charAt(0).toUpperCase()}
+                </span>
+              </div>
+            )}
+            <Button
+              href={`/tenants/edit/${id}`}
+              size="sm"
+              variant="primary"
+              className="whitespace-nowrap flex-shrink-0 xl:order-last xl:ml-auto self-start"
+            >
+              Edit Tenant
+            </Button>
+          </div>
 
           <div className="flex-shrink-0 xl:border-r border-gray-100 xl:pr-6 xl:mr-2 w-full xl:w-auto">
             <div className="flex items-center gap-2 flex-wrap">
@@ -184,26 +192,6 @@ const TenantDetails = () => {
               </span>
             </div>
           </div>
-
-          <div className="flex flex-row gap-3 ml-auto self-start xl:flex-col xl:items-end flex-shrink-0">
-            <Button
-              onClick={handleBack}
-              size="sm"
-              variant="secondary"
-              className="whitespace-nowrap"
-            >
-              <ArrowLeftIcon className="size-4 shrink-0" />
-              Back to Tenants
-            </Button>
-            <Button
-              onClick={handleEdit}
-              size="sm"
-              variant="primary"
-              className="whitespace-nowrap"
-            >
-              Edit Tenant
-            </Button>
-          </div>
         </div>
 
         <Tabs
@@ -216,7 +204,7 @@ const TenantDetails = () => {
             setActiveTab(id as 'info' | 'reports')
             window.location.hash = id
           }}
-          className="mx-5 mt-2"
+          className="mt-2"
         />
       </header>
 

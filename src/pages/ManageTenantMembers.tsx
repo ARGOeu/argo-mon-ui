@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { useCreateTenantInvitation } from '@/hooks/useInvitations'
 import {
   useGetTenantMembers,
@@ -10,11 +10,7 @@ import {
 } from '@/hooks/useTenants'
 import { useAuth } from '@/auth/useAuth'
 import ErrorDisplay from '@/components/ErrorDisplay'
-import {
-  ArrowLeftIcon,
-  UserMinusIcon,
-  XMarkIcon,
-} from '@heroicons/react/16/solid'
+import { UserMinusIcon, XMarkIcon } from '@heroicons/react/16/solid'
 import { toast } from 'sonner'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -35,7 +31,6 @@ const roleOptions = [
 
 const ManageTenantMembers = () => {
   const { id: tenantId } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const { profile } = useAuth()
   const { data: tenantData, error: tenantError } = useGetUserTenantById(
     tenantId || '',
@@ -287,10 +282,6 @@ const ManageTenantMembers = () => {
     setMemberToRemove(null)
   }
 
-  const handleBack = () => {
-    navigate('/tenants')
-  }
-
   const isLoading = membersLoading
 
   if (tenantError) {
@@ -316,13 +307,9 @@ const ManageTenantMembers = () => {
               </strong>
             </>
           }
-          className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-2 pb-2"
-        >
-          <Button onClick={handleBack} size="sm" variant="secondary">
-            <ArrowLeftIcon className="size-4" />
-            Back to Tenants
-          </Button>
-        </PageHeader>
+          className="mb-2 pb-2"
+          navigateTo={{ label: 'Back to Tenants', to: '/tenants' }}
+        />
 
         <Tabs
           tabs={[
@@ -400,7 +387,7 @@ const ManageTenantMembers = () => {
                                   className={
                                     roleBadgeClass[
                                       tenantInfo?.role ?? 'viewer'
-                                    ] ?? 'bg-gray-100 text-muted'
+                                    ] ?? 'bg-surface-strong text-muted'
                                   }
                                 >
                                   {tenantInfo?.role === 'admin'
@@ -459,7 +446,7 @@ const ManageTenantMembers = () => {
             {activeTab === 'invite' && (
               <div className="animate-fade-in">
                 <form onSubmit={handleInviteSubmit} className="max-w-xl">
-                  <div className="bg-surface-subtle border border-line rounded-lg px-6 py-4">
+                  <div className="bg-surface-muted border border-line rounded-lg px-6 py-4">
                     <h2 className="text-lg font-semibold text-gray-800 mb-2.5">
                       Invite New Member
                     </h2>
@@ -533,7 +520,7 @@ const ManageTenantMembers = () => {
             {activeTab === 'add-direct' && isSuperAdmin && (
               <div className="animate-fade-in">
                 <form onSubmit={handleAddDirectSubmit} className="max-w-xl">
-                  <div className="bg-surface-subtle border border-line rounded-lg px-6 py-4">
+                  <div className="bg-surface-muted border border-line rounded-lg px-6 py-4">
                     <h2 className="text-lg font-semibold text-gray-800 mb-2.5">
                       Add a Member Directly
                     </h2>

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeftIcon } from '@heroicons/react/16/solid'
+import { useParams } from 'react-router-dom'
 import {
   useGetTenantReadiness,
   useGetUserTenantById,
@@ -20,7 +19,6 @@ const READINESS_CHECK_INTERVAL_MS = 10000
 
 const TenantReadiness = () => {
   const { id } = useParams<{ id: string }>()
-  const navigate = useNavigate()
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [isRecentlyChecked, setIsRecentlyChecked] = useState(false)
 
@@ -44,10 +42,6 @@ const TenantReadiness = () => {
   const checkReadinessJob = statusData?.status?.jobs?.find(
     (job) => job.name === 'CHECK_READINESS',
   )
-
-  const handleBackClick = () => {
-    navigate('/tenants')
-  }
 
   useEffect(() => {
     return () => {
@@ -115,7 +109,7 @@ const TenantReadiness = () => {
     if (status === 'INITIALISED') return 'bg-brand-muted text-blue-600'
     if (status === 'FAILED') return 'bg-red-100 text-red-800'
     if (status === 'FAILED_INITIALISATION') return 'bg-red-100 text-red-800'
-    return 'bg-gray-100 text-muted'
+    return 'bg-surface-strong text-muted'
   }
 
   const shouldShowJobStatus = (status?: JobStatus): boolean => {
@@ -163,8 +157,9 @@ const TenantReadiness = () => {
   }
 
   return (
-    <div className="max-w-[1240px] flex flex-col gap-4 mx-auto mb-6">
+    <div className="max-w-[1240px] flex flex-col gap-2 mx-auto mb-6">
       <PageHeader
+        className="mb-2"
         title="Tenant Readiness"
         subtitle={
           <>
@@ -174,17 +169,12 @@ const TenantReadiness = () => {
             </strong>
           </>
         }
-        className="flex flex-col gap-4 items-stretch md:flex-row md:items-start md:justify-between"
-      >
-        <Button variant="secondary" size="sm" onClick={handleBackClick}>
-          <ArrowLeftIcon className="size-4" />
-          Back to Tenants
-        </Button>
-      </PageHeader>
+        navigateTo={{ label: 'Back to Tenants', to: '/tenants' }}
+      />
       <div className="flex items-center">
         <div className="flex flex-col gap-2 mb-2">
           <div className="flex flex-col gap-1 max-w-full">
-            <p className="text-sm text-muted leading-relaxed m-0">
+            <p className="text-[0.9375rem] text-muted leading-relaxed m-0">
               Trigger a manual readiness check to verify tenant status
             </p>
           </div>

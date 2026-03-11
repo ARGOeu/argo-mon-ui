@@ -143,7 +143,7 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
     return (
       <>
         <DataTable tableClassName="table-fixed min-w-[700px]">
-          <thead className="bg-gray-100 border-b border-line">
+          <thead className="bg-surface-strong border-b border-line">
             <tr>
               <th className={`${thBase} w-[22%]`}>
                 <SortableColumnHeader
@@ -212,7 +212,7 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
                     size="xs"
                     className={
                       roleBadgeClass[invitation.role] ??
-                      'bg-gray-100 text-muted'
+                      'bg-surface-strong text-muted'
                     }
                   >
                     {invitation.role === 'admin' ? 'Admin' : 'Viewer'}
@@ -221,7 +221,7 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
                 <td className={tdBase}>
                   <Badge
                     size="xs"
-                    className={`capitalize ${invitationStatusBadgeClass[invitation.status] ?? 'bg-gray-100 text-muted'}`}
+                    className={`capitalize ${invitationStatusBadgeClass[invitation.status] ?? 'bg-surface-strong text-muted'}`}
                   >
                     {invitation.status === 'PENDING'
                       ? 'Pending'
