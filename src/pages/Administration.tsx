@@ -10,7 +10,7 @@ import SearchInput from '@/components/SearchInput'
 import Tabs from '@/components/Tabs'
 import DataTable, { thBase, SortableColumnHeader } from '@/components/DataTable'
 import Pagination from '@/components/Pagination'
-import { useNavigate } from 'react-router-dom'
+import IconButton from '@/components/IconButton'
 import { squishEmail } from '@/utils/profile'
 
 type SortColumn = 'username' | 'firstName' | 'lastName' | 'email' | 'tenants'
@@ -28,7 +28,6 @@ const Administration = () => {
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null)
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [currentPage, setCurrentPage] = useState(1)
-  const navigate = useNavigate()
 
   const { profile } = useAuth()
   const isSuperAdmin = profile?.roles?.includes('super_admin')
@@ -108,7 +107,7 @@ const Administration = () => {
       <PageHeader
         title="Administration Panel"
         subtitle="Central management and configuration"
-        className="mb-6"
+        className="mb-2"
       />
 
       <Tabs
@@ -141,7 +140,7 @@ const Administration = () => {
             <>
               {filteredUsers.length > 0 ? (
                 <DataTable tableClassName="table-fixed min-w-[700px]">
-                  <thead className="bg-gray-100 border-b border-line">
+                  <thead className="bg-surface-strong border-b border-line">
                     <tr>
                       <th className={`${thBase} w-[15%]`}>
                         <SortableColumnHeader
@@ -249,18 +248,14 @@ const Administration = () => {
                         </td>
                         <td className="px-4 py-3 break-words text-sm">
                           <div className="flex items-center gap-1 ml-2.5">
-                            <button
-                              onClick={() =>
-                                navigate(
-                                  `/administration/users/${encodeURIComponent(user?.username?.split('@')[0] || '')}`,
-                                )
+                            <IconButton
+                              href={`/administration/users/${encodeURIComponent(user?.username?.split('@')[0] || '')}`}
+                              icon={
+                                <UserCircleIcon className="size-[1.125rem] md:size-[1.375rem]" />
                               }
-                              className="tooltip p-1.5 text-muted bg-transparent border-none rounded-lg flex items-center justify-center cursor-pointer transition-all hover:bg-gray-200 hover:text-foreground"
-                              data-tip="Manage user"
-                              aria-label="Manage user"
-                            >
-                              <UserCircleIcon className="size-[1.125rem] md:size-[1.375rem]" />
-                            </button>
+                              label="Manage user"
+                              className="text-muted hover:bg-gray-200 hover:text-foreground"
+                            />
                           </div>
                         </td>
                       </tr>

@@ -6,7 +6,7 @@ import type { Metadata } from '@/types/tenants'
 const sectionClass =
   'grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 md:gap-8 mb-6 animate-fade-in'
 const sectionContentClass =
-  'bg-surface-subtle border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
+  'bg-surface-muted border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
 const fieldGridClass =
   'grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3'
 const iconButtonClass =

@@ -1,6 +1,6 @@
 import { UserCircleIcon } from '@heroicons/react/16/solid'
-import { ArrowLeftIcon, UserMinusIcon } from '@heroicons/react/24/solid'
-import { Navigate, useNavigate, useParams } from 'react-router-dom'
+import { UserMinusIcon } from '@heroicons/react/24/solid'
+import { Navigate, useParams } from 'react-router-dom'
 import { useState } from 'react'
 import { useAuth } from '../auth/useAuth'
 import {
@@ -10,7 +10,6 @@ import {
 } from '@/hooks/useTenants'
 import { squishEmail } from '@/utils/profile'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import { toast } from 'sonner'
 import ErrorDisplay from '@/components/ErrorDisplay'
@@ -27,7 +26,6 @@ export const Profile = () => {
   const { username } = useParams<{ username: string }>()
 
   const { profile } = useAuth()
-  const navigate = useNavigate()
   const isSuperAdmin = profile?.roles?.includes('super_admin')
 
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
@@ -53,10 +51,6 @@ export const Profile = () => {
   // Determine which profile to display based on route
   const isViewingOtherUser = !!username
   const displayProfile = isViewingOtherUser ? userProfileData : null
-
-  const handleBack = () => {
-    navigate('/administration')
-  }
 
   const handleRemoveClick = (tenantName: string, role: string) => {
     setTenantToRemove({ id: '', name: tenantName, role })
@@ -126,13 +120,12 @@ export const Profile = () => {
           <PageHeader
             title="Manage User"
             subtitle="View and manage user account"
-            className="flex justify-between items-start mb-6"
-          >
-            <Button variant="secondary" size="md" onClick={handleBack}>
-              <ArrowLeftIcon className="size-4" />
-              Back to Administration
-            </Button>
-          </PageHeader>
+            className="mb-6"
+            navigateTo={{
+              label: 'Back to Administration',
+              to: '/administration',
+            }}
+          />
           <ErrorDisplay error={error.message} context="user profile" />
         </div>
       </div>
@@ -196,15 +189,13 @@ export const Profile = () => {
               ? 'View and manage user account'
               : 'View your account information'
           }
-          className="flex justify-between items-start mb-6"
-        >
-          {isViewingOtherUser && (
-            <Button variant="secondary" size="md" onClick={handleBack}>
-              <ArrowLeftIcon className="size-4" />
-              Back to Administration
-            </Button>
-          )}
-        </PageHeader>
+          className="mb-6"
+          navigateTo={
+            isViewingOtherUser
+              ? { label: 'Back to Administration', to: '/administration' }
+              : undefined
+          }
+        />
 
         {(profile || displayProfile) && (
           <div className="bg-white border border-line rounded-lg shadow-sm overflow-hidden">
@@ -301,7 +292,7 @@ export const Profile = () => {
                           {currentGroups.map((tenant, index) => (
                             <div
                               key={index}
-                              className="w-fit flex items-center justify-between px-3 py-2 bg-surface-muted border border-line rounded-lg transition-all hover:bg-gray-100"
+                              className="w-fit flex items-center justify-between px-3 py-2 bg-surface-muted border border-line rounded-lg transition-all hover:bg-surface-strong"
                             >
                               <div className="flex items-center gap-5 flex-1">
                                 <span className="text-sm font-medium text-gray-800">

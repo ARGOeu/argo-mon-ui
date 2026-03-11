@@ -33,8 +33,8 @@ function SidebarNavItem({
         [
           'flex items-center gap-3 px-4 py-3 text-sm transition-colors rounded-md mx-2',
           isActive
-            ? 'bg-brand-subtle text-brand font-medium border-l-4 border-blue-600'
-            : 'text-body hover:bg-gray-100 hover:text-blue-600',
+            ? 'bg-brand-subtle text-brand font-medium border-l-4 border-brand'
+            : 'text-body hover:bg-surface-strong hover:text-brand',
         ].join(' ')
       }
     >
@@ -143,10 +143,10 @@ export default function Layout() {
                 <Link
                   to="/profile"
                   onClick={closeMobileMenu}
-                  className="tooltip"
+                  className="tooltip focus:outline-none focus-visible:ring-2 focus-visible:ring-brand"
                   data-tip="View Profile"
                 >
-                  <div className="flex items-center gap-2 min-w-0 flex-1 hover:bg-gray-100 p-2 -m-2 rounded-lg w-auto max-w-40 md:max-w-48">
+                  <div className="flex items-center gap-2 min-w-0 flex-1 hover:bg-surface-strong p-2 -m-2 rounded-lg w-auto max-w-40 md:max-w-48">
                     <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center text-xs font-semibold flex-shrink-0">
                       {(profile?.name || 'U').charAt(0).toUpperCase()}
                     </div>
@@ -159,7 +159,7 @@ export default function Layout() {
                   </div>
                 </Link>
                 <button
-                  className="me-2 p-1 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 cursor-pointer tooltip"
+                  className="me-2 p-1 hover:bg-surface-strong rounded-lg transition-colors flex-shrink-0 cursor-pointer tooltip"
                   data-tip="Logout"
                   onClick={logout}
                   type="button"
@@ -175,7 +175,7 @@ export default function Layout() {
       {/* Page content */}
       <main className="flex-1 bg-white overflow-auto">
         <div
-          className={`${tDetsRoute ? '' : 'container mx-2 md:mx-auto py-6 px-4 md:px-6'}`}
+          className={`${tDetsRoute ? '' : 'container mx-2 md:mx-auto p-4 md:px-6'}`}
         >
           {!authenticated ? (
             <LoginPrompt

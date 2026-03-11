@@ -113,11 +113,7 @@ export const InvitationReview = () => {
               context="invitation"
             />
             <div className="mt-6">
-              <Button
-                variant="secondary"
-                size="md"
-                onClick={() => navigate('/')}
-              >
+              <Button variant="secondary" size="md" href="/">
                 Go to Home
               </Button>
             </div>
@@ -157,7 +153,7 @@ export const InvitationReview = () => {
                   variant="primary"
                   size="md"
                   className="w-full sm:w-auto"
-                  onClick={() => navigate('/tenants')}
+                  href="/tenants"
                 >
                   View Tenants
                 </Button>
@@ -166,7 +162,7 @@ export const InvitationReview = () => {
                 variant="secondary"
                 size="md"
                 className="w-full sm:w-auto"
-                onClick={() => navigate('/')}
+                href="/"
               >
                 Go to Home
               </Button>
@@ -268,7 +264,7 @@ export const InvitationReview = () => {
                 </>
               ) : (
                 <>
-                  <XCircleIcon className="size-5" />
+                  <XCircleIcon className="size-6" />
                   Reject Invitation
                 </>
               )}
@@ -288,7 +284,7 @@ export const InvitationReview = () => {
                 </>
               ) : (
                 <>
-                  <CheckCircleIcon className="size-5" />
+                  <CheckCircleIcon className="size-6" />
                   Accept Invitation
                 </>
               )}

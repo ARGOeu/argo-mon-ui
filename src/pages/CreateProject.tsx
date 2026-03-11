@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { ArrowLeftIcon } from '@heroicons/react/16/solid'
 import {
   useCreateProjectMutation,
   useUpdateProjectMutation,
@@ -9,13 +8,13 @@ import {
 import { toast } from 'sonner'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
-import Button from '../components/Button'
+import Button from '@/components/Button'
 import PageHeader from '@/components/PageHeader'
 
 const sectionClass =
   'grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 md:gap-8 mb-6 animate-fade-in'
 const sectionContentClass =
-  'bg-surface-subtle border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
+  'bg-surface-muted border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
 
 const CreateProject = () => {
   const { id: projectId } = useParams<{ id?: string }>()
@@ -224,17 +223,9 @@ const CreateProject = () => {
                   ? 'Update the project information'
                   : 'Fill in the details to create a new project'
               }
-              className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-1 pb-1"
-            >
-              <Button
-                onClick={() => navigate('/projects')}
-                size="sm"
-                variant="secondary"
-              >
-                <ArrowLeftIcon className="size-4" />
-                Back to Projects
-              </Button>
-            </PageHeader>
+              className="mb-1 pb-1"
+              navigateTo={{ label: 'Back to Projects', to: '/projects' }}
+            />
 
             <div className="flex justify-end mb-4">
               <Button

@@ -1,4 +1,5 @@
 import { type ButtonHTMLAttributes, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
 
 type ButtonVariant =
   | 'primary'
@@ -11,17 +12,18 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant
   size?: ButtonSize
   children: ReactNode
+  href?: string
 }
 
 const variantClassMap: Record<ButtonVariant, string> = {
   primary:
-    'bg-brand text-white border-brand hover:enabled:bg-blue-800 hover:enabled:border-blue-800',
+    'bg-brand text-white border-brand hover:bg-brand-strong hover:border-brand-strong',
   secondary:
-    'bg-gray-600 text-white border-gray-600 hover:enabled:bg-gray-700 hover:enabled:border-gray-700',
+    'bg-gray-600 text-white border-gray-600 hover:bg-gray-700 hover:border-gray-700',
   'outline-primary':
-    'bg-white text-blue-600 border-blue-600 hover:enabled:bg-brand-subtle',
+    'bg-white text-brand border-brand font-medium hover:bg-brand-subtle',
   'outline-secondary':
-    'bg-white text-muted border-gray-600 hover:enabled:bg-surface-muted',
+    'bg-white text-body border-line-strong font-medium hover:bg-surface-strong hover:border-gray-400',
 }
 
 const sizeClassMap: Record<ButtonSize, string> = {
@@ -36,12 +38,13 @@ function Button({
   size = 'md',
   className = '',
   disabled,
+  href,
   children,
   ...props
 }: ButtonProps) {
   const buttonClasses = [
-    'inline-flex items-center justify-center gap-2 font-normal rounded-md border transition-colors cursor-pointer',
-    'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2',
+    'inline-flex items-center justify-center gap-2 font-base rounded-md border transition-colors cursor-pointer',
+    'focus:outline-none',
     'disabled:opacity-50 disabled:cursor-not-allowed',
     variantClassMap[variant],
     sizeClassMap[size],
@@ -49,6 +52,14 @@ function Button({
   ]
     .filter(Boolean)
     .join(' ')
+
+  if (href) {
+    return (
+      <Link to={href} className={buttonClasses}>
+        {children}
+      </Link>
+    )
+  }
 
   return (
     <button className={buttonClasses} disabled={disabled} {...props}>

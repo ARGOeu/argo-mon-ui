@@ -2,7 +2,7 @@ import type { ComponentType } from 'react'
 
 const tabBase =
   'px-6 py-3 pb-2 text-base font-medium bg-transparent border-0 rounded-t-md border-b-2 cursor-pointer transition-all -mb-0.5 relative flex items-center gap-1'
-const tabActive = 'text-blue-500 border-b-blue-500 hover:border-b-blue-500'
+const tabActive = 'text-brand border-b-brand hover:border-b-brand'
 const tabInactive =
   'text-muted border-b-transparent hover:text-body hover:bg-surface-muted hover:border-b-gray-300'
 
@@ -33,11 +33,11 @@ const Tabs = ({ tabs, activeTab, onChange, className }: TabsProps) => (
         >
           {Icon && <Icon className="size-5" />}
           {tab.label}
-          {tab.hasError !== undefined && (
+          {tab.hasError ? (
             <span
               className={`inline-block size-[6px] rounded-full bg-red-500 ml-[6px] transition-opacity ${tab.hasError ? 'opacity-100' : 'opacity-0'}`}
             />
-          )}
+          ) : null}
         </button>
       )
     })}

@@ -2,7 +2,6 @@ import { useState, useCallback, useEffect } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useDropzone } from 'react-dropzone'
 import { PhotoIcon, XMarkIcon } from '@heroicons/react/16/solid'
-import { ArrowLeftIcon } from '@heroicons/react/16/solid'
 import {
   useCreateTenantMutation,
   useGetUserTenantById,
@@ -11,7 +10,7 @@ import {
 import type { Metadata } from '@/types/tenants'
 import { toast } from 'sonner'
 import ErrorDisplay from '@/components/ErrorDisplay'
-import Button from '../components/Button'
+import Button from '@/components/Button'
 import ContactInformation from '../components/ContactInformation'
 import InfrastructureMetadata from '../components/InfrastructureMetadata'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -23,7 +22,7 @@ const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 const sectionClass =
   'grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 md:gap-8 mb-6 animate-fade-in'
 const sectionContentClass =
-  'bg-surface-subtle border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
+  'bg-surface-muted border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -453,17 +452,9 @@ const CreateTenant = () => {
                   'Fill in the details to create a new tenant'
                 )
               }
-              className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between mb-1 pb-1"
-            >
-              <Button
-                onClick={() => navigate('/tenants')}
-                size="sm"
-                variant="secondary"
-              >
-                <ArrowLeftIcon className="size-4" />
-                Back to Tenants
-              </Button>
-            </PageHeader>
+              className="mb-1 pb-1"
+              navigateTo={{ label: 'Back to Tenants', to: '/tenants' }}
+            />
 
             <div className="flex justify-between items-center">
               <div className="flex items-center gap-[3px]">
@@ -609,7 +600,7 @@ const CreateTenant = () => {
                       </label>
                       <div
                         {...getRootProps()}
-                        className={`border-2 border-dashed rounded-lg p-2 text-center cursor-pointer transition-all min-h-[80px] flex flex-col items-center justify-center ${isDragActive ? 'border-blue-500 bg-brand-muted' : 'border-line-strong bg-white hover:border-gray-400 hover:bg-gray-100'}`}
+                        className={`border-2 border-dashed rounded-lg p-2 text-center cursor-pointer transition-all min-h-[80px] flex flex-col items-center justify-center ${isDragActive ? 'border-blue-500 bg-brand-muted' : 'border-line-strong bg-white hover:border-gray-400 hover:bg-surface-strong'}`}
                       >
                         <input {...getInputProps()} />
                         {imagePreview ? (

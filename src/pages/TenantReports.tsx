@@ -8,7 +8,7 @@ import Badge from '@/components/Badge'
 const cardClass =
   'bg-white border border-line rounded-lg px-4 py-3 flex flex-col gap-2'
 const simpleItemClass =
-  'flex items-center justify-between px-3 py-2 bg-surface-subtle border border-line rounded-md gap-2'
+  'flex items-center justify-between px-3 py-2 bg-surface-muted border border-line rounded-md gap-2'
 const simpleItemTitleClass =
   'text-sm font-semibold text-body leading-[1.4] flex-1 break-words'
 
@@ -85,7 +85,7 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
                 className={`p-3 bg-white border rounded-md cursor-pointer transition-all ${
                   selectedReportId === report.id
                     ? 'border-blue-500 bg-brand-subtle hover:opacity-85'
-                    : 'border-line hover:border-line-strong hover:bg-surface-subtle'
+                    : 'border-line hover:border-line-strong hover:bg-surface-muted'
                 }`}
                 onClick={() => setSelectedReportId(report.id)}
               >

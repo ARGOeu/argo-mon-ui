@@ -11,7 +11,6 @@ import {
 } from '@/hooks/useTenants'
 import { useGetAllProjects } from '@/hooks/useProjects'
 import { GripVertical } from 'lucide-react'
-import { ArrowLeftIcon } from '@heroicons/react/16/solid'
 import type { ProjectItem } from '@/types/projects'
 import { useAuth } from '@/auth/useAuth'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -29,7 +28,7 @@ const columnClass =
   'flex flex-col bg-white border border-line rounded-lg overflow-hidden'
 
 const columnHeaderClass =
-  'flex justify-between items-center px-5 py-3.5 bg-gray-100 border-b border-line'
+  'flex justify-between items-center px-5 py-3.5 bg-surface-strong border-b border-line'
 
 const listContainerClass =
   'bg-surface-muted min-h-[300px] max-h-[400px] md:min-h-[400px] md:max-h-[500px] overflow-y-auto'
@@ -211,10 +210,6 @@ const AssignProjects = () => {
     )
   }
 
-  const handleCancel = () => {
-    navigate('/tenants')
-  }
-
   if (!isInitialized) {
     return (
       <div className="loading-container">
@@ -250,13 +245,9 @@ const AssignProjects = () => {
               </strong>
             </span>
           }
-          className="flex flex-col gap-4 items-stretch pb-4 mb-4 md:flex-row md:items-start md:justify-between"
-        >
-          <Button onClick={handleCancel} size="sm" variant="secondary">
-            <ArrowLeftIcon className="size-4" />
-            Back to Tenants
-          </Button>
-        </PageHeader>
+          className="pb-1 mb-1"
+          navigateTo={{ label: 'Back to Tenants', to: '/tenants' }}
+        />
 
         {!isReadOnly && (
           <div className="flex justify-end mb-4">
