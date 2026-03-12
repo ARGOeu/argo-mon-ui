@@ -5,7 +5,7 @@ import { TrashIcon } from '@heroicons/react/16/solid'
 import type { StatusItemType } from '@/types/common'
 import { StatusItem } from './StatusItem'
 import StatusLabel from './StatusLabel'
-import Button from './Button'
+import Button from '@/components/Button'
 
 type StatusGroupProps = {
   name: string

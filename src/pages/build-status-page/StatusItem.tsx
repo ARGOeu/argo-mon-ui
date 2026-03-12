@@ -1,4 +1,4 @@
-import StatusLabel from '@/components/StatusLabel'
+import StatusLabel from './StatusLabel'
 import { GripVertical } from 'lucide-react'
 import { StatusIcon } from './StatusIcon'
 

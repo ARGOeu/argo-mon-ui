@@ -1,5 +1,5 @@
 import type { StatusItemType } from '@/types/common'
-import StatusGroup from './StatusGroup'
+import StatusGroup from '@/pages/build-status-page/StatusGroup'
 import { getStatusClass } from '@/utils/status'
 
 type ViewGroupProps = {

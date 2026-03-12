@@ -5,23 +5,20 @@ import { Home } from './pages/Home'
 import AuthProtected from './routing/AuthProtected'
 import ProtectedRoute from './routing/ProtectedRoute'
 import { Profile } from './pages/Profile'
-import Build from './pages/Build'
+import BuildStatusPage from './pages/build-status-page'
 import View from './pages/View'
-import Tenants from './pages/Tenants'
 import CreateTenant from './pages/create-tenant'
-import TenantStatus from './pages/TenantStatus'
-import TenantReadiness from './pages/TenantReadiness'
+import TenantReports from './pages/tenant-reports'
+import TenantCapabilities from './pages/tenant-capabilities'
 import TenantDetails from './pages/tenant-details'
 import AssignProjects from './pages/AssignProjects'
-import Projects from './pages/Projects'
 import CreateProject from './pages/CreateProject'
-import Administration from './pages/Administration'
+import Administration from './pages/administration'
 import ManageTenantMembers from './pages/manage-tenant-members'
 import MyInvitations from './pages/MyInvitations'
 import { InvitationReview } from './pages/InvitationReview'
 import { Status } from './pages/Status'
 import { AuthProvider } from './auth/AuthProvider'
-import TenantCapabilities from './pages/TenantCapabilities'
 import NotFound from './pages/NotFound'
 import { Toaster } from 'sonner'
 
@@ -67,26 +64,10 @@ function App() {
               <Route element={<Layout />}>
                 <Route index element={<Home />} />
                 <Route
-                  path="tenants"
-                  element={
-                    <AuthProtected>
-                      <Tenants />
-                    </AuthProtected>
-                  }
-                />
-                <Route
                   path="tenants/:id/details"
                   element={
                     <AuthProtected>
                       <TenantDetails />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="tenants/:id/capabilities"
-                  element={
-                    <AuthProtected>
-                      <TenantCapabilities />
                     </AuthProtected>
                   }
                 />
@@ -123,27 +104,19 @@ function App() {
                   }
                 />
                 <Route
-                  path="tenants/:id/status"
+                  path="tenants/:id/reports"
                   element={
                     <AuthProtected>
-                      <TenantStatus />
+                      <TenantReports />
                     </AuthProtected>
                   }
                 />
                 <Route
-                  path="tenants/:id/readiness"
+                  path="tenants/:id/capabilities"
                   element={
                     <AuthProtected>
-                      <TenantReadiness />
+                      <TenantCapabilities />
                     </AuthProtected>
-                  }
-                />
-                <Route
-                  path="projects"
-                  element={
-                    <ProtectedRoute requiredRoles={['super_admin']}>
-                      <Projects />
-                    </ProtectedRoute>
                   }
                 />
                 <Route
@@ -198,7 +171,7 @@ function App() {
                   path="status-pages/tenants/:tenantId/pages/:pageId"
                   element={
                     <AuthProtected>
-                      <Build />
+                      <BuildStatusPage />
                     </AuthProtected>
                   }
                 />
@@ -206,7 +179,7 @@ function App() {
                   path="status-pages/build"
                   element={
                     <AuthProtected>
-                      <Build />
+                      <BuildStatusPage />
                     </AuthProtected>
                   }
                 />

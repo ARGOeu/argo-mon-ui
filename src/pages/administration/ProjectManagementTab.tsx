@@ -6,7 +6,6 @@ import IconButton from '@/components/IconButton'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import ConfirmDialog from '@/components/ConfirmDialog'
-import PageHeader from '@/components/PageHeader'
 import SearchInput from '@/components/SearchInput'
 import Pagination from '@/components/Pagination'
 import Card from '@/components/Card'
@@ -25,7 +24,7 @@ const formatDate = (dateString: string) => {
   })
 }
 
-const Projects = () => {
+const ProjectManagementTab = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchInput, setSearchInput] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
@@ -41,7 +40,6 @@ const Projects = () => {
     name: string
   } | null>(null)
 
-  // Debounced search effect
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchQuery(searchInput)
@@ -86,7 +84,7 @@ const Projects = () => {
   }
 
   return (
-    <div className="page-container">
+    <>
       <ConfirmDialog
         isOpen={deleteDialogOpen}
         title="Delete Project"
@@ -109,23 +107,20 @@ const Projects = () => {
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
-      <PageHeader
-        className="mb-6"
-        title="Projects"
-        subtitle="Manage and create projects for the monitoring service"
-      >
+
+      <div className="flex flex-wrap justify-between items-start gap-3 mb-4">
+        <SearchInput
+          className="min-w-[24rem]"
+          value={searchInput}
+          onChange={setSearchInput}
+          onClear={handleClearSearch}
+          placeholder="Search projects..."
+          maxWidth="max-w-md"
+        />
         <Button variant="primary" size="md" href="/projects/create">
           Create New Project
         </Button>
-      </PageHeader>
-
-      <SearchInput
-        value={searchInput}
-        onChange={setSearchInput}
-        onClear={handleClearSearch}
-        placeholder="Search projects..."
-        maxWidth="max-w-md"
-      />
+      </div>
 
       {isLoading ? (
         <div className="loading-container">
@@ -134,7 +129,7 @@ const Projects = () => {
       ) : projectsError ? (
         <ErrorDisplay error={projectsError} context="projects" />
       ) : (
-        <div className="grid grid-cols-1 min-[840px]:grid-cols-[repeat(auto-fit,minmax(min(100%,320px),440px))] gap-6">
+        <div className="grid grid-cols-1 min-[840px]:grid-cols-[repeat(auto-fit,minmax(min(100%,320px),475px))] gap-6">
           {data?.content && data.content.length > 0
             ? data.content.map((project) => (
                 <Card
@@ -234,8 +229,8 @@ const Projects = () => {
           }
         />
       )}
-    </div>
+    </>
   )
 }
 
-export default Projects
+export default ProjectManagementTab

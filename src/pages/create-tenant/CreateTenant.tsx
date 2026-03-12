@@ -236,7 +236,7 @@ const CreateTenant = () => {
           onSuccess: () => {
             toast.success('Tenant updated successfully!')
             navigateTimerRef.current = setTimeout(
-              () => navigate('/tenants'),
+              () => navigate(`/tenants/${tenantId}/details`),
               2000,
             )
           },
@@ -250,7 +250,7 @@ const CreateTenant = () => {
           onSuccess: () => {
             toast.success('Tenant created successfully!')
             navigateTimerRef.current = setTimeout(
-              () => navigate('/tenants'),
+              () => navigate(`/administration#tenants`),
               2000,
             )
           },
@@ -285,7 +285,12 @@ const CreateTenant = () => {
               )
             }
             className="mb-1 pb-1"
-            navigateTo={{ label: 'Back to Tenants', to: '/tenants' }}
+            navigateTo={{
+              label: isEditMode ? 'Back to Overview' : 'Back to Tenants',
+              to: isEditMode
+                ? `/tenants/${tenantId}/details`
+                : '/administration#tenants',
+            }}
           />
 
           <div className="flex justify-between items-center">

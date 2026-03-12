@@ -6,11 +6,10 @@ import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import PageHeader from '@/components/PageHeader'
 import SearchInput from '@/components/SearchInput'
 import Pagination from '@/components/Pagination'
 import Card from '@/components/Card'
-import TenantCardFooter from '@/components/TenantCardFooter'
+import TenantCardFooter from '@/pages/administration/TenantCardFooter'
 import Badge from '@/components/Badge'
 import { roleBadgeClass } from '@/utils/badges'
 import { toast } from 'sonner'
@@ -30,7 +29,7 @@ const getStatusBadgeClass = (status: JobStatus): string => {
   return ''
 }
 
-const Tenants = () => {
+const TenantManagementTab = () => {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchInput, setSearchInput] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
@@ -73,7 +72,6 @@ const Tenants = () => {
     return group?.role === 'admin'
   }
 
-  // Debounced search effect
   useEffect(() => {
     const timer = setTimeout(() => {
       setSearchQuery(searchInput)
@@ -128,7 +126,7 @@ const Tenants = () => {
   }
 
   return (
-    <div className="page-container">
+    <>
       <ConfirmDialog
         isOpen={deleteDialogOpen}
         title="Delete Tenant"
@@ -151,29 +149,20 @@ const Tenants = () => {
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
-      <PageHeader
-        className="mb-6"
-        title="Tenants"
-        subtitle={
-          isSuperAdmin
-            ? 'Manage and create new tenants for the monitoring service'
-            : 'View your tenants'
-        }
-      >
-        {isSuperAdmin && (
-          <Button variant="primary" size="md" href="/tenants/create">
-            Create New Tenant
-          </Button>
-        )}
-      </PageHeader>
 
-      <SearchInput
-        value={searchInput}
-        onChange={setSearchInput}
-        onClear={handleClearSearch}
-        placeholder="Search tenants..."
-        maxWidth="max-w-md"
-      />
+      <div className="flex flex-wrap justify-between items-start gap-3 mb-1">
+        <SearchInput
+          className="min-w-[24rem]"
+          value={searchInput}
+          onChange={setSearchInput}
+          onClear={handleClearSearch}
+          placeholder="Search tenants..."
+          maxWidth="max-w-md"
+        />
+        <Button variant="primary" size="md" href="/tenants/create">
+          Create New Tenant
+        </Button>
+      </div>
 
       {isLoading ? (
         <div className="loading-container">
@@ -182,7 +171,7 @@ const Tenants = () => {
       ) : error ? (
         <ErrorDisplay error={error} context="tenants" />
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(360px,100%),470px))] gap-6">
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(360px,100%),475px))] gap-6">
           {tenants && tenants?.length > 0
             ? tenants.map((tenant) => (
                 <Card
@@ -287,6 +276,7 @@ const Tenants = () => {
             : null}
         </div>
       )}
+
       {!error && !isLoading && (!tenants || tenants?.length === 0) ? (
         <div className="text-center p-8 bg-surface-muted rounded-lg border border-line">
           <p className="text-muted text-lg">No tenants found</p>
@@ -306,8 +296,8 @@ const Tenants = () => {
           }
         />
       )}
-    </div>
+    </>
   )
 }
 
-export default Tenants
+export default TenantManagementTab

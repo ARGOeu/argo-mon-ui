@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useGetTenantReports, useGetTenantReportById } from '@/hooks/useTenants'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
-import MetricProfileItem from '@/components/MetricProfileItem'
+import MetricProfileItem from '@/pages/tenant-reports/MetricProfileItem'
 import Badge from '@/components/Badge'
 
 const cardClass =
@@ -12,7 +12,7 @@ const simpleItemClass =
 const simpleItemTitleClass =
   'text-sm font-semibold text-body leading-[1.4] flex-1 break-words'
 
-const TenantReports = ({ tenantId }: { tenantId: string }) => {
+const TenantReportsTab = ({ tenantId }: { tenantId: string }) => {
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
   const [expandedServices, setExpandedServices] = useState<
     Record<string, Set<string>>
@@ -477,4 +477,4 @@ const TenantReports = ({ tenantId }: { tenantId: string }) => {
   )
 }
 
-export default TenantReports
+export default TenantReportsTab

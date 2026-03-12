@@ -7,7 +7,7 @@ import {
 import { BanIcon, Columns2Icon, SquareIcon } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
-import SelectGroup from '@/components/SelectGroup'
+import SelectGroup from './SelectGroup'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 

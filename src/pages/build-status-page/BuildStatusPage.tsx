@@ -20,10 +20,10 @@ import Button from '@/components/Button'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import PageHeader from '@/components/PageHeader'
 import Tabs from '@/components/Tabs'
-import BuildConfigTab from '@/components/BuildConfigTab'
-import BuildItemsTab from '@/components/BuildItemsTab'
-import BuildThemingTab from '@/components/BuildThemingTab'
-import BuildPagePreview from '@/components/BuildPagePreview'
+import BuildConfigTab from './BuildConfigTab'
+import BuildItemsTab from './BuildItemsTab'
+import BuildThemingTab from './BuildThemingTab'
+import BuildPagePreview from './BuildPagePreview'
 import type { StatusItemType, StatusGroupType } from '@/types/common'
 import type { TabItem } from '@/components/Tabs'
 
@@ -35,7 +35,7 @@ const buildTabs: TabItem[] = [
   { id: 'theming', label: 'Theming', icon: PaintBrushIcon },
 ]
 
-const Build = () => {
+const BuildStatusPage = () => {
   const { tenantId: tenantIdParam, pageId } = useParams<{
     tenantId?: string
     pageId?: string
@@ -399,7 +399,7 @@ const Build = () => {
             className="pb-1 mb-3"
           />
 
-          <div className="flex flex-row justify-between items-center mb-6">
+          <div className="flex flex-row justify-between items-center mb-4">
             <Tabs
               tabs={buildTabs}
               activeTab={activeTab}
@@ -517,4 +517,4 @@ const Build = () => {
   )
 }
 
-export default Build
+export default BuildStatusPage

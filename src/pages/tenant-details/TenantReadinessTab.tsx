@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { useParams } from 'react-router-dom'
 import {
   useGetTenantReadiness,
   useGetUserTenantById,
@@ -9,7 +8,6 @@ import {
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '@/components/Button'
-import PageHeader from '@/components/PageHeader'
 import Badge from '@/components/Badge'
 import { formatDateTime } from '@/utils/formatDateTime'
 import type { ReadinessCheckDetail, JobStatus } from '@/types/tenants'
@@ -17,23 +15,25 @@ import { toast } from 'sonner'
 
 const READINESS_CHECK_INTERVAL_MS = 10000
 
-const TenantReadiness = () => {
-  const { id } = useParams<{ id: string }>()
+interface TenantReadinessTabProps {
+  tenantId: string
+}
+
+const TenantReadinessTab = ({ tenantId }: TenantReadinessTabProps) => {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [isRecentlyChecked, setIsRecentlyChecked] = useState(false)
 
-  const { data: tenantData, isLoading: tenantLoading } = useGetUserTenantById(
-    id || '',
-  )
+  const { data: tenantData, isLoading: tenantLoading } =
+    useGetUserTenantById(tenantId)
 
   const {
     data: readinessData,
     isLoading: readinessLoading,
     error: readinessError,
-  } = useGetTenantReadiness(id || '', true, READINESS_CHECK_INTERVAL_MS)
+  } = useGetTenantReadiness(tenantId, true, READINESS_CHECK_INTERVAL_MS)
 
   const { data: statusData } = useGetUserTenantStatus(
-    id || '',
+    tenantId,
     READINESS_CHECK_INTERVAL_MS,
   )
 
@@ -52,7 +52,7 @@ const TenantReadiness = () => {
   }, [])
 
   const handleCheckReadiness = () => {
-    if (!id || !tenantData?.info.name) {
+    if (!tenantId || !tenantData?.info.name) {
       toast.error('Tenant information is not available')
       return
     }
@@ -70,7 +70,7 @@ const TenantReadiness = () => {
 
     notifyCheckReadinessMutation.mutate(
       {
-        tenantId: id,
+        tenantId,
         tenantName: tenantData.info.name,
       },
       {
@@ -158,19 +158,6 @@ const TenantReadiness = () => {
 
   return (
     <div className="max-w-[1240px] flex flex-col gap-2 mx-auto mb-6">
-      <PageHeader
-        className="mb-2"
-        title="Tenant Readiness"
-        subtitle={
-          <>
-            View readiness checks for tenant
-            <strong className="break-all">
-              {tenantData?.info.name ? ` ${tenantData.info.name}` : '...'}
-            </strong>
-          </>
-        }
-        navigateTo={{ label: 'Back to Tenants', to: '/tenants' }}
-      />
       <div className="flex items-center">
         <div className="flex flex-col gap-2 mb-2">
           <div className="flex flex-col gap-1 max-w-full">
@@ -297,4 +284,4 @@ const TenantReadiness = () => {
   )
 }
 
-export default TenantReadiness
+export default TenantReadinessTab

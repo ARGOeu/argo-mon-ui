@@ -243,6 +243,9 @@ export const useUpdateTenantStatusMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ['user-tenant-status', variables.id],
       })
+      queryClient.invalidateQueries({
+        queryKey: ['user-tenants'],
+      })
     },
     onError: (error) => {
       console.error('Tenant status update error:', error)

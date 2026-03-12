@@ -1,6 +1,6 @@
 import Button from '@/components/Button'
-import EditLabel from '@/components/EditLabel'
-import StatusGroup from '@/components/StatusGroup'
+import EditLabel from '@/pages/build-status-page/EditLabel'
+import StatusGroup from './StatusGroup'
 import { getStatusClass } from '@/utils/status'
 import type { StatusGroupType, StatusItemType } from '@/types/common'
 

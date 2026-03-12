@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import { StatusItem } from '@/components/StatusItem'
+import { StatusItem } from './StatusItem'
 import type { StatusItemType, StatusGroupType } from '@/types/common'
 import type { ReportListItem } from '@/types/tenants'
 

@@ -43,7 +43,6 @@ const ManageTenantMembers = () => {
           </>
         }
         className="mb-2 pb-2"
-        navigateTo={{ label: 'Back to Tenants', to: '/tenants' }}
       />
 
       <Tabs
