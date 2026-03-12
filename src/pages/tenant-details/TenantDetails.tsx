@@ -1,31 +1,39 @@
 import { useState, useEffect } from 'react'
-import { useParams, useLocation, Link } from 'react-router-dom'
+import { useParams, useLocation } from 'react-router-dom'
 import { useGetUserTenantById } from '@/hooks/useTenants'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '@/components/Button'
-import { ArrowLeftIcon } from '@heroicons/react/16/solid'
 import { ArrowUpRightFromSquare, MailIcon } from 'lucide-react'
 import Tabs from '@/components/Tabs'
 import Badge from '@/components/Badge'
 import TenantInfoTab from './TenantInfoTab'
-import TenantReports from './TenantReports'
+import TenantStatusTab from './TenantStatusTab'
+import TenantReadinessTab from './TenantReadinessTab'
 
 const TenantDetails = () => {
-  const { id } = useParams<{ id: string }>()
+  const { id: tenantId } = useParams<{ id: string }>()
   const location = useLocation()
-  const [activeTab, setActiveTab] = useState<'info' | 'reports'>('info')
+  const [activeTab, setActiveTab] = useState<'info' | 'status' | 'readiness'>(
+    'info',
+  )
 
   useEffect(() => {
     const hash = location?.hash
-    if (hash?.startsWith('#reports')) {
-      setActiveTab('reports')
+    if (hash?.startsWith('#status')) {
+      setActiveTab('status')
+    } else if (hash?.startsWith('#readiness')) {
+      setActiveTab('readiness')
     } else {
       setActiveTab('info')
     }
   }, [location.hash])
 
-  const { data: tenantData, isLoading, error } = useGetUserTenantById(id || '')
+  const {
+    data: tenantData,
+    isLoading,
+    error,
+  } = useGetUserTenantById(tenantId || '')
 
   if (isLoading)
     return (
@@ -55,14 +63,7 @@ const TenantDetails = () => {
 
   return (
     <div className="w-[100%] max-w-[1480px]">
-      <header className="px-6">
-        <Link
-          to="/tenants"
-          className="inline-flex items-center gap-1.5 text-base text-subtle hover:text-foreground no-underline transition-colors py-2"
-        >
-          <ArrowLeftIcon className="size-4" />
-          Back to Tenants
-        </Link>
+      <header className="px-6 py-4">
         <div className="flex flex-col xl:flex-row items-start xl:items-center gap-4 xl:gap-6">
           <div className="flex w-full items-start justify-between xl:contents">
             {tenantData?.info?.image ? (
@@ -81,7 +82,7 @@ const TenantDetails = () => {
               </div>
             )}
             <Button
-              href={`/tenants/edit/${id}`}
+              href={`/tenants/edit/${tenantId}`}
               size="sm"
               variant="primary"
               className="whitespace-nowrap flex-shrink-0 xl:order-last xl:ml-auto self-start"
@@ -152,11 +153,12 @@ const TenantDetails = () => {
         <Tabs
           tabs={[
             { id: 'info', label: 'Info' },
-            { id: 'reports', label: 'Reports' },
+            { id: 'status', label: 'Status' },
+            { id: 'readiness', label: 'Readiness' },
           ]}
           activeTab={activeTab}
           onChange={(id) => {
-            setActiveTab(id as 'info' | 'reports')
+            setActiveTab(id as 'info' | 'status' | 'readiness')
             window.location.hash = id
           }}
           className="mt-2"
@@ -164,8 +166,13 @@ const TenantDetails = () => {
       </header>
 
       <div className="py-4 px-10">
-        {activeTab === 'info' && <TenantInfoTab tenantId={id || ''} />}
-        {activeTab === 'reports' && <TenantReports tenantId={id || ''} />}
+        {activeTab === 'info' && <TenantInfoTab tenantId={tenantId || ''} />}
+        {activeTab === 'status' && (
+          <TenantStatusTab tenantId={tenantId || ''} />
+        )}
+        {activeTab === 'readiness' && (
+          <TenantReadinessTab tenantId={tenantId || ''} />
+        )}
       </div>
     </div>
   )

@@ -2,10 +2,8 @@ import {
   PencilSquareIcon,
   TrashIcon,
   PlusCircleIcon,
-  ListBulletIcon,
   UserGroupIcon,
   Bars3Icon,
-  ShieldCheckIcon,
   Square3Stack3DIcon,
   ClipboardDocumentListIcon,
 } from '@heroicons/react/16/solid'
@@ -35,20 +33,12 @@ const TenantCardFooter = ({
     />
 
     {(isSuperAdmin || isAdmin) && (
-      <>
-        <IconButton
-          label="Edit Tenant"
-          icon={<PencilSquareIcon className={actionIconClass} />}
-          href={`/tenants/edit/${tenantId}`}
-          className="text-muted hover:bg-gray-200"
-        />
-        <IconButton
-          label="Manage Members"
-          icon={<UserGroupIcon className={actionIconClass} />}
-          href={`/tenants/${tenantId}/members`}
-          className="text-violet-700 hover:bg-violet-100"
-        />
-      </>
+      <IconButton
+        label="Edit Tenant"
+        icon={<PencilSquareIcon className={actionIconClass} />}
+        href={`/tenants/edit/${tenantId}`}
+        className="text-muted hover:bg-gray-200"
+      />
     )}
 
     {!isSuperAdmin && (
@@ -70,26 +60,21 @@ const TenantCardFooter = ({
     )}
 
     {(isSuperAdmin || isAdmin) && (
-      <>
-        <IconButton
-          label="View Status"
-          icon={<ListBulletIcon className={actionIconClass} />}
-          href={`/tenants/${tenantId}/status`}
-          className="text-emerald-600 hover:bg-green-50"
-        />
-        <IconButton
-          label="Check Readiness"
-          icon={<ShieldCheckIcon className={actionIconClass} />}
-          href={`/tenants/${tenantId}/readiness`}
-          className="text-cyan-600 hover:bg-cyan-50"
-        />
-        <IconButton
-          label="Capabilities"
-          icon={<Square3Stack3DIcon className={actionIconClass} />}
-          href={`/tenants/${tenantId}/capabilities`}
-          className="text-amber-600 hover:bg-amber-50"
-        />
-      </>
+      <IconButton
+        label="Capabilities"
+        icon={<Square3Stack3DIcon className={actionIconClass} />}
+        href={`/tenants/${tenantId}/capabilities`}
+        className="text-amber-600 hover:bg-amber-50"
+      />
+    )}
+
+    {(isSuperAdmin || isAdmin) && (
+      <IconButton
+        label="Manage Members"
+        icon={<UserGroupIcon className={actionIconClass} />}
+        href={`/tenants/${tenantId}/members`}
+        className="text-violet-700 hover:bg-violet-100"
+      />
     )}
 
     {isSuperAdmin && (

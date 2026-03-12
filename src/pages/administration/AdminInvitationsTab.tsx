@@ -25,7 +25,7 @@ type SortOrder = 'ASC' | 'DESC'
 
 const pageSize = 10
 
-const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
+const AdminInvitationsTab = ({ isSuperAdmin }: AdminInvitationsProps) => {
   const [searchInput, setSearchInput] = useState('')
   const [debouncedSearch, setDebouncedSearch] = useState('')
   const [sortColumn, setSortColumn] = useState<SortColumn | null>(null)
@@ -330,4 +330,4 @@ const AdminInvitations = ({ isSuperAdmin }: AdminInvitationsProps) => {
   )
 }
 
-export default AdminInvitations
+export default AdminInvitationsTab

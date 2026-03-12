@@ -143,7 +143,7 @@ const CreateProject = () => {
           onSuccess: () => {
             toast.success('Project updated successfully!')
             setTimeout(() => {
-              navigate(`/projects`)
+              navigate(`/administration#projects`)
             }, 2000)
           },
           onError: (error: Error & { errors?: string[] }) => {
@@ -167,7 +167,7 @@ const CreateProject = () => {
         onSuccess: () => {
           toast.success('Project created successfully!')
           setTimeout(() => {
-            navigate(`/projects`)
+            navigate(`/administration#projects`)
           }, 2000)
         },
         onError: (error: Error & { errors?: string[] }) => {
@@ -224,7 +224,10 @@ const CreateProject = () => {
                   : 'Fill in the details to create a new project'
               }
               className="mb-1 pb-1"
-              navigateTo={{ label: 'Back to Projects', to: '/projects' }}
+              navigateTo={{
+                label: 'Back to Projects',
+                to: `/administration#projects`,
+              }}
             />
 
             <div className="flex justify-end mb-4">

@@ -122,8 +122,8 @@ export const Profile = () => {
             subtitle="View and manage user account"
             className="mb-6"
             navigateTo={{
-              label: 'Back to Administration',
-              to: '/administration',
+              label: 'Back to Users',
+              to: '/administration#users',
             }}
           />
           <ErrorDisplay error={error.message} context="user profile" />
@@ -192,7 +192,7 @@ export const Profile = () => {
           className="mb-6"
           navigateTo={
             isViewingOtherUser
-              ? { label: 'Back to Administration', to: '/administration' }
+              ? { label: 'Back to Users', to: '/administration#users' }
               : undefined
           }
         />

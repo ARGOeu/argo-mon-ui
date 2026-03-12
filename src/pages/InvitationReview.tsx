@@ -54,7 +54,7 @@ export const InvitationReview = () => {
           toast.success('Invitation accepted successfully!')
 
           setTimeout(() => {
-            navigate('/tenants')
+            navigate('/my-invitations')
           }, 2000)
         },
         onError: (error) => {
@@ -153,9 +153,9 @@ export const InvitationReview = () => {
                   variant="primary"
                   size="md"
                   className="w-full sm:w-auto"
-                  href="/tenants"
+                  href="/my-invitations"
                 >
-                  View Tenants
+                  My Invitations
                 </Button>
               )}
               <Button

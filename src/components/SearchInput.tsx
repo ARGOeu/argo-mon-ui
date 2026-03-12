@@ -17,7 +17,7 @@ const SearchInput = ({
   maxWidth = 'max-w-sm',
   className,
 }: SearchInputProps) => (
-  <div className={`mb-4 ${className ?? ''}`}>
+  <div className={`mb-2 ${className ?? ''}`}>
     <div className={`relative ${maxWidth}`}>
       <MagnifyingGlassIcon className="absolute left-3 top-1/2 -translate-y-1/2 size-5 text-subtle pointer-events-none" />
       <input
@@ -25,7 +25,7 @@ const SearchInput = ({
         placeholder={placeholder}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full py-2 pl-10 pr-10 border border-line-strong rounded-lg text-sm"
+        className="w-full py-2 pl-10 pr-10 text-sm"
       />
       {value && (
         <button

@@ -190,7 +190,7 @@ const AssignProjects = () => {
         onSuccess: () => {
           toast.success('Projects assigned successfully!')
           setTimeout(() => {
-            navigate('/tenants')
+            navigate('/administration#tenants')
           }, 2000)
         },
         onError: (error: Error & { errors?: string[] }) => {
@@ -245,8 +245,10 @@ const AssignProjects = () => {
               </strong>
             </span>
           }
-          className="pb-1 mb-1"
-          navigateTo={{ label: 'Back to Tenants', to: '/tenants' }}
+          navigateTo={{
+            label: 'Back to Tenants',
+            to: '/administration#tenants',
+          }}
         />
 
         {!isReadOnly && (
