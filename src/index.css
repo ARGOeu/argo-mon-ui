@@ -110,6 +110,11 @@
     color: #ef4444;
   }
 
+  .toggle-brand:checked,
+  .toggle-brand[aria-checked='true'] {
+    --input-color: var(--color-brand) !important;
+  }
+
   .loading-container {
     display: flex;
     justify-content: center;

@@ -15,7 +15,7 @@ function LoginPrompt({
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh]">
       <div className="text-center max-w-md">
-        <div className="mb-6">
+        <div className="mb-2">
           <LockClosedIcon className="mx-auto h-16 w-16 text-subtle" />
         </div>
         <h2 className="text-2xl font-semibold text-foreground mb-1">{title}</h2>

@@ -129,7 +129,7 @@ const ProjectManagementTab = () => {
       ) : projectsError ? (
         <ErrorDisplay error={projectsError} context="projects" />
       ) : (
-        <div className="grid grid-cols-1 min-[840px]:grid-cols-[repeat(auto-fit,minmax(min(100%,320px),475px))] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
           {data?.content && data.content.length > 0
             ? data.content.map((project) => (
                 <Card
