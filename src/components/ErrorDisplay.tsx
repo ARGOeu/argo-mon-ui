@@ -19,6 +19,17 @@ const ErrorDisplay = ({ error, context = 'data' }: ErrorDisplayProps) => {
   const isForbidden =
     errorMessageLower.includes('status code 403') ||
     errorMessageLower.includes('forbidden')
+  const isNotFound =
+    errorMessageLower.includes('status code 404') ||
+    errorMessageLower.includes('not found')
+
+  if (isNotFound) {
+    return (
+      <div className="text-center px-8 py-3 bg-surface-muted rounded-lg">
+        <p className="text-muted text-sm italic">No {context} found</p>
+      </div>
+    )
+  }
 
   const getTitle = () => {
     if (isUnauthorized) return 'Authentication Required'
@@ -43,7 +54,7 @@ const ErrorDisplay = ({ error, context = 'data' }: ErrorDisplayProps) => {
     : message
 
   return (
-    <div className="flex flex-col items-center justify-center gap-1 p-3 bg-red-50 border border-red-200 rounded-lg my-1 text-center">
+    <div className="flex flex-col items-center justify-center gap-1 px-3 py-2 bg-red-50 rounded-lg my-1 text-center">
       <ExclamationCircleIcon className="size-6 text-red-700" />
       <h2 className="text-base font-semibold text-red-800">{getTitle()}</h2>
       <p

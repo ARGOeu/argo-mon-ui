@@ -13,16 +13,17 @@ import type {
 
 export const useGetTopologyEndpoints = (
   tenantId: string,
+  date: string = '',
   enabled: boolean = true,
 ) => {
   const { token } = useAuth()
 
   return useQuery<EndpointTopologyItem[], Error>({
-    queryKey: ['topology-endpoints', tenantId],
+    queryKey: ['topology-endpoints', tenantId, date],
     queryFn: () => {
       if (!token) throw new Error('No authentication token available')
       if (!tenantId) throw new Error('Tenant ID is required')
-      return fetchTopologyEndpoints(tenantId, token)
+      return fetchTopologyEndpoints(tenantId, date, token)
     },
     retry: false,
     enabled: enabled && !!token && !!tenantId,

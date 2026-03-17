@@ -1,10 +1,11 @@
 import { useState, useRef, useEffect } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
 import {
+  useGetTopologyEndpoints,
   useGetTopologyServiceTypes,
   useCreateTopologyEndpointMutation,
 } from '@/hooks/useTopology'
 import { useGetUserTenantById } from '@/hooks/useTenants'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   PlusIcon,
   TrashIcon,
@@ -13,6 +14,7 @@ import {
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
 import Button from '@/components/Button'
+import IconButton from '@/components/IconButton'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 
@@ -25,12 +27,17 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const today = new Date().toISOString().split('T')[0]
 
+interface Contact {
+  id: string
+  value: string
+}
+
 interface FormData {
   service: string
   hostname: string
   monitored: boolean
   notificationsEnabled: boolean
-  contacts: string[]
+  contacts: Contact[]
 }
 
 interface FormErrors {
@@ -45,6 +52,7 @@ const CreateTopologyEndpoint = () => {
   const navigate = useNavigate()
 
   const { data: tenantData } = useGetUserTenantById(tenantId)
+  const { data: existingEndpoints } = useGetTopologyEndpoints(tenantId, today)
   const {
     data: serviceTypes,
     isLoading: isLoadingTypes,
@@ -57,7 +65,7 @@ const CreateTopologyEndpoint = () => {
     hostname: '',
     monitored: true,
     notificationsEnabled: false,
-    contacts: [''],
+    contacts: [{ id: crypto.randomUUID(), value: '' }],
   })
 
   const [errors, setErrors] = useState<FormErrors>({
@@ -96,9 +104,12 @@ const CreateTopologyEndpoint = () => {
   }
 
   const handleContactChange = (index: number, value: string) => {
-    const updated = [...formData.contacts]
-    updated[index] = value
-    setFormData((prev) => ({ ...prev, contacts: updated }))
+    setFormData((prev) => ({
+      ...prev,
+      contacts: prev.contacts.map((c, i) =>
+        i === index ? { ...c, value } : c,
+      ),
+    }))
 
     const updatedErrors = [...errors.contacts]
     if (!value.trim() || emailRegex.test(value)) {
@@ -110,7 +121,10 @@ const CreateTopologyEndpoint = () => {
   }
 
   const handleAddContact = () => {
-    setFormData((prev) => ({ ...prev, contacts: [...prev.contacts, ''] }))
+    setFormData((prev) => ({
+      ...prev,
+      contacts: [...prev.contacts, { id: crypto.randomUUID(), value: '' }],
+    }))
     setErrors((prev) => ({ ...prev, contacts: [...prev.contacts, ''] }))
   }
 
@@ -146,14 +160,14 @@ const CreateTopologyEndpoint = () => {
 
     if (formData.notificationsEnabled) {
       const hasValidContact = formData.contacts.some(
-        (c) => c.trim() && emailRegex.test(c),
+        (c) => c.value.trim() && emailRegex.test(c.value),
       )
       if (!hasValidContact) {
         newErrors.contacts[0] = 'At least one valid email is required'
         hasError = true
       }
       formData.contacts.forEach((c, i) => {
-        if (c.trim() && !emailRegex.test(c)) {
+        if (c.value.trim() && !emailRegex.test(c.value)) {
           newErrors.contacts[i] = 'Invalid email'
           hasError = true
         }
@@ -166,6 +180,7 @@ const CreateTopologyEndpoint = () => {
     }
 
     const payload = [
+      ...(existingEndpoints ?? []),
       {
         date: today,
         group: 'DEFAULT',
@@ -175,12 +190,12 @@ const CreateTopologyEndpoint = () => {
         tags: {
           monitored: formData.monitored ? '1' : '0',
         },
-        ...(formData.notificationsEnabled && {
-          notifications: {
-            enabled: true,
-            contacts: formData.contacts.filter((c) => c.trim()),
-          },
-        }),
+        notifications: {
+          enabled: formData.notificationsEnabled,
+          contacts: formData.contacts
+            .filter((c) => c.value.trim() && emailRegex.test(c.value))
+            .map((c) => c.value),
+        },
       },
     ]
 
@@ -205,10 +220,10 @@ const CreateTopologyEndpoint = () => {
   return (
     <div className="page-container">
       <PageHeader
-        title="Create Topology Endpoint"
+        title="Add Topology Endpoint"
         subtitle={
           <>
-            Add a new endpoint for tenant{' '}
+            Configure and register a new topology endpoint for tenant{' '}
             <strong>{tenantData?.info.name ?? '...'}</strong>
           </>
         }
@@ -231,7 +246,7 @@ const CreateTopologyEndpoint = () => {
               Creating...
             </>
           ) : (
-            'Create Endpoint'
+            'Add Endpoint'
           )}
         </Button>
       </div>
@@ -355,10 +370,7 @@ const CreateTopologyEndpoint = () => {
               className="toggle toggle-brand"
               checked={formData.monitored}
               onChange={() =>
-                setFormData((prev) => ({
-                  ...prev,
-                  monitored: !prev.monitored,
-                }))
+                setFormData((prev) => ({ ...prev, monitored: !prev.monitored }))
               }
             />
             <div>
@@ -406,11 +418,11 @@ const CreateTopologyEndpoint = () => {
                 Contact Emails <span className="required">*</span>
               </p>
               {formData.contacts.map((contact, index) => (
-                <div key={index} className="flex items-start gap-2">
+                <div key={contact.id} className="flex items-start gap-1">
                   <div className="flex flex-col flex-1">
                     <input
                       type="email"
-                      value={contact}
+                      value={contact.value}
                       onChange={(e) =>
                         handleContactChange(index, e.target.value)
                       }
@@ -428,14 +440,14 @@ const CreateTopologyEndpoint = () => {
                     )}
                   </div>
                   {formData.contacts.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveContact(index)}
-                      className="flex items-center justify-center size-7 rounded-md bg-red-500 text-white border-none cursor-pointer hover:bg-red-600"
-                      title="Remove contact"
-                    >
-                      <TrashIcon className="size-4" />
-                    </button>
+                    <div className="mt-1">
+                      <IconButton
+                        icon={<TrashIcon className="size-4.5" />}
+                        label="Remove contact"
+                        onClick={() => handleRemoveContact(index)}
+                        className="text-red-600 hover:bg-red-50"
+                      />
+                    </div>
                   )}
                 </div>
               ))}
