@@ -171,7 +171,7 @@ const TenantManagementTab = () => {
       ) : error ? (
         <ErrorDisplay error={error} context="tenants" />
       ) : (
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(min(360px,100%),475px))] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-6">
           {tenants && tenants?.length > 0
             ? tenants.map((tenant) => (
                 <Card

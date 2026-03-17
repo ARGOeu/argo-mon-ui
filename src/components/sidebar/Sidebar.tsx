@@ -6,7 +6,8 @@ import {
   ShieldCheckIcon,
   UsersIcon,
   DocumentChartBarIcon,
-  BuildingOffice2Icon,
+  ServerStackIcon,
+  CircleStackIcon,
 } from '@heroicons/react/16/solid'
 import type { Tenant } from '@/types/tenants'
 import type { AuthContextType } from '@/auth/context'
@@ -75,6 +76,15 @@ function Sidebar({
                   <HomeIcon className="size-4" aria-hidden />
                   Overview
                 </SidebarNavItem>
+                {isAdminOfTenant && (
+                  <SidebarNavItem
+                    to={`/tenants/${effectiveTenantId}/topology`}
+                    onClick={onCloseMobileMenu}
+                  >
+                    <CircleStackIcon className="size-4" aria-hidden />
+                    Topology
+                  </SidebarNavItem>
+                )}
                 <SidebarNavItem
                   to="/status-pages/view"
                   onClick={onCloseMobileMenu}
@@ -132,7 +142,7 @@ function Sidebar({
       ) : (
         <div className="flex-1 flex items-start justify-center px-6 pt-20">
           <div className="text-center text-muted text-sm">
-            <BuildingOffice2Icon className="size-12 mx-auto mb-3 text-brand" />
+            <ServerStackIcon className="size-12 mx-auto mb-3 text-brand" />
             <p className="font-medium text-body mb-1">
               Status Pages Management
             </p>

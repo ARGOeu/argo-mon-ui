@@ -18,6 +18,7 @@ import ManageTenantMembers from './pages/manage-tenant-members'
 import MyInvitations from './pages/MyInvitations'
 import { InvitationReview } from './pages/InvitationReview'
 import { Status } from './pages/Status'
+import { TenantTopology, CreateTopologyEndpoint } from './pages/tenant-topology'
 import { AuthProvider } from './auth/AuthProvider'
 import NotFound from './pages/NotFound'
 import { Toaster } from 'sonner'
@@ -188,6 +189,22 @@ function App() {
                   element={
                     <AuthProtected>
                       <View />
+                    </AuthProtected>
+                  }
+                />
+                <Route
+                  path="tenants/:id/topology"
+                  element={
+                    <AuthProtected>
+                      <TenantTopology />
+                    </AuthProtected>
+                  }
+                />
+                <Route
+                  path="tenants/:id/topology/create"
+                  element={
+                    <AuthProtected>
+                      <CreateTopologyEndpoint />
                     </AuthProtected>
                   }
                 />
