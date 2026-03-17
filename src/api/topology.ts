@@ -8,10 +8,11 @@ const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
 export const fetchTopologyEndpoints = async (
   tenantId: string,
+  date: string,
   token: string,
 ): Promise<EndpointTopologyItem[]> => {
   const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/topology/endpoints`,
+    `${BACKEND_API}/v1/tenants/${tenantId}/topology/endpoints${date ? `?date=${date}` : ''}`,
     {
       headers: {
         'Content-Type': 'application/json',
