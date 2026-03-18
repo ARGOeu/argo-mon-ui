@@ -6,7 +6,7 @@ import AuthProtected from './routing/AuthProtected'
 import ProtectedRoute from './routing/ProtectedRoute'
 import { Profile } from './pages/Profile'
 import BuildStatusPage from './pages/build-status-page'
-import View from './pages/View'
+import TenantStatusPages from './pages/status-pages'
 import CreateTenant from './pages/create-tenant'
 import TenantReports from './pages/tenant-reports'
 import TenantCapabilities from './pages/tenant-capabilities'
@@ -185,10 +185,10 @@ function App() {
                   }
                 />
                 <Route
-                  path="status-pages/view"
+                  path="tenants/:id/status-pages"
                   element={
                     <AuthProtected>
-                      <View />
+                      <TenantStatusPages />
                     </AuthProtected>
                   }
                 />

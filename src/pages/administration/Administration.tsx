@@ -7,8 +7,14 @@ import UsersTab from './UsersTab'
 import AdminInvitationsTab from './AdminInvitationsTab'
 import TenantManagementTab from './TenantManagementTab'
 import ProjectManagementTab from './ProjectManagementTab'
+import StatusPagesManagementTab from './StatusPagesManagementTab'
 
-type ActiveTab = 'users' | 'invitations' | 'tenants' | 'projects'
+type ActiveTab =
+  | 'tenants'
+  | 'status-pages'
+  | 'projects'
+  | 'users'
+  | 'invitations'
 
 const Administration = () => {
   const location = useLocation()
@@ -24,6 +30,8 @@ const Administration = () => {
       setActiveTab('users')
     } else if (hash.startsWith('#projects')) {
       setActiveTab('projects')
+    } else if (hash.startsWith('#status-pages')) {
+      setActiveTab('status-pages')
     } else {
       setActiveTab('tenants')
     }
@@ -52,6 +60,7 @@ const Administration = () => {
       <Tabs
         tabs={[
           { id: 'tenants', label: 'Tenants' },
+          { id: 'status-pages', label: 'Status Pages' },
           { id: 'projects', label: 'Projects' },
           { id: 'users', label: 'Users' },
           { id: 'invitations', label: 'Invitations' },
@@ -65,6 +74,7 @@ const Administration = () => {
       />
 
       {activeTab === 'tenants' && <TenantManagementTab />}
+      {activeTab === 'status-pages' && <StatusPagesManagementTab />}
       {activeTab === 'projects' && <ProjectManagementTab />}
       {activeTab === 'users' && <UsersTab />}
       {activeTab === 'invitations' && (
