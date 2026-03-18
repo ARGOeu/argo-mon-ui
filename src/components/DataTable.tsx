@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 export const thBase =
   'px-4 py-3 text-left text-sm font-semibold text-body whitespace-nowrap'
 
-export const tdBase = 'px-4 py-3 text-sm text-gray-800'
+export const tdBase = 'px-4 py-2.5 text-sm text-gray-800'
 
 const sortButtonClass =
   'group flex items-center gap-1 w-full bg-transparent border-none p-0 text-sm font-semibold text-body tracking-wider cursor-pointer text-left transition-all hover:text-foreground'

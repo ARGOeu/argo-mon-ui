@@ -72,7 +72,7 @@ export const useUpdatePageMutation = () => {
   })
 }
 
-export const useGetAllPagesQuery = (
+export const useGetTenantPages = (
   tenantId: string,
   page: number = 1,
   size: number = 10,

@@ -7,7 +7,7 @@ import { UserMinusIcon } from '@heroicons/react/16/solid'
 import { toast } from 'sonner'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import IconButton from '@/components/IconButton'
-import DataTable from '@/components/DataTable'
+import DataTable, { thBase, tdBase } from '@/components/DataTable'
 import Pagination from '@/components/Pagination'
 import Badge from '@/components/Badge'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -84,21 +84,11 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
             <DataTable tableClassName="min-w-[700px]">
               <thead className="bg-surface-strong border-b border-line">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-body whitespace-nowrap">
-                    First Name
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-body whitespace-nowrap">
-                    Last Name
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-body whitespace-nowrap">
-                    Email
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-body whitespace-nowrap">
-                    Role
-                  </th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold text-body whitespace-nowrap">
-                    Actions
-                  </th>
+                  <th className={thBase}>First Name</th>
+                  <th className={thBase}>Last Name</th>
+                  <th className={thBase}>Email</th>
+                  <th className={thBase}>Role</th>
+                  <th className={thBase}>Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -109,16 +99,10 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
                     )
                     return (
                       <tr key={member.id} className="hover:bg-surface-muted">
-                        <td className="px-4 py-3.5 text-sm text-gray-800 break-words">
-                          {member.firstName || '-'}
-                        </td>
-                        <td className="px-4 py-3.5 text-sm text-gray-800 break-words">
-                          {member.lastName || '-'}
-                        </td>
-                        <td className="px-4 py-3.5 text-sm text-gray-800 break-words">
-                          {member.email}
-                        </td>
-                        <td className="px-4 py-3.5 text-sm text-gray-800">
+                        <td className={tdBase}>{member.firstName || '-'}</td>
+                        <td className={tdBase}>{member.lastName || '-'}</td>
+                        <td className={tdBase}>{member.email}</td>
+                        <td className={tdBase}>
                           <Badge
                             className={
                               roleBadgeClass[tenantInfo?.role ?? 'viewer'] ??
@@ -130,7 +114,7 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
                               : 'Member'}
                           </Badge>
                         </td>
-                        <td className="px-6 py-3 text-sm text-gray-800">
+                        <td className={`${tdBase} px-6`}>
                           <IconButton
                             icon={<UserMinusIcon className="size-5" />}
                             label="Remove member"

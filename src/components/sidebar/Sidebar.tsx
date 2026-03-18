@@ -86,7 +86,7 @@ function Sidebar({
                   </SidebarNavItem>
                 )}
                 <SidebarNavItem
-                  to="/status-pages/view"
+                  to={`/tenants/${effectiveTenantId}/status-pages`}
                   onClick={onCloseMobileMenu}
                 >
                   <RectangleStackIcon className="size-4" aria-hidden />
