@@ -161,7 +161,7 @@ const TenantDetails = () => {
             setActiveTab(id as 'info' | 'status' | 'readiness')
             window.location.hash = id
           }}
-          className="mt-2"
+          className="mt-3"
         />
       </header>
 

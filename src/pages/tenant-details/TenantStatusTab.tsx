@@ -17,6 +17,7 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Badge from '@/components/Badge'
 import Button from '@/components/Button'
+import SelectDropdown from '@/components/SelectDropdown'
 import { formatDateTime } from '@/utils/formatDateTime'
 import type { Job, JobStatus } from '@/types/tenants'
 
@@ -330,20 +331,13 @@ const TenantStatusTab = ({ tenantId }: TenantStatusTabProps) => {
                           >
                             Change Status:
                           </label>
-                          <select
-                            id={`status-${job.name}`}
+                          <SelectDropdown
                             value={selectedStatus || job.status}
-                            onChange={(e) =>
-                              setSelectedStatus(e.target.value as JobStatus)
+                            onChange={(value) =>
+                              setSelectedStatus(value as JobStatus)
                             }
-                            className="w-full px-3 py-2 text-sm font-medium"
-                          >
-                            {STATUS_OPTIONS.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </select>
+                            options={STATUS_OPTIONS}
+                          />
                         </div>
                         <div className="flex flex-col gap-1 flex-1">
                           <label

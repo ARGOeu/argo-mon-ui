@@ -1,5 +1,6 @@
 import { CheckBadgeIcon } from '@heroicons/react/24/solid'
 import type { TenantList, ReportListItem } from '@/types/tenants'
+import SelectDropdown from '@/components/SelectDropdown'
 
 interface BuildConfigTabProps {
   name: string
@@ -10,7 +11,7 @@ interface BuildConfigTabProps {
   reportsData: ReportListItem[] | undefined
   onNameChange: (value: string) => void
   onSlugChange: (value: string) => void
-  onTenantChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
+  onTenantChange: (value: string) => void
 }
 
 const BuildConfigTab = ({
@@ -75,19 +76,20 @@ const BuildConfigTab = ({
           <label className="block text-sm font-medium text-body mb-2">
             Tenant: <span className="required">*</span>
           </label>
-          <select
-            className="w-full"
+          <SelectDropdown
             value={tenantId}
             onChange={onTenantChange}
+            options={
+              tenantsData?.content
+                .filter((tenant) => tenant.id)
+                .map((tenant) => ({
+                  value: tenant.id as string,
+                  label: tenant.info.name,
+                })) ?? []
+            }
+            placeholder="Select a tenant"
             disabled={isEditMode}
-          >
-            <option value="">Select a tenant</option>
-            {tenantsData?.content.map((tenant) => (
-              <option key={tenant.id} value={tenant.id}>
-                {tenant.info.name}
-              </option>
-            ))}
-          </select>
+          />
           {isEditMode && (
             <p className="text-xs text-muted mt-1">
               Tenant cannot be changed when editing a page

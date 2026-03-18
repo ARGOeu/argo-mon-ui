@@ -108,7 +108,7 @@ const ProjectManagementTab = () => {
         onCancel={handleDeleteCancel}
       />
 
-      <div className="flex flex-wrap justify-between items-start gap-3 mb-4">
+      <div className="flex flex-wrap justify-between items-start gap-3 mb-1">
         <SearchInput
           className="min-w-[24rem]"
           value={searchInput}
@@ -211,8 +211,10 @@ const ProjectManagementTab = () => {
       {!projectsError &&
       !isLoading &&
       (!data || data?.content?.length === 0) ? (
-        <div className="text-center p-8 bg-surface-muted rounded-lg border border-line">
-          <p className="text-muted text-lg">No projects found</p>
+        <div className="text-center bg-surface-muted rounded-lg">
+          <p className="text-sm text-subtle italic py-6 px-12">
+            No projects found
+          </p>
         </div>
       ) : null}
 

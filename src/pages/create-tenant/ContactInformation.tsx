@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGetUserContactTypes } from '@/hooks/useTenants'
 import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid'
+import SelectDropdown from '@/components/SelectDropdown'
 
 const sectionClass =
   'grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 md:gap-8 mb-6 animate-fade-in'
@@ -44,15 +45,12 @@ const ContactInformation = ({
 
   const handleChange = (
     index: number,
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const { name, value } = e.target
 
     const updatedContacts = [...contacts]
-    updatedContacts[index] = {
-      ...updatedContacts[index],
-      [name]: value,
-    }
+    updatedContacts[index] = { ...updatedContacts[index], [name]: value }
     onContactsChange(updatedContacts)
 
     if (name === 'email') {
@@ -67,6 +65,12 @@ const ContactInformation = ({
       }
       setErrors(updatedErrors)
     }
+  }
+
+  const handleTypeChange = (index: number, value: string) => {
+    const updatedContacts = [...contacts]
+    updatedContacts[index] = { ...updatedContacts[index], type: value }
+    onContactsChange(updatedContacts)
   }
 
   const handleAddContact = () => {
@@ -166,19 +170,19 @@ const ContactInformation = ({
               {isContactTypesLoading ? (
                 <div className="text-sm text-muted">Loading...</div>
               ) : (
-                <select
-                  name="type"
+                <SelectDropdown
                   value={contact.type}
-                  onChange={(e) => handleChange(index, e)}
-                  className="capitalize"
-                >
-                  <option value="">Select contact type</option>
-                  {contactTypes?.map((type) => (
-                    <option key={type} value={type} className="capitalize">
-                      {type.toLowerCase()}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(value) => handleTypeChange(index, value)}
+                  options={
+                    contactTypes?.map((type) => ({
+                      value: type,
+                      label:
+                        type.charAt(0).toUpperCase() +
+                        type.slice(1).toLowerCase(),
+                    })) ?? []
+                  }
+                  placeholder="Select contact type"
+                />
               )}
             </div>
           </div>

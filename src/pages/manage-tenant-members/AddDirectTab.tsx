@@ -3,6 +3,7 @@ import { useGetMembers, useAddMemberDirectly } from '@/hooks/useTenants'
 import { XMarkIcon } from '@heroicons/react/16/solid'
 import { toast } from 'sonner'
 import Button from '@/components/Button'
+import SelectDropdown from '@/components/SelectDropdown'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import type { InvitationRole } from '@/types/invitations'
 
@@ -47,21 +48,19 @@ const AddDirectTab = ({ tenantId }: AddDirectTabProps) => {
     return () => clearTimeout(timer)
   }, [searchInput])
 
-  const handleFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = e.target
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target
 
-    if (name === 'search') {
-      setSearchInput(value)
-      setShowSearchResults(true)
-      if (!value.trim()) {
-        setShowSearchResults(false)
-        setAddDirectErrors((prev) => ({ ...prev, search: '' }))
-      }
-    } else if (name === 'role') {
-      setAddDirectForm((prev) => ({ ...prev, role: value as InvitationRole }))
+    setSearchInput(value)
+    setShowSearchResults(true)
+    if (!value.trim()) {
+      setShowSearchResults(false)
+      setAddDirectErrors((prev) => ({ ...prev, search: '' }))
     }
+  }
+
+  const handleRoleChange = (value: string) => {
+    setAddDirectForm((prev) => ({ ...prev, role: value as InvitationRole }))
   }
 
   const handleUserSelect = (user: {
@@ -227,17 +226,11 @@ const AddDirectTab = ({ tenantId }: AddDirectTabProps) => {
               <label className="text-sm font-medium text-body mb-1.5">
                 Role <span className="required">*</span>
               </label>
-              <select
-                name="role"
+              <SelectDropdown
                 value={addDirectForm.role}
-                onChange={handleFormChange}
-              >
-                {roleOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                onChange={handleRoleChange}
+                options={roleOptions}
+              />
             </div>
           </div>
 

@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import SelectDropdown from '@/components/SelectDropdown'
 import { StatusItem } from './StatusItem'
 import type { StatusItemType, StatusGroupType } from '@/types/common'
 import type { ReportListItem } from '@/types/tenants'
@@ -16,7 +17,7 @@ interface BuildItemsTabProps {
   statusGroups: StatusGroupType[]
   selectIcon: string
   selectText: string
-  onReportChange: (event: React.ChangeEvent<HTMLSelectElement>) => void
+  onReportChange: (value: string) => void
 }
 
 const BuildItemsTab = ({
@@ -75,21 +76,16 @@ const BuildItemsTab = ({
                 <label className="block text-sm font-medium text-body mb-1">
                   Report:
                 </label>
-                <select
+                <SelectDropdown
                   value={report}
-                  className="w-full"
                   onChange={onReportChange}
+                  options={reportsData.map((item) => ({
+                    value: item.id,
+                    label: item.name,
+                  }))}
+                  placeholder="Select a report"
                   disabled={statusGroups.length > 0}
-                >
-                  <option value="" disabled={true}>
-                    Select a report
-                  </option>
-                  {reportsData.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               {groupsMutationIsPending && (

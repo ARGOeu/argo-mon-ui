@@ -82,7 +82,7 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
         ) : (
           <>
             <DataTable tableClassName="min-w-[700px]">
-              <thead className="bg-surface-muted border-b border-line">
+              <thead className="bg-surface-strong border-b border-line">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-semibold text-body whitespace-nowrap">
                     First Name
@@ -130,7 +130,7 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
                               : 'Member'}
                           </Badge>
                         </td>
-                        <td className="px-4 py-3.5 text-sm text-gray-800">
+                        <td className="px-6 py-3 text-sm text-gray-800">
                           <IconButton
                             icon={<UserMinusIcon className="size-5" />}
                             label="Remove member"

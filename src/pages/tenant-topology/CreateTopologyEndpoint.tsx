@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState } from 'react'
 import {
   useGetTopologyEndpoints,
   useGetTopologyServiceTypes,
@@ -6,17 +6,14 @@ import {
 } from '@/hooks/useTopology'
 import { useGetUserTenantById } from '@/hooks/useTenants'
 import { useParams, useNavigate } from 'react-router-dom'
-import {
-  PlusIcon,
-  TrashIcon,
-  ChevronUpDownIcon,
-} from '@heroicons/react/16/solid'
+import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
 import Button from '@/components/Button'
 import IconButton from '@/components/IconButton'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
+import SelectDropdown from '@/components/SelectDropdown'
 
 const sectionClass =
   'grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4 md:gap-8 mb-8 animate-fade-in'
@@ -74,27 +71,9 @@ const CreateTopologyEndpoint = () => {
     contacts: [''],
   })
 
-  const [isServiceOpen, setIsServiceOpen] = useState(false)
-  const serviceDropdownRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (!isServiceOpen) return
-    const handleMouseDown = (e: MouseEvent) => {
-      if (
-        serviceDropdownRef.current &&
-        !serviceDropdownRef.current.contains(e.target as Node)
-      ) {
-        setIsServiceOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', handleMouseDown)
-    return () => document.removeEventListener('mousedown', handleMouseDown)
-  }, [isServiceOpen])
-
-  const handleServiceSelect = (value: string) => {
+  const handleServiceChange = (value: string) => {
     setFormData((prev) => ({ ...prev, service: value }))
     if (value) setErrors((prev) => ({ ...prev, service: '' }))
-    setIsServiceOpen(false)
   }
 
   const handleHostnameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -273,48 +252,17 @@ const CreateTopologyEndpoint = () => {
             ) : typesError ? (
               <ErrorDisplay error={typesError} context="service types" />
             ) : (
-              <div className="relative" ref={serviceDropdownRef}>
-                <button
-                  type="button"
-                  onClick={() => setIsServiceOpen((prev) => !prev)}
-                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm rounded-md border bg-white text-left transition-colors focus:outline-none focus:ring-2 focus:ring-brand/20 focus:border-brand ${
-                    errors.service
-                      ? 'border-red-500 focus:border-red-500 focus:ring-red-500/10'
-                      : 'border-line-strong hover:border-gray-400'
-                  }`}
-                >
-                  <span
-                    className={
-                      formData.service ? 'text-foreground' : 'text-subtle'
-                    }
-                  >
-                    {formData.service || 'Select a service type...'}
-                  </span>
-                  <ChevronUpDownIcon className="size-4 text-muted shrink-0" />
-                </button>
-
-                {isServiceOpen && (
-                  <div className="absolute z-10 mt-1 w-full bg-white border border-line rounded-md shadow-lg overflow-hidden animate-fade-in">
-                    <ul className="max-h-80 overflow-y-auto py-1">
-                      {serviceTypes?.map((st) => (
-                        <li key={st.name}>
-                          <button
-                            type="button"
-                            onClick={() => handleServiceSelect(st.name)}
-                            className={`w-full px-3 py-2 text-sm text-left cursor-pointer transition-colors ${
-                              formData.service === st.name
-                                ? 'bg-brand-subtle text-brand font-medium'
-                                : 'text-foreground hover:bg-brand-subtle'
-                            }`}
-                          >
-                            {st.name}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
+              <SelectDropdown
+                value={formData.service}
+                onChange={handleServiceChange}
+                options={
+                  serviceTypes?.map((st) => ({
+                    value: st.name,
+                    label: st.name,
+                  })) ?? []
+                }
+                placeholder="Select a service type..."
+              />
             )}
             {errors.service && (
               <span className="text-xs text-red-500 mt-1">
