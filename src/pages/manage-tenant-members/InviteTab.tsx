@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useCreateTenantInvitation } from '@/hooks/useInvitations'
 import { toast } from 'sonner'
 import Button from '@/components/Button'
+import SelectDropdown from '@/components/SelectDropdown'
 import type { InvitationRole } from '@/types/invitations'
 
 const roleOptions = [
@@ -24,22 +25,22 @@ const InviteTab = ({ tenantId }: InviteTabProps) => {
 
   const createInvitationMutation = useCreateTenantInvitation()
 
-  const handleFormChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
-    const { name, value } = e.target
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target
 
-    setInviteForm((prev) => ({ ...prev, [name]: value }))
+    setInviteForm((prev) => ({ ...prev, email: value }))
 
-    if (name === 'email') {
-      if (!value.trim()) {
-        setErrors((prev) => ({ ...prev, email: 'Email is required' }))
-      } else if (!emailRegex.test(value)) {
-        setErrors((prev) => ({ ...prev, email: 'Invalid email format' }))
-      } else {
-        setErrors((prev) => ({ ...prev, email: '' }))
-      }
+    if (!value.trim()) {
+      setErrors((prev) => ({ ...prev, email: 'Email is required' }))
+    } else if (!emailRegex.test(value)) {
+      setErrors((prev) => ({ ...prev, email: 'Invalid email format' }))
+    } else {
+      setErrors((prev) => ({ ...prev, email: '' }))
     }
+  }
+
+  const handleRoleChange = (value: string) => {
+    setInviteForm((prev) => ({ ...prev, role: value as InvitationRole }))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -115,17 +116,11 @@ const InviteTab = ({ tenantId }: InviteTabProps) => {
               <label className="text-sm font-medium text-body mb-1.5">
                 Role <span className="required">*</span>
               </label>
-              <select
-                name="role"
+              <SelectDropdown
                 value={inviteForm.role}
-                onChange={handleFormChange}
-              >
-                {roleOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </select>
+                onChange={handleRoleChange}
+                options={roleOptions}
+              />
             </div>
           </div>
 

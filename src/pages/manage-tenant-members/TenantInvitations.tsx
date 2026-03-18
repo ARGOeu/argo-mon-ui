@@ -71,7 +71,7 @@ const TenantInvitations = ({
       ) : (
         <>
           <DataTable>
-            <thead className="bg-surface-muted border-b border-line">
+            <thead className="bg-surface-strong border-b border-line">
               <tr>
                 <th className={thBase}>Email</th>
                 <th className={thBase}>Role</th>

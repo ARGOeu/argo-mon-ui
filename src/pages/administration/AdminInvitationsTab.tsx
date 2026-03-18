@@ -130,8 +130,8 @@ const AdminInvitationsTab = ({ isSuperAdmin }: AdminInvitationsProps) => {
 
     if (!invitationsData?.content || invitationsData.content.length === 0) {
       return (
-        <div className="bg-surface-muted border border-line rounded-lg p-12 text-center">
-          <p className="text-muted text-base m-0">
+        <div className="text-center bg-surface-muted rounded-lg">
+          <p className="text-sm text-subtle italic py-6 px-12">
             {searchInput
               ? 'No invitations found matching your search'
               : 'No invitations found'}
@@ -295,6 +295,7 @@ const AdminInvitationsTab = ({ isSuperAdmin }: AdminInvitationsProps) => {
   return (
     <>
       <SearchInput
+        className="mb-3"
         value={searchInput}
         onChange={setSearchInput}
         onClear={handleClearSearch}

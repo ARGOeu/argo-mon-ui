@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGetUserContactTypes } from '@/hooks/useTenants'
 import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid'
 import type { Metadata } from '@/types/tenants'
+import SelectDropdown from '@/components/SelectDropdown'
 
 const sectionClass =
   'grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 md:gap-8 mb-6 animate-fade-in'
@@ -60,9 +61,17 @@ const InfrastructureMetadata = ({
   const urlErrorMesage =
     'Please enter a valid URL (must start with http:// or https://)'
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
-  ) => {
+  const handleTopologyTypeChange = (value: string) => {
+    onMetadataChange({ ...metadata, topology_type: value })
+  }
+
+  const handleInternalListTypeChange = (index: number, value: string) => {
+    const updatedLists = [...metadata.internalLists]
+    updatedLists[index] = { ...updatedLists[index], type: value }
+    onMetadataChange({ ...metadata, internalLists: updatedLists })
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value: fieldValue } = e.target
     const urlRegex = /^https?:\/\/.+\..+/
 
@@ -134,7 +143,7 @@ const InfrastructureMetadata = ({
 
   const handleInternalListChange = (
     index: number,
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>,
+    e: React.ChangeEvent<HTMLInputElement>,
   ) => {
     const { name, value } = e.target
     const updatedLists = [...metadata.internalLists]
@@ -270,15 +279,15 @@ const InfrastructureMetadata = ({
               {isContactTypesLoading ? (
                 <div className="text-sm text-muted">Loading...</div>
               ) : (
-                <select
-                  name="topology_type"
+                <SelectDropdown
                   value={metadata.topology_type}
-                  onChange={handleChange}
-                >
-                  <option value="">Select type</option>
-                  <option value="GOCDB">GOCdb</option>
-                  <option value="CSV">CSV</option>
-                </select>
+                  onChange={handleTopologyTypeChange}
+                  options={[
+                    { value: 'GOCDB', label: 'GOCdb' },
+                    { value: 'CSV', label: 'CSV' },
+                  ]}
+                  placeholder="Select type"
+                />
               )}
             </div>
 
@@ -383,19 +392,21 @@ const InfrastructureMetadata = ({
                   {isContactTypesLoading ? (
                     <div className="text-sm text-muted">Loading...</div>
                   ) : (
-                    <select
-                      name="type"
+                    <SelectDropdown
                       value={list.type}
-                      onChange={(e) => handleInternalListChange(index, e)}
-                      className="capitalize"
-                    >
-                      <option value="">Select type</option>
-                      {contactTypes?.map((type) => (
-                        <option key={type} value={type} className="capitalize">
-                          {type.toLowerCase()}
-                        </option>
-                      ))}
-                    </select>
+                      onChange={(value) =>
+                        handleInternalListTypeChange(index, value)
+                      }
+                      options={
+                        contactTypes?.map((type) => ({
+                          value: type,
+                          label:
+                            type.charAt(0).toUpperCase() +
+                            type.slice(1).toLowerCase(),
+                        })) ?? []
+                      }
+                      placeholder="Select type"
+                    />
                   )}
                 </div>
               </div>

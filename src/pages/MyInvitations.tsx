@@ -188,8 +188,10 @@ const MyInvitations = () => {
                 )}
               </>
             ) : (
-              <div className="bg-surface-muted border border-line rounded-lg py-8 px-12 text-center">
-                <p className="text-muted text-base m-0">No invitations found</p>
+              <div className="text-center bg-surface-muted rounded-lg">
+                <p className="text-sm text-subtle italic py-6 px-12">
+                  No invitations found
+                </p>
               </div>
             )}
           </>

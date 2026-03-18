@@ -14,6 +14,7 @@ import DataTable, {
 import Badge from '@/components/Badge'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
+import SelectDropdown from '@/components/SelectDropdown'
 type SortColumn = 'service' | 'group' | 'monitored'
 type DateMode = 'latest' | 'custom'
 
@@ -173,17 +174,19 @@ const TenantTopology = () => {
               type="date"
               value={customDate}
               onChange={handleCustomDateChange}
+              onClick={(e) => e.currentTarget.showPicker?.()}
               className="text-sm"
             />
           )}
-          <select
+          <SelectDropdown
             value={dateMode}
-            onChange={(e) => handleDateModeChange(e.target.value)}
-            className="text-sm"
-          >
-            <option value="latest">Latest</option>
-            <option value="custom">Select date</option>
-          </select>
+            onChange={handleDateModeChange}
+            options={[
+              { value: 'latest', label: 'Latest' },
+              { value: 'custom', label: 'Select date' },
+            ]}
+            className="w-36"
+          />
         </div>
       </div>
 
@@ -243,6 +246,15 @@ const TenantTopology = () => {
                 className="text-center text-sm text-subtle italic py-6 px-12"
               >
                 No topology endpoints found
+              </td>
+            </tr>
+          ) : searchQuery && !paginated.length ? (
+            <tr>
+              <td
+                colSpan={5}
+                className="text-center text-sm text-subtle italic py-6 px-12"
+              >
+                No results match your search
               </td>
             </tr>
           ) : (

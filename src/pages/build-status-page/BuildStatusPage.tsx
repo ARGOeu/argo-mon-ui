@@ -142,8 +142,8 @@ const BuildStatusPage = () => {
     nextGroupIdRef.current = newGroupId + 1
   }
 
-  const handleReportChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setReport(event.target.value)
+  const handleReportChange = (value: string) => {
+    setReport(value)
   }
 
   const handlePageSave = () => {
@@ -224,8 +224,8 @@ const BuildStatusPage = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [report, tenantId])
 
-  const handleTenantChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setTenantId(event.target.value)
+  const handleTenantChange = (value: string) => {
+    setTenantId(value)
     setReport('')
   }
 
