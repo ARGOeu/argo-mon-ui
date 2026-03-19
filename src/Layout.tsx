@@ -1,10 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { Outlet, useLocation, useMatch } from 'react-router'
 import { useGetUserTenants } from '@/hooks/useTenants'
 import { useAuth } from './auth/useAuth'
 import LoginPrompt from './components/LoginPrompt'
 import Sidebar from '@/components/sidebar/Sidebar'
 import MobileMenuToggle from '@/components/sidebar/MobileMenuToggle'
+
+const LAST_TENANT_KEY = 'lastActiveTenantId'
 
 function Layout() {
   const { authenticated, profile, login, logout } = useAuth()
@@ -15,6 +17,9 @@ function Layout() {
 
   // check to see if we are on tenant details route
   const tDetsRoute = useMatch('/tenants/:id/details')
+
+  // Per-user storage key
+  const storageKey = profile?.id ? `${LAST_TENANT_KEY}_${profile.id}` : null
 
   const [lastActiveTenantId, setLastActiveTenantId] = useState<string | null>(
     null,
@@ -31,6 +36,18 @@ function Layout() {
       ? rawTenantId
       : null
 
+  // Load persisted tenant when storage key is available
+  useEffect(() => {
+    if (!storageKey) return
+    setLastActiveTenantId(localStorage.getItem(storageKey))
+  }, [storageKey])
+
+  // Sync lastActiveTenantId to localStorage whenever it changes
+  useEffect(() => {
+    if (!storageKey || !lastActiveTenantId) return
+    localStorage.setItem(storageKey, lastActiveTenantId)
+  }, [lastActiveTenantId, storageKey])
+
   // Persist the last tenant the user navigated into
   useEffect(() => {
     if (activeTenantId) {
@@ -44,7 +61,17 @@ function Layout() {
     undefined,
     authenticated,
   )
-  const userTenants = tenantsData?.content ?? []
+  const userTenants = useMemo(() => tenantsData?.content ?? [], [tenantsData])
+
+  // Validate stored ID on load, fall back to first tenant if missing or invalid
+  useEffect(() => {
+    if (!storageKey || userTenants.length === 0) return
+
+    setLastActiveTenantId((current) => {
+      if (current && userTenants.some((t) => t.id === current)) return current
+      return userTenants[0]?.id ?? null
+    })
+  }, [userTenants, storageKey])
 
   const effectiveTenantId = activeTenantId ?? lastActiveTenantId ?? null
 
