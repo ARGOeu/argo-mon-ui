@@ -96,6 +96,10 @@ export const useGetUserInvitations = (
     page?: number
     size?: number
   },
+  options?: {
+    refetchInterval?: number
+    staleTime?: number
+  },
 ) => {
   const { token } = useAuth()
 
@@ -110,6 +114,7 @@ export const useGetUserInvitations = (
     retry: false,
     enabled: enabled && !!token,
     refetchOnMount: 'always',
+    ...options,
   })
 }
 

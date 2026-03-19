@@ -9,6 +9,7 @@ import {
   ServerStackIcon,
   CircleStackIcon,
 } from '@heroicons/react/16/solid'
+import { useGetUserInvitations } from '@/hooks/useInvitations'
 import type { Tenant } from '@/types/tenants'
 import type { AuthContextType } from '@/auth/context'
 import TenantPicker from './TenantPicker'
@@ -47,6 +48,15 @@ function Sidebar({
   profile,
   onLogout,
 }: SidebarProps) {
+  const { data: invitationsData } = useGetUserInvitations(
+    authenticated,
+    { size: 100 },
+    { refetchInterval: 60000, staleTime: 0 },
+  )
+  const pendingCount =
+    invitationsData?.content.filter((inv) => inv.status === 'PENDING').length ??
+    0
+
   return (
     <aside
       className={`w-56 md:w-60 xl:w-68 2xl:w-72 bg-surface-muted border-r border-line flex flex-col overflow-y-auto overflow-x-hidden fixed md:static inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
@@ -125,6 +135,11 @@ function Sidebar({
             <SidebarNavItem to="/my-invitations" onClick={onCloseMobileMenu}>
               <EnvelopeIcon className="size-4" aria-hidden />
               My Invitations
+              {pendingCount > 0 && (
+                <span className="bg-red-500 text-white text-[0.65rem] font-semibold rounded-full min-w-5 h-5 flex items-center justify-center px-1 shrink-0">
+                  {pendingCount > 99 ? '99+' : pendingCount}
+                </span>
+              )}
             </SidebarNavItem>
           </div>
 
