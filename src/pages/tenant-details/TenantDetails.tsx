@@ -46,14 +46,14 @@ const TenantDetails = () => {
 
   if (error)
     return (
-      <div className="page-container">
+      <div className="page-container p-12">
         <ErrorDisplay error={error} context="tenant" />
       </div>
     )
 
   if (!tenantData)
     return (
-      <div className="page-container">
+      <div className="page-container p-12">
         <ErrorDisplay
           error="The tenant you are looking for does not exist or has been removed."
           context="tenant"
@@ -165,7 +165,7 @@ const TenantDetails = () => {
         />
       </header>
 
-      <div className="py-4 px-10">
+      <div className="px-10">
         {activeTab === 'info' && <TenantInfoTab tenantId={tenantId || ''} />}
         {activeTab === 'status' && (
           <TenantStatusTab tenantId={tenantId || ''} />

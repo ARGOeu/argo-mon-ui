@@ -23,13 +23,6 @@ const ManageTenantMembers = () => {
     'members' | 'invite' | 'add-direct' | 'invitations'
   >('members')
 
-  if (tenantError)
-    return (
-      <div className="page-container">
-        <ErrorDisplay error={tenantError} context="tenant" />
-      </div>
-    )
-
   return (
     <div className="page-container">
       <PageHeader
@@ -45,42 +38,50 @@ const ManageTenantMembers = () => {
         className="mb-2 pb-2"
       />
 
-      <Tabs
-        tabs={[
-          { id: 'members', label: 'Members' },
-          { id: 'invite', label: 'Invite Member' },
-          ...(isSuperAdmin ? [{ id: 'add-direct', label: 'Add Member' }] : []),
-          { id: 'invitations', label: 'Invitations' },
-        ]}
-        activeTab={activeTab}
-        onChange={(id) =>
-          setActiveTab(
-            id as 'members' | 'invite' | 'add-direct' | 'invitations',
-          )
-        }
-        className="mb-4"
-      />
-
-      {activeTab === 'members' && (
-        <MembersTab
-          tenantId={tenantId || ''}
-          tenantName={tenantData?.info.name || ''}
-        />
-      )}
-
-      {activeTab === 'invite' && <InviteTab tenantId={tenantId || ''} />}
-
-      {activeTab === 'add-direct' && isSuperAdmin && (
-        <AddDirectTab tenantId={tenantId || ''} />
-      )}
-
-      {activeTab === 'invitations' && (
-        <div className="animate-fade-in">
-          <TenantInvitations
-            tenantId={tenantId || ''}
-            tenantName={tenantData?.info.name || ''}
+      {tenantError ? (
+        <ErrorDisplay error={tenantError} context="tenant" />
+      ) : (
+        <>
+          <Tabs
+            tabs={[
+              { id: 'members', label: 'Members' },
+              { id: 'invite', label: 'Invite Member' },
+              ...(isSuperAdmin
+                ? [{ id: 'add-direct', label: 'Add Member' }]
+                : []),
+              { id: 'invitations', label: 'Invitations' },
+            ]}
+            activeTab={activeTab}
+            onChange={(id) =>
+              setActiveTab(
+                id as 'members' | 'invite' | 'add-direct' | 'invitations',
+              )
+            }
+            className="mb-4"
           />
-        </div>
+
+          {activeTab === 'members' && (
+            <MembersTab
+              tenantId={tenantId || ''}
+              tenantName={tenantData?.info.name || ''}
+            />
+          )}
+
+          {activeTab === 'invite' && <InviteTab tenantId={tenantId || ''} />}
+
+          {activeTab === 'add-direct' && isSuperAdmin && (
+            <AddDirectTab tenantId={tenantId || ''} />
+          )}
+
+          {activeTab === 'invitations' && (
+            <div className="animate-fade-in">
+              <TenantInvitations
+                tenantId={tenantId || ''}
+                tenantName={tenantData?.info.name || ''}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   )

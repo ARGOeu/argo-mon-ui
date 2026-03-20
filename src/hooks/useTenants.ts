@@ -26,6 +26,8 @@ import {
   fetchTenantMetricProfile,
   fetchTenantReadiness,
   notifyAmsCheckReadiness,
+  setTenantNode,
+  setNodeReport,
 } from '@/api/tenants'
 import type {
   Job,
@@ -521,6 +523,51 @@ export const useCheckReadinessMutation = () => {
     },
     onError: (error) => {
       console.error('Failed to notify AMS check readiness:', error)
+    },
+  })
+}
+
+export const useSetTenantNodeMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<void, Error, { id: string; node: boolean }>({
+    mutationFn: ({ id, node }) => {
+      if (!token) throw new Error('No authentication token available')
+      if (!id) throw new Error('Tenant ID is required')
+      return setTenantNode(id, node, token)
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['user-tenant', variables.id] })
+      queryClient.invalidateQueries({ queryKey: ['user-tenants'] })
+    },
+    onError: (error) => {
+      console.error('Set tenant node error:', error)
+    },
+  })
+}
+
+export const useSetNodeReportMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<void, Error, { tenantId: string; reportId: string }>({
+    mutationFn: ({ tenantId, reportId }) => {
+      if (!token) throw new Error('No authentication token available')
+      if (!tenantId) throw new Error('Tenant ID is required')
+      if (!reportId) throw new Error('Report ID is required')
+      return setNodeReport(tenantId, reportId, token)
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['tenant-reports', variables.tenantId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['user-tenant', variables.tenantId],
+      })
+    },
+    onError: (error) => {
+      console.error('Set node report error:', error)
     },
   })
 }

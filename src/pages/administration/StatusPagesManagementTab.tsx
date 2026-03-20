@@ -9,6 +9,7 @@ import Pagination from '@/components/Pagination'
 import SelectDropdown from '@/components/SelectDropdown'
 import type { SelectOption } from '@/components/SelectDropdown'
 import StatusPagesTable from '@/pages/status-pages/StatusPagesTable'
+import Button from '@/components/Button'
 
 const pageSize = 10
 
@@ -121,13 +122,25 @@ const StatusPagesManagementTab = () => {
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
+
+      <div className="flex items-center justify-end mb-3">
+        <Button
+          variant="primary"
+          size="md"
+          href="/status-pages/build"
+          className=""
+        >
+          Create Status Page
+        </Button>
+      </div>
+
       <div className="bg-white border border-line rounded-lg shadow-sm overflow-hidden">
-        <div className="bg-surface-strong p-4 border-b border-line flex items-center gap-3">
+        <div className="bg-surface-strong px-4 py-3 border-b border-line flex items-center gap-2">
           <label className="block text-sm font-medium text-body">
             Select Tenant:
           </label>
           <SelectDropdown
-            className="max-w-md"
+            className="min-w-[280px] max-w-md"
             value={isAllSelected ? 'all' : tenantId}
             options={
               [

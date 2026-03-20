@@ -73,8 +73,8 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
           <h2 className="text-lg font-semibold text-foreground">Projects</h2>
         </div>
         {projectsLoading ? (
-          <div className={cardClass}>
-            <LoadingSpinner size="sm" inline />
+          <div className={`${cardClass} items-center max-w-[180px]`}>
+            <LoadingSpinner size="xs" inline />
           </div>
         ) : projects && projects.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
