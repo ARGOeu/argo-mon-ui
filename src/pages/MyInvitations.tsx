@@ -139,7 +139,7 @@ const MyInvitations = () => {
                               <IconButton
                                 label="Accept invitation"
                                 icon={
-                                  <CheckCircleIcon className="size-7 shrink-0" />
+                                  <CheckCircleIcon className="size-6 shrink-0" />
                                 }
                                 onClick={() =>
                                   handleRespond(invitation.id, 'ACCEPT')
@@ -150,7 +150,7 @@ const MyInvitations = () => {
                               <IconButton
                                 label="Reject invitation"
                                 icon={
-                                  <XCircleIcon className="size-7 shrink-0" />
+                                  <XCircleIcon className="size-6 shrink-0" />
                                 }
                                 onClick={() =>
                                   handleRespond(invitation.id, 'REJECT')
