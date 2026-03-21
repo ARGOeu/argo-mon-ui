@@ -79,7 +79,7 @@ const TenantStatusTab = ({ tenantId }: TenantStatusTabProps) => {
     data: statusData,
     isLoading: statusLoading,
     error: statusError,
-  } = useGetUserTenantStatus(tenantId)
+  } = useGetUserTenantStatus(tenantId, 10000) // Refetch every 10 seconds to keep status updated
 
   const updateStatusMutation = useUpdateTenantStatusMutation()
 
@@ -214,7 +214,7 @@ const TenantStatusTab = ({ tenantId }: TenantStatusTabProps) => {
     return <ErrorDisplay error={statusError} context="tenant status" />
 
   return (
-    <div className="flex flex-col gap-6 max-w-[1040px] mx-auto">
+    <div className="flex flex-col gap-6 max-w-[1040px] mx-auto py-1">
       {jobs && jobs.length > 0 ? (
         jobs
           .filter((job) => job.name !== 'CHECK_READINESS')

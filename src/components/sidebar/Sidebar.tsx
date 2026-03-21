@@ -134,12 +134,14 @@ function Sidebar({
             <SidebarSectionLabel>Account</SidebarSectionLabel>
             <SidebarNavItem to="/my-invitations" onClick={onCloseMobileMenu}>
               <EnvelopeIcon className="size-4" aria-hidden />
-              My Invitations
-              {pendingCount > 0 && (
-                <span className="bg-red-500 text-white text-[0.65rem] font-semibold rounded-full min-w-5 h-5 flex items-center justify-center px-1 shrink-0">
-                  {pendingCount > 99 ? '99+' : pendingCount}
-                </span>
-              )}
+              <span className="relative">
+                My Invitations
+                {pendingCount > 0 && (
+                  <span className="absolute -top-1 -right-4.5 bg-red-500 text-white text-[0.7rem] font-semibold rounded-full min-w-4 h-4 flex items-center justify-center px-1">
+                    {pendingCount > 99 ? '99+' : pendingCount}
+                  </span>
+                )}
+              </span>
             </SidebarNavItem>
           </div>
 

@@ -7,6 +7,7 @@ import ConfirmDialog from '@/components/ConfirmDialog'
 import PageHeader from '@/components/PageHeader'
 import Pagination from '@/components/Pagination'
 import StatusPagesTable from './StatusPagesTable'
+import Button from '@/components/Button'
 
 const pageSize = 10
 
@@ -118,7 +119,11 @@ const TenantStatusPages = () => {
             </>
           }
           className="pb-1 mb-2 md:mb-4 px-2 md:px-0"
-        />
+        >
+          <Button variant="primary" size="md" href="/status-pages/build">
+            Create Status Page
+          </Button>
+        </PageHeader>
         <StatusPagesTable
           data={data}
           isLoading={isLoading}

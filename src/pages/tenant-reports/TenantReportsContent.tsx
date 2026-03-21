@@ -104,7 +104,7 @@ const TenantReportsTab = ({ tenantId }: { tenantId: string }) => {
                   )}
                 </div>
                 {report.description && (
-                  <p className="text-xs text-muted mt-2 leading-[1.4]">
+                  <p className="text-xs text-muted leading-[1.4]">
                     {report.description}
                   </p>
                 )}

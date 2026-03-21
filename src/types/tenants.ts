@@ -71,6 +71,7 @@ export type Tenant = {
   metadata?: Metadata
   updated_by?: string
   status?: TenantStatus
+  node?: boolean
   ['group-status']?: 'UNKNOWN' | 'NOT_FOUND' | 'EXISTS'
 }
 
@@ -117,6 +118,7 @@ export type ReportListItem = {
   disabled: boolean
   created_at: string
   updated_at: string
+  node_report?: boolean
 }
 
 export type ReportProfile = {

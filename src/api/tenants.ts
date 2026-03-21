@@ -523,3 +523,49 @@ export const notifyAmsCheckReadiness = async (
 
   return response.json()
 }
+
+export const setTenantNode = async (
+  id: string,
+  node: boolean,
+  token: string,
+): Promise<void> => {
+  const response = await fetch(`${BACKEND_API}/v1/tenants/${id}/set-node`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify({ node }),
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+}
+
+export const setNodeReport = async (
+  tenantId: string,
+  reportId: string,
+  token: string,
+): Promise<void> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/reports/${reportId}/set-node-report`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+}
