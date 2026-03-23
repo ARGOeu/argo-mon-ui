@@ -6,7 +6,7 @@ export type TopologyNotifications = {
 }
 
 export type EndpointTopologyItem = {
-  id?: string
+  id: string
   date: string
   group: string
   type: string
