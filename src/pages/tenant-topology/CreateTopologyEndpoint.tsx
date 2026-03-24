@@ -51,8 +51,13 @@ const CreateTopologyEndpoint = () => {
   const navigate = useNavigate()
 
   const { data: tenantData } = useGetUserTenantById(tenantId)
-  const { data: existingEndpoints, isLoading: isLoadingEndpoints } =
+
+  const { data: todayEndpoints, isLoading: isLoadingToday } =
     useGetTopologyEndpoints(tenantId, today)
+
+  const { data: latestEndpoints, isLoading: isLoadingLatest } =
+    useGetTopologyEndpoints(tenantId, '', isEditMode)
+
   const {
     data: serviceTypes,
     isLoading: isLoadingTypes,
@@ -77,37 +82,40 @@ const CreateTopologyEndpoint = () => {
   const formInitialized = useRef(false)
 
   useEffect(() => {
-    if (!isEditMode || formInitialized.current || !existingEndpoints) {
+    if (!isEditMode || formInitialized.current || !latestEndpoints) {
       return
     }
-    const endpoint = existingEndpoints.find((e) => e.id === endpointId)
+    const endpoint = latestEndpoints.find((e) => e.id === endpointId)
     if (!endpoint) {
       return
     }
-
     setFormData({
       service: endpoint.service,
       hostname: endpoint.hostname,
       monitored: endpoint.tags?.monitored === '1',
       notificationsEnabled: endpoint.notifications?.enabled ?? false,
       contacts: endpoint.notifications?.contacts?.length
-        ? endpoint.notifications.contacts.map((email) => ({
+        ? endpoint.notifications.contacts.map((email: string) => ({
             id: crypto.randomUUID(),
             value: email,
           }))
         : [{ id: crypto.randomUUID(), value: '' }],
     })
     formInitialized.current = true
-  }, [isEditMode, endpointId, existingEndpoints])
+  }, [isEditMode, endpointId, latestEndpoints])
 
-  if (isEditMode && isLoadingEndpoints)
+  if (isEditMode && (isLoadingLatest || isLoadingToday))
     return (
       <div className="page-container">
         <LoadingSpinner size="md" />
       </div>
     )
 
-  if (isEditMode && !existingEndpoints?.find((e) => e.id === endpointId))
+  if (
+    isEditMode &&
+    latestEndpoints &&
+    !latestEndpoints.find((e) => e.id === endpointId)
+  )
     return (
       <div className="page-container">
         <ErrorDisplay
@@ -216,14 +224,17 @@ const CreateTopologyEndpoint = () => {
       },
     }
 
+    const editingEndpoint = latestEndpoints?.find(
+      (e) => e.id === endpointId,
+    ) as EndpointTopologyItem
+
     const payload = isEditMode
-      ? (existingEndpoints ?? []).map((endpoint) =>
-          endpoint.id === endpointId
-            ? { ...endpoint, ...updatedFields }
-            : endpoint,
-        )
+      ? [
+          ...(todayEndpoints ?? []).filter((e) => e.id !== endpointId),
+          { ...editingEndpoint, ...updatedFields, date: today },
+        ]
       : [
-          ...(existingEndpoints ?? []),
+          ...(todayEndpoints ?? []),
           {
             date: today,
             group: 'DEFAULT',
@@ -279,7 +290,7 @@ const CreateTopologyEndpoint = () => {
           variant="primary"
           size="md"
           onClick={handleSubmit}
-          disabled={createMutation.isPending}
+          disabled={createMutation.isPending || isLoadingToday}
         >
           {createMutation.isPending ? (
             <>
