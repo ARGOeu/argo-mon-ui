@@ -27,7 +27,6 @@ type SortColumn = 'service' | 'group' | 'monitored'
 type DateMode = 'latest' | 'custom'
 
 const pageSize = 15
-const today = new Date().toISOString().split('T')[0]
 
 const TenantTopology = () => {
   const { id } = useParams<{ id: string }>()
@@ -45,6 +44,9 @@ const TenantTopology = () => {
   const [customDate, setCustomDate] = useState('')
   const [committedDate, setCommittedDate] = useState('')
   const dateInputRef = useRef<HTMLInputElement>(null)
+  const [monitoredFilter, setMonitoredFilter] = useState<
+    'monitored' | 'not_monitored'
+  >('monitored')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [endpointToDelete, setEndpointToDelete] =
     useState<EndpointTopologyItem | null>(null)
@@ -66,9 +68,11 @@ const TenantTopology = () => {
 
   const handleDeleteConfirm = () => {
     if (!endpointToDelete) return
+
     const updatedEndpoints = (endpoints ?? []).filter(
-      (e) => e.id !== endpointToDelete.id,
+      (endpoint) => endpoint.hostname !== endpointToDelete.hostname,
     )
+
     deleteMutation.mutate(
       { tenantId, data: updatedEndpoints },
       {
@@ -118,6 +122,10 @@ const TenantTopology = () => {
       )
     : ''
 
+  const showActions =
+    dateMode === 'latest' ||
+    (dateMode === 'custom' && committedDate === latestDate && !!latestDate)
+
   const handleDateModeChange = (mode: string) => {
     setDateMode(mode as DateMode)
     if (mode === 'custom') {
@@ -148,6 +156,10 @@ const TenantTopology = () => {
   }
 
   const filtered = (endpoints ?? []).filter((e) => {
+    if (monitoredFilter === 'monitored' && e.tags?.monitored !== '1')
+      return false
+    if (monitoredFilter === 'not_monitored' && e.tags?.monitored === '1')
+      return false
     if (!searchQuery) return true
     const q = searchQuery.toLowerCase()
     const monitoredLabel =
@@ -204,14 +216,29 @@ const TenantTopology = () => {
         </PageHeader>
 
         <div className="flex items-center justify-between gap-3 mb-3">
-          <SearchInput
-            value={searchInput}
-            onChange={setSearchInput}
-            onClear={handleSearchClear}
-            placeholder="Search by service, group or monitored status..."
-            className="!mb-0 w-full"
-          />
+          <div className="flex items-center gap-3 w-full">
+            <SearchInput
+              value={searchInput}
+              onChange={setSearchInput}
+              onClear={handleSearchClear}
+              placeholder="Search by service or group..."
+              className="!mb-0 w-full"
+            />
+            <SelectDropdown
+              value={monitoredFilter}
+              onChange={(value) => {
+                setMonitoredFilter(value as 'monitored' | 'not_monitored')
+                setCurrentPage(1)
+              }}
+              options={[
+                { value: 'monitored', label: 'Monitored' },
+                { value: 'not_monitored', label: 'Not monitored' },
+              ]}
+              className="w-40 shrink-0"
+            />
+          </div>
           <div className="flex items-center gap-2 shrink-0">
+            <div className="h-8 w-px bg-line-strong me-1" />
             {dateMode === 'custom' && (
               <input
                 ref={dateInputRef}
@@ -266,13 +293,13 @@ const TenantTopology = () => {
                 </SortableColumnHeader>
               </th>
               <th className={`${thBase} min-w-28`}>Date</th>
-              <th className={`${thBase} w-24`}>Actions</th>
+              {showActions && <th className={`${thBase} w-24`}>Actions</th>}
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
             {isLoading ? (
               <tr>
-                <td colSpan={6} className="py-12">
+                <td colSpan={showActions ? 6 : 5} className="py-12">
                   <div className="flex justify-center">
                     <LoadingSpinner size="md" />
                   </div>
@@ -280,26 +307,26 @@ const TenantTopology = () => {
               </tr>
             ) : error ? (
               <tr>
-                <td colSpan={6} className="py-6 px-12">
+                <td colSpan={showActions ? 6 : 5} className="py-6 px-12">
                   <ErrorDisplay error={error} context="topology endpoints" />
                 </td>
               </tr>
             ) : !endpoints?.length ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={showActions ? 6 : 5}
                   className="text-center text-sm text-subtle italic py-6 px-12"
                 >
                   No topology endpoints found
                 </td>
               </tr>
-            ) : searchQuery && !paginated.length ? (
+            ) : !paginated.length ? (
               <tr>
                 <td
-                  colSpan={6}
+                  colSpan={showActions ? 6 : 5}
                   className="text-center text-sm text-subtle italic py-6 px-12"
                 >
-                  No results match your search
+                  No endpoints match your filters
                 </td>
               </tr>
             ) : (
@@ -330,8 +357,8 @@ const TenantTopology = () => {
                     ) : null}
                   </td>
                   <td className={tdBase}>{endpoint.date}</td>
-                  <td className={`${tdBase} whitespace-nowrap`}>
-                    {endpoint.date === today && (
+                  {showActions && (
+                    <td className={`${tdBase} whitespace-nowrap`}>
                       <div className="flex items-center gap-1">
                         <IconButton
                           icon={
@@ -352,8 +379,8 @@ const TenantTopology = () => {
                           className="text-red-600 hover:bg-red-50"
                         />
                       </div>
-                    )}
-                  </td>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
