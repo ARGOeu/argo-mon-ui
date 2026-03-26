@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/16/solid'
 import { useGetUserTenantById } from '@/hooks/useTenants'
@@ -23,6 +23,7 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import SelectDropdown from '@/components/SelectDropdown'
 import type { EndpointTopologyItem } from '@/types/topology'
+import CreateTopologyEndpoint from './CreateTopologyEndpoint'
 type SortColumn = 'service' | 'group' | 'monitored'
 type DateMode = 'latest' | 'custom'
 
@@ -31,7 +32,6 @@ const pageSize = 15
 const TenantTopology = () => {
   const { id } = useParams<{ id: string }>()
   const tenantId = id ?? ''
-  const navigate = useNavigate()
 
   const { data: tenantData } = useGetUserTenantById(tenantId)
 
@@ -41,7 +41,6 @@ const TenantTopology = () => {
   const [sortColumn, setSortColumn] = useState<SortColumn>('monitored')
   const [sortAsc, setSortAsc] = useState(false)
   const [dateMode, setDateMode] = useState<DateMode>('latest')
-  const [customDate, setCustomDate] = useState('')
   const [committedDate, setCommittedDate] = useState('')
   const dateInputRef = useRef<HTMLInputElement>(null)
   const [monitoredFilter, setMonitoredFilter] = useState<
@@ -49,6 +48,8 @@ const TenantTopology = () => {
   >('monitored')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [endpointToDelete, setEndpointToDelete] =
+    useState<EndpointTopologyItem | null>(null)
+  const [endpointToEdit, setEndpointToEdit] =
     useState<EndpointTopologyItem | null>(null)
 
   const effectiveDate = dateMode === 'latest' ? '' : committedDate
@@ -58,6 +59,8 @@ const TenantTopology = () => {
     isLoading,
     error,
   } = useGetTopologyEndpoints(tenantId, effectiveDate)
+
+  const { data: latestEndpoints } = useGetTopologyEndpoints(tenantId, '')
 
   const deleteMutation = useCreateTopologyEndpointMutation()
 
@@ -115,10 +118,10 @@ const TenantTopology = () => {
     return () => input.removeEventListener('change', handleChange)
   }, [dateMode])
 
-  const latestDate = endpoints?.length
-    ? endpoints.reduce(
+  const latestDate = latestEndpoints?.length
+    ? latestEndpoints.reduce(
         (max, e) => (e.date > max ? e.date : max),
-        endpoints[0].date,
+        latestEndpoints[0].date,
       )
     : ''
 
@@ -129,14 +132,12 @@ const TenantTopology = () => {
   const handleDateModeChange = (mode: string) => {
     setDateMode(mode as DateMode)
     if (mode === 'custom') {
-      setCustomDate(latestDate)
+      if (dateInputRef.current) {
+        dateInputRef.current.value = latestDate
+      }
       setCommittedDate(latestDate)
     }
     setCurrentPage(1)
-  }
-
-  const handleCustomDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setCustomDate(e.target.value)
   }
 
   const handleSortChange = (column: SortColumn) => {
@@ -191,6 +192,16 @@ const TenantTopology = () => {
     currentPage * pageSize,
   )
 
+  if (endpointToEdit) {
+    return (
+      <CreateTopologyEndpoint
+        tenantId={tenantId}
+        editingEndpoint={endpointToEdit}
+        onClose={() => setEndpointToEdit(null)}
+      />
+    )
+  }
+
   return (
     <>
       <div className="page-container">
@@ -243,8 +254,7 @@ const TenantTopology = () => {
               <input
                 ref={dateInputRef}
                 type="date"
-                value={customDate}
-                onChange={handleCustomDateChange}
+                defaultValue={latestDate || undefined}
                 onClick={(e) => e.currentTarget.showPicker?.()}
                 className="text-sm"
               />
@@ -332,7 +342,7 @@ const TenantTopology = () => {
             ) : (
               paginated.map((endpoint) => (
                 <tr
-                  key={endpoint.id}
+                  key={`${endpoint.hostname}_${endpoint.service}`}
                   className="hover:bg-surface-muted transition-colors"
                 >
                   <td className={tdBase}>{endpoint.service}</td>
@@ -365,11 +375,7 @@ const TenantTopology = () => {
                             <PencilSquareIcon className="size-4 md:size-5" />
                           }
                           label="Edit"
-                          onClick={() =>
-                            navigate(
-                              `/tenants/${tenantId}/topology/edit/${endpoint.id}`,
-                            )
-                          }
+                          onClick={() => setEndpointToEdit(endpoint)}
                           className="text-muted hover:bg-surface-strong"
                         />
                         <IconButton

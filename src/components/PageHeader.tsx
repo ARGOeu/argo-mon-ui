@@ -5,6 +5,7 @@ import type { ReactNode } from 'react'
 interface NavigateTo {
   label: string
   to: string
+  onClick?: () => void
 }
 
 interface PageHeaderProps {
@@ -27,6 +28,7 @@ const PageHeader = ({
       {navigateTo && (
         <Link
           to={navigateTo.to}
+          onClick={navigateTo.onClick}
           className="inline-flex items-center gap-1.5 text-base text-subtle hover:text-foreground no-underline mb-1 transition-colors"
         >
           <ArrowLeftIcon className="size-4" />

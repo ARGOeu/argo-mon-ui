@@ -35,9 +35,10 @@ export const fetchCreateTopologyEndpoints = async (
   tenantId: string,
   data: EndpointTopologyItem[],
   token: string,
+  force: boolean = true,
 ): Promise<CreateTopologyEndpointResponse> => {
   const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/topology/endpoints`,
+    `${BACKEND_API}/v1/tenants/${tenantId}/topology/endpoints?force=${force}`,
     {
       method: 'POST',
       headers: {

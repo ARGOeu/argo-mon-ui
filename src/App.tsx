@@ -208,14 +208,6 @@ function App() {
                     </AuthProtected>
                   }
                 />
-                <Route
-                  path="tenants/:id/topology/edit/:endpointId"
-                  element={
-                    <AuthProtected>
-                      <CreateTopologyEndpoint />
-                    </AuthProtected>
-                  }
-                />
                 <Route path="*" element={<NotFound />} />
               </Route>
             </Route>
