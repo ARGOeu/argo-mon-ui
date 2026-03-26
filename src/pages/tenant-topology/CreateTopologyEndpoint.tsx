@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import {
   useGetTopologyEndpoints,
   useGetTopologyServiceTypes,
@@ -44,10 +44,20 @@ interface FormErrors {
   contacts: string[]
 }
 
-const CreateTopologyEndpoint = () => {
-  const { id, endpointId } = useParams<{ id: string; endpointId?: string }>()
-  const tenantId = id ?? ''
-  const isEditMode = !!endpointId
+interface CreateTopologyEndpointProps {
+  tenantId?: string
+  editingEndpoint?: EndpointTopologyItem
+  onClose?: () => void
+}
+
+const CreateTopologyEndpoint = ({
+  tenantId: tenantIdProp,
+  editingEndpoint,
+  onClose,
+}: CreateTopologyEndpointProps = {}) => {
+  const { id: tenantIdParam } = useParams<{ id?: string }>()
+  const tenantId = tenantIdProp ?? tenantIdParam ?? ''
+  const isEditMode = !!editingEndpoint
   const navigate = useNavigate()
 
   const { data: tenantData } = useGetUserTenantById(tenantId)
@@ -55,22 +65,36 @@ const CreateTopologyEndpoint = () => {
   const { data: todayEndpoints, isLoading: isLoadingToday } =
     useGetTopologyEndpoints(tenantId, today)
 
-  const { data: latestEndpoints, isLoading: isLoadingLatest } =
-    useGetTopologyEndpoints(tenantId, '', isEditMode)
-
   const {
     data: serviceTypes,
     isLoading: isLoadingTypes,
     error: typesError,
   } = useGetTopologyServiceTypes(tenantId)
+
   const createMutation = useCreateTopologyEndpointMutation()
 
-  const [formData, setFormData] = useState<FormData>({
-    service: '',
-    hostname: '',
-    monitored: true,
-    notificationsEnabled: false,
-    contacts: [{ id: crypto.randomUUID(), value: '' }],
+  const [formData, setFormData] = useState<FormData>(() => {
+    if (editingEndpoint) {
+      return {
+        service: editingEndpoint.service,
+        hostname: editingEndpoint.hostname,
+        monitored: editingEndpoint.tags?.monitored === '1',
+        notificationsEnabled: editingEndpoint.notifications?.enabled ?? false,
+        contacts: editingEndpoint.notifications?.contacts?.length
+          ? editingEndpoint.notifications.contacts.map((email) => ({
+              id: crypto.randomUUID(),
+              value: email,
+            }))
+          : [{ id: crypto.randomUUID(), value: '' }],
+      }
+    }
+    return {
+      service: '',
+      hostname: '',
+      monitored: true,
+      notificationsEnabled: false,
+      contacts: [{ id: crypto.randomUUID(), value: '' }],
+    }
   })
 
   const [errors, setErrors] = useState<FormErrors>({
@@ -79,61 +103,19 @@ const CreateTopologyEndpoint = () => {
     contacts: [''],
   })
 
-  const formInitialized = useRef(false)
-
-  useEffect(() => {
-    if (!isEditMode || formInitialized.current || !latestEndpoints) {
-      return
-    }
-    const endpoint = latestEndpoints.find((e) => e.id === endpointId)
-    if (!endpoint) {
-      return
-    }
-    setFormData({
-      service: endpoint.service,
-      hostname: endpoint.hostname,
-      monitored: endpoint.tags?.monitored === '1',
-      notificationsEnabled: endpoint.notifications?.enabled ?? false,
-      contacts: endpoint.notifications?.contacts?.length
-        ? endpoint.notifications.contacts.map((email: string) => ({
-            id: crypto.randomUUID(),
-            value: email,
-          }))
-        : [{ id: crypto.randomUUID(), value: '' }],
-    })
-    formInitialized.current = true
-  }, [isEditMode, endpointId, latestEndpoints])
-
-  if (isEditMode && (isLoadingLatest || isLoadingToday))
-    return (
-      <div className="page-container">
-        <LoadingSpinner size="md" />
-      </div>
-    )
-
-  if (
-    isEditMode &&
-    latestEndpoints &&
-    !latestEndpoints.find((e) => e.id === endpointId)
-  )
-    return (
-      <div className="page-container">
-        <ErrorDisplay
-          error={new Error('Endpoint not found')}
-          context="loading endpoint for editing"
-        />
-      </div>
-    )
-
   const handleServiceChange = (value: string) => {
     setFormData((prev) => ({ ...prev, service: value }))
-    if (value) setErrors((prev) => ({ ...prev, service: '' }))
+    if (value) {
+      setErrors((prev) => ({ ...prev, service: '' }))
+    }
   }
 
   const handleHostnameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target
     setFormData((prev) => ({ ...prev, hostname: value }))
-    if (value.trim()) setErrors((prev) => ({ ...prev, hostname: '' }))
+    if (value.trim()) {
+      setErrors((prev) => ({ ...prev, hostname: '' }))
+    }
   }
 
   const handleContactChange = (index: number, value: string) => {
@@ -224,13 +206,11 @@ const CreateTopologyEndpoint = () => {
       },
     }
 
-    const editingEndpoint = latestEndpoints?.find(
-      (e) => e.id === endpointId,
-    ) as EndpointTopologyItem
-
     const payload = isEditMode
       ? [
-          ...(todayEndpoints ?? []).filter((e) => e.id !== endpointId),
+          ...(todayEndpoints ?? []).filter(
+            (e) => e.hostname !== editingEndpoint.hostname,
+          ),
           { ...editingEndpoint, ...updatedFields, date: today },
         ]
       : [
@@ -240,7 +220,7 @@ const CreateTopologyEndpoint = () => {
             group: 'DEFAULT',
             type: 'SERVICEGROUPS',
             ...updatedFields,
-          } as unknown as EndpointTopologyItem,
+          },
         ]
 
     createMutation.mutate(
@@ -252,7 +232,13 @@ const CreateTopologyEndpoint = () => {
               ? 'Topology endpoint updated successfully!'
               : 'Topology endpoint created successfully!',
           )
-          navigate(`/tenants/${tenantId}/topology`)
+          setTimeout(() => {
+            if (onClose) {
+              onClose()
+            } else {
+              navigate(`/tenants/${tenantId}/topology`)
+            }
+          }, 2000)
         },
         onError: (error) => {
           toast.error(
@@ -282,6 +268,7 @@ const CreateTopologyEndpoint = () => {
         navigateTo={{
           label: 'Back to Topology',
           to: `/tenants/${tenantId}/topology`,
+          onClick: onClose,
         }}
       />
 
