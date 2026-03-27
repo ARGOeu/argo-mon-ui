@@ -7,17 +7,20 @@ import {
 import { useGetUserTenantById } from '@/hooks/useTenants'
 import { useParams, useNavigate } from 'react-router-dom'
 import type { EndpointTopologyItem } from '@/types/topology'
-import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid'
 import { toast } from 'sonner'
+import NotificationsSection from './NotificationsSection'
+import GroupSelector from './GroupSelector'
+import KeyValueInput from './KeyValueInput'
+import type { Label } from './KeyValueInput'
+import type { Contact } from './NotificationsSection'
 import PageHeader from '@/components/PageHeader'
 import Button from '@/components/Button'
-import IconButton from '@/components/IconButton'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import SelectDropdown from '@/components/SelectDropdown'
 
 const sectionClass =
-  'grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4 md:gap-8 mb-8 animate-fade-in'
+  'grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4 md:gap-8 mb-7 animate-fade-in'
 const sectionContentClass =
   'bg-surface-muted border border-line rounded-lg px-5 py-3 flex flex-col gap-2'
 
@@ -25,15 +28,12 @@ const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const today = new Date().toISOString().split('T')[0]
 
-interface Contact {
-  id: string
-  value: string
-}
-
 interface FormData {
   service: string
   hostname: string
+  group: string
   monitored: boolean
+  labels: Label[]
   notificationsEnabled: boolean
   contacts: Contact[]
 }
@@ -41,6 +41,7 @@ interface FormData {
 interface FormErrors {
   service: string
   hostname: string
+  group: string
   contacts: string[]
 }
 
@@ -62,8 +63,8 @@ const CreateTopologyEndpoint = ({
 
   const { data: tenantData } = useGetUserTenantById(tenantId)
 
-  const { data: todayEndpoints, isLoading: isLoadingToday } =
-    useGetTopologyEndpoints(tenantId, today)
+  const { data: latestEndpoints, isLoading: isLoadingLatest } =
+    useGetTopologyEndpoints(tenantId, '')
 
   const {
     data: serviceTypes,
@@ -73,12 +74,18 @@ const CreateTopologyEndpoint = ({
 
   const createMutation = useCreateTopologyEndpointMutation()
 
+  const [isGroupSaving, setIsGroupSaving] = useState(false)
+
   const [formData, setFormData] = useState<FormData>(() => {
     if (editingEndpoint) {
       return {
         service: editingEndpoint.service,
         hostname: editingEndpoint.hostname,
+        group: editingEndpoint.group,
         monitored: editingEndpoint.tags?.monitored === '1',
+        labels: Object.entries(editingEndpoint.tags ?? {})
+          .filter(([key]) => key !== 'monitored')
+          .map(([key, value]) => ({ id: crypto.randomUUID(), key, value })),
         notificationsEnabled: editingEndpoint.notifications?.enabled ?? false,
         contacts: editingEndpoint.notifications?.contacts?.length
           ? editingEndpoint.notifications.contacts.map((email) => ({
@@ -91,7 +98,9 @@ const CreateTopologyEndpoint = ({
     return {
       service: '',
       hostname: '',
+      group: '',
       monitored: true,
+      labels: [],
       notificationsEnabled: false,
       contacts: [{ id: crypto.randomUUID(), value: '' }],
     }
@@ -100,6 +109,7 @@ const CreateTopologyEndpoint = ({
   const [errors, setErrors] = useState<FormErrors>({
     service: '',
     hostname: '',
+    group: '',
     contacts: [''],
   })
 
@@ -158,6 +168,7 @@ const CreateTopologyEndpoint = ({
     const newErrors: FormErrors = {
       service: '',
       hostname: '',
+      group: '',
       contacts: formData.contacts.map(() => ''),
     }
 
@@ -170,6 +181,11 @@ const CreateTopologyEndpoint = ({
 
     if (!formData.hostname.trim()) {
       newErrors.hostname = 'URL is required'
+      hasError = true
+    }
+
+    if (!formData.group) {
+      newErrors.group = 'Group is required'
       hasError = true
     }
 
@@ -197,7 +213,14 @@ const CreateTopologyEndpoint = ({
     const updatedFields = {
       service: formData.service,
       hostname: formData.hostname.trim(),
-      tags: { monitored: formData.monitored ? '1' : '0' },
+      tags: {
+        monitored: formData.monitored ? '1' : '0',
+        ...Object.fromEntries(
+          formData.labels
+            .filter((label) => label.key.trim())
+            .map((label) => [label.key.trim(), label.value.trim()]),
+        ),
+      },
       notifications: {
         enabled: formData.notificationsEnabled,
         contacts: formData.contacts
@@ -208,16 +231,21 @@ const CreateTopologyEndpoint = ({
 
     const payload = isEditMode
       ? [
-          ...(todayEndpoints ?? []).filter(
+          ...(latestEndpoints ?? []).filter(
             (e) => e.hostname !== editingEndpoint.hostname,
           ),
-          { ...editingEndpoint, ...updatedFields, date: today },
+          {
+            ...editingEndpoint,
+            ...updatedFields,
+            group: formData.group,
+            date: today,
+          },
         ]
       : [
-          ...(todayEndpoints ?? []),
+          ...(latestEndpoints ?? []),
           {
             date: today,
-            group: 'DEFAULT',
+            group: formData.group,
             type: 'SERVICEGROUPS',
             ...updatedFields,
           },
@@ -236,7 +264,7 @@ const CreateTopologyEndpoint = ({
             if (onClose) {
               onClose()
             } else {
-              navigate(`/tenants/${tenantId}/topology`)
+              navigate(`/tenants/${tenantId}/topology#endpoints`)
             }
           }, 2000)
         },
@@ -267,7 +295,7 @@ const CreateTopologyEndpoint = ({
         }
         navigateTo={{
           label: 'Back to Topology',
-          to: `/tenants/${tenantId}/topology`,
+          to: `/tenants/${tenantId}/topology#endpoints`,
           onClick: onClose,
         }}
       />
@@ -277,7 +305,9 @@ const CreateTopologyEndpoint = ({
           variant="primary"
           size="md"
           onClick={handleSubmit}
-          disabled={createMutation.isPending || isLoadingToday}
+          disabled={
+            createMutation.isPending || isLoadingLatest || isGroupSaving
+          }
         >
           {createMutation.isPending ? (
             <>
@@ -296,7 +326,7 @@ const CreateTopologyEndpoint = ({
       <div className={sectionClass}>
         <div>
           <p className="section-title">Endpoint Details</p>
-          <p className="section-description mt-1">
+          <p className="section-description">
             Select the service type and provide the endpoint URL
           </p>
         </div>
@@ -365,11 +395,32 @@ const CreateTopologyEndpoint = ({
         </div>
       </div>
 
+      {/* Group */}
+      <div className={sectionClass}>
+        <div>
+          <p className="section-title">Group</p>
+          <p className="section-description">Assign this endpoint to a group</p>
+        </div>
+        <div className={sectionContentClass}>
+          <GroupSelector
+            tenantId={tenantId}
+            tenantName={tenantData?.info.name ?? ''}
+            value={formData.group}
+            onChange={(value) => {
+              setFormData((prev) => ({ ...prev, group: value }))
+              if (value) setErrors((prev) => ({ ...prev, group: '' }))
+            }}
+            error={errors.group}
+            onGroupSaving={setIsGroupSaving}
+          />
+        </div>
+      </div>
+
       {/* Monitoring */}
       <div className={sectionClass}>
         <div>
           <p className="section-title">Monitoring</p>
-          <p className="section-description mt-1">
+          <p className="section-description">
             Configure whether this endpoint is monitored
           </p>
         </div>
@@ -394,83 +445,35 @@ const CreateTopologyEndpoint = ({
 
       {/* Notifications */}
       <div className={sectionClass}>
+        <NotificationsSection
+          subtitle="endpoint"
+          enabled={formData.notificationsEnabled}
+          onEnabledChange={(v) =>
+            setFormData((prev) => ({ ...prev, notificationsEnabled: v }))
+          }
+          contacts={formData.contacts}
+          contactErrors={errors.contacts}
+          onContactChange={handleContactChange}
+          onAddContact={handleAddContact}
+          onRemoveContact={handleRemoveContact}
+        />
+      </div>
+
+      {/* Labels */}
+      <div className={sectionClass}>
         <div>
-          <p className="section-title">Notifications</p>
-          <p className="section-description mt-1">
-            Enable email notifications for this endpoint
+          <p className="section-title">Labels</p>
+          <p className="section-description">
+            Add custom key-value metadata to this endpoint
           </p>
         </div>
         <div className={sectionContentClass}>
-          <label className="flex items-center gap-3 cursor-pointer">
-            <input
-              type="checkbox"
-              className="toggle toggle-brand"
-              checked={formData.notificationsEnabled}
-              onChange={() =>
-                setFormData((prev) => ({
-                  ...prev,
-                  notificationsEnabled: !prev.notificationsEnabled,
-                }))
-              }
-            />
-            <div>
-              <p className="text-sm font-semibold text-body">
-                {formData.notificationsEnabled
-                  ? 'Notifications enabled'
-                  : 'Notifications disabled'}
-              </p>
-            </div>
-          </label>
-
-          {formData.notificationsEnabled && (
-            <div className="flex flex-col gap-2 mt-1 animate-fade-in">
-              <p className="text-sm font-medium text-body">
-                Contact Emails <span className="required">*</span>
-              </p>
-              {formData.contacts.map((contact, index) => (
-                <div key={contact.id} className="flex items-start gap-1">
-                  <div className="flex flex-col flex-1">
-                    <input
-                      type="email"
-                      value={contact.value}
-                      onChange={(e) =>
-                        handleContactChange(index, e.target.value)
-                      }
-                      placeholder="Enter contact email"
-                      className={
-                        errors.contacts[index]
-                          ? '!border-red-500 focus:!border-red-500 focus:!ring-red-500/10'
-                          : ''
-                      }
-                    />
-                    {errors.contacts[index] && (
-                      <span className="text-xs text-red-500 mt-1">
-                        {errors.contacts[index]}
-                      </span>
-                    )}
-                  </div>
-                  {formData.contacts.length > 1 && (
-                    <div className="mt-1">
-                      <IconButton
-                        icon={<TrashIcon className="size-4.5" />}
-                        label="Remove contact"
-                        onClick={() => handleRemoveContact(index)}
-                        className="text-red-600 hover:bg-red-50"
-                      />
-                    </div>
-                  )}
-                </div>
-              ))}
-              <button
-                type="button"
-                onClick={handleAddContact}
-                className="flex items-center gap-1.5 text-sm text-brand hover:text-brand-strong transition-colors w-fit cursor-pointer"
-              >
-                <PlusIcon className="size-4" />
-                Add another email
-              </button>
-            </div>
-          )}
+          <KeyValueInput
+            labels={formData.labels}
+            onLabelsChange={(labels) =>
+              setFormData((prev) => ({ ...prev, labels }))
+            }
+          />
         </div>
       </div>
     </div>
