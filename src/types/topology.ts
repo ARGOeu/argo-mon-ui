@@ -15,6 +15,15 @@ export type EndpointTopologyItem = {
   notifications?: TopologyNotifications
 }
 
+export type GroupTopologyItem = {
+  date: string
+  group: string
+  type: string
+  subgroup: string
+  tags?: TopologyTags
+  notifications?: TopologyNotifications
+}
+
 export type ServiceType = {
   name: string
   title: string

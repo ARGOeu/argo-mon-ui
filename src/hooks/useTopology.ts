@@ -3,10 +3,13 @@ import { useAuth } from '@/auth/useAuth'
 import {
   fetchTopologyEndpoints,
   fetchCreateTopologyEndpoints,
+  fetchTopologyGroups,
+  fetchCreateTopologyGroups,
   fetchTopologyServiceTypes,
 } from '@/api/topology'
 import type {
   EndpointTopologyItem,
+  GroupTopologyItem,
   ServiceType,
   CreateTopologyEndpointResponse,
 } from '@/types/topology'
@@ -45,6 +48,56 @@ export const useGetTopologyServiceTypes = (
     },
     retry: false,
     enabled: enabled && !!token && !!tenantId,
+  })
+}
+
+export const useGetTopologyGroups = (
+  tenantId: string,
+  date: string = '',
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<GroupTopologyItem[], Error>({
+    queryKey: ['topology-groups', tenantId, date],
+    queryFn: () => {
+      if (!token) throw new Error('No authentication token available')
+      if (!tenantId) throw new Error('Tenant ID is required')
+      return fetchTopologyGroups(tenantId, date, token)
+    },
+    retry: false,
+    enabled: enabled && !!token && !!tenantId,
+  })
+}
+
+export const useCreateTopologyGroupsMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<
+    CreateTopologyEndpointResponse,
+    Error,
+    { tenantId: string; data: GroupTopologyItem[] }
+  >({
+    mutationFn: ({
+      tenantId,
+      data,
+    }: {
+      tenantId: string
+      data: GroupTopologyItem[]
+    }) => {
+      if (!token) throw new Error('No authentication token available')
+      if (!tenantId) throw new Error('Tenant ID is required')
+      return fetchCreateTopologyGroups(tenantId, data, token)
+    },
+    onSuccess: (_result, { tenantId }) => {
+      queryClient.invalidateQueries({
+        queryKey: ['topology-groups', tenantId],
+      })
+    },
+    onError: (error) => {
+      console.error('Topology groups create error:', error)
+    },
   })
 }
 
