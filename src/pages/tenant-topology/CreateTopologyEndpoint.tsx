@@ -1,31 +1,34 @@
-import { useState } from 'react'
+import { useState, useRef, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import {
   useGetTopologyEndpoints,
   useGetTopologyServiceTypes,
   useCreateTopologyEndpointMutation,
 } from '@/hooks/useTopology'
 import { useGetUserTenantById } from '@/hooks/useTenants'
-import { useParams, useNavigate } from 'react-router-dom'
-import type { EndpointTopologyItem } from '@/types/topology'
 import { toast } from 'sonner'
-import NotificationsSection from './NotificationsSection'
-import GroupSelector from './GroupSelector'
-import KeyValueInput from './KeyValueInput'
-import LabelsInput from './LabelsInput'
-import type { Label } from './KeyValueInput'
-import type { Contact } from './NotificationsSection'
 import PageHeader from '@/components/PageHeader'
 import Button from '@/components/Button'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import SelectDropdown from '@/components/SelectDropdown'
+import {
+  getContactValidationErrors,
+  getValidContactEmails,
+  isValidEmail,
+} from './utils/topologyValidation'
+import NotificationsSection from './NotificationsSection'
+import GroupSelector from './GroupSelector'
+import LabelsInput from './LabelsInput'
+import KeyValueInput from './KeyValueInput'
+import type { Label } from './KeyValueInput'
+import type { Contact } from './NotificationsSection'
+import type { EndpointTopologyItem } from '@/types/topology'
 
 const sectionClass =
   'grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-2 lg:gap-8 mb-6 animate-fade-in'
 const sectionContentClass =
   'bg-surface-muted border border-line rounded-lg px-5 py-3 flex flex-col gap-2'
-
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const today = new Date().toISOString().split('T')[0]
 
@@ -62,6 +65,7 @@ const CreateTopologyEndpoint = ({
   const tenantId = tenantIdProp ?? tenantIdParam ?? ''
   const isEditMode = !!editingEndpoint
   const navigate = useNavigate()
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { data: tenantData } = useGetUserTenantById(tenantId)
 
@@ -123,6 +127,14 @@ const CreateTopologyEndpoint = ({
     contacts: [''],
   })
 
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current)
+      }
+    }
+  }, [])
+
   const handleServiceChange = (value: string) => {
     setFormData((prev) => ({ ...prev, service: value }))
     if (value) {
@@ -147,7 +159,7 @@ const CreateTopologyEndpoint = ({
     }))
 
     const updatedErrors = [...errors.contacts]
-    if (!value.trim() || emailRegex.test(value)) {
+    if (!value.trim() || isValidEmail(value)) {
       updatedErrors[index] = ''
     } else {
       updatedErrors[index] = 'Invalid email'
@@ -208,19 +220,11 @@ const CreateTopologyEndpoint = ({
     }
 
     if (formData.notificationsEnabled) {
-      const hasValidContact = formData.contacts.some(
-        (c) => c.value.trim() && emailRegex.test(c.value),
-      )
-      if (!hasValidContact) {
-        newErrors.contacts[0] = 'At least one valid email is required'
+      const contactErrors = getContactValidationErrors(formData.contacts, true)
+      if (contactErrors.some((error) => !!error)) {
+        newErrors.contacts = contactErrors
         hasError = true
       }
-      formData.contacts.forEach((c, i) => {
-        if (c.value.trim() && !emailRegex.test(c.value)) {
-          newErrors.contacts[i] = 'Invalid email'
-          hasError = true
-        }
-      })
     }
 
     if (hasError) {
@@ -244,9 +248,7 @@ const CreateTopologyEndpoint = ({
       },
       notifications: {
         enabled: formData.notificationsEnabled,
-        contacts: formData.contacts
-          .filter((c) => c.value.trim() && emailRegex.test(c.value))
-          .map((c) => c.value),
+        contacts: getValidContactEmails(formData.contacts),
       },
     }
 
@@ -281,7 +283,10 @@ const CreateTopologyEndpoint = ({
               ? 'Topology endpoint updated successfully!'
               : 'Topology endpoint created successfully!',
           )
-          setTimeout(() => {
+          if (timerRef.current) {
+            clearTimeout(timerRef.current)
+          }
+          timerRef.current = setTimeout(() => {
             if (onClose) {
               onClose()
             } else {

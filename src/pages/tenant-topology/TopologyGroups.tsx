@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/16/solid'
 import { useGetUserTenantById } from '@/hooks/useTenants'
@@ -7,6 +7,9 @@ import {
   useCreateTopologyGroupsMutation,
 } from '@/hooks/useTopology'
 import Button from '@/components/Button'
+import { getLatestTopologyDate } from './utils/topologyDateHelpers'
+import { sortByField } from './utils/topologySortHelpers'
+import { useTopologyListState } from './hooks/useTopologyListState'
 import IconButton from '@/components/IconButton'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import SearchInput from '@/components/SearchInput'
@@ -22,7 +25,6 @@ import SelectDropdown from '@/components/SelectDropdown'
 import type { GroupTopologyItem } from '@/types/topology'
 
 type SortColumn = 'subgroup'
-type DateMode = 'latest' | 'custom'
 
 const pageSize = 15
 
@@ -33,31 +35,40 @@ interface TopologyGroupsProps {
 
 const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
   const { data: tenantData } = useGetUserTenantById(tenantId)
-
-  const [searchInput, setSearchInput] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [sortColumn, setSortColumn] = useState<SortColumn>('subgroup')
-  const [sortAsc, setSortAsc] = useState(true)
-  const [dateMode, setDateMode] = useState<DateMode>('latest')
-  const [committedDate, setCommittedDate] = useState('')
-  const dateInputRef = useRef<HTMLInputElement>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [groupToDelete, setGroupToDelete] = useState<{
     group: GroupTopologyItem
     index: number
   } | null>(null)
 
-  const effectiveDate = dateMode === 'latest' ? '' : committedDate
+  const { data: latestGroups } = useGetTopologyGroups(tenantId, '')
+  const latestDate = getLatestTopologyDate(latestGroups)
+
+  const {
+    searchInput,
+    setSearchInput,
+    currentPage,
+    setCurrentPage,
+    sortColumn,
+    sortAsc,
+    dateMode,
+    dateInput,
+    committedDate,
+    showActions,
+    handleDateInputChange,
+    handleDateModeChange,
+    handleSortChange,
+    handleSearchClear,
+  } = useTopologyListState<SortColumn>({
+    latestDate,
+  })
 
   const {
     data: groups,
     isLoading,
     isFetching,
     error,
-  } = useGetTopologyGroups(tenantId, effectiveDate)
-
-  const { data: latestGroups } = useGetTopologyGroups(tenantId, '')
+  } = useGetTopologyGroups(tenantId, committedDate)
 
   const deleteMutation = useCreateTopologyGroupsMutation()
 
@@ -95,75 +106,12 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
     )
   }
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchQuery(searchInput)
-      setCurrentPage(1)
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [searchInput])
-
-  useEffect(() => {
-    const input = dateInputRef.current
-    if (!input) return
-
-    const handleChange = (e: Event) => {
-      const value = (e.target as HTMLInputElement).value
-      setCommittedDate(value)
-      setCurrentPage(1)
-    }
-
-    input.addEventListener('change', handleChange)
-    return () => input.removeEventListener('change', handleChange)
-  }, [dateMode])
-
-  const latestDate = latestGroups?.length
-    ? latestGroups.reduce(
-        (max, g) => (g.date > max ? g.date : max),
-        latestGroups[0].date,
-      )
-    : ''
-
-  const showActions =
-    dateMode === 'latest' ||
-    (dateMode === 'custom' && committedDate === latestDate && !!latestDate)
-
-  const handleDateModeChange = (mode: string) => {
-    setDateMode(mode as DateMode)
-    if (mode === 'custom') {
-      if (dateInputRef.current) {
-        dateInputRef.current.value = latestDate
-      }
-      setCommittedDate(latestDate)
-    }
-    setCurrentPage(1)
-  }
-
-  const handleSortChange = (column: SortColumn) => {
-    if (sortColumn === column) {
-      setSortAsc((prev) => !prev)
-    } else {
-      setSortColumn(column)
-      setSortAsc(true)
-    }
-    setCurrentPage(1)
-  }
-
-  const handleSearchClear = () => {
-    setSearchInput('')
-    setSearchQuery('')
-    setCurrentPage(1)
-  }
-
   const filtered = (groups ?? []).filter((g) => {
-    if (!searchQuery) return true
-    return g.subgroup.toLowerCase().includes(searchQuery.toLowerCase())
+    if (!searchInput) return true
+    return g.subgroup.toLowerCase().includes(searchInput.toLowerCase())
   })
 
-  const sorted = [...filtered].sort((a, b) => {
-    const cmp = a.subgroup.localeCompare(b.subgroup)
-    return sortAsc ? cmp : -cmp
-  })
+  const sorted = sortByField(filtered, sortColumn, sortAsc)
 
   const totalPages = Math.ceil(sorted.length / pageSize)
   const paginated = sorted.slice(
@@ -186,9 +134,9 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
         <div className="flex items-center gap-3 shrink-0">
           {dateMode === 'custom' && (
             <input
-              ref={dateInputRef}
               type="date"
-              defaultValue={latestDate || undefined}
+              value={dateInput}
+              onChange={handleDateInputChange}
               onClick={(e) => e.currentTarget.showPicker?.()}
               className="text-sm"
             />
@@ -266,9 +214,9 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
               </td>
             </tr>
           ) : (
-            paginated.map((group) => (
+            paginated.map((group, index) => (
               <tr
-                key={group.subgroup}
+                key={`${group.subgroup}-${group.date}-${index}`}
                 className="hover:bg-surface-muted transition-colors"
               >
                 <td className={tdBase}>{group.subgroup}</td>
