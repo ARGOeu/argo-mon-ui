@@ -43,15 +43,17 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
   const [committedDate, setCommittedDate] = useState('')
   const dateInputRef = useRef<HTMLInputElement>(null)
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [groupToDelete, setGroupToDelete] = useState<GroupTopologyItem | null>(
-    null,
-  )
+  const [groupToDelete, setGroupToDelete] = useState<{
+    group: GroupTopologyItem
+    index: number
+  } | null>(null)
 
   const effectiveDate = dateMode === 'latest' ? '' : committedDate
 
   const {
     data: groups,
     isLoading,
+    isFetching,
     error,
   } = useGetTopologyGroups(tenantId, effectiveDate)
 
@@ -59,8 +61,8 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
 
   const deleteMutation = useCreateTopologyGroupsMutation()
 
-  const handleDeleteClick = (group: GroupTopologyItem) => {
-    setGroupToDelete(group)
+  const handleDeleteClick = (group: GroupTopologyItem, index: number) => {
+    setGroupToDelete({ group, index })
     setDeleteDialogOpen(true)
   }
 
@@ -68,7 +70,11 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
     if (!groupToDelete) return
 
     const updatedGroups = (groups ?? []).filter(
-      (g) => g.subgroup !== groupToDelete.subgroup,
+      (group, index) =>
+        !(
+          index === groupToDelete.index &&
+          group.subgroup === groupToDelete.group.subgroup
+        ),
     )
 
     deleteMutation.mutate(
@@ -173,7 +179,7 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
             value={searchInput}
             onChange={setSearchInput}
             onClear={handleSearchClear}
-            placeholder="Search by subgroup..."
+            placeholder="Search by group..."
             className="!mb-0 w-full"
           />
         </div>
@@ -218,7 +224,7 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
                 isAscending={sortAsc}
                 onClick={() => handleSortChange('subgroup')}
               >
-                Subgroup
+                Group
               </SortableColumnHeader>
             </th>
             <th className={`${thBase} w-[40%]`}>Contacts</th>
@@ -227,7 +233,7 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
-          {isLoading ? (
+          {isLoading || isFetching ? (
             <tr>
               <td colSpan={showActions ? 4 : 3} className="py-12">
                 <div className="flex justify-center">
@@ -293,7 +299,10 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
                       <IconButton
                         icon={<TrashIcon className="size-4 md:size-5" />}
                         label="Delete"
-                        onClick={() => handleDeleteClick(group)}
+                        onClick={() => {
+                          const indexToDelete = (groups ?? []).indexOf(group)
+                          handleDeleteClick(group, indexToDelete)
+                        }}
                         className="text-red-600 hover:bg-red-50 !p-1"
                       />
                     </div>
@@ -320,7 +329,7 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
         message={
           <>
             Are you sure you want to delete the group{' '}
-            <strong>{groupToDelete?.subgroup}</strong> ?
+            <strong>{groupToDelete?.group.subgroup}</strong> ?
             <br />
             <span className="text-amber-600 font-medium">
               This action cannot be undone.
