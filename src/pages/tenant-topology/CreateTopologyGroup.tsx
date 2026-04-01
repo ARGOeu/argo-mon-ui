@@ -143,7 +143,7 @@ const CreateTopologyGroup = ({
     let hasError = false
 
     if (!formData.subgroup.trim()) {
-      newErrors.subgroup = 'Subgroup is required'
+      newErrors.subgroup = 'Group is required'
       hasError = true
     }
 
@@ -268,37 +268,20 @@ const CreateTopologyGroup = ({
         <div>
           <p className="section-title">Group Details</p>
           <p className="section-description">
-            Define the group and subgroup for this topology entry
+            Define the details for this topology entry
           </p>
         </div>
         <div className={sectionContentClass}>
           <div className="flex flex-col">
-            <label className="text-sm font-medium text-body mb-1.5">
-              Group
-            </label>
-            <input
-              type="text"
-              value={tenantData?.info.name ?? ''}
-              disabled
-              readOnly
-            />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-body mb-1.5">Type</label>
-            <input type="text" value="PROJECT" disabled readOnly />
-          </div>
-
-          <div className="flex flex-col">
-            <label className="text-sm font-medium text-body mb-1.5">
-              Subgroup <span className="required">*</span>
+            <label className="text-sm font-medium text-body mb-1">
+              Group <span className="required">*</span>
             </label>
             <input
               type="text"
               name="subgroup"
               value={formData.subgroup}
               onChange={handleSubgroupChange}
-              placeholder="Enter subgroup name"
+              placeholder="Enter group name"
               className={
                 errors.subgroup
                   ? '!border-red-500 focus:!border-red-500 focus:!ring-red-500/10'

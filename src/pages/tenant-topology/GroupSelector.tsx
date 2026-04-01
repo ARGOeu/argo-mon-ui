@@ -72,7 +72,7 @@ const GroupSelector = ({
 
   const handleCreateGroupSubmit = () => {
     if (!newGroupSubgroup.trim()) {
-      setNewGroupSubgroupError('Subgroup is required')
+      setNewGroupSubgroupError('Group is required')
       return
     }
 
@@ -138,7 +138,7 @@ const GroupSelector = ({
 
   return (
     <div className="flex flex-col">
-      <label className="text-sm font-medium text-body mb-1.5">
+      <label className="text-sm font-medium text-body mb-1">
         Group <span className="required">*</span>
       </label>
 
@@ -187,7 +187,7 @@ const GroupSelector = ({
         <div className="border border-line rounded-lg px-4 py-3 flex flex-col gap-3 mt-1 animate-fade-in">
           <div className="flex flex-col">
             <label className="text-sm font-medium text-body mb-1.5">
-              Subgroup <span className="required">*</span>
+              Group <span className="required">*</span>
             </label>
             <input
               type="text"
@@ -196,7 +196,7 @@ const GroupSelector = ({
                 setNewGroupSubgroup(e.target.value)
                 if (e.target.value.trim()) setNewGroupSubgroupError('')
               }}
-              placeholder="Enter subgroup name"
+              placeholder="Enter group name"
               className={
                 newGroupSubgroupError
                   ? '!border-red-500 focus:!border-red-500 focus:!ring-red-500/10'

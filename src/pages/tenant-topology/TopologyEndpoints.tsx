@@ -47,14 +47,17 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
     'monitored' | 'not_monitored'
   >('monitored')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [endpointToDelete, setEndpointToDelete] =
-    useState<EndpointTopologyItem | null>(null)
+  const [endpointToDelete, setEndpointToDelete] = useState<{
+    endpoint: EndpointTopologyItem
+    index: number
+  } | null>(null)
 
   const effectiveDate = dateMode === 'latest' ? '' : committedDate
 
   const {
     data: endpoints,
     isLoading,
+    isFetching,
     error,
   } = useGetTopologyEndpoints(tenantId, effectiveDate)
 
@@ -62,8 +65,8 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
 
   const deleteMutation = useCreateTopologyEndpointMutation()
 
-  const handleDeleteClick = (endpoint: EndpointTopologyItem) => {
-    setEndpointToDelete(endpoint)
+  const handleDeleteClick = (endpoint: EndpointTopologyItem, index: number) => {
+    setEndpointToDelete({ endpoint, index })
     setDeleteDialogOpen(true)
   }
 
@@ -71,7 +74,11 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
     if (!endpointToDelete) return
 
     const updatedEndpoints = (endpoints ?? []).filter(
-      (endpoint) => endpoint.hostname !== endpointToDelete.hostname,
+      (endpoint, index) =>
+        !(
+          index === endpointToDelete.index &&
+          endpoint.hostname === endpointToDelete.endpoint.hostname
+        ),
     )
 
     deleteMutation.mutate(
@@ -281,7 +288,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
-          {isLoading ? (
+          {isLoading || isFetching ? (
             <tr>
               <td colSpan={showActions ? 6 : 5} className="py-12">
                 <div className="flex justify-center">
@@ -353,7 +360,12 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
                       <IconButton
                         icon={<TrashIcon className="size-4 md:size-5" />}
                         label="Delete"
-                        onClick={() => handleDeleteClick(endpoint)}
+                        onClick={() => {
+                          const indexToDelete = (endpoints ?? []).indexOf(
+                            endpoint,
+                          )
+                          handleDeleteClick(endpoint, indexToDelete)
+                        }}
                         className="text-red-600 hover:bg-red-50 !p-1"
                       />
                     </div>
@@ -380,7 +392,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
         message={
           <>
             Are you sure you want to delete the endpoint with URL{' '}
-            <strong>{endpointToDelete?.hostname}</strong> ?
+            <strong>{endpointToDelete?.endpoint.hostname}</strong> ?
             <br />
             <span className="text-amber-600 font-medium">
               This action cannot be undone.

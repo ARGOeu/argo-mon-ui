@@ -11,6 +11,7 @@ import { toast } from 'sonner'
 import NotificationsSection from './NotificationsSection'
 import GroupSelector from './GroupSelector'
 import KeyValueInput from './KeyValueInput'
+import LabelsInput from './LabelsInput'
 import type { Label } from './KeyValueInput'
 import type { Contact } from './NotificationsSection'
 import PageHeader from '@/components/PageHeader'
@@ -20,7 +21,7 @@ import ErrorDisplay from '@/components/ErrorDisplay'
 import SelectDropdown from '@/components/SelectDropdown'
 
 const sectionClass =
-  'grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4 md:gap-8 mb-7 animate-fade-in'
+  'grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-2 lg:gap-8 mb-6 animate-fade-in'
 const sectionContentClass =
   'bg-surface-muted border border-line rounded-lg px-5 py-3 flex flex-col gap-2'
 
@@ -31,9 +32,10 @@ const today = new Date().toISOString().split('T')[0]
 interface FormData {
   service: string
   hostname: string
+  tags: string[]
   group: string
   monitored: boolean
-  labels: Label[]
+  metadata: Label[]
   notificationsEnabled: boolean
   contacts: Contact[]
 }
@@ -78,13 +80,20 @@ const CreateTopologyEndpoint = ({
 
   const [formData, setFormData] = useState<FormData>(() => {
     if (editingEndpoint) {
+      const labelsTag = editingEndpoint.tags?.labels ?? ''
       return {
         service: editingEndpoint.service,
         hostname: editingEndpoint.hostname,
+        tags: labelsTag
+          ? labelsTag
+              .split(',')
+              .map((t) => t.trim())
+              .filter(Boolean)
+          : [],
         group: editingEndpoint.group,
         monitored: editingEndpoint.tags?.monitored === '1',
-        labels: Object.entries(editingEndpoint.tags ?? {})
-          .filter(([key]) => key !== 'monitored')
+        metadata: Object.entries(editingEndpoint.tags ?? {})
+          .filter(([key]) => key !== 'monitored' && key !== 'labels')
           .map(([key, value]) => ({ id: crypto.randomUUID(), key, value })),
         notificationsEnabled: editingEndpoint.notifications?.enabled ?? false,
         contacts: editingEndpoint.notifications?.contacts?.length
@@ -98,9 +107,10 @@ const CreateTopologyEndpoint = ({
     return {
       service: '',
       hostname: '',
+      tags: [],
       group: '',
       monitored: true,
-      labels: [],
+      metadata: [],
       notificationsEnabled: false,
       contacts: [{ id: crypto.randomUUID(), value: '' }],
     }
@@ -189,6 +199,14 @@ const CreateTopologyEndpoint = ({
       hasError = true
     }
 
+    if (
+      formData.metadata.some(
+        (label) => label.key.trim().toLowerCase() === 'labels',
+      )
+    ) {
+      hasError = true
+    }
+
     if (formData.notificationsEnabled) {
       const hasValidContact = formData.contacts.some(
         (c) => c.value.trim() && emailRegex.test(c.value),
@@ -215,8 +233,11 @@ const CreateTopologyEndpoint = ({
       hostname: formData.hostname.trim(),
       tags: {
         monitored: formData.monitored ? '1' : '0',
+        ...(formData.tags.length > 0
+          ? { labels: formData.tags.join(',') }
+          : {}),
         ...Object.fromEntries(
-          formData.labels
+          formData.metadata
             .filter((label) => label.key.trim())
             .map((label) => [label.key.trim(), label.value.trim()]),
         ),
@@ -333,7 +354,7 @@ const CreateTopologyEndpoint = ({
         <div className={sectionContentClass}>
           {/* Service type */}
           <div className="flex flex-col">
-            <label className="text-sm font-medium text-body mb-1.5">
+            <label className="text-sm font-medium text-body mb-1">
               Service Type <span className="required">*</span>
             </label>
             {isLoadingTypes ? (
@@ -371,7 +392,7 @@ const CreateTopologyEndpoint = ({
 
           {/* Hostname / URL */}
           <div className="flex flex-col">
-            <label className="text-sm font-medium text-body mb-1.5">
+            <label className="text-sm font-medium text-body mb-1">
               URL <span className="required">*</span>
             </label>
             <input
@@ -391,6 +412,18 @@ const CreateTopologyEndpoint = ({
                 {errors.hostname}
               </span>
             )}
+          </div>
+
+          {/* Labels */}
+          <div className="flex flex-col">
+            <label className="text-sm font-medium text-body mb-1">Labels</label>
+            <LabelsInput
+              tags={formData.tags}
+              onChange={(tags) => setFormData((prev) => ({ ...prev, tags }))}
+            />
+            <p className="text-xs text-muted mt-1">
+              Press 'Enter' or 'Space' to add a label
+            </p>
           </div>
         </div>
       </div>
@@ -459,20 +492,26 @@ const CreateTopologyEndpoint = ({
         />
       </div>
 
-      {/* Labels */}
+      {/* Metadata */}
       <div className={sectionClass}>
         <div>
-          <p className="section-title">Labels</p>
+          <p className="section-title">Metadata</p>
           <p className="section-description">
             Add custom key-value metadata to this endpoint
           </p>
         </div>
         <div className={sectionContentClass}>
           <KeyValueInput
-            labels={formData.labels}
-            onLabelsChange={(labels) =>
-              setFormData((prev) => ({ ...prev, labels }))
+            labels={formData.metadata}
+            onLabelsChange={(metadata) =>
+              setFormData((prev) => ({ ...prev, metadata }))
             }
+            disallowedKeys={[
+              {
+                key: 'labels',
+                message: '"labels" cannot be used as a key',
+              },
+            ]}
           />
         </div>
       </div>
