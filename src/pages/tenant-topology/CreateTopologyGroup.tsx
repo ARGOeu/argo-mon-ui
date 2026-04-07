@@ -1,14 +1,19 @@
 import { useState, useRef, useEffect } from 'react'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useGetUserTenantById } from '@/hooks/useTenants'
 import {
   useGetTopologyGroups,
   useCreateTopologyGroupsMutation,
 } from '@/hooks/useTopology'
-import { useParams, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
 import Button from '@/components/Button'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import {
+  getContactValidationErrors,
+  getValidContactEmails,
+  isValidEmail,
+} from './utils/topologyValidation'
 import NotificationsSection from './NotificationsSection'
 import type { Contact } from './NotificationsSection'
 import type { GroupTopologyItem } from '@/types/topology'
@@ -17,8 +22,6 @@ const sectionClass =
   'grid grid-cols-1 md:grid-cols-[360px_1fr] gap-4 md:gap-8 mb-8 animate-fade-in'
 const sectionContentClass =
   'bg-surface-muted border border-line rounded-lg px-5 py-3 flex flex-col gap-2'
-
-const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 const today = new Date().toISOString().split('T')[0]
 
@@ -107,7 +110,7 @@ const CreateTopologyGroup = ({
     }))
 
     const updatedErrors = [...errors.contacts]
-    if (!value.trim() || emailRegex.test(value)) {
+    if (!value.trim() || isValidEmail(value)) {
       updatedErrors[index] = ''
     } else {
       updatedErrors[index] = 'Invalid email'
@@ -148,19 +151,11 @@ const CreateTopologyGroup = ({
     }
 
     if (formData.notificationsEnabled) {
-      const hasValidContact = formData.contacts.some(
-        (c) => c.value.trim() && emailRegex.test(c.value),
-      )
-      if (!hasValidContact) {
-        newErrors.contacts[0] = 'At least one valid email is required'
+      const contactErrors = getContactValidationErrors(formData.contacts, true)
+      if (contactErrors.some((error) => !!error)) {
+        newErrors.contacts = contactErrors
         hasError = true
       }
-      formData.contacts.forEach((c, i) => {
-        if (c.value.trim() && !emailRegex.test(c.value)) {
-          newErrors.contacts[i] = 'Invalid email'
-          hasError = true
-        }
-      })
     }
 
     if (hasError) {
@@ -170,9 +165,7 @@ const CreateTopologyGroup = ({
 
     const notifications = {
       enabled: formData.notificationsEnabled,
-      contacts: formData.contacts
-        .filter((c) => c.value.trim() && emailRegex.test(c.value))
-        .map((c) => c.value),
+      contacts: getValidContactEmails(formData.contacts),
     }
 
     const payload = isEditMode
@@ -207,6 +200,9 @@ const CreateTopologyGroup = ({
               ? 'Topology group updated successfully!'
               : 'Topology group created successfully!',
           )
+          if (timerRef.current) {
+            clearTimeout(timerRef.current)
+          }
           timerRef.current = setTimeout(() => {
             if (onClose) {
               onClose()

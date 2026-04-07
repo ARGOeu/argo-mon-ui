@@ -83,12 +83,13 @@ const TenantTopology = () => {
         className="mb-4"
       />
 
-      {activeTab === 'endpoints' && (
+      <div className={activeTab === 'endpoints' ? 'block' : 'hidden'}>
         <TopologyEndpoints tenantId={tenantId} onEdit={setEditingEndpoint} />
-      )}
-      {activeTab === 'groups' && (
+      </div>
+
+      <div className={activeTab === 'groups' ? 'block' : 'hidden'}>
         <TopologyGroups tenantId={tenantId} onEdit={setEditingGroup} />
-      )}
+      </div>
     </div>
   )
 }

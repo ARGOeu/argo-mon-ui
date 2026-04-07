@@ -214,7 +214,7 @@ const SelectDropdown = ({
                 filteredOptions.map((option, index) => (
                   <li
                     id={`${listboxId}-option-${index}`}
-                    key={option.value}
+                    key={`${option.value}-${index}`}
                     role="option"
                     aria-selected={option.value === value}
                     onClick={() => handleSelect(option.value)}

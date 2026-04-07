@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState } from 'react'
 import { toast } from 'sonner'
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/16/solid'
 import { useGetUserTenantById } from '@/hooks/useTenants'
@@ -7,6 +7,9 @@ import {
   useCreateTopologyEndpointMutation,
 } from '@/hooks/useTopology'
 import Button from '@/components/Button'
+import { getLatestTopologyDate } from './utils/topologyDateHelpers'
+import { sortByField } from './utils/topologySortHelpers'
+import { useTopologyListState } from './hooks/useTopologyListState'
 import IconButton from '@/components/IconButton'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import SearchInput from '@/components/SearchInput'
@@ -22,8 +25,7 @@ import ErrorDisplay from '@/components/ErrorDisplay'
 import SelectDropdown from '@/components/SelectDropdown'
 import type { EndpointTopologyItem } from '@/types/topology'
 
-type SortColumn = 'service' | 'group' | 'monitored'
-type DateMode = 'latest' | 'custom'
+type SortColumn = 'service' | 'group' | 'tags.monitored'
 
 const pageSize = 15
 
@@ -34,34 +36,43 @@ interface TopologyEndpointsProps {
 
 const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
   const { data: tenantData } = useGetUserTenantById(tenantId)
-
-  const [searchInput, setSearchInput] = useState('')
-  const [searchQuery, setSearchQuery] = useState('')
-  const [currentPage, setCurrentPage] = useState(1)
-  const [sortColumn, setSortColumn] = useState<SortColumn>('monitored')
-  const [sortAsc, setSortAsc] = useState(false)
-  const [dateMode, setDateMode] = useState<DateMode>('latest')
-  const [committedDate, setCommittedDate] = useState('')
-  const dateInputRef = useRef<HTMLInputElement>(null)
   const [monitoredFilter, setMonitoredFilter] = useState<
-    'monitored' | 'not_monitored'
-  >('monitored')
+    'all' | 'monitored' | 'not_monitored'
+  >('all')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [endpointToDelete, setEndpointToDelete] = useState<{
     endpoint: EndpointTopologyItem
     index: number
   } | null>(null)
 
-  const effectiveDate = dateMode === 'latest' ? '' : committedDate
+  const { data: latestEndpoints } = useGetTopologyEndpoints(tenantId, '')
+  const latestDate = getLatestTopologyDate(latestEndpoints)
+
+  const {
+    searchInput,
+    setSearchInput,
+    currentPage,
+    setCurrentPage,
+    sortColumn,
+    sortAsc,
+    dateMode,
+    dateInput,
+    committedDate,
+    showActions,
+    handleDateInputChange,
+    handleDateModeChange,
+    handleSortChange,
+    handleSearchClear,
+  } = useTopologyListState<SortColumn>({
+    latestDate,
+  })
 
   const {
     data: endpoints,
     isLoading,
     isFetching,
     error,
-  } = useGetTopologyEndpoints(tenantId, effectiveDate)
-
-  const { data: latestEndpoints } = useGetTopologyEndpoints(tenantId, '')
+  } = useGetTopologyEndpoints(tenantId, committedDate)
 
   const deleteMutation = useCreateTopologyEndpointMutation()
 
@@ -99,66 +110,6 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
     )
   }
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setSearchQuery(searchInput)
-      setCurrentPage(1)
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [searchInput])
-
-  useEffect(() => {
-    const input = dateInputRef.current
-    if (!input) return
-
-    const handleChange = (e: Event) => {
-      const value = (e.target as HTMLInputElement).value
-      setCommittedDate(value)
-      setCurrentPage(1)
-    }
-
-    input.addEventListener('change', handleChange)
-    return () => input.removeEventListener('change', handleChange)
-  }, [dateMode])
-
-  const latestDate = latestEndpoints?.length
-    ? latestEndpoints.reduce(
-        (max, e) => (e.date > max ? e.date : max),
-        latestEndpoints[0].date,
-      )
-    : ''
-
-  const showActions =
-    dateMode === 'latest' ||
-    (dateMode === 'custom' && committedDate === latestDate && !!latestDate)
-
-  const handleDateModeChange = (mode: string) => {
-    setDateMode(mode as DateMode)
-    if (mode === 'custom') {
-      if (dateInputRef.current) {
-        dateInputRef.current.value = latestDate
-      }
-      setCommittedDate(latestDate)
-    }
-    setCurrentPage(1)
-  }
-
-  const handleSortChange = (column: SortColumn) => {
-    if (sortColumn === column) {
-      setSortAsc((prev) => !prev)
-    } else {
-      setSortColumn(column)
-      setSortAsc(true)
-    }
-    setCurrentPage(1)
-  }
-
-  const handleSearchClear = () => {
-    setSearchInput('')
-    setSearchQuery('')
-    setCurrentPage(1)
-  }
-
   const filtered = (endpoints ?? []).filter((e) => {
     if (monitoredFilter === 'monitored' && e.tags?.monitored !== '1') {
       return false
@@ -166,30 +117,19 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
     if (monitoredFilter === 'not_monitored' && e.tags?.monitored === '1') {
       return false
     }
-    if (!searchQuery) return true
-    const q = searchQuery.toLowerCase()
+    if (!searchInput) return true
+    const q = searchInput.toLowerCase()
     const monitoredLabel =
       e.tags?.monitored === '1' ? 'monitored' : 'not monitored'
     return (
       e.service.toLowerCase().includes(q) ||
       e.group.toLowerCase().includes(q) ||
+      e.hostname.toLowerCase().includes(q) ||
       monitoredLabel.includes(q)
     )
   })
 
-  const sorted = [...filtered].sort((a, b) => {
-    let cmp = 0
-    if (sortColumn === 'service') {
-      cmp = a.service.localeCompare(b.service)
-    } else if (sortColumn === 'group') {
-      cmp = a.group.localeCompare(b.group)
-    } else {
-      const aVal = a.tags?.monitored ?? '0'
-      const bVal = b.tags?.monitored ?? '0'
-      cmp = aVal.localeCompare(bVal)
-    }
-    return sortAsc ? cmp : -cmp
-  })
+  const sorted = sortByField(filtered, sortColumn, sortAsc)
 
   const totalPages = Math.ceil(sorted.length / pageSize)
   const paginated = sorted.slice(
@@ -204,7 +144,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
           value={searchInput}
           onChange={setSearchInput}
           onClear={handleSearchClear}
-          placeholder="Search by service or group..."
+          placeholder="Search by service, URL or group..."
           className="!mb-0 flex-1 max-w-xs xl:max-w-none"
         />
         {tenantData?.metadata?.instance?.topology?.type !== 'GOCDB' && (
@@ -221,9 +161,9 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
           <div className="hidden xl:block h-8 w-px bg-line-strong me-1" />
           {dateMode === 'custom' && (
             <input
-              ref={dateInputRef}
               type="date"
-              defaultValue={latestDate || undefined}
+              value={dateInput}
+              onChange={handleDateInputChange}
               onClick={(e) => e.currentTarget.showPicker?.()}
               className="text-sm"
             />
@@ -240,10 +180,11 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
           <SelectDropdown
             value={monitoredFilter}
             onChange={(value) => {
-              setMonitoredFilter(value as 'monitored' | 'not_monitored')
+              setMonitoredFilter(value as 'all' | 'monitored' | 'not_monitored')
               setCurrentPage(1)
             }}
             options={[
+              { value: 'all', label: 'All' },
               { value: 'monitored', label: 'Monitored' },
               { value: 'not_monitored', label: 'Not monitored' },
             ]}
@@ -276,9 +217,9 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
             </th>
             <th className={`${thBase} min-w-24`}>
               <SortableColumnHeader
-                isActive={sortColumn === 'monitored'}
+                isActive={sortColumn === 'tags.monitored'}
                 isAscending={sortAsc}
-                onClick={() => handleSortChange('monitored')}
+                onClick={() => handleSortChange('tags.monitored')}
               >
                 Monitored
               </SortableColumnHeader>
