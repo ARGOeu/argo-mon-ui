@@ -3,6 +3,7 @@ import {
   XMarkIcon,
   PhotoIcon,
   CheckCircleIcon,
+  QuestionMarkCircleIcon,
 } from '@heroicons/react/16/solid'
 import { BanIcon, Columns2Icon, SquareIcon } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
@@ -11,6 +12,8 @@ import SelectGroup from './SelectGroup'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
+const labelClass = 'block text-sm font-medium text-body mb-1'
+
 interface BuildThemingTabProps {
   color: string
   logoUrl: string
@@ -18,6 +21,7 @@ interface BuildThemingTabProps {
   selectIcon: string
   selectText: string
   columns: string
+  themeOption: 'theme_1' | 'theme_2'
   onColorChange: (value: string) => void
   onLogoUrlChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   onRemoveLogo: (e: React.MouseEvent) => void
@@ -25,6 +29,7 @@ interface BuildThemingTabProps {
   onIconChange: (value: string) => void
   onTextChange: (value: string) => void
   onColumnsChange: (value: string) => void
+  onThemeOptionChange: (value: 'theme_1' | 'theme_2') => void
 }
 
 const BuildThemingTab = ({
@@ -34,6 +39,7 @@ const BuildThemingTab = ({
   selectIcon,
   selectText,
   columns,
+  themeOption,
   onColorChange,
   onLogoUrlChange,
   onRemoveLogo,
@@ -41,6 +47,7 @@ const BuildThemingTab = ({
   onIconChange,
   onTextChange,
   onColumnsChange,
+  onThemeOptionChange,
 }: BuildThemingTabProps) => {
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
@@ -86,9 +93,7 @@ const BuildThemingTab = ({
           </p>
           <div className="bg-white rounded-lg py-2 space-y-3 mt-1">
             <div>
-              <label className="block text-sm font-medium text-body mb-2">
-                Color:
-              </label>
+              <label className={labelClass}>Color:</label>
               <div className="flex items-center gap-3">
                 <input
                   type="color"
@@ -107,75 +112,103 @@ const BuildThemingTab = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-body mb-2">
-                Logo:
+              <label className="flex items-center gap-1 text-sm font-medium text-body mb-1">
+                Theme:
+                <div
+                  className="tooltip tooltip-right"
+                  data-tip="Select whether the public status page will feature a logo at the top."
+                >
+                  <QuestionMarkCircleIcon className="w-4.5 h-4.5 text-muted cursor-help" />
+                </div>
               </label>
-              <div
-                {...getRootProps()}
-                className={`border-2 border-dashed rounded-lg p-4 text-center cursor-pointer transition-colors flex flex-col items-center justify-center ${
-                  isDragActive
-                    ? 'border-blue-400 bg-brand-subtle'
-                    : 'border-line-strong bg-surface-muted hover:border-gray-400'
-                }`}
+              <SelectGroup
+                selected={themeOption}
+                onChange={(val) =>
+                  onThemeOptionChange(val as 'theme_1' | 'theme_2')
+                }
               >
-                <input {...getInputProps()} />
-                {logoPreview ? (
-                  <div className="relative flex flex-col items-center gap-2 w-full">
-                    <button
-                      type="button"
-                      onClick={onRemoveLogo}
-                      className="absolute -top-2 -right-2 bg-gray-600 hover:bg-gray-700 border-2 border-white rounded-full w-7 h-7 flex items-center justify-center z-10 shadow-md"
-                      aria-label="Remove logo"
-                    >
-                      <XMarkIcon className="w-5 h-5 text-white" />
-                    </button>
-                    <img
-                      alt="Logo"
-                      className="h-20 w-20 object-contain rounded"
-                      src={
-                        logoPreview?.startsWith('http') ||
-                        logoPreview?.startsWith('data:')
-                          ? logoPreview
-                          : `${BACKEND_API}${logoPreview}`
-                      }
-                    />
-                    <p className="text-sm text-muted">
-                      Click or drag to change
-                    </p>
-                  </div>
-                ) : (
-                  <>
-                    <div className="text-subtle mb-1">
-                      <PhotoIcon className="mx-auto h-10 w-10" />
-                    </div>
-                    <p className="text-sm text-muted">
-                      {isDragActive
-                        ? 'Drop logo here'
-                        : 'Drop logo here or click to upload'}
-                    </p>
-                  </>
-                )}
-              </div>
-              <div className="flex items-center my-2">
-                <div className="flex-1 border-b border-line-strong"></div>
-                <span className="px-3 text-xs text-muted font-medium uppercase">
-                  OR
-                </span>
-                <div className="flex-1 border-b border-line-strong"></div>
-              </div>
-              <input
-                type="url"
-                value={logoUrl}
-                onChange={onLogoUrlChange}
-                className="w-full"
-                placeholder="Enter logo URL"
-              />
+                <SelectGroup.Item value="theme_1">
+                  <PhotoIcon className="w-4" />
+                  <div>With Logo</div>
+                </SelectGroup.Item>
+                <SelectGroup.Item value="theme_2">
+                  <BanIcon className="w-4" />
+                  <div>No Logo</div>
+                </SelectGroup.Item>
+              </SelectGroup>
             </div>
 
+            {themeOption === 'theme_1' && (
+              <div>
+                <label className={labelClass}>Logo:</label>
+                <div
+                  {...getRootProps()}
+                  className={`border-2 border-dashed rounded-lg p-3 text-center cursor-pointer transition-colors flex flex-col items-center justify-center ${
+                    isDragActive
+                      ? 'border-blue-400 bg-brand-subtle'
+                      : 'border-line-strong bg-surface-muted hover:border-gray-400'
+                  }`}
+                >
+                  <input {...getInputProps()} />
+                  {logoPreview ? (
+                    <div className="relative flex flex-col items-center gap-1 w-full">
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          onRemoveLogo(e)
+                        }}
+                        className="absolute -top-1 -right-1 bg-gray-600 hover:bg-gray-700 rounded-full w-6 h-6 flex items-center justify-center z-10 shadow-md cursor-pointer"
+                        aria-label="Remove logo"
+                      >
+                        <XMarkIcon className="w-4 h-4 text-white" />
+                      </button>
+                      <img
+                        alt="Logo"
+                        className="w-24 w-h-24 object-contain rounded"
+                        src={
+                          logoPreview?.startsWith('http') ||
+                          logoPreview?.startsWith('data:')
+                            ? logoPreview
+                            : `${BACKEND_API}${logoPreview}`
+                        }
+                      />
+                      <p className="text-sm text-muted">
+                        Click or drag to change
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="text-subtle mb-1">
+                        <PhotoIcon className="mx-auto h-10 w-10" />
+                      </div>
+                      <p className="text-sm text-muted">
+                        {isDragActive
+                          ? 'Drop logo here'
+                          : 'Drop logo here or click to upload'}
+                      </p>
+                    </>
+                  )}
+                </div>
+                <div className="flex items-center my-2">
+                  <div className="flex-1 border-b border-line-strong"></div>
+                  <span className="px-3 text-xs text-muted font-medium uppercase">
+                    OR
+                  </span>
+                  <div className="flex-1 border-b border-line-strong"></div>
+                </div>
+                <input
+                  type="url"
+                  value={logoUrl}
+                  onChange={onLogoUrlChange}
+                  className="w-full"
+                  placeholder="Enter logo URL"
+                />
+              </div>
+            )}
+
             <div>
-              <label className="block text-sm font-medium text-body mb-2">
-                Status Icon:
-              </label>
+              <label className={labelClass}>Status Icon:</label>
               <SelectGroup selected={selectIcon} onChange={onIconChange}>
                 <SelectGroup.Item value="led">
                   <div
@@ -192,9 +225,7 @@ const BuildThemingTab = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-body mb-2">
-                Status Text:
-              </label>
+              <label className={labelClass}>Status Text:</label>
               <SelectGroup selected={selectText} onChange={onTextChange}>
                 <SelectGroup.Item value="text">
                   <div className="text-green-500">
@@ -203,7 +234,7 @@ const BuildThemingTab = ({
                   <div>Text</div>
                 </SelectGroup.Item>
                 <SelectGroup.Item value="badge">
-                  <div className="badge badge-success text-white">
+                  <div className="badge badge-success text-white px-2 py-1">
                     <small>OK</small>
                   </div>
                   <div>Badge</div>
@@ -216,9 +247,7 @@ const BuildThemingTab = ({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-body mb-2">
-                Status Columns:
-              </label>
+              <label className={labelClass}>Status Columns:</label>
               <SelectGroup selected={columns} onChange={onColumnsChange}>
                 <SelectGroup.Item value="one">
                   <SquareIcon className="w-4" />

@@ -17,6 +17,7 @@ interface BuildPagePreviewProps {
   selectIcon: string
   selectText: string
   report: string
+  themeOption: 'theme_1' | 'theme_2'
   groupsMutationIsPending: boolean
   onTitleChange: (value: string) => void
   onDescChange: (value: string) => void
@@ -42,6 +43,7 @@ const BuildPagePreview = ({
   selectIcon,
   selectText,
   report,
+  themeOption,
   groupsMutationIsPending,
   onTitleChange,
   onDescChange,
@@ -54,7 +56,7 @@ const BuildPagePreview = ({
   <div className="border border-line rounded-lg p-4 shadow-md w-full max-w-3xl self-start">
     <header style={{ backgroundColor: color }} className="p-3 mb-2 rounded-lg">
       <div className="flex flex-col items-center">
-        {logo && (
+        {logo && themeOption === 'theme_1' && (
           <img
             src={
               logo?.startsWith('http') || logo?.startsWith('data:')
