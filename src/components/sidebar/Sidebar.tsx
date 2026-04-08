@@ -8,6 +8,7 @@ import {
   DocumentChartBarIcon,
   ServerStackIcon,
   CircleStackIcon,
+  LockClosedIcon,
 } from '@heroicons/react/16/solid'
 import { useGetUserInvitations } from '@/hooks/useInvitations'
 import type { Tenant } from '@/types/tenants'
@@ -152,6 +153,13 @@ function Sidebar({
               <SidebarNavItem to="/administration" onClick={onCloseMobileMenu}>
                 <UserGroupIcon className="size-4" aria-hidden />
                 Administration
+              </SidebarNavItem>
+              <SidebarNavItem
+                to="/endpoints-access"
+                onClick={onCloseMobileMenu}
+              >
+                <LockClosedIcon className="size-4" aria-hidden />
+                Endpoints Access
               </SidebarNavItem>
             </div>
           )}
