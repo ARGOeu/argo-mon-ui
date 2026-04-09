@@ -43,7 +43,9 @@ export const Status = () => {
                 />
               </div>
 
-              {statusData.theming?.logo ? (
+              {(statusData.theming?.option === 'theme_1' ||
+                !statusData.theming?.option) &&
+              statusData.theming?.logo ? (
                 <div className="relative flex justify-center -mt-20">
                   <div className="bg-white rounded-full p-2 shadow-xl">
                     <img
@@ -66,7 +68,13 @@ export const Status = () => {
               ) : null}
 
               <div
-                className={`text-center pt-2 pb-3 px-24 ${statusData.theming?.logo ? 'mt-4' : 'mt-8'}`}
+                className={`text-center pt-2 pb-3 px-24 ${
+                  (statusData.theming?.option === 'theme_1' ||
+                    !statusData.theming?.option) &&
+                  statusData.theming?.logo
+                    ? 'mt-4'
+                    : 'mt-8'
+                }`}
                 style={{
                   backgroundColor: statusData.theming?.color || '#FFFFFF',
                 }}

@@ -57,6 +57,7 @@ export type PageThemingStatus = {
 }
 
 export type PageTheming = {
+  option?: 'theme_1' | 'theme_2'
   status: PageThemingStatus
   color?: string
   logo?: string

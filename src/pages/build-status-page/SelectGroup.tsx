@@ -47,10 +47,10 @@ const SelectGroup = ({ children, selected, onChange }: SelectGroupProps) => {
           <button
             key={item.value}
             onClick={() => handleClick(item.value)}
-            className={`btn ${
+            className={`btn h-9 px-3 text-sm ${
               isSelected
-                ? 'bg-gray-200 border-gray-400 hover:bg-gray-300'
-                : 'btn'
+                ? 'bg-brand-subtle border-brand text-brand hover:bg-brand-muted hover:border-brand font-medium'
+                : 'bg-surface-muted border-line text-body hover:bg-surface-strong hover:border-line-strong font-normal'
             }`}
           >
             {item.children}

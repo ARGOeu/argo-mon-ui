@@ -52,6 +52,9 @@ const BuildStatusPage = () => {
   const [saved, setSaved] = useState(false)
   const [selectIcon, setSelectIcon] = useState('led')
   const [selectText, setSelectText] = useState('none')
+  const [themeOption, setThemeOption] = useState<'theme_1' | 'theme_2'>(
+    'theme_1',
+  )
   const [color, setColor] = useState('#FFFFFF')
   const [logo, setLogo] = useState('')
   const [logoUrl, setLogoUrl] = useState('')
@@ -109,6 +112,7 @@ const BuildStatusPage = () => {
       setSaved(true)
       setSelectIcon(pageData.config?.theming?.status.icon || 'led')
       setSelectText(pageData.config?.theming?.status.text || 'none')
+      setThemeOption(pageData.config?.theming?.option || 'theme_1')
       setColor(pageData.config?.theming?.color || '')
       setLogo(pageData.config?.theming?.logo || '')
       if (pageData.config?.theming?.logo) {
@@ -157,6 +161,7 @@ const BuildStatusPage = () => {
         title,
         description: desc,
         theming: {
+          option: themeOption,
           status: { icon: selectIcon, text: selectText },
           logo:
             logo &&
@@ -477,6 +482,7 @@ const BuildStatusPage = () => {
                   selectIcon={selectIcon}
                   selectText={selectText}
                   columns={columns}
+                  themeOption={themeOption}
                   onColorChange={setColor}
                   onLogoUrlChange={handleLogoUrlChange}
                   onRemoveLogo={handleRemoveLogo}
@@ -484,6 +490,7 @@ const BuildStatusPage = () => {
                   onIconChange={setSelectIcon}
                   onTextChange={setSelectText}
                   onColumnsChange={setColumns}
+                  onThemeOptionChange={setThemeOption}
                 />
               </div>
             </div>
@@ -500,6 +507,7 @@ const BuildStatusPage = () => {
                 selectIcon={selectIcon}
                 selectText={selectText}
                 report={report}
+                themeOption={themeOption}
                 groupsMutationIsPending={groupsMutation.isPending}
                 onTitleChange={setTitle}
                 onDescChange={setDesc}
