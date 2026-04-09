@@ -524,6 +524,39 @@ export const notifyAmsCheckReadiness = async (
   return response.json()
 }
 
+export const notifyAms = async (
+  tenantId: string,
+  tenantName: string,
+  jobName: string,
+  token: string,
+): Promise<{ jobs: Job[] }> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/admin/tenants/${tenantId}/notify-ams`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({
+        name: jobName,
+        properties: {
+          tenant_name: tenantName,
+        },
+      }),
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
 export const setTenantNode = async (
   id: string,
   node: boolean,
