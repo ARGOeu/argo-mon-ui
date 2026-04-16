@@ -181,6 +181,14 @@ function App() {
                   }
                 />
                 <Route
+                  path="status-pages/tenants/:tenantId/build"
+                  element={
+                    <AuthProtected>
+                      <BuildStatusPage />
+                    </AuthProtected>
+                  }
+                />
+                <Route
                   path="status-pages/build"
                   element={
                     <AuthProtected>

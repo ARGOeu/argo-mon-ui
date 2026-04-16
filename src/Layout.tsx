@@ -109,7 +109,7 @@ function Layout() {
       {/* Page content */}
       <main className="flex-1 bg-white overflow-auto">
         <div
-          className={`${tDetsRoute ? '' : 'container mx-2 md:mx-auto p-4 md:px-6'}`}
+          className={`${tDetsRoute ? '' : 'container mx-2 md:mx-auto py-2 px-4 md:px-6'}`}
         >
           {!authenticated ? (
             <LoginPrompt
