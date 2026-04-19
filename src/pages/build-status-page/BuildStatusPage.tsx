@@ -154,7 +154,6 @@ const BuildStatusPage = () => {
     const data = {
       name,
       slug,
-      tenant_id: tenantId,
       'report-id': report,
       config: {
         groups: statusGroups,
@@ -404,15 +403,16 @@ const BuildStatusPage = () => {
             className="pb-1 mb-3"
           />
 
-          <div className="flex flex-row justify-between items-center mb-4">
+          <div className="flex flex-col md:flex-row justify-between md:items-center gap-3 md:gap-6 mb-1 md:mb-4">
             <Tabs
               tabs={buildTabs}
               activeTab={activeTab}
               onChange={(id) =>
                 setActiveTab(id as 'config' | 'items' | 'theming')
               }
+              className="flex-1 w-full"
             />
-            <div className="flex justify-end gap-4">
+            <div className="flex justify-end gap-4 w-full md:w-auto 2xl:mr-25">
               {saved && (
                 <Button
                   variant="outline-primary"
@@ -420,7 +420,7 @@ const BuildStatusPage = () => {
                   onClick={() => window.open(`/status/${slug}`, '_blank')}
                 >
                   View Page
-                  <ArrowTopRightOnSquareIcon className="size-4" />
+                  <ArrowTopRightOnSquareIcon className="size-4 flex-shrink-0" />
                 </Button>
               )}
               {activeTab !== 'config' && (
@@ -435,7 +435,7 @@ const BuildStatusPage = () => {
             className={
               activeTab === 'config'
                 ? ''
-                : 'flex flex-col xl:grid xl:grid-cols-[500px_1fr] 2xl:grid-cols-[720px_1fr] gap-8'
+                : 'flex flex-col xl:grid xl:grid-cols-[2fr_3fr] gap-8'
             }
           >
             <div
@@ -447,6 +447,9 @@ const BuildStatusPage = () => {
                   slug={slug}
                   tenantId={tenantId}
                   isEditMode={isEditMode}
+                  isTenantSelectionDisabled={
+                    isEditMode || Boolean(tenantIdParam)
+                  }
                   tenantsData={tenantsData}
                   reportsData={reportsData}
                   onNameChange={handleNameChange}

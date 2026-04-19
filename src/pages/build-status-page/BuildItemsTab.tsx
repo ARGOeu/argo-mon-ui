@@ -5,6 +5,8 @@ import { StatusItem } from './StatusItem'
 import type { StatusItemType, StatusGroupType } from '@/types/common'
 import type { ReportListItem } from '@/types/tenants'
 
+const labelClass = 'block text-sm font-medium text-body mb-1'
+
 interface BuildItemsTabProps {
   tenantId: string
   report: string
@@ -73,9 +75,7 @@ const BuildItemsTab = ({
           {tenantId && reportsData && reportsData.length > 0 && (
             <>
               <div>
-                <label className="block text-sm font-medium text-body mb-1">
-                  Report:
-                </label>
+                <label className={labelClass}>Report:</label>
                 <SelectDropdown
                   value={report}
                   onChange={onReportChange}
@@ -102,9 +102,7 @@ const BuildItemsTab = ({
                 ) : (
                   <>
                     <div className="mb-2">
-                      <label className="block text-sm font-medium text-body mb-1">
-                        Search Items:
-                      </label>
+                      <label className={labelClass}>Search Items:</label>
                       <input
                         type="text"
                         className="w-full"

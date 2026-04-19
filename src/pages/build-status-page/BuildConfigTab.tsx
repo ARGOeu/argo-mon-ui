@@ -2,11 +2,14 @@ import { CheckBadgeIcon } from '@heroicons/react/24/solid'
 import type { TenantList, ReportListItem } from '@/types/tenants'
 import SelectDropdown from '@/components/SelectDropdown'
 
+const labelClass = 'block text-sm font-medium text-body mb-1'
+
 interface BuildConfigTabProps {
   name: string
   slug: string
   tenantId: string
   isEditMode: boolean
+  isTenantSelectionDisabled: boolean
   tenantsData: TenantList | undefined
   reportsData: ReportListItem[] | undefined
   onNameChange: (value: string) => void
@@ -19,6 +22,7 @@ const BuildConfigTab = ({
   slug,
   tenantId,
   isEditMode,
+  isTenantSelectionDisabled,
   tenantsData,
   reportsData,
   onNameChange,
@@ -36,7 +40,7 @@ const BuildConfigTab = ({
 
       <div className="bg-white border border-line rounded-lg p-6 space-y-4">
         <div>
-          <label className="block text-sm font-medium text-body mb-2">
+          <label className={labelClass}>
             Name <span className="required">*</span>
           </label>
           <input
@@ -49,7 +53,7 @@ const BuildConfigTab = ({
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-body mb-2">
+          <label className={labelClass}>
             Path <span className="required">*</span>
           </label>
           <input
@@ -71,9 +75,9 @@ const BuildConfigTab = ({
         </p>
       </div>
 
-      <div className="bg-white border border-line rounded-lg p-6 space-y-4">
+      <div className="bg-white border border-line rounded-lg p-6 space-y-2">
         <div>
-          <label className="block text-sm font-medium text-body mb-2">
+          <label className={labelClass}>
             Tenant: <span className="required">*</span>
           </label>
           <SelectDropdown
@@ -88,17 +92,19 @@ const BuildConfigTab = ({
                 })) ?? []
             }
             placeholder="Select a tenant"
-            disabled={isEditMode}
+            disabled={isTenantSelectionDisabled}
           />
-          {isEditMode && (
+          {isTenantSelectionDisabled && (
             <p className="text-xs text-muted mt-1">
-              Tenant cannot be changed when editing a page
+              {isEditMode
+                ? 'Tenant cannot be changed when editing a status page'
+                : 'You are currently creating a status page for this specific tenant'}
             </p>
           )}
         </div>
 
         {!isEditMode && tenantId && reportsData && reportsData.length > 0 && (
-          <div className="p-3 bg-green-50 border border-green-200 rounded text-sm text-green-700 flex items-center">
+          <div className="p-2 bg-green-50 border border-green-200 rounded text-sm text-green-700 flex items-center">
             <CheckBadgeIcon className="size-5 inline-block me-2" />
             {reportsData.length} report{reportsData.length !== 1 ? 's' : ''}{' '}
             available

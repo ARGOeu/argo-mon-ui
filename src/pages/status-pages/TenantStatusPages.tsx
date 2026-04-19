@@ -120,7 +120,11 @@ const TenantStatusPages = () => {
           }
           className="pb-1 mb-2 md:mb-4 px-2 md:px-0"
         >
-          <Button variant="primary" size="md" href="/status-pages/build">
+          <Button
+            variant="primary"
+            size="md"
+            href={`/status-pages/tenants/${tenantId}/build`}
+          >
             Create Status Page
           </Button>
         </PageHeader>

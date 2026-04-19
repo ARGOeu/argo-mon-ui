@@ -34,13 +34,9 @@ export type UserPages = {
 }
 
 export type PageCreateRequest = {
-  id?: string
   name: string
   slug: string
-  tenant_id: string
   'report-id': string
-  created_at?: string
-  updated_at?: string
   config?: PageConfig
 }
 
