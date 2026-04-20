@@ -2,6 +2,7 @@ import { useState, Fragment } from 'react'
 import {
   useGetUserTenantStatus,
   useUpdateTenantStatusMutation,
+  useNotifyAmsMutation,
 } from '@/hooks/useTenants'
 import { useAuth } from '@/auth/useAuth'
 import {
@@ -82,6 +83,7 @@ const TenantStatusTab = ({ tenantId }: TenantStatusTabProps) => {
   } = useGetUserTenantStatus(tenantId, 10000) // Refetch every 10 seconds to keep status updated
 
   const updateStatusMutation = useUpdateTenantStatusMutation()
+  const notifyAmsMutation = useNotifyAmsMutation()
 
   const jobs = statusData && statusData.status.jobs
 
@@ -90,6 +92,31 @@ const TenantStatusTab = ({ tenantId }: TenantStatusTabProps) => {
       ...prev,
       [jobName]: !prev[jobName],
     }))
+  }
+
+  const handleRerunJob = (e: React.MouseEvent, job: Job) => {
+    e.stopPropagation()
+    if (!tenantId || !statusData?.name) return
+
+    toast.loading(`Notifying AMS to rerun ${job.name.toLowerCase()}...`)
+
+    notifyAmsMutation.mutate(
+      {
+        tenantId,
+        tenantName: statusData.name,
+        jobName: job.name,
+      },
+      {
+        onSuccess: () => {
+          toast.dismiss()
+          toast.success('Job execution triggered successfully')
+        },
+        onError: (error) => {
+          toast.dismiss()
+          toast.error(`Failed to rerun job: ${error.message}`)
+        },
+      },
+    )
   }
 
   const handleEditClick = (job: Job) => {
@@ -371,6 +398,25 @@ const TenantStatusTab = ({ tenantId }: TenantStatusTabProps) => {
                   )}
 
                   <div className="flex flex-col gap-2">
+                    {isSuperAdmin && job.mode !== 'MANUAL' && (
+                      <div className="flex flex-col items-start gap-1.5 border-b border-gray-50 pb-3 pt-1">
+                        <label className="text-sm font-medium text-body">
+                          Trigger manual notification to AMS
+                        </label>
+                        <Button
+                          size="sm"
+                          variant="outline-primary"
+                          onClick={(e) => handleRerunJob(e, job)}
+                          disabled={notifyAmsMutation.isPending}
+                        >
+                          {notifyAmsMutation.isPending ? (
+                            <LoadingSpinner size="xs" />
+                          ) : (
+                            'Rerun'
+                          )}
+                        </Button>
+                      </div>
+                    )}
                     <div className="flex justify-between items-center gap-4 py-1.5 pb-2 border-b border-gray-50 last:border-b-0">
                       <div className="grid grid-cols-1 gap-1 md:grid-cols-[120px_1fr] md:gap-3">
                         <span className="text-sm font-semibold text-muted px-1">

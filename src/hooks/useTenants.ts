@@ -26,6 +26,7 @@ import {
   fetchTenantMetricProfile,
   fetchTenantReadiness,
   notifyAmsCheckReadiness,
+  notifyAms,
   setTenantNode,
   setNodeReport,
 } from '@/api/tenants'
@@ -523,6 +524,35 @@ export const useCheckReadinessMutation = () => {
     },
     onError: (error) => {
       console.error('Failed to notify AMS check readiness:', error)
+    },
+  })
+}
+
+export const useNotifyAmsMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<
+    { jobs: Job[] },
+    Error,
+    { tenantId: string; tenantName: string; jobName: string }
+  >({
+    mutationFn: ({ tenantId, tenantName, jobName }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return notifyAms(tenantId, tenantName, jobName, token)
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['user-tenant-status', variables.tenantId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['user-tenants'],
+      })
+    },
+    onError: (error) => {
+      console.error('Failed to rerun AMS job:', error)
     },
   })
 }
