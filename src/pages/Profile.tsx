@@ -25,8 +25,7 @@ const profileGridClass = 'grid grid-cols-[200px_1fr] gap-6'
 export const Profile = () => {
   const { username } = useParams<{ username: string }>()
 
-  const { profile } = useAuth()
-  const isSuperAdmin = profile?.roles?.includes('super_admin')
+  const { isSuperAdmin, profile } = useAuth()
 
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
   const [tenantToRemove, setTenantToRemove] = useState<{

@@ -1,5 +1,5 @@
 import { CheckBadgeIcon } from '@heroicons/react/24/solid'
-import type { TenantList, ReportListItem } from '@/types/tenants'
+import type { ReportListItem, Tenant } from '@/types/tenants'
 import SelectDropdown from '@/components/SelectDropdown'
 
 const labelClass = 'block text-sm font-medium text-body mb-1'
@@ -10,7 +10,7 @@ interface BuildConfigTabProps {
   tenantId: string
   isEditMode: boolean
   isTenantSelectionDisabled: boolean
-  tenantsData: TenantList | undefined
+  tenantsData: Tenant[]
   reportsData: ReportListItem[] | undefined
   onNameChange: (value: string) => void
   onSlugChange: (value: string) => void
@@ -83,14 +83,12 @@ const BuildConfigTab = ({
           <SelectDropdown
             value={tenantId}
             onChange={onTenantChange}
-            options={
-              tenantsData?.content
-                .filter((tenant) => tenant.id)
-                .map((tenant) => ({
-                  value: tenant.id as string,
-                  label: tenant.info.name,
-                })) ?? []
-            }
+            options={tenantsData
+              .filter((tenant) => tenant.id)
+              .map((tenant) => ({
+                value: tenant.id as string,
+                label: tenant.info.name,
+              }))}
             placeholder="Select a tenant"
             disabled={isTenantSelectionDisabled}
           />

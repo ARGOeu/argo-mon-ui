@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
-import { useGetUserTenantById } from '@/hooks/useTenants'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '@/components/Button'
@@ -30,12 +30,12 @@ const TenantDetails = () => {
   }, [location.hash])
 
   const {
-    data: tenantData,
-    isLoading,
-    error,
-  } = useGetUserTenantById(tenantId || '')
+    tenant: tenantData,
+    isTenantLoading,
+    tenantError,
+  } = useSelectedTenant()
 
-  if (isLoading)
+  if (isTenantLoading)
     return (
       <div className="page-container">
         <div className="loading-container">
@@ -44,10 +44,10 @@ const TenantDetails = () => {
       </div>
     )
 
-  if (error)
+  if (tenantError)
     return (
       <div className="page-container p-12">
-        <ErrorDisplay error={error} context="tenant" />
+        <ErrorDisplay error={tenantError} context="tenant" />
       </div>
     )
 
@@ -62,7 +62,7 @@ const TenantDetails = () => {
     )
 
   return (
-    <div className="w-[100%] max-w-[1480px]">
+    <div className="w-full max-w-[1480px]">
       <header className="px-6 py-4">
         <div className="flex flex-col xl:flex-row items-start xl:items-center gap-4 xl:gap-6">
           <div className="flex w-full items-start justify-between xl:contents">

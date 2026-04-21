@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useGetTenantPages, useDeletePageMutation } from '@/hooks/usePages'
 import { useGetUserPages } from '@/hooks/useUsers'
-import { useGetUserTenants } from '@/hooks/useTenants'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import { toast } from 'sonner'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import Pagination from '@/components/Pagination'
@@ -18,7 +18,7 @@ const StatusPagesManagementTab = () => {
   const [tenantId, setTenantId] = useState<string>('')
   const [isAllSelected, setIsAllSelected] = useState<boolean>(true)
 
-  const { data: tenantsData } = useGetUserTenants(1, 100, undefined, true)
+  const { tenants } = useSelectedTenant()
 
   const {
     data: allUserPagesData,
@@ -145,10 +145,10 @@ const StatusPagesManagementTab = () => {
             options={
               [
                 { value: 'all', label: 'All' },
-                ...(tenantsData?.content.map((tenant) => ({
+                ...tenants.map((tenant) => ({
                   value: tenant.id ?? '',
                   label: tenant.info.name,
-                })) ?? []),
+                })),
               ] satisfies SelectOption[]
             }
             onChange={(value) => {

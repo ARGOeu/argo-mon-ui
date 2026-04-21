@@ -39,10 +39,8 @@ const TenantManagementTab = () => {
     name: string
   } | null>(null)
 
-  const { profile } = useAuth()
+  const { isSuperAdmin } = useAuth()
   const { data: userProfileData } = useGetUserProfile()
-
-  const isSuperAdmin = profile?.roles?.includes('super_admin')
 
   const { data, isLoading, error } = useGetUserTenants(
     currentPage,

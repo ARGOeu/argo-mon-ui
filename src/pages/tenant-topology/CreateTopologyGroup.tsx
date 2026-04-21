@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useGetUserTenantById } from '@/hooks/useTenants'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import {
   useGetTopologyGroups,
   useCreateTopologyGroupsMutation,
@@ -53,7 +53,7 @@ const CreateTopologyGroup = ({
   const navigate = useNavigate()
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { data: tenantData } = useGetUserTenantById(tenantId)
+  const { tenant: tenantData } = useSelectedTenant()
 
   const { data: latestGroups, isLoading: isLoadingLatest } =
     useGetTopologyGroups(tenantId, '')

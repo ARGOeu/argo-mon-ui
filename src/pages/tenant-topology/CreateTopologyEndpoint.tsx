@@ -5,7 +5,7 @@ import {
   useGetTopologyServiceTypes,
   useCreateTopologyEndpointMutation,
 } from '@/hooks/useTopology'
-import { useGetUserTenantById } from '@/hooks/useTenants'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
 import Button from '@/components/Button'
@@ -67,7 +67,7 @@ const CreateTopologyEndpoint = ({
   const navigate = useNavigate()
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const { data: tenantData } = useGetUserTenantById(tenantId)
+  const { tenant: tenantData } = useSelectedTenant()
 
   const { data: latestEndpoints, isLoading: isLoadingLatest } =
     useGetTopologyEndpoints(tenantId, '')

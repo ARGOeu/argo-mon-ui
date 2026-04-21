@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGroupsMutation } from '@/hooks/useGroups'
-import { useGetUserTenants, useGetTenantReports } from '@/hooks/useTenants'
+import { useGetTenantReports } from '@/hooks/useTenants'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import {
   useSavePageMutation,
   useGetPageQuery,
@@ -73,7 +74,7 @@ const BuildStatusPage = () => {
   } = useGetPageQuery(tenantId || '', pageId || '')
   const groupsMutation = useGroupsMutation()
 
-  const { data: tenantsData } = useGetUserTenants(1, 100, undefined, true)
+  const { tenants: tenantsData } = useSelectedTenant()
   const { data: reportsData, isLoading: reportsLoading } = useGetTenantReports(
     tenantId,
     undefined,

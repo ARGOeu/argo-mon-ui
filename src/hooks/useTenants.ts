@@ -127,6 +127,28 @@ export const useGetUserTenants = (
   })
 }
 
+export const useGetAllTenants = (enabled: boolean = true) => {
+  const { token } = useAuth()
+
+  return useInfiniteQuery<TenantList, Error>({
+    queryKey: ['user-tenants', 'all'],
+    queryFn: ({ pageParam = 1 }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      return fetchUserTenants(token, pageParam as number, 10)
+    },
+    getNextPageParam: (lastPage) => {
+      const currentPage = lastPage.number_of_page
+      const totalPages = lastPage.total_pages
+      return currentPage < totalPages ? currentPage + 1 : undefined
+    },
+    initialPageParam: 1,
+    retry: false,
+    enabled: enabled && !!token,
+  })
+}
+
 export const useGetUserTenantById = (id: string, enabled: boolean = true) => {
   const { token } = useAuth()
 

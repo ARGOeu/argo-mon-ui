@@ -86,7 +86,7 @@ function Sidebar({
                   <HomeIcon className="size-4" aria-hidden />
                   Overview
                 </SidebarNavItem>
-                {isAdminOfTenant && (
+                {(isSuperAdmin || isAdminOfTenant) && (
                   <SidebarNavItem
                     to={`/tenants/${effectiveTenantId}/topology`}
                     onClick={onCloseMobileMenu}
@@ -116,7 +116,7 @@ function Sidebar({
                   <ShieldCheckIcon className="size-4" aria-hidden />
                   Capabilities
                 </SidebarNavItem>
-                {isAdminOfTenant && (
+                {(isSuperAdmin || isAdminOfTenant) && (
                   <SidebarNavItem
                     to={`/tenants/${effectiveTenantId}/members`}
                     onClick={onCloseMobileMenu}

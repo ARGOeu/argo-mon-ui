@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/16/solid'
-import { useGetUserTenantById } from '@/hooks/useTenants'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import {
   useGetTopologyGroups,
   useCreateTopologyGroupsMutation,
@@ -34,7 +34,7 @@ interface TopologyGroupsProps {
 }
 
 const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
-  const { data: tenantData } = useGetUserTenantById(tenantId)
+  const { tenant: tenantData } = useSelectedTenant()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [groupToDelete, setGroupToDelete] = useState<{
     group: GroupTopologyItem
@@ -163,10 +163,10 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
         </div>
       </div>
 
-      <DataTable tableClassName="table-fixed">
+      <DataTable>
         <thead className="bg-surface-strong border-b border-line">
           <tr>
-            <th className={`${thBase} w-[30%]`}>
+            <th className={`${thBase} w-[25%]`}>
               <SortableColumnHeader
                 isActive={sortColumn === 'subgroup'}
                 isAscending={sortAsc}
@@ -175,9 +175,9 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
                 Group
               </SortableColumnHeader>
             </th>
-            <th className={`${thBase} w-[40%]`}>Contacts</th>
-            <th className={`${thBase} w-[15%]`}>Date</th>
-            {showActions && <th className={`${thBase} w-[8%]`}>Actions</th>}
+            <th className={`${thBase}`}>Contacts</th>
+            <th className={`${thBase} w-44`}>Date</th>
+            {showActions && <th className={`${thBase} w-30`}>Actions</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
@@ -224,7 +224,7 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
                   {group.notifications?.contacts?.length ? (
                     <div className="flex flex-wrap gap-x-2 gap-y-0.5">
                       {group.notifications.contacts.map((contact, i, arr) => (
-                        <span key={contact}>
+                        <span key={contact} className="truncate">
                           {contact}
                           {i < arr.length - 1 ? ',' : ''}
                         </span>

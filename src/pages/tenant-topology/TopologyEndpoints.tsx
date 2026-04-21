@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/16/solid'
-import { useGetUserTenantById } from '@/hooks/useTenants'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import {
   useGetTopologyEndpoints,
   useCreateTopologyEndpointMutation,
@@ -35,7 +35,7 @@ interface TopologyEndpointsProps {
 }
 
 const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
-  const { data: tenantData } = useGetUserTenantById(tenantId)
+  const { tenant: tenantData } = useSelectedTenant()
   const [monitoredFilter, setMonitoredFilter] = useState<
     'all' | 'monitored' | 'not_monitored'
   >('all')
