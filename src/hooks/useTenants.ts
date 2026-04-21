@@ -29,6 +29,8 @@ import {
   notifyAms,
   setTenantNode,
   setNodeReport,
+  fetchTenantCapabilityAvailability,
+  fetchTenantCapabilityStatus,
 } from '@/api/tenants'
 import type {
   Job,
@@ -41,6 +43,10 @@ import type {
   ReportDetail,
   MetricProfileResponse,
   TenantReadinessResponse,
+  CapabilityAvailabilityResponse,
+  CapabilityAvailabilityParams,
+  CapabilityStatusResponse,
+  CapabilityStatusParams,
 } from '@/types/tenants'
 import type { ProjectList } from '@/types/projects'
 
@@ -621,5 +627,41 @@ export const useSetNodeReportMutation = () => {
     onError: (error) => {
       console.error('Set node report error:', error)
     },
+  })
+}
+
+export const useGetTenantCapabilityAvailability = (
+  tenantId: string,
+  params: CapabilityAvailabilityParams = {},
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+  return useQuery<CapabilityAvailabilityResponse, Error>({
+    queryKey: ['tenant-capability-availability', tenantId, params],
+    queryFn: () => {
+      if (!token) throw new Error('No authentication token available')
+      if (!tenantId) throw new Error('Tenant ID is required')
+      return fetchTenantCapabilityAvailability(tenantId, params, token)
+    },
+    retry: false,
+    enabled: enabled && !!token && !!tenantId,
+  })
+}
+
+export const useGetTenantCapabilityStatus = (
+  tenantId: string,
+  params: CapabilityStatusParams = {},
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+  return useQuery<CapabilityStatusResponse, Error>({
+    queryKey: ['tenant-capability-status', tenantId, params],
+    queryFn: () => {
+      if (!token) throw new Error('No authentication token available')
+      if (!tenantId) throw new Error('Tenant ID is required')
+      return fetchTenantCapabilityStatus(tenantId, params, token)
+    },
+    retry: false,
+    enabled: enabled && !!token && !!tenantId,
   })
 }

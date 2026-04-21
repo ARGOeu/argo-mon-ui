@@ -217,3 +217,46 @@ export type TenantReadinessResponse = {
   }
   data: TenantReadinessData
 }
+
+export type CapabilityAvailabilityResult = {
+  date: string
+  availability: string
+}
+
+export type CapabilityAvailabilityData = {
+  name: string
+  results: CapabilityAvailabilityResult[]
+}
+
+export type CapabilityAvailabilityResponse = {
+  data: CapabilityAvailabilityData[]
+}
+
+export type CapabilityAvailabilityParams = {
+  date?: string
+  start_date?: string
+  end_date?: string
+  start_time?: string
+  end_time?: string
+  granularity?: string
+}
+
+export type CapabilityStatusResult = {
+  timestamp: string
+  value: string
+}
+
+export type CapabilityStatusData = {
+  name: string
+  results: CapabilityStatusResult[]
+}
+
+export type CapabilityStatusResponse = {
+  data: CapabilityStatusData[]
+}
+
+export type CapabilityStatusParams = {
+  start_time?: string
+  end_time?: string
+  history?: boolean
+}

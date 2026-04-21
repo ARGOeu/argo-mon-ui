@@ -1,217 +1,14 @@
+import { ArrowBigUp, ClockIcon, Rows4, ZapIcon } from 'lucide-react'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
 import {
-  ArrowBigUp,
-  Check,
-  ChevronRight,
-  ClockIcon,
-  CopyIcon,
-  Lock,
-  Play,
-  Rows4,
-  SquareArrowOutUpRight,
-  ZapIcon,
-} from 'lucide-react'
-import { useEffect, useRef, useState, type ReactElement } from 'react'
+  useGetTenantCapabilityAvailability,
+  useGetTenantCapabilityStatus,
+} from '@/hooks/useTenants'
+import CapabilityCard from './CapabilityCard'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
-
-interface CapabilityEndpointProps {
-  label: string
-  url: string
-  isApi?: boolean
-  apiDoc?: string
-  apiAccess?: string
-}
-
-interface Stats {
-  name: string
-  value: number
-  colorClass?: string
-}
-
-interface CapabilityCardProps {
-  title: string
-  description: string
-  icon: ReactElement
-  uiUrl: string
-  apiUrl: string
-  apiDoc?: string
-  apiAccess?: string
-  colorClass: string
-  docUrl: string
-  stats?: Stats[]
-}
-
-const CapabilityEndpoint = ({
-  label,
-  url,
-  isApi = false,
-  apiDoc = '',
-  apiAccess = '',
-}: CapabilityEndpointProps) => {
-  const [copied, setCopied] = useState(false)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    }
-  }, [])
-
-  const copyToClipboard = async (): Promise<void> => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    try {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      timeoutRef.current = setTimeout(() => setCopied(false), 300)
-    } catch (err) {
-      console.error('Failed to copy:', err)
-    }
-  }
-
-  return (
-    <div className="group relative">
-      <span className="text-[9px] font-bold uppercase text-slate-400 tracking-widest leading-none">
-        {label}
-      </span>
-      <div
-        className={`mt-1 flex flex-col rounded-md border transition-all duration-200 ${
-          isApi
-            ? 'bg-slate-900 border-slate-800 hover:border-slate-700 shadow-inner'
-            : 'bg-white border-slate-200 hover:border-blue-300'
-        }`}
-      >
-        <div className="flex items-center justify-between p-2">
-          <code
-            className={`text-xs truncate font-mono font-medium ${isApi ? (copied ? 'text-black bg-green-300' : 'text-emerald-400') : 'text-blue-600'}`}
-          >
-            {url}
-          </code>
-          {isApi ? (
-            <button
-              onClick={copyToClipboard}
-              className="ml-2 p-1 text-slate-400 hover:text-blue-500 transition-colors focus:outline-none hover:cursor-pointer"
-            >
-              {copied ? (
-                <Check size={14} className="text-emerald-400" />
-              ) : (
-                <CopyIcon size={14} />
-              )}
-            </button>
-          ) : (
-            <a
-              target="_blank"
-              href={url}
-              className="ml-2 p-1 text-slate-400 hover:text-blue-600 transition-colors"
-            >
-              <SquareArrowOutUpRight size={14} />
-            </a>
-          )}
-        </div>
-        {isApi && (
-          <div className="flex gap-1.5 px-2 pb-2 pt-0.5 justify-end">
-            <a
-              target="_blank"
-              href={apiAccess}
-              className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-all cursor-pointer border border-slate-700"
-            >
-              <div className="flex items-center">
-                <Lock size={10} className="inline me-1.5" />
-                Get Credentials
-              </div>
-            </a>
-            <a
-              target="_blank"
-              href={apiDoc}
-              className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-all cursor-pointer border border-slate-700"
-            >
-              <div className="flex items-center">
-                <Play size={10} className="inline me-1.5" />
-                Try Request
-              </div>
-            </a>
-          </div>
-        )}
-      </div>
-    </div>
-  )
-}
-
-const CapabilityCard = ({
-  title,
-  description,
-  icon,
-  uiUrl,
-  apiUrl,
-  apiDoc,
-  apiAccess,
-  colorClass,
-  docUrl,
-  stats,
-}: CapabilityCardProps) => {
-  return (
-    <div className="flex flex-col bg-white rounded-xl border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300 overflow-hidden">
-      <div className="p-4 flex-1">
-        <div className="flex items-start justify-between mb-3">
-          <div className="flex items-center gap-2.5">
-            <div className={`p-2 rounded-lg shadow-sm ${colorClass}`}>
-              <div className="scale-90">{icon}</div>
-            </div>
-            <h2 className="text-base font-bold text-slate-800 tracking-tight">
-              {title}
-            </h2>
-          </div>
-          <div className="flex items-center gap-3">
-            {stats &&
-              stats.map((item) => (
-                <div
-                  key={item.name}
-                  className="flex flex-col items-end border-l border-slate-100 pl-3"
-                >
-                  <span className="text-[9px] font-bold uppercase text-slate-400 tracking-wider">
-                    {item.name || 'Stat'}
-                  </span>
-                  <span
-                    className={`text-xl font-black ${item.colorClass ? item.colorClass : item.value > 90 ? 'text-green-600' : item.value > 70 ? 'text-amber-600' : 'text-red-600'} leading-none mt-0.5`}
-                  >
-                    {item.value}
-                  </span>
-                </div>
-              ))}
-          </div>
-        </div>
-
-        <p className="text-sm text-slate-500 mb-4 leading-normal">
-          {description}
-        </p>
-
-        <div className="space-y-3">
-          <CapabilityEndpoint label="User Interface" url={uiUrl} />
-          <CapabilityEndpoint
-            label="API Access"
-            url={apiUrl}
-            isApi={true}
-            apiAccess={apiAccess}
-            apiDoc={apiDoc}
-          />
-        </div>
-      </div>
-
-      <div className="px-4 py-2.5 bg-slate-50 border-t border-slate-100 flex justify-end items-center">
-        <a
-          href={docUrl}
-          target="_blank"
-          className="group hover:cursor-pointer flex items-center gap-1 text-[10px] font-bold text-slate-400 hover:text-blue-600 transition-colors uppercase tracking-widest"
-        >
-          View Documentation
-          <ChevronRight className="w-3 h-3 transform group-hover:translate-x-0.5 transition-transform" />
-        </a>
-      </div>
-    </div>
-  )
-}
 
 const TenantCapabilitiesTab = () => {
   const {
@@ -219,6 +16,64 @@ const TenantCapabilitiesTab = () => {
     isTenantLoading,
     tenantError,
   } = useSelectedTenant()
+
+  const { data: availabilityData } = useGetTenantCapabilityAvailability(
+    tenantData?.id || '',
+  )
+  const { data: statusData } = useGetTenantCapabilityStatus(
+    tenantData?.id || '',
+  )
+
+  const availabilityStats = (() => {
+    const results = availabilityData?.data?.[0]?.results ?? []
+    if (results.length === 0) {
+      return undefined
+    }
+    const values = results
+      .map((result) => parseFloat(result.availability))
+      .filter((value) => !isNaN(value))
+    if (values.length === 0) {
+      return undefined
+    }
+    const avg =
+      Math.round(
+        (values.reduce((sum, value) => sum + value, 0) / values.length) * 10,
+      ) / 10
+    return [{ name: 'Avg Avail', value: avg }]
+  })()
+
+  const statusStats = (() => {
+    const results = statusData?.data?.[0]?.results ?? []
+    if (results.length === 0) {
+      return undefined
+    }
+    const count = (value: string) =>
+      results.filter((result) => result.value === value).length
+    return [
+      { name: 'Operational', value: count('OK'), colorClass: 'text-green-600' },
+      {
+        name: 'Warning',
+        value: count('WARNING'),
+        colorClass: 'text-amber-500',
+      },
+      {
+        name: 'Critical',
+        value: count('CRITICAL'),
+        colorClass: 'text-red-500',
+      },
+      {
+        name: 'Unknown',
+        value: count('UNKNOWN'),
+        colorClass: 'text-slate-400',
+      },
+      { name: 'Missing', value: count('MISSING'), colorClass: 'text-blue-500' },
+      {
+        name: 'Downtime',
+        value: count('DOWNTIME'),
+        colorClass: 'text-slate-500',
+      },
+    ].filter((s) => s.value > 0)
+  })()
 
   if (isTenantLoading)
     return (
@@ -243,7 +98,7 @@ const TenantCapabilitiesTab = () => {
         apiAccess={`${BACKEND_API}/oidc-client`}
         icon={<ClockIcon />}
         docUrl="https://argoeu.github.io/argo-monitoring/docs/reports/ar#availability"
-        stats={[{ name: 'Avg Avail', value: 98.3 }]}
+        stats={availabilityStats}
       />
 
       <CapabilityCard
@@ -256,10 +111,7 @@ const TenantCapabilitiesTab = () => {
         apiAccess={`${BACKEND_API}/oidc-client`}
         icon={<Rows4 />}
         docUrl="https://argoeu.github.io/argo-monitoring/docs/reports/status_timelines"
-        stats={[
-          { name: 'Warnings', value: 8, colorClass: 'text-amber-500' },
-          { name: 'Critical', value: 10, colorClass: 'text-red-500' },
-        ]}
+        stats={statusStats}
       />
 
       <CapabilityCard

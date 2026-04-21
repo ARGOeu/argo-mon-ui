@@ -8,6 +8,10 @@ import type {
   ReportDetail,
   MetricProfileResponse,
   TenantReadinessResponse,
+  CapabilityAvailabilityResponse,
+  CapabilityAvailabilityParams,
+  CapabilityStatusResponse,
+  CapabilityStatusParams,
 } from '@/types/tenants'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
@@ -544,6 +548,92 @@ export const notifyAms = async (
           tenant_name: tenantName,
         },
       }),
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchTenantCapabilityAvailability = async (
+  tenantId: string,
+  params: CapabilityAvailabilityParams = {},
+  token: string,
+): Promise<CapabilityAvailabilityResponse> => {
+  const query = new URLSearchParams()
+  if (params.date) {
+    query.append('date', params.date)
+  }
+  if (params.start_date) {
+    query.append('start_date', params.start_date)
+  }
+  if (params.end_date) {
+    query.append('end_date', params.end_date)
+  }
+  if (params.start_time) {
+    query.append('start_time', params.start_time)
+  }
+  if (params.end_time) {
+    query.append('end_time', params.end_time)
+  }
+  if (params.granularity) {
+    query.append('granularity', params.granularity)
+  }
+  const queryString = query.toString()
+
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/capabilities/availability${queryString ? `?${queryString}` : ''}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchTenantCapabilityStatus = async (
+  tenantId: string,
+  params: CapabilityStatusParams = {},
+  token: string,
+): Promise<CapabilityStatusResponse> => {
+  const query = new URLSearchParams()
+  if (params.start_time) {
+    query.append('start_time', params.start_time)
+  }
+  if (params.end_time) {
+    query.append('end_time', params.end_time)
+  }
+  if (params.history !== undefined) {
+    query.append('history', String(params.history))
+  }
+
+  const queryString = query.toString()
+
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/capabilities/status${queryString ? `?${queryString}` : ''}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
     },
   )
 
