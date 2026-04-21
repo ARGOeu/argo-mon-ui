@@ -20,7 +20,7 @@ const Administration = () => {
   const location = useLocation()
   const [activeTab, setActiveTab] = useState<ActiveTab>('tenants')
 
-  const { profile } = useAuth()
+  const { isSuperAdmin } = useAuth()
 
   useEffect(() => {
     const hash = location.hash
@@ -36,8 +36,6 @@ const Administration = () => {
       setActiveTab('tenants')
     }
   }, [location.hash])
-  const isSuperAdmin = profile?.roles?.includes('super_admin')
-
   if (!isSuperAdmin) {
     return (
       <div className="page-container">

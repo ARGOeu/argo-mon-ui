@@ -1,18 +1,14 @@
 import { useParams } from 'react-router-dom'
-import { useGetUserTenantById } from '@/hooks/useTenants'
 import { useAuth } from '@/auth/useAuth'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import PageHeader from '@/components/PageHeader'
 import TenantCapabilitiesTab from './TenantCapabilitiesTab'
 import NodeConfigPanel from './NodeConfigPanel'
 
 const TenantCapabilities = () => {
   const { id } = useParams<{ id: string }>()
-  const { profile } = useAuth()
-  const { data: tenantData } = useGetUserTenantById(id || '')
-  const isSuperAdmin = profile?.roles?.includes('super_admin')
-  const isTenantAdmin = profile?.groups?.some(
-    (g) => g.name === tenantData?.info.name && g.role === 'admin',
-  )
+  const { isSuperAdmin } = useAuth()
+  const { tenant, isTenantAdmin } = useSelectedTenant()
   const canConfigureNode = isSuperAdmin || isTenantAdmin
 
   return (
@@ -22,20 +18,18 @@ const TenantCapabilities = () => {
         subtitle={
           <>
             Explore capabilities for tenant{' '}
-            <strong>
-              {tenantData?.info.name ? tenantData.info.name : '...'}
-            </strong>
+            <strong>{tenant?.info.name ? tenant.info.name : '...'}</strong>
           </>
         }
         className="pb-2 mb-2"
       />
-      {canConfigureNode && tenantData !== undefined && (
+      {canConfigureNode && tenant !== undefined && (
         <NodeConfigPanel
           tenantId={id || ''}
-          currentNode={tenantData.node ?? false}
+          currentNode={tenant.node ?? false}
         />
       )}
-      <TenantCapabilitiesTab tenantId={id || ''} />
+      <TenantCapabilitiesTab />
     </div>
   )
 }

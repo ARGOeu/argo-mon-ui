@@ -25,8 +25,7 @@ const UsersTab = () => {
   const [sortDirection, setSortDirection] = useState<SortDirection>('asc')
   const [currentPage, setCurrentPage] = useState(1)
 
-  const { profile } = useAuth()
-  const isSuperAdmin = profile?.roles?.includes('super_admin')
+  const { isSuperAdmin } = useAuth()
 
   useEffect(() => {
     const timer = setTimeout(() => {

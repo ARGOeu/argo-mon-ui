@@ -1,6 +1,6 @@
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
-import { useGetUserTenantById } from '@/hooks/useTenants'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import {
   ArrowBigUp,
   Check,
@@ -213,21 +213,21 @@ const CapabilityCard = ({
   )
 }
 
-interface TenantCapabilitiesTabProps {
-  tenantId: string
-}
+const TenantCapabilitiesTab = () => {
+  const {
+    tenant: tenantData,
+    isTenantLoading,
+    tenantError,
+  } = useSelectedTenant()
 
-const TenantCapabilitiesTab = ({ tenantId }: TenantCapabilitiesTabProps) => {
-  const { data: tenantData, isLoading, error } = useGetUserTenantById(tenantId)
-
-  if (isLoading)
+  if (isTenantLoading)
     return (
       <div className="flex justify-center p-8">
         <LoadingSpinner />
       </div>
     )
 
-  if (error) return <ErrorDisplay error={error} context="tenant" />
+  if (tenantError) return <ErrorDisplay error={tenantError} context="tenant" />
 
   if (!tenantData) return null
 

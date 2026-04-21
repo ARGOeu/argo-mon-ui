@@ -1,10 +1,10 @@
 import { useState, useEffect, useRef } from 'react'
 import {
   useGetTenantReadiness,
-  useGetUserTenantById,
   useCheckReadinessMutation,
   useGetUserTenantStatus,
 } from '@/hooks/useTenants'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '@/components/Button'
@@ -23,8 +23,8 @@ const TenantReadinessTab = ({ tenantId }: TenantReadinessTabProps) => {
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const [isRecentlyChecked, setIsRecentlyChecked] = useState(false)
 
-  const { data: tenantData, isLoading: tenantLoading } =
-    useGetUserTenantById(tenantId)
+  const { tenant: tenantData, isTenantLoading: tenantLoading } =
+    useSelectedTenant()
 
   const {
     data: readinessData,

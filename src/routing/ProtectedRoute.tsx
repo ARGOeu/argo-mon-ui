@@ -15,7 +15,7 @@ function ProtectedRoute({
   requiredRoles,
   redirectTo = '/',
 }: RoleProtectedProps) {
-  const { initialized, authenticated, profile } = useAuth()
+  const { initialized, authenticated, isSuperAdmin, profile } = useAuth()
   const location = useLocation()
   const [profileTimeout, setProfileTimeout] = useState(false)
 
@@ -50,8 +50,6 @@ function ProtectedRoute({
       </div>
     )
   }
-
-  const isSuperAdmin = profile?.roles?.includes('super_admin')
 
   const hasRequiredRole = (() => {
     if (isSuperAdmin) {

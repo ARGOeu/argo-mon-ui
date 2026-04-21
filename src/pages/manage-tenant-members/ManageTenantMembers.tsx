@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useParams } from 'react-router-dom'
-import { useGetUserTenantById } from '@/hooks/useTenants'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import { useAuth } from '@/auth/useAuth'
+import { useParams } from 'react-router-dom'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import PageHeader from '@/components/PageHeader'
 import Tabs from '@/components/Tabs'
@@ -12,12 +12,8 @@ import AddDirectTab from './AddDirectTab'
 
 const ManageTenantMembers = () => {
   const { id: tenantId } = useParams<{ id: string }>()
-  const { profile } = useAuth()
-  const { data: tenantData, error: tenantError } = useGetUserTenantById(
-    tenantId || '',
-  )
-
-  const isSuperAdmin = profile?.roles?.includes('super_admin')
+  const { isSuperAdmin } = useAuth()
+  const { tenant: tenantData, tenantError } = useSelectedTenant()
 
   const [activeTab, setActiveTab] = useState<
     'members' | 'invite' | 'add-direct' | 'invitations'

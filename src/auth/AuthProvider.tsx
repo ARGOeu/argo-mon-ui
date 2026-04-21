@@ -135,6 +135,8 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       redirectUri: import.meta.env.VITE_REDIRECT_URI || window.location.origin,
     })
 
+  const isSuperAdmin = !!profile?.roles?.includes('super_admin')
+
   return (
     <AuthContext.Provider
       value={{
@@ -143,6 +145,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         registered,
         token,
         profile,
+        isSuperAdmin,
         login,
         logout,
       }}

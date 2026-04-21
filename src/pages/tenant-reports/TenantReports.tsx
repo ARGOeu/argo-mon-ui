@@ -1,11 +1,11 @@
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import { useParams } from 'react-router-dom'
-import { useGetUserTenantById } from '@/hooks/useTenants'
 import PageHeader from '@/components/PageHeader'
 import TenantReportsContent from './TenantReportsContent'
 
 const TenantReports = () => {
   const { id } = useParams<{ id: string }>()
-  const { data: tenantData } = useGetUserTenantById(id || '')
+  const { tenant: tenantData } = useSelectedTenant()
 
   return (
     <div className="page-container">

@@ -34,9 +34,8 @@ const listContainerClass =
   'bg-surface-muted min-h-[300px] max-h-[400px] md:min-h-[400px] md:max-h-[500px] overflow-y-auto'
 
 const AssignProjects = () => {
-  const { profile } = useAuth()
+  const { isSuperAdmin } = useAuth()
   const { id: tenantId } = useParams<{ id: string }>()
-  const isSuperAdmin = profile?.roles?.includes('super_admin')
 
   const [allProjects, setAllProjects] = useState<ProjectItem[]>([])
   const [tenantProjectIds, setTenantProjectIds] = useState<string[]>([])

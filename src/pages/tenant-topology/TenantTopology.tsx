@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
-import { useGetUserTenantById } from '@/hooks/useTenants'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import PageHeader from '@/components/PageHeader'
 import Tabs from '@/components/Tabs'
 import TopologyEndpoints from './TopologyEndpoints'
@@ -20,7 +20,7 @@ const TenantTopology = () => {
   const { id } = useParams<{ id: string }>()
   const tenantId = id ?? ''
 
-  const { data: tenantData } = useGetUserTenantById(tenantId)
+  const { tenant: tenantData } = useSelectedTenant()
 
   const location = useLocation()
   const [activeTab, setActiveTab] = useState<

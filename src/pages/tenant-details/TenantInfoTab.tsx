@@ -1,8 +1,6 @@
 import { useEffect } from 'react'
-import {
-  useGetUserTenantById,
-  useGetUserTenantProjects,
-} from '@/hooks/useTenants'
+import { useGetUserTenantProjects } from '@/hooks/useTenants'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 
@@ -35,7 +33,11 @@ interface TenantInfoTabProps {
 }
 
 const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
-  const { data: tenantData, isLoading, error } = useGetUserTenantById(tenantId)
+  const {
+    tenant: tenantData,
+    isTenantLoading,
+    tenantError,
+  } = useSelectedTenant()
 
   const {
     data: projectsData,
@@ -50,14 +52,15 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
     }
   }, [projectsData, hasNextProjectsPage, fetchNextProjectsPage])
 
-  if (isLoading)
+  if (isTenantLoading)
     return (
       <div className="loading-container">
         <LoadingSpinner size="sm" />
       </div>
     )
 
-  if (error) return <ErrorDisplay error={error} context="tenant info" />
+  if (tenantError)
+    return <ErrorDisplay error={tenantError} context="tenant info" />
 
   if (!tenantData) return null
 
@@ -109,7 +112,7 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
             ))}
           </div>
         ) : (
-          <div className="w-fit max-w-[320px] min-w-[180px] bg-surface-muted rounded-lg py-2 px-4">
+          <div className={`${cardClass} w-fit max-w-[320px] min-w-[180px]`}>
             <p className={noDataClass}>No projects assigned</p>
           </div>
         )}
@@ -139,7 +142,7 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
             ))}
           </div>
         ) : (
-          <div className={cardClass}>
+          <div className={`${cardClass} w-fit max-w-[320px] min-w-[180px]`}>
             <p className={noDataClass}>No contacts available</p>
           </div>
         )}

@@ -68,9 +68,7 @@ interface TenantStatusTabProps {
 }
 
 const TenantStatusTab = ({ tenantId }: TenantStatusTabProps) => {
-  const { profile } = useAuth()
-
-  const isSuperAdmin = profile?.roles?.includes('super_admin')
+  const { isSuperAdmin } = useAuth()
   const [expandedJobs, setExpandedJobs] = useState<Record<string, boolean>>({})
   const [editingJob, setEditingJob] = useState<string | null>(null)
   const [selectedStatus, setSelectedStatus] = useState<JobStatus | null>(null)

@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import { useGetTenantPages, useDeletePageMutation } from '@/hooks/usePages'
-import { useGetUserTenantById } from '@/hooks/useTenants'
+import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import ConfirmDialog from '@/components/ConfirmDialog'
 import PageHeader from '@/components/PageHeader'
@@ -15,7 +15,7 @@ const TenantStatusPages = () => {
   const { id: tenantId } = useParams<{ id: string }>()
   const [currentPage, setCurrentPage] = useState(1)
 
-  const { data: tenantData } = useGetUserTenantById(tenantId ?? '')
+  const { tenant: tenantData } = useSelectedTenant()
 
   const { data, isLoading, error } = useGetTenantPages(
     tenantId ?? '',

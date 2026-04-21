@@ -17,6 +17,7 @@ export type AuthContextType = {
       role: string
     }>
   }
+  isSuperAdmin: boolean
   login: (redirectUri?: string) => void
   logout: () => void
 }
@@ -25,6 +26,7 @@ export const AuthContext = createContext<AuthContextType>({
   initialized: false,
   authenticated: false,
   registered: false,
+  isSuperAdmin: false,
   login: () => {},
   logout: () => {},
 })
