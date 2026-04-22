@@ -83,7 +83,7 @@ const NodeConfigPanel = ({ tenantId, currentNode }: NodeConfigPanelProps) => {
   }
 
   return (
-    <div className={isOpen ? 'mb-8' : 'mb-5'}>
+    <div className={isOpen ? 'mb-8' : 'mb-6'}>
       <p className="text-sm text-muted mb-1">
         Enable this tenant as a node and assign a default node report
       </p>
