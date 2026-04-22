@@ -34,7 +34,7 @@ const today = new Date().toISOString().split('T')[0]
 
 interface FormData {
   service: string
-  hostname: string
+  url: string
   tags: string[]
   group: string
   monitored: boolean
@@ -45,7 +45,7 @@ interface FormData {
 
 interface FormErrors {
   service: string
-  hostname: string
+  url: string
   group: string
   contacts: string[]
 }
@@ -87,7 +87,7 @@ const CreateTopologyEndpoint = ({
       const labelsTag = editingEndpoint.tags?.labels ?? ''
       return {
         service: editingEndpoint.service,
-        hostname: editingEndpoint.hostname,
+        url: editingEndpoint.tags?.info_URL ?? editingEndpoint.hostname,
         tags: labelsTag
           ? labelsTag
               .split(',')
@@ -110,7 +110,7 @@ const CreateTopologyEndpoint = ({
     }
     return {
       service: '',
-      hostname: '',
+      url: '',
       tags: [],
       group: '',
       monitored: true,
@@ -122,7 +122,7 @@ const CreateTopologyEndpoint = ({
 
   const [errors, setErrors] = useState<FormErrors>({
     service: '',
-    hostname: '',
+    url: '',
     group: '',
     contacts: [''],
   })
@@ -142,11 +142,11 @@ const CreateTopologyEndpoint = ({
     }
   }
 
-  const handleHostnameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target
-    setFormData((prev) => ({ ...prev, hostname: value }))
+    setFormData((prev) => ({ ...prev, url: value }))
     if (value.trim()) {
-      setErrors((prev) => ({ ...prev, hostname: '' }))
+      setErrors((prev) => ({ ...prev, url: '' }))
     }
   }
 
@@ -189,7 +189,7 @@ const CreateTopologyEndpoint = ({
   const handleSubmit = () => {
     const newErrors: FormErrors = {
       service: '',
-      hostname: '',
+      url: '',
       group: '',
       contacts: formData.contacts.map(() => ''),
     }
@@ -201,8 +201,8 @@ const CreateTopologyEndpoint = ({
       hasError = true
     }
 
-    if (!formData.hostname.trim()) {
-      newErrors.hostname = 'URL is required'
+    if (!formData.url.trim()) {
+      newErrors.url = 'URL is required'
       hasError = true
     }
 
@@ -232,11 +232,21 @@ const CreateTopologyEndpoint = ({
       return
     }
 
+    const fullUrl = formData.url.trim()
+    let extractedHostname = fullUrl
+    try {
+      extractedHostname = new URL(fullUrl).hostname
+    } catch (e) {
+      console.warn('Could not parse URL hostname:', e)
+    }
+
     const updatedFields = {
       service: formData.service,
-      hostname: formData.hostname.trim(),
+      hostname: extractedHostname,
       tags: {
         monitored: formData.monitored ? '1' : '0',
+        info_URL: fullUrl,
+        hostname: extractedHostname,
         ...(formData.tags.length > 0
           ? { labels: formData.tags.join(',') }
           : {}),
@@ -253,17 +263,18 @@ const CreateTopologyEndpoint = ({
     }
 
     const payload = isEditMode
-      ? [
-          ...(latestEndpoints ?? []).filter(
-            (e) => e.hostname !== editingEndpoint.hostname,
-          ),
-          {
-            ...editingEndpoint,
-            ...updatedFields,
-            group: formData.group,
-            date: today,
-          },
-        ]
+      ? (latestEndpoints ?? []).map((e) =>
+          (e.tags?.info_URL ?? e.hostname) ===
+            (editingEndpoint.tags?.info_URL ?? editingEndpoint.hostname) &&
+          e.service === editingEndpoint.service
+            ? {
+                ...editingEndpoint,
+                ...updatedFields,
+                group: formData.group,
+                date: today,
+              }
+            : e,
+        )
       : [
           ...(latestEndpoints ?? []),
           {
@@ -402,20 +413,18 @@ const CreateTopologyEndpoint = ({
             </label>
             <input
               type="text"
-              name="hostname"
-              value={formData.hostname}
-              onChange={handleHostnameChange}
+              name="url"
+              value={formData.url}
+              onChange={handleUrlChange}
               placeholder="Enter the endpoint URL"
               className={
-                errors.hostname
+                errors.url
                   ? '!border-red-500 focus:!border-red-500 focus:!ring-red-500/10'
                   : ''
               }
             />
-            {errors.hostname && (
-              <span className="text-xs text-red-500 mt-1">
-                {errors.hostname}
-              </span>
+            {errors.url && (
+              <span className="text-xs text-red-500 mt-1">{errors.url}</span>
             )}
           </div>
 
