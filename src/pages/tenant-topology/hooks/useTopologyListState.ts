@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 
 type DateMode = 'latest' | 'custom'
 
@@ -33,9 +34,13 @@ export const useTopologyListState = <TSort extends string>({
     setCurrentPage(1)
   }, [committedDate])
 
+  const { tenant } = useSelectedTenant()
+  const isGocdb = tenant?.metadata?.instance?.topology?.type === 'GOCDB'
+
   const showActions =
-    dateMode === 'latest' ||
-    (dateMode === 'custom' && committedDate === latestDate && !!latestDate)
+    !isGocdb &&
+    (dateMode === 'latest' ||
+      (dateMode === 'custom' && committedDate === latestDate && !!latestDate))
 
   const handleDateInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setDateInput(e.target.value)
