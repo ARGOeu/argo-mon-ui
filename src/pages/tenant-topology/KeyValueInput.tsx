@@ -47,9 +47,7 @@ const KeyValueInput = ({
     if (!disallowedKeys || !key.trim()) {
       return ''
     }
-    const match = disallowedKeys.find(
-      (dk) => dk.key.toLowerCase() === key.trim().toLowerCase(),
-    )
+    const match = disallowedKeys.find((dk) => dk.key === key.trim())
     return match?.message ?? ''
   }
 
