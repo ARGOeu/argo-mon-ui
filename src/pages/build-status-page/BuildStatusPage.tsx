@@ -13,7 +13,7 @@ import {
   CubeIcon,
   PaintBrushIcon,
 } from '@heroicons/react/16/solid'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import { useDragAndDrop } from '@formkit/drag-and-drop/react'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -37,6 +37,7 @@ const buildTabs: TabItem[] = [
 ]
 
 const BuildStatusPage = () => {
+  const navigate = useNavigate()
   const { tenantId: tenantIdParam, pageId } = useParams<{
     tenantId?: string
     pageId?: string
@@ -201,9 +202,12 @@ const BuildStatusPage = () => {
       savePageMutation.mutate(
         { tenantId, data },
         {
-          onSuccess: () => {
+          onSuccess: (data) => {
             toast.success('Page created successfully!')
             setSaved(true)
+            if (data.id) {
+              navigate(`/status-pages/tenants/${tenantId}/pages/${data.id}`)
+            }
           },
           onError: (error: Error & { errors?: string[] }) => {
             if (error.errors && error.errors.length > 0) {
@@ -421,7 +425,7 @@ const BuildStatusPage = () => {
                   onClick={() => window.open(`/status/${slug}`, '_blank')}
                 >
                   View Page
-                  <ArrowTopRightOnSquareIcon className="size-4 flex-shrink-0" />
+                  <ArrowTopRightOnSquareIcon className="size-4 shrink-0" />
                 </Button>
               )}
               {activeTab !== 'config' && (
