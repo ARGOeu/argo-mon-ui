@@ -116,8 +116,20 @@ const BuildItemsTab = ({
                       Drag and drop items to the preview panel to add them to a
                       group
                     </div>
-                    <div className="max-h-[500px] overflow-y-auto border border-line rounded px-4 py-1">
-                      <ul ref={parent}>
+                    <div className="max-h-[500px] overflow-y-auto border border-line rounded px-4 py-2 relative">
+                      {groupsFiltered.length === 0 && (
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-sm text-muted pointer-events-none text-xs text-subtle">
+                          Drop items here to unassign them
+                        </div>
+                      )}
+                      <ul
+                        ref={parent}
+                        className={
+                          groupsFiltered.length === 0
+                            ? 'min-h-16'
+                            : 'min-h-2 pb-2'
+                        }
+                      >
                         {(groupsFiltered ?? []).map((group) => (
                           <li key={group.name} className="my-2">
                             <StatusItem

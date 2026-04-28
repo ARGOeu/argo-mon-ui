@@ -598,6 +598,12 @@ export const useSetTenantNodeMutation = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['user-tenant', variables.id] })
       queryClient.invalidateQueries({ queryKey: ['user-tenants'] })
+      queryClient.invalidateQueries({
+        queryKey: ['tenant-capability-availability', variables.id],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['tenant-capability-status', variables.id],
+      })
     },
     onError: (error) => {
       console.error('Set tenant node error:', error)
@@ -622,6 +628,12 @@ export const useSetNodeReportMutation = () => {
       })
       queryClient.invalidateQueries({
         queryKey: ['user-tenant', variables.tenantId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['tenant-capability-availability', variables.tenantId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['tenant-capability-status', variables.tenantId],
       })
     },
     onError: (error) => {
