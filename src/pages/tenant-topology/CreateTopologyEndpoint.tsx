@@ -97,7 +97,10 @@ const CreateTopologyEndpoint = ({
         group: editingEndpoint.group,
         monitored: editingEndpoint.tags?.monitored === '1',
         metadata: Object.entries(editingEndpoint.tags ?? {})
-          .filter(([key]) => key !== 'monitored' && key !== 'labels')
+          .filter(
+            ([key]) =>
+              key !== 'monitored' && key !== 'labels' && key !== 'info_ID',
+          )
           .map(([key, value]) => ({ id: crypto.randomUUID(), key, value })),
         notificationsEnabled: editingEndpoint.notifications?.enabled ?? false,
         contacts: editingEndpoint.notifications?.contacts?.length
@@ -255,6 +258,9 @@ const CreateTopologyEndpoint = ({
             .filter((label) => label.key.trim())
             .map((label) => [label.key.trim(), label.value.trim()]),
         ),
+        ...(editingEndpoint?.tags?.info_ID
+          ? { info_ID: editingEndpoint.tags.info_ID }
+          : {}),
       },
       notifications: {
         enabled: formData.notificationsEnabled,
@@ -524,6 +530,22 @@ const CreateTopologyEndpoint = ({
               {
                 key: 'labels',
                 message: '"labels" cannot be used as a key',
+              },
+              {
+                key: 'monitored',
+                message: '"monitored" cannot be used as a key',
+              },
+              {
+                key: 'info_ID',
+                message: '"info_ID" cannot be used as a key',
+              },
+              {
+                key: 'info_URL',
+                message: '"info_URL" cannot be used as a key',
+              },
+              {
+                key: 'hostname',
+                message: '"hostname" cannot be used as a key',
               },
             ]}
           />
