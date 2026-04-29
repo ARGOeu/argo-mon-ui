@@ -59,12 +59,12 @@ function Sidebar({
 
   return (
     <aside
-      className={`w-56 md:w-60 xl:w-68 2xl:w-72 bg-surface-muted border-r border-line flex flex-col overflow-y-auto overflow-x-hidden fixed md:static inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
+      className={`w-56 md:w-60 xl:w-68 2xl:w-72 bg-surface-muted border-r border-line flex flex-col fixed md:static inset-y-0 left-0 z-40 transform transition-transform duration-300 ease-in-out ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
     >
       <SidebarHeader onCloseMobileMenu={onCloseMobileMenu} />
 
       {authenticated ? (
-        <nav className="flex-1 flex flex-col">
+        <nav className="flex flex-col overflow-y-auto min-h-0 max-h-[calc(100vh-10rem)]">
           {/* Tenant section */}
           <div>
             <SidebarSectionLabel>Tenant</SidebarSectionLabel>
@@ -169,11 +169,13 @@ function Sidebar({
       )}
 
       {authenticated && (
-        <SidebarFooter
-          profile={profile}
-          onCloseMobileMenu={onCloseMobileMenu}
-          onLogout={onLogout}
-        />
+        <div className="mt-auto">
+          <SidebarFooter
+            profile={profile}
+            onCloseMobileMenu={onCloseMobileMenu}
+            onLogout={onLogout}
+          />
+        </div>
       )}
     </aside>
   )
