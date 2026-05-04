@@ -47,9 +47,20 @@ function LayoutContent() {
 function Layout() {
   const { authenticated, login } = useAuth()
 
-  if (!authenticated)
+  if (!authenticated) {
     return (
       <div className="h-screen flex overflow-hidden">
+        <Sidebar
+          isMobileMenuOpen={false}
+          onCloseMobileMenu={() => {}}
+          authenticated={false}
+          isSuperAdmin={false}
+          userTenants={[]}
+          effectiveTenantId={null}
+          isAdminOfTenant={false}
+          profile={undefined}
+          onLogout={() => {}}
+        />
         <main className="flex-1 bg-white overflow-auto">
           <div className="container mx-2 md:mx-auto p-4 md:px-6">
             <LoginPrompt
@@ -61,6 +72,7 @@ function Layout() {
         </main>
       </div>
     )
+  }
 
   return (
     <SelectedTenantProvider>

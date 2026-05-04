@@ -162,7 +162,7 @@ const StatusPagesTable = ({
                   onClick={() =>
                     onDeleteClick(item.id, item.name, item.tenant_id)
                   }
-                  className="text-red-600 hover:bg-red-50 z-1000"
+                  className="text-red-600 hover:bg-red-50"
                 />
               </div>
             </td>

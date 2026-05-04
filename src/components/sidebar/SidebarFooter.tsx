@@ -36,7 +36,7 @@ export default function SidebarFooter({
             </div>
           </Link>
           <button
-            className="me-2 p-1 hover:bg-surface-strong rounded-lg transition-colors flex-shrink-0 cursor-pointer tooltip"
+            className="p-1 -m-1 rounded-lg transition-colors flex-shrink-0 cursor-pointer tooltip hover:bg-surface-strong"
             data-tip="Logout"
             onClick={onLogout}
             type="button"
