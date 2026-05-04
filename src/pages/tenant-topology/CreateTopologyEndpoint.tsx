@@ -243,6 +243,14 @@ const CreateTopologyEndpoint = ({
       console.warn('Could not parse URL hostname:', e)
     }
 
+    const existingEndpoint = latestEndpoints?.find(
+      (e) => e.hostname === extractedHostname && e.service === formData.service,
+    )
+
+    const resolvedInfoId = isEditMode
+      ? (editingEndpoint.tags?.info_ID ?? crypto.randomUUID())
+      : (existingEndpoint?.tags?.info_ID ?? crypto.randomUUID())
+
     const updatedFields = {
       service: formData.service,
       hostname: extractedHostname,
@@ -258,9 +266,7 @@ const CreateTopologyEndpoint = ({
             .filter((label) => label.key.trim())
             .map((label) => [label.key.trim(), label.value.trim()]),
         ),
-        ...(editingEndpoint?.tags?.info_ID
-          ? { info_ID: editingEndpoint.tags.info_ID }
-          : {}),
+        info_ID: resolvedInfoId,
       },
       notifications: {
         enabled: formData.notificationsEnabled,
