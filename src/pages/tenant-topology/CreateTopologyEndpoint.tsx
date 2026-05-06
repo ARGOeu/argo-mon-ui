@@ -99,7 +99,11 @@ const CreateTopologyEndpoint = ({
         metadata: Object.entries(editingEndpoint.tags ?? {})
           .filter(
             ([key]) =>
-              key !== 'monitored' && key !== 'labels' && key !== 'info_ID',
+              key !== 'monitored' &&
+              key !== 'labels' &&
+              key !== 'info_ID' &&
+              key !== 'info_URL' &&
+              key !== 'hostname',
           )
           .map(([key, value]) => ({ id: crypto.randomUUID(), key, value })),
         notificationsEnabled: editingEndpoint.notifications?.enabled ?? false,
@@ -244,16 +248,20 @@ const CreateTopologyEndpoint = ({
     }
 
     const existingEndpoint = latestEndpoints?.find(
-      (e) => e.hostname === extractedHostname && e.service === formData.service,
+      (e) =>
+        (e.tags?.hostname ?? e.hostname) === extractedHostname &&
+        e.service === formData.service,
     )
 
     const resolvedInfoId = isEditMode
       ? (editingEndpoint.tags?.info_ID ?? crypto.randomUUID())
       : (existingEndpoint?.tags?.info_ID ?? crypto.randomUUID())
 
+    const rootHostname = `${extractedHostname}_${resolvedInfoId}`
+
     const updatedFields = {
       service: formData.service,
-      hostname: extractedHostname,
+      hostname: rootHostname,
       tags: {
         monitored: formData.monitored ? '1' : '0',
         info_URL: fullUrl,
