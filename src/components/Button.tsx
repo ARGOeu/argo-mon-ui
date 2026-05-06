@@ -29,7 +29,7 @@ const variantClassMap: Record<ButtonVariant, string> = {
 const sizeClassMap: Record<ButtonSize, string> = {
   xs: 'px-2 py-1.5 text-xs',
   sm: 'px-3 py-1.5 text-sm',
-  md: 'px-4 py-2 text-[0.9375rem]',
+  md: 'px-4 py-1.5 text-[0.9375rem]',
   lg: 'px-6 py-2 text-base',
 }
 
