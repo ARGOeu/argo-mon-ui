@@ -17,6 +17,8 @@ const TenantDetails = () => {
   const [activeTab, setActiveTab] = useState<'info' | 'status' | 'readiness'>(
     'info',
   )
+  const [logoError, setLogoError] = useState(false)
+  const [logoLoaded, setLogoLoaded] = useState(false)
 
   useEffect(() => {
     const hash = location?.hash
@@ -34,6 +36,11 @@ const TenantDetails = () => {
     isTenantLoading,
     tenantError,
   } = useSelectedTenant()
+
+  useEffect(() => {
+    setLogoError(false)
+    setLogoLoaded(false)
+  }, [tenantData?.info?.image])
 
   if (isTenantLoading)
     return (
@@ -66,21 +73,20 @@ const TenantDetails = () => {
       <header className="px-6 py-4">
         <div className="flex flex-col xl:flex-row items-start xl:items-center gap-4 xl:gap-6">
           <div className="flex w-full items-start justify-between xl:contents">
-            {tenantData?.info?.image ? (
-              <div className="flex-shrink-0 w-16 h-16 bg-white border border-line rounded flex items-center justify-center p-1 shadow-sm">
+            <div className="relative size-16 rounded-lg bg-slate-500 flex items-center justify-center flex-shrink-0">
+              <span className="text-2xl font-bold text-white leading-none select-none">
+                {tenantData.info.name.charAt(0).toUpperCase()}
+              </span>
+              {tenantData?.info?.image && !logoError && (
                 <img
                   src={tenantData.info.image}
-                  alt="Logo"
-                  className="object-contain"
+                  alt={tenantData.info.name}
+                  onLoad={() => setLogoLoaded(true)}
+                  onError={() => setLogoError(true)}
+                  className={`absolute inset-0 size-full rounded-lg object-contain bg-white border border-line p-1 shadow-sm transition-opacity duration-200 ${logoLoaded ? 'opacity-100' : 'opacity-0'}`}
                 />
-              </div>
-            ) : (
-              <div className="size-16 rounded-lg bg-slate-500 flex items-center justify-center flex-shrink-0">
-                <span className="text-2xl font-bold text-white">
-                  {tenantData.info.name.charAt(0).toUpperCase()}
-                </span>
-              </div>
-            )}
+              )}
+            </div>
             <Button
               href={`/tenants/edit/${tenantId}`}
               size="sm"

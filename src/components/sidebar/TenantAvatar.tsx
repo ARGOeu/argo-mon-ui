@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react'
+
 interface TenantAvatarProps {
   name: string
   image?: string
@@ -9,25 +11,34 @@ export default function TenantAvatar({
   image,
   size = 'md',
 }: TenantAvatarProps) {
+  const [imgError, setImgError] = useState(false)
+  const [imgLoaded, setImgLoaded] = useState(false)
   const sizeClass = size === 'sm' ? 'size-6' : 'size-8'
   const textClass = size === 'sm' ? 'text-[0.6rem]' : 'text-xs'
 
-  if (image) {
-    return (
-      <img
-        src={image}
-        alt={name}
-        className={`${sizeClass} rounded object-contain bg-surface-muted flex-shrink-0`}
-      />
-    )
-  }
+  useEffect(() => {
+    setImgError(false)
+    setImgLoaded(false)
+  }, [image])
+
   return (
     <div
-      className={`${sizeClass} rounded bg-slate-500 flex items-center justify-center flex-shrink-0`}
+      className={`${sizeClass} relative rounded bg-slate-500 flex items-center justify-center flex-shrink-0`}
     >
-      <span className={`${textClass} font-bold text-white`}>
+      <span
+        className={`${textClass} font-bold text-white leading-none select-none`}
+      >
         {name.charAt(0).toUpperCase()}
       </span>
+      {image && !imgError && (
+        <img
+          src={image}
+          alt={name}
+          onLoad={() => setImgLoaded(true)}
+          onError={() => setImgError(true)}
+          className={`absolute inset-0 size-full rounded object-contain bg-surface-muted transition-opacity duration-200 ${imgLoaded ? 'opacity-100' : 'opacity-0'}`}
+        />
+      )}
     </div>
   )
 }
