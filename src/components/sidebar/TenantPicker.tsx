@@ -64,35 +64,35 @@ export default function TenantPicker({
         <ChevronUpDownIcon className="size-5 text-muted flex-shrink-0" />
       </button>
 
-      {open && (
-        <div className="absolute left-0 right-0 top-full bg-white border border-line rounded shadow-lg z-20 py-1 max-h-60 overflow-y-auto">
-          {tenants.length === 0 ? (
-            <p className="px-3 py-2 text-sm text-muted text-center">
-              No tenants available
-            </p>
-          ) : (
-            tenants.map((tenant) => (
-              <Link
-                key={tenant.id}
-                to={`/tenants/${tenant.id}/details`}
-                onClick={handleSelect}
-                className={`flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors hover:bg-surface-muted ${
-                  tenant.id === activeTenantId
-                    ? 'bg-brand-subtle text-brand font-medium'
-                    : 'text-body'
-                }`}
-              >
-                <TenantAvatar
-                  name={tenant.info.name}
-                  image={tenant.info.image}
-                  size="sm"
-                />
-                <span className="truncate">{tenant.info.name}</span>
-              </Link>
-            ))
-          )}
-        </div>
-      )}
+      <div
+        className={`absolute left-0 right-0 top-full bg-white border border-line rounded shadow-lg z-20 py-1 max-h-60 overflow-y-auto ${open ? '' : 'hidden'}`}
+      >
+        {tenants.length === 0 ? (
+          <p className="px-3 py-2 text-sm text-muted text-center">
+            No tenants available
+          </p>
+        ) : (
+          tenants.map((tenant) => (
+            <Link
+              key={tenant.id}
+              to={`/tenants/${tenant.id}/details`}
+              onClick={handleSelect}
+              className={`flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors hover:bg-surface-muted ${
+                tenant.id === activeTenantId
+                  ? 'bg-brand-subtle text-brand font-medium'
+                  : 'text-body'
+              }`}
+            >
+              <TenantAvatar
+                name={tenant.info.name}
+                image={tenant.info.image}
+                size="sm"
+              />
+              <span className="truncate">{tenant.info.name}</span>
+            </Link>
+          ))
+        )}
+      </div>
     </div>
   )
 }
