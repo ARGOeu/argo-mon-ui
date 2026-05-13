@@ -164,11 +164,13 @@ const BuildStatusPage = () => {
         theming: {
           option: themeOption,
           status: { icon: selectIcon, text: selectText },
-          logo:
-            logo &&
-            (logo?.startsWith('http') || logo?.startsWith('data:')
-              ? logo
-              : `${BACKEND_API}${logo}`),
+          ...(themeOption !== 'theme_2' &&
+            logo && {
+              logo:
+                logo.startsWith('http') || logo.startsWith('data:')
+                  ? logo
+                  : `${BACKEND_API}${logo}`,
+            }),
           color,
           columns,
         },
