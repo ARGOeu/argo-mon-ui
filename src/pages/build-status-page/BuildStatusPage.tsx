@@ -1,21 +1,20 @@
 import { useEffect, useRef, useState } from 'react'
-import { useGroupsMutation } from '@/hooks/useGroups'
+import { useParams } from 'react-router-dom'
 import { useGetTenantReports } from '@/hooks/useTenants'
-import { useSelectedTenant } from '@/contexts/selected-tenant'
 import {
   useSavePageMutation,
   useGetPageQuery,
   useUpdatePageMutation,
 } from '@/hooks/usePages'
+import { useGroupsMutation } from '@/hooks/useGroups'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
+import { useDragAndDrop } from '@formkit/drag-and-drop/react'
 import {
   ArrowTopRightOnSquareIcon,
   Cog6ToothIcon,
   CubeIcon,
   PaintBrushIcon,
 } from '@heroicons/react/16/solid'
-import { useNavigate, useParams } from 'react-router-dom'
-import { toast } from 'sonner'
-import { useDragAndDrop } from '@formkit/drag-and-drop/react'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import Button from '@/components/Button'
 import ErrorDisplay from '@/components/ErrorDisplay'
@@ -25,33 +24,30 @@ import BuildConfigTab from './BuildConfigTab'
 import BuildItemsTab from './BuildItemsTab'
 import BuildThemingTab from './BuildThemingTab'
 import BuildPagePreview from './BuildPagePreview'
+import { useBuildStatusPage } from './useBuildStatusPage'
 import type { StatusItemType, StatusGroupType } from '@/types/common'
-import type { TabItem } from '@/components/Tabs'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
-
-const buildTabs: TabItem[] = [
-  { id: 'config', label: 'Config', icon: Cog6ToothIcon },
-  { id: 'items', label: 'Items', icon: CubeIcon },
-  { id: 'theming', label: 'Theming', icon: PaintBrushIcon },
-]
+const DND_GROUP = 'status-board'
 
 const BuildStatusPage = () => {
-  const navigate = useNavigate()
   const { tenantId: tenantIdParam, pageId } = useParams<{
     tenantId?: string
     pageId?: string
   }>()
-  const isEditMode = Boolean(pageId)
 
-  const [tenantId, setTenantId] = useState<string>(tenantIdParam || '')
+  const isEditMode = Boolean(pageId)
+  const isTenantSelectionDisabled = isEditMode || Boolean(tenantIdParam)
+
+  const [activeTab, setActiveTab] = useState<'config' | 'items' | 'theming'>(
+    'config',
+  )
   const [name, setName] = useState<string>('')
   const [slug, setSlug] = useState<string>('')
-  const [statusGroups, setStatusGroups] = useState<StatusGroupType[]>([])
+  const [tenantId, setTenantId] = useState<string>(tenantIdParam || '')
   const [report, setReport] = useState('')
   const [title, setTitle] = useState('')
   const [desc, setDesc] = useState('')
-  const [saved, setSaved] = useState(false)
   const [selectIcon, setSelectIcon] = useState('led')
   const [selectText, setSelectText] = useState('none')
   const [themeOption, setThemeOption] = useState<'theme_1' | 'theme_2'>(
@@ -62,18 +58,12 @@ const BuildStatusPage = () => {
   const [logoUrl, setLogoUrl] = useState('')
   const [logoPreview, setLogoPreview] = useState<string | null>(null)
   const [columns, setColumns] = useState('one')
-  const [activeTab, setActiveTab] = useState<'config' | 'items' | 'theming'>(
-    'config',
-  )
-
-  const savePageMutation = useSavePageMutation()
-  const updatePageMutation = useUpdatePageMutation()
-  const {
-    data: pageData,
-    isLoading: pageLoading,
-    error: pageError,
-  } = useGetPageQuery(tenantId || '', pageId || '')
-  const groupsMutation = useGroupsMutation()
+  const [statusGroups, setStatusGroups] = useState<StatusGroupType[]>([])
+  const [saved, setSaved] = useState(false)
+  // remembers each item's last position in the LEFT list
+  const leftIndexRef = useRef<Map<string, number>>(new Map())
+  // Track next group ID to avoid duplicate names when groups are deleted
+  const nextGroupIdRef = useRef(1)
 
   const { tenants: tenantsData } = useSelectedTenant()
   const { data: reportsData, isLoading: reportsLoading } = useGetTenantReports(
@@ -81,9 +71,57 @@ const BuildStatusPage = () => {
     undefined,
     !!tenantId,
   )
+  const {
+    data: pageData,
+    isLoading: pageLoading,
+    error: pageError,
+  } = useGetPageQuery(tenantIdParam || '', pageId || '')
 
-  // Track next group ID to avoid duplicate names when groups are deleted
-  const nextGroupIdRef = useRef(1)
+  const savePageMutation = useSavePageMutation()
+  const updatePageMutation = useUpdatePageMutation()
+  const groupsMutation = useGroupsMutation()
+
+  const isSaving = savePageMutation.isPending || updatePageMutation.isPending
+  const groupsMutationIsPending = groupsMutation.isPending
+  const groupsMutationData = groupsMutation.data
+
+  const [parent, items, setItems] = useDragAndDrop<
+    HTMLUListElement,
+    StatusItemType
+  >([], { group: DND_GROUP, dragHandle: '.dnd-handle' })
+
+  const {
+    initGroups,
+    triggerGroupsMutation,
+    handlePageSave,
+    handleAddStatusGroup,
+    handleChangeItemAlias,
+    updateGroup,
+    renameGroup,
+    removeGroup,
+  } = useBuildStatusPage({
+    isEditMode,
+    pageId,
+    statusGroups,
+    setStatusGroups,
+    setSaved,
+    setItems,
+    saveMutate: savePageMutation.mutate,
+    updateMutate: updatePageMutation.mutate,
+    groupsMutate: groupsMutation.mutate,
+    nextGroupIdRef,
+    leftIndexRef,
+  })
+
+  // whenever LEFT list order changes, record indices for items currently present
+  useEffect(() => {
+    items.forEach((it, idx) => leftIndexRef.current.set(it.name, idx))
+  }, [items])
+
+  useEffect(() => {
+    if (groupsMutation.data) setItems(groupsMutation.data)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [JSON.stringify(groupsMutation.data), setItems])
 
   useEffect(() => {
     if (isEditMode && pageData) {
@@ -92,26 +130,7 @@ const BuildStatusPage = () => {
       setTitle(pageData.config?.title || '')
       setDesc(pageData.config?.description || '')
       setReport(reportsData?.find((r) => r.name === pageData.report)?.id || '')
-
-      if (!tenantId) {
-        setTenantId(pageData.tenant_id)
-      }
-      setStatusGroups(pageData.config?.groups || [])
-
-      const existingGroups = pageData.config?.groups || []
-      if (existingGroups.length > 0) {
-        const maxId = existingGroups.reduce((max, group) => {
-          const match = group.name.match(/^group-(\d+)$/)
-          if (match) {
-            const id = parseInt(match[1], 10)
-            return id > max ? id : max
-          }
-          return max
-        }, 0)
-        nextGroupIdRef.current = maxId + 1
-      }
-
-      setSaved(true)
+      if (!tenantId) setTenantId(pageData.tenant_id)
       setSelectIcon(pageData.config?.theming?.status.icon || 'led')
       setSelectText(pageData.config?.theming?.status.text || 'none')
       setThemeOption(pageData.config?.theming?.option || 'theme_1')
@@ -124,6 +143,7 @@ const BuildStatusPage = () => {
         }
       }
       setColumns(pageData.config?.theming?.columns || 'one')
+      initGroups(pageData.config?.groups || [])
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
@@ -135,212 +155,24 @@ const BuildStatusPage = () => {
     JSON.stringify(reportsData),
   ])
 
-  const handleAddStatusGroup = () => {
-    const newGroupId = nextGroupIdRef.current
-    setStatusGroups((prev) => [
-      ...prev,
-      {
-        name: `group-${newGroupId}`,
-        alias: `group-${newGroupId}`,
-        list: [],
-      },
-    ])
-    nextGroupIdRef.current = newGroupId + 1
-  }
-
-  const handleReportChange = (value: string) => {
-    setReport(value)
-  }
-
-  const handlePageSave = () => {
-    const data = {
-      name,
-      slug,
-      'report-id': report,
-      config: {
-        groups: statusGroups,
-        title,
-        description: desc,
-        theming: {
-          option: themeOption,
-          status: { icon: selectIcon, text: selectText },
-          ...(themeOption !== 'theme_2' &&
-            logo && {
-              logo:
-                logo.startsWith('http') || logo.startsWith('data:')
-                  ? logo
-                  : `${BACKEND_API}${logo}`,
-            }),
-          color,
-          columns,
-        },
-      },
-    }
-
-    if (isEditMode && pageId) {
-      updatePageMutation.mutate(
-        { tenantId, pageId, data },
-        {
-          onSuccess: () => {
-            toast.success('Page updated successfully!')
-            setSaved(true)
-          },
-          onError: (error: Error & { errors?: string[] }) => {
-            if (error.errors && error.errors.length > 0) {
-              toast.error(
-                <div>
-                  {error.errors?.map((err, idx) => (
-                    <div key={idx}>{err}</div>
-                  ))}
-                </div>,
-              )
-            } else {
-              toast.error(`Failed to update status page: ${error.message}`)
-            }
-          },
-        },
-      )
-    } else {
-      savePageMutation.mutate(
-        { tenantId, data },
-        {
-          onSuccess: (data) => {
-            toast.success('Page created successfully!')
-            setSaved(true)
-            if (data.id) {
-              navigate(`/status-pages/tenants/${tenantId}/pages/${data.id}`)
-            }
-          },
-          onError: (error: Error & { errors?: string[] }) => {
-            if (error.errors && error.errors.length > 0) {
-              toast.error(
-                <div>
-                  {error.errors?.map((err, idx) => (
-                    <div key={idx}>{err}</div>
-                  ))}
-                </div>,
-              )
-            } else {
-              toast.error(`Failed to create status page: ${error.message}`)
-            }
-          },
-        },
-      )
-    }
-  }
-
   useEffect(() => {
-    if (report && tenantId && !groupsMutation.isPending)
-      groupsMutation.mutate({ tenantId, reportId: report })
+    if (report && tenantId && !groupsMutationIsPending)
+      triggerGroupsMutation(tenantId, report)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [report, tenantId])
 
-  const handleTenantChange = (value: string) => {
-    setTenantId(value)
-    setReport('')
-  }
-
   const handleNameChange = (value: string) => {
     setName(value)
-    if (!isEditMode) {
-      setSlug(value.toLowerCase().replaceAll(' ', '-'))
-    }
+    if (!isEditMode) setSlug(value.toLowerCase().replaceAll(' ', '-'))
   }
 
   const handleSlugChange = (value: string) => {
     setSlug(value.toLowerCase().replaceAll(' ', '-'))
   }
 
-  const handleChangeItemAlias = (
-    groupName: string,
-    itemName: string,
-    newAlias: string,
-  ) => {
-    if (groupName !== '') {
-      setStatusGroups((prevStatusGroups) =>
-        prevStatusGroups.map((group) =>
-          group.name === groupName
-            ? {
-                ...group,
-                list: group.list.map((item) =>
-                  item.name === itemName ? { ...item, alias: newAlias } : item,
-                ),
-              }
-            : group,
-        ),
-      )
-    }
-  }
-
-  const groupName = 'status-board'
-  const [parent, items, setItems] = useDragAndDrop<
-    HTMLUListElement,
-    StatusItemType
-  >([], { group: groupName, dragHandle: '.dnd-handle' })
-
-  useEffect(() => {
-    if (groupsMutation.data) setItems(groupsMutation.data)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [JSON.stringify(groupsMutation.data), setItems])
-
-  const updateGroup = (groupIndex: number, nextItems: StatusItemType[]) => {
-    setStatusGroups((prev) => {
-      const movedNames = new Set(nextItems.map((it) => it.name))
-      const next = prev.map((g, i) =>
-        i === groupIndex
-          ? { ...g, list: nextItems }
-          : { ...g, list: g.list.filter((it) => !movedNames.has(it.name)) },
-      )
-      setItems((curr) => curr.filter((it) => !movedNames.has(it.name)))
-      return next
-    })
-  }
-
-  const renameGroup = (groupIndex: number, nextAlias: string) => {
-    setStatusGroups((prev) =>
-      prev.map((g, i) => (i === groupIndex ? { ...g, alias: nextAlias } : g)),
-    )
-  }
-
-  // remembers each item's last position in the LEFT list
-  const leftIndexRef = useRef<Map<string, number>>(new Map())
-
-  // whenever LEFT list order changes, record indices for items currently present
-  useEffect(() => {
-    items.forEach((it, idx) => leftIndexRef.current.set(it.name, idx))
-  }, [items])
-
-  const removeGroup = (groupIndex: number) => {
-    setStatusGroups((prev) => {
-      const removed = prev[groupIndex]?.list ?? []
-
-      if (removed.length) {
-        setItems((curr) => {
-          const leftIndex = leftIndexRef.current
-
-          // avoid duplicates
-          const currNames = new Set(curr.map((x) => x.name))
-          const toReturn = removed.filter((it) => !currNames.has(it.name))
-
-          // merge with current left list
-          const merged = [...curr, ...toReturn]
-
-          // sort by previously recorded index; unknowns go to the end (stable tiebreaker by name)
-          const FALLBACK = Number.MAX_SAFE_INTEGER / 2
-          merged.sort((a, b) => {
-            const ia = leftIndex.get(a.name) ?? FALLBACK
-            const ib = leftIndex.get(b.name) ?? FALLBACK
-            if (ia !== ib) return ia - ib
-            return a.name.localeCompare(b.name)
-          })
-
-          return merged
-        })
-      }
-
-      // finally remove the column
-      return prev.filter((_, i) => i !== groupIndex)
-    })
+  const handleTenantChange = (value: string) => {
+    setTenantId(value)
+    setReport('')
   }
 
   const handleLogoUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -383,6 +215,22 @@ const BuildStatusPage = () => {
     setLogoPreview(base64)
   }
 
+  const onSave = () =>
+    handlePageSave({
+      name,
+      slug,
+      tenantId,
+      report,
+      title,
+      desc,
+      selectIcon,
+      selectText,
+      themeOption,
+      color,
+      logo,
+      columns,
+    })
+
   if (isEditMode && pageLoading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -412,7 +260,23 @@ const BuildStatusPage = () => {
 
           <div className="flex flex-col md:flex-row justify-between md:items-center gap-3 md:gap-6 mb-1 md:mb-4">
             <Tabs
-              tabs={buildTabs}
+              tabs={[
+                {
+                  id: 'config',
+                  label: 'Config',
+                  icon: Cog6ToothIcon,
+                  hasError: !name.trim() || !slug.trim() || !tenantId,
+                },
+                {
+                  id: 'items',
+                  label: 'Items',
+                  icon: CubeIcon,
+                  hasError:
+                    statusGroups.length === 0 ||
+                    statusGroups.some((g) => g.list.length === 0),
+                },
+                { id: 'theming', label: 'Theming', icon: PaintBrushIcon },
+              ]}
               activeTab={activeTab}
               onChange={(id) =>
                 setActiveTab(id as 'config' | 'items' | 'theming')
@@ -424,18 +288,34 @@ const BuildStatusPage = () => {
                 <Button
                   variant="outline-primary"
                   size="md"
-                  onClick={() => window.open(`/status/${slug}`, '_blank')}
+                  onClick={() =>
+                    window.open(
+                      `${window.location.origin}/status/${slug}`,
+                      '_blank',
+                    )
+                  }
                 >
                   View Page
                   <ArrowTopRightOnSquareIcon className="size-4 shrink-0" />
                 </Button>
               )}
-              {activeTab !== 'config' && (
-                <Button variant="primary" size="md" onClick={handlePageSave}>
-                  {isEditMode ? 'Update' : 'Save'}
-                </Button>
-              )}
+              <Button
+                variant="primary"
+                size="md"
+                onClick={onSave}
+                disabled={isSaving}
+              >
+                {isSaving ? 'Saving...' : isEditMode ? 'Update' : 'Save'}
+              </Button>
             </div>
+          </div>
+
+          <div className="flex items-center gap-[3px] mb-3">
+            <span className="inline-block size-[6px] rounded-full bg-red-500 shrink-0" />
+            <span className="text-sm text-muted font-medium">:</span>
+            <span className="text-sm text-subtle">
+              Indicates required fields are missing or invalid
+            </span>
           </div>
 
           <div
@@ -454,9 +334,7 @@ const BuildStatusPage = () => {
                   slug={slug}
                   tenantId={tenantId}
                   isEditMode={isEditMode}
-                  isTenantSelectionDisabled={
-                    isEditMode || Boolean(tenantIdParam)
-                  }
+                  isTenantSelectionDisabled={isTenantSelectionDisabled}
                   tenantsData={tenantsData}
                   reportsData={reportsData}
                   onNameChange={handleNameChange}
@@ -471,14 +349,14 @@ const BuildStatusPage = () => {
                   report={report}
                   reportsData={reportsData}
                   reportsLoading={reportsLoading}
-                  groupsMutationIsPending={groupsMutation.isPending}
-                  groupsMutationData={groupsMutation.data}
+                  groupsMutationIsPending={groupsMutationIsPending}
+                  groupsMutationData={groupsMutationData}
                   parent={parent}
                   items={items}
                   statusGroups={statusGroups}
                   selectIcon={selectIcon}
                   selectText={selectText}
-                  onReportChange={handleReportChange}
+                  onReportChange={(value) => setReport(value)}
                 />
               </div>
 
@@ -493,14 +371,16 @@ const BuildStatusPage = () => {
                   selectText={selectText}
                   columns={columns}
                   themeOption={themeOption}
-                  onColorChange={setColor}
+                  onColorChange={(v) => setColor(v)}
                   onLogoUrlChange={handleLogoUrlChange}
                   onRemoveLogo={handleRemoveLogo}
                   onLogoFileChange={handleLogoFileChange}
-                  onIconChange={setSelectIcon}
-                  onTextChange={setSelectText}
-                  onColumnsChange={setColumns}
-                  onThemeOptionChange={setThemeOption}
+                  onIconChange={(v) => setSelectIcon(v)}
+                  onTextChange={(v) => setSelectText(v)}
+                  onColumnsChange={(v) => setColumns(v)}
+                  onThemeOptionChange={(v) =>
+                    setThemeOption(v as 'theme_1' | 'theme_2')
+                  }
                 />
               </div>
             </div>
@@ -512,13 +392,13 @@ const BuildStatusPage = () => {
                 title={title}
                 desc={desc}
                 statusGroups={statusGroups}
-                groupName={groupName}
+                groupName={DND_GROUP}
                 columns={columns}
                 selectIcon={selectIcon}
                 selectText={selectText}
                 report={report}
                 themeOption={themeOption}
-                groupsMutationIsPending={groupsMutation.isPending}
+                groupsMutationIsPending={groupsMutationIsPending}
                 onTitleChange={setTitle}
                 onDescChange={setDesc}
                 onUpdateGroup={updateGroup}
