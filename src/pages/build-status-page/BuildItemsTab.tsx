@@ -5,7 +5,7 @@ import { StatusItem } from './StatusItem'
 import type { StatusItemType, StatusGroupType } from '@/types/common'
 import type { ReportListItem } from '@/types/tenants'
 
-const labelClass = 'block text-sm font-medium text-body mb-1'
+const labelClass = 'block text-sm font-medium text-body mb-0.5'
 
 interface BuildItemsTabProps {
   tenantId: string
@@ -49,7 +49,7 @@ const BuildItemsTab = ({
   return (
     <div className="space-y-4">
       <div>
-        <div className="border border-line rounded-lg px-5 py-4 space-y-3">
+        <div className="border border-line rounded-lg px-5 py-4 space-y-2">
           <div>
             <h3 className="section-title mb-0">Report Selection</h3>
             <p className="section-description mb-2">
@@ -86,6 +86,12 @@ const BuildItemsTab = ({
                   placeholder="Select a report"
                   disabled={statusGroups.length > 0}
                 />
+                {statusGroups.length > 0 && (
+                  <p className="text-xs text-muted mt-1">
+                    Remove all groups from the preview panel to change the
+                    report.
+                  </p>
+                )}
               </div>
 
               {groupsMutationIsPending && (
@@ -95,13 +101,13 @@ const BuildItemsTab = ({
               )}
 
               {groupsMutationData &&
-                (groupsMutationData.length === 0 ? (
+                (groupsMutationData.length === 1 ? (
                   <div className="text-sm required p-2 mt-2 bg-red-50 border-red-400 border text-center rounded">
                     Report is empty!
                   </div>
                 ) : (
                   <>
-                    <div className="mb-2">
+                    <div className="mb-1">
                       <label className={labelClass}>Search Items:</label>
                       <input
                         type="text"
@@ -112,40 +118,42 @@ const BuildItemsTab = ({
                         onChange={(e) => setFilterItems(e.target.value)}
                       />
                     </div>
-                    <div className="text-sm text-subtle rounded-lg p-1 mt-2 mb-1">
-                      Drag and drop items to the preview panel to add them to a
-                      group
-                    </div>
-                    <div className="max-h-[500px] overflow-y-auto border border-line rounded px-4 py-2 relative">
-                      {groupsFiltered.length === 0 && (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-sm text-muted pointer-events-none text-xs text-subtle">
-                          Drop items here to unassign them
-                        </div>
-                      )}
-                      <ul
-                        ref={parent}
-                        className={
-                          groupsFiltered.length === 0
-                            ? 'min-h-16'
-                            : 'min-h-2 pb-2'
-                        }
-                      >
-                        {(groupsFiltered ?? []).map((group) => (
-                          <li key={group.name} className="my-2">
-                            <StatusItem
-                              iconMode={selectIcon}
-                              textMode={selectText}
-                              group=""
-                              drag={true}
-                              dragHandle="dnd-handle"
-                              name={group.name}
-                              alias={group.alias || ''}
-                              status={group.status}
-                              onChangeAlias={() => {}}
-                            />
-                          </li>
-                        ))}
-                      </ul>
+                    <div className="mt-2">
+                      <div className="max-h-[500px] overflow-y-auto border border-line rounded px-4 py-2 relative">
+                        {groupsFiltered.length === 0 && (
+                          <div className="absolute inset-0 flex flex-col items-center justify-center text-xs text-subtle pointer-events-none">
+                            Drop items here to unassign them
+                          </div>
+                        )}
+                        <ul
+                          ref={parent}
+                          className={
+                            groupsFiltered.length === 0
+                              ? 'min-h-16'
+                              : 'min-h-2 pb-2'
+                          }
+                        >
+                          {(groupsFiltered ?? []).map((group) => (
+                            <li key={group.name} className="my-2">
+                              <StatusItem
+                                iconMode={selectIcon}
+                                textMode={selectText}
+                                group=""
+                                drag={true}
+                                dragHandle="dnd-handle"
+                                name={group.name}
+                                alias={group.alias || ''}
+                                status={group.status}
+                                onChangeAlias={() => {}}
+                              />
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                      <p className="text-xs text-muted mt-1">
+                        Drag and drop items to the preview panel to add them to
+                        a group.
+                      </p>
                     </div>
                   </>
                 ))}

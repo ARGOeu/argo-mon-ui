@@ -38,7 +38,7 @@ const BuildConfigTab = ({
         </p>
       </div>
 
-      <div className="bg-white border border-line rounded-lg p-6 space-y-4">
+      <div className="bg-white border border-line rounded-lg p-6 space-y-2">
         <div>
           <label className={labelClass}>
             Name <span className="required">*</span>
@@ -63,6 +63,14 @@ const BuildConfigTab = ({
             value={slug}
             onChange={(e) => onSlugChange(e.target.value)}
           />
+          {slug && (
+            <p className="text-xs text-muted mt-1">
+              Public URL:{' '}
+              <span className="font-mono text-subtle">
+                {window.location.origin}/status/{slug}
+              </span>
+            </p>
+          )}
         </div>
       </div>
     </div>
