@@ -31,6 +31,8 @@ import {
   setNodeReport,
   fetchTenantCapabilityAvailability,
   fetchTenantCapabilityStatus,
+  fetchGetTopologyFeed,
+  fetchUpdateTopologyFeed,
 } from '@/api/tenants'
 import type {
   Job,
@@ -43,6 +45,7 @@ import type {
   ReportDetail,
   MetricProfileResponse,
   TenantReadinessResponse,
+  TopologyFeed,
   CapabilityAvailabilityResponse,
   CapabilityAvailabilityParams,
   CapabilityStatusResponse,
@@ -675,5 +678,43 @@ export const useGetTenantCapabilityStatus = (
     },
     retry: false,
     enabled: enabled && !!token && !!tenantId,
+  })
+}
+
+export const useGetTopologyFeedQuery = (
+  tenantId: string,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+  return useQuery<TopologyFeed, Error>({
+    queryKey: ['topology-feed', tenantId],
+    queryFn: () => {
+      if (!token) throw new Error('No authentication token available')
+      if (!tenantId) throw new Error('Tenant ID is required')
+      return fetchGetTopologyFeed(tenantId, token)
+    },
+    retry: false,
+    enabled: enabled && !!token && !!tenantId,
+  })
+}
+
+export const useUpdateTopologyFeedMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<void, Error, { tenantId: string; data: TopologyFeed }>({
+    mutationFn: ({ tenantId, data }) => {
+      if (!token) throw new Error('No authentication token available')
+      if (!tenantId) throw new Error('Tenant ID is required')
+      return fetchUpdateTopologyFeed(tenantId, data, token)
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['topology-feed', variables.tenantId],
+      })
+    },
+    onError: (error) => {
+      console.error('Update topology feed error:', error)
+    },
   })
 }

@@ -32,6 +32,17 @@ export type Metadata = {
   auth_metadata?: AuthMetadata
 }
 
+export type TopologyFeed = {
+  type: string
+  feed_url?: string
+  feed_service_groups?: string
+  feed_service_endpoints?: string
+  feed_service_endpoints_extensions?: string
+  paginated?: string
+  fetch_type?: string[]
+  uid_endpoints?: string
+}
+
 export type TenantInfo = {
   name: string
   email: string

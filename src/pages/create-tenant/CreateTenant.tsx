@@ -4,8 +4,11 @@ import {
   useCreateTenantMutation,
   useGetUserTenantById,
   useUpdateUserTenantMutation,
+  useGetTopologyFeedQuery,
+  useUpdateTopologyFeedMutation,
 } from '@/hooks/useTenants'
-import type { Metadata } from '@/types/tenants'
+import type { Metadata, TopologyFeed } from '@/types/tenants'
+import type { TopologyFeedFormState } from './InfrastructureMetadata'
 import { toast } from 'sonner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '@/components/Button'
@@ -17,6 +20,27 @@ import Tabs from '@/components/Tabs'
 import TenantBasicInfoTab from './TenantBasicInfoTab'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
+
+const buildFeedPayload = (feed: TopologyFeedFormState): TopologyFeed => {
+  if (feed.type === 'CSV') {
+    return {
+      type: feed.type,
+      feed_url: feed.feed_url,
+      paginated: 'false',
+      fetch_type: ['ServiceGroups'],
+      uid_endpoints: '',
+    }
+  }
+  if (feed.type === 'eosc-service-catalog') {
+    return {
+      type: feed.type,
+      feed_service_groups: feed.feed_service_groups,
+      feed_service_endpoints: feed.feed_service_endpoints,
+      feed_service_endpoints_extensions: feed.feed_service_endpoints_extensions,
+    }
+  }
+  return { type: feed.type }
+}
 
 const CreateTenant = () => {
   const { id: tenantId } = useParams<{ id?: string }>()
@@ -51,6 +75,13 @@ const CreateTenant = () => {
     useState(false)
   const [hasMetadataValidationError, setHasMetadataValidationError] =
     useState(false)
+  const [topologyFeed, setTopologyFeed] = useState<TopologyFeedFormState>({
+    type: '',
+    feed_url: '',
+    feed_service_groups: '',
+    feed_service_endpoints: '',
+    feed_service_endpoints_extensions: '',
+  })
 
   const navigateTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -62,12 +93,16 @@ const CreateTenant = () => {
 
   const createMutation = useCreateTenantMutation()
   const updateMutation = useUpdateUserTenantMutation()
+  const updateTopologyFeedMutation = useUpdateTopologyFeedMutation()
 
   const {
     data: tenantData,
     isLoading: isTenantLoading,
     error: tenantError,
   } = useGetUserTenantById(tenantId || '')
+
+  const { data: topologyFeedData, isLoading: topologyFeedLoading } =
+    useGetTopologyFeedQuery(tenantId || '', isEditMode)
 
   useEffect(() => {
     if (isEditMode && tenantData) {
@@ -119,6 +154,19 @@ const CreateTenant = () => {
       }
     }
   }, [isEditMode, tenantData])
+
+  useEffect(() => {
+    if (isEditMode && topologyFeedData) {
+      setTopologyFeed({
+        type: topologyFeedData.type || '',
+        feed_url: topologyFeedData.feed_url || '',
+        feed_service_groups: topologyFeedData.feed_service_groups || '',
+        feed_service_endpoints: topologyFeedData.feed_service_endpoints || '',
+        feed_service_endpoints_extensions:
+          topologyFeedData.feed_service_endpoints_extensions || '',
+      })
+    }
+  }, [isEditMode, topologyFeedData])
 
   const hasTenantDetailsErrors = () => {
     return (
@@ -222,6 +270,8 @@ const CreateTenant = () => {
       }
     }
 
+    const feedPayload = buildFeedPayload(topologyFeed)
+
     if (isEditMode && tenantId) {
       updateMutation.mutate(
         {
@@ -234,10 +284,18 @@ const CreateTenant = () => {
         },
         {
           onSuccess: () => {
-            toast.success('Tenant updated successfully!')
-            navigateTimerRef.current = setTimeout(
-              () => navigate(`/tenants/${tenantId}/details`),
-              2000,
+            updateTopologyFeedMutation.mutate(
+              { tenantId, data: feedPayload },
+              {
+                onSuccess: () => {
+                  toast.success('Tenant updated successfully!')
+                  navigateTimerRef.current = setTimeout(
+                    () => navigate(`/tenants/${tenantId}/details`),
+                    2000,
+                  )
+                },
+                onError,
+              },
             )
           },
           onError,
@@ -247,12 +305,28 @@ const CreateTenant = () => {
       createMutation.mutate(
         { info: submitData, contacts: contactsData, metadata: metadataObj },
         {
-          onSuccess: () => {
-            toast.success('Tenant created successfully!')
-            navigateTimerRef.current = setTimeout(
-              () => navigate(`/administration#tenants`),
-              2000,
-            )
+          onSuccess: (createdTenant) => {
+            if (createdTenant.id) {
+              updateTopologyFeedMutation.mutate(
+                { tenantId: createdTenant.id, data: feedPayload },
+                {
+                  onSuccess: () => {
+                    toast.success('Tenant created successfully!')
+                    navigateTimerRef.current = setTimeout(
+                      () => navigate(`/administration#tenants`),
+                      2000,
+                    )
+                  },
+                  onError,
+                },
+              )
+            } else {
+              toast.success('Tenant created successfully!')
+              navigateTimerRef.current = setTimeout(
+                () => navigate(`/administration#tenants`),
+                2000,
+              )
+            }
           },
           onError,
         },
@@ -262,7 +336,7 @@ const CreateTenant = () => {
 
   return (
     <div className="page-container">
-      {isEditMode && isTenantLoading ? (
+      {isEditMode && (isTenantLoading || topologyFeedLoading) ? (
         <div className="loading-container">
           <LoadingSpinner />
         </div>
@@ -308,6 +382,7 @@ const CreateTenant = () => {
               disabled={
                 createMutation.isPending ||
                 updateMutation.isPending ||
+                updateTopologyFeedMutation.isPending ||
                 !!errors.name ||
                 !!errors.email ||
                 !!errors.website ||
@@ -321,10 +396,13 @@ const CreateTenant = () => {
                     contact.type.trim(),
                 ) ||
                 hasContactValidationError ||
-                hasMetadataValidationError
+                hasMetadataValidationError ||
+                !topologyFeed.type
               }
             >
-              {createMutation.isPending || updateMutation.isPending
+              {createMutation.isPending ||
+              updateMutation.isPending ||
+              updateTopologyFeedMutation.isPending
                 ? 'Saving...'
                 : isEditMode
                   ? 'Update'
@@ -348,7 +426,7 @@ const CreateTenant = () => {
                 {
                   id: 'metadata',
                   label: 'Infrastructure Settings',
-                  hasError: hasMetadataValidationError,
+                  hasError: hasMetadataValidationError || !topologyFeed.type,
                 },
               ]}
               activeTab={activeTab}
@@ -384,8 +462,9 @@ const CreateTenant = () => {
               <InfrastructureMetadata
                 metadata={metadata}
                 onMetadataChange={setMetadata}
+                topologyFeed={topologyFeed}
+                onTopologyFeedChange={setTopologyFeed}
                 onValidationChange={setHasMetadataValidationError}
-                initialData={tenantData?.metadata || null}
               />
             </div>
           </form>

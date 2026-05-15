@@ -1,5 +1,8 @@
 import { useEffect } from 'react'
-import { useGetUserTenantProjects } from '@/hooks/useTenants'
+import {
+  useGetUserTenantProjects,
+  useGetTopologyFeedQuery,
+} from '@/hooks/useTenants'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
@@ -45,6 +48,9 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
     fetchNextPage: fetchNextProjectsPage,
     hasNextPage: hasNextProjectsPage,
   } = useGetUserTenantProjects(tenantId, true)
+
+  const { data: topologyFeedData, isLoading: topologyFeedLoading } =
+    useGetTopologyFeedQuery(tenantId, !!tenantId)
 
   useEffect(() => {
     if (hasNextProjectsPage) {
@@ -155,13 +161,15 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
             Infrastructure Metadata
           </h2>
         </div>
-        {metadata &&
-        (metadata.instance ||
-          metadata.internalLists ||
-          metadata.auth_metadata) ? (
+        {(metadata &&
+          (metadata.instance ||
+            metadata.internalLists ||
+            metadata.auth_metadata)) ||
+        topologyFeedData ||
+        topologyFeedLoading ? (
           <div className="bg-surface-muted rounded-lg py-2 px-4 flex flex-col gap-2">
             {/* Instance Information */}
-            {metadata.instance && (
+            {metadata?.instance && (
               <>
                 <div className="pt-2 border-t border-line first:pt-0 first:border-t-0">
                   <h3 className="text-base font-semibold text-body">
@@ -204,35 +212,40 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
                     </p>
                   </div>
                 </div>
+              </>
+            )}
 
-                {/* Topology */}
-                {metadata.instance.topology && (
-                  <>
-                    <div className="pt-2 border-t border-line">
-                      <h3 className="text-base font-semibold text-body">
-                        Topology
-                      </h3>
+            {/* Topology Feed */}
+            <>
+              <div className="pt-2 border-t border-line first:pt-0 first:border-t-0">
+                <h3 className="text-base font-semibold text-body">
+                  Topology Feed
+                </h3>
+              </div>
+              {topologyFeedLoading ? (
+                <LoadingSpinner size="xs" inline />
+              ) : topologyFeedData ? (
+                <>
+                  <div className={cardRowClass}>
+                    <div className={infoGroupClass}>
+                      <label className={labelClass}>Type</label>
+                      <p className={valueClass}>{topologyFeedData.type}</p>
                     </div>
+                  </div>
+
+                  {topologyFeedData.type === 'CSV' && (
                     <div className={cardRowClass}>
                       <div className={infoGroupClass}>
-                        <label className={labelClass}>Type</label>
+                        <label className={labelClass}>Feed URL</label>
                         <p className={valueClass}>
-                          {metadata.instance.topology.type || (
-                            <span className={noDataClass}>Not provided</span>
-                          )}
-                        </p>
-                      </div>
-                      <div className={infoGroupClass}>
-                        <label className={labelClass}>URL</label>
-                        <p className={valueClass}>
-                          {metadata.instance.topology.url ? (
+                          {topologyFeedData.feed_url ? (
                             <a
-                              href={metadata.instance.topology.url}
+                              href={topologyFeedData.feed_url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={linkClass}
+                              className={`${linkClass} break-words`}
                             >
-                              {metadata.instance.topology.url}
+                              {topologyFeedData.feed_url}
                             </a>
                           ) : (
                             <span className={noDataClass}>Not provided</span>
@@ -240,40 +253,79 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
                         </p>
                       </div>
                     </div>
+                  )}
+
+                  {topologyFeedData.type === 'eosc-service-catalog' && (
                     <div className={cardRowClass}>
                       <div className={infoGroupClass}>
-                        <label className={labelClass}>Feed</label>
-                        <p className={`${valueClass} max-w-[45%]`}>
-                          {metadata.instance.topology.feed ? (
-                            metadata.instance.topology.feed.startsWith(
-                              'http',
-                            ) ? (
-                              <a
-                                href={metadata.instance.topology.feed}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`${linkClass} break-words`}
-                              >
-                                {metadata.instance.topology.feed}
-                              </a>
-                            ) : (
-                              <span className="break-words">
-                                {metadata.instance.topology.feed}
-                              </span>
-                            )
+                        <label className={labelClass}>Service Groups URL</label>
+                        <p className={valueClass}>
+                          {topologyFeedData.feed_service_groups ? (
+                            <a
+                              href={topologyFeedData.feed_service_groups}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`${linkClass} break-words`}
+                            >
+                              {topologyFeedData.feed_service_groups}
+                            </a>
+                          ) : (
+                            <span className={noDataClass}>Not provided</span>
+                          )}
+                        </p>
+                      </div>
+                      <div className={infoGroupClass}>
+                        <label className={labelClass}>
+                          Service Endpoints URL
+                        </label>
+                        <p className={valueClass}>
+                          {topologyFeedData.feed_service_endpoints ? (
+                            <a
+                              href={topologyFeedData.feed_service_endpoints}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`${linkClass} break-words`}
+                            >
+                              {topologyFeedData.feed_service_endpoints}
+                            </a>
+                          ) : (
+                            <span className={noDataClass}>Not provided</span>
+                          )}
+                        </p>
+                      </div>
+                      <div className={infoGroupClass}>
+                        <label className={labelClass}>
+                          Service Endpoint Extensions URL
+                        </label>
+                        <p className={valueClass}>
+                          {topologyFeedData.feed_service_endpoints_extensions ? (
+                            <a
+                              href={
+                                topologyFeedData.feed_service_endpoints_extensions
+                              }
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`${linkClass} break-words`}
+                            >
+                              {
+                                topologyFeedData.feed_service_endpoints_extensions
+                              }
+                            </a>
                           ) : (
                             <span className={noDataClass}>Not provided</span>
                           )}
                         </p>
                       </div>
                     </div>
-                  </>
-                )}
-              </>
-            )}
+                  )}
+                </>
+              ) : (
+                <span className={noDataClass}>Not configured</span>
+              )}
+            </>
 
             {/* Internal Lists */}
-            {metadata.internalLists && metadata.internalLists.length > 0 && (
+            {metadata?.internalLists && metadata.internalLists.length > 0 && (
               <>
                 <div className="pt-2 border-t border-line">
                   <h3 className="text-base font-semibold text-body">
@@ -301,7 +353,7 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
             )}
 
             {/* Authentication Metadata */}
-            {metadata.auth_metadata && (
+            {metadata?.auth_metadata && (
               <>
                 <div className="pt-2 border-t border-line">
                   <h3 className="text-base font-semibold text-body">

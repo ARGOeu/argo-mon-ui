@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
+import { useGetTopologyFeedQuery } from '@/hooks/useTenants'
 
 type DateMode = 'latest' | 'custom'
 
@@ -35,10 +36,14 @@ export const useTopologyListState = <TSort extends string>({
   }, [committedDate])
 
   const { tenant } = useSelectedTenant()
-  const isGocdb = tenant?.metadata?.instance?.topology?.type === 'GOCDB'
+  const { data: topologyFeedData } = useGetTopologyFeedQuery(
+    tenant?.id ?? '',
+    !!tenant?.id,
+  )
+  const isExternal = topologyFeedData?.type === 'external'
 
   const showActions =
-    !isGocdb &&
+    !isExternal &&
     (dateMode === 'latest' ||
       (dateMode === 'custom' && committedDate === latestDate && !!latestDate))
 
@@ -83,6 +88,7 @@ export const useTopologyListState = <TSort extends string>({
     dateInput,
     committedDate,
     showActions,
+    isExternal,
     handleDateInputChange,
     handleDateModeChange,
     handleSortChange,
