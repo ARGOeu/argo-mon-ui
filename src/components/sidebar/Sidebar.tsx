@@ -78,6 +78,15 @@ function Sidebar({
             {/* Tenant sub-navigation (only when inside a tenant context) */}
             {effectiveTenantId && (
               <div>
+                {(isSuperAdmin || isAdminOfTenant) && (
+                  <SidebarNavItem
+                    to={`/tenants/${effectiveTenantId}/Dashboard`}
+                    onClick={onCloseMobileMenu}
+                  >
+                    <CircleStackIcon className="size-4" aria-hidden />
+                    Dashboard
+                  </SidebarNavItem>
+                )}
                 <SidebarNavItem
                   to={`/tenants/${effectiveTenantId}/details`}
                   end

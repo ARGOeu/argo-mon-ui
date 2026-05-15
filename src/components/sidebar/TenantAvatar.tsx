@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react'
 interface TenantAvatarProps {
   name: string
   image?: string
+  bgClass?: string
   size?: 'sm' | 'md'
 }
 
@@ -10,6 +11,7 @@ export default function TenantAvatar({
   name,
   image,
   size = 'md',
+  bgClass = 'bg-slate-500',
 }: TenantAvatarProps) {
   const [imgError, setImgError] = useState(false)
   const [imgLoaded, setImgLoaded] = useState(false)
@@ -23,7 +25,7 @@ export default function TenantAvatar({
 
   return (
     <div
-      className={`${sizeClass} relative rounded bg-slate-500 flex items-center justify-center flex-shrink-0`}
+      className={`${sizeClass} relative rounded ${bgClass} flex items-center justify-center flex-shrink-0`}
     >
       <span
         className={`${textClass} font-bold text-white leading-none select-none`}

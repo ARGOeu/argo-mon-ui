@@ -75,7 +75,7 @@ export default function TenantPicker({
           tenants.map((tenant) => (
             <Link
               key={tenant.id}
-              to={`/tenants/${tenant.id}/details`}
+              to={`/tenants/${tenant.id}/dashboard`}
               onClick={handleSelect}
               className={`flex items-center gap-2.5 px-3 py-2.5 text-sm transition-colors hover:bg-surface-muted ${
                 tenant.id === activeTenantId
