@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/16/solid'
-import { useSelectedTenant } from '@/contexts/selected-tenant'
 import {
   useGetTopologyGroups,
   useCreateTopologyGroupsMutation,
@@ -34,7 +33,6 @@ interface TopologyGroupsProps {
 }
 
 const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
-  const { tenant: tenantData } = useSelectedTenant()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [groupToDelete, setGroupToDelete] = useState<{
     group: GroupTopologyItem
@@ -55,6 +53,7 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
     dateInput,
     committedDate,
     showActions,
+    isExternal,
     handleDateInputChange,
     handleDateModeChange,
     handleSortChange,
@@ -150,7 +149,7 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
             ]}
             className="w-36"
           />
-          {tenantData?.metadata?.instance?.topology?.type !== 'GOCDB' && (
+          {!isExternal && (
             <Button
               size="md"
               variant="primary"

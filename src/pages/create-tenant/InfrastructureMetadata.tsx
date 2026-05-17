@@ -1,21 +1,37 @@
 import { useState } from 'react'
 import { useGetUserContactTypes } from '@/hooks/useTenants'
 import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid'
-import type { Metadata } from '@/types/tenants'
 import SelectDropdown from '@/components/SelectDropdown'
+import FormField from './FormField'
 
 const sectionClass =
   'grid grid-cols-1 md:grid-cols-[300px_1fr] gap-4 md:gap-8 mb-6 animate-fade-in'
 const sectionContentClass =
   'bg-surface-muted border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
 const fieldGridClass =
-  'grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-3'
+  'grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-3'
 const iconButtonClass =
-  'flex items-center justify-center size-7 rounded-md bg-blue-500 text-white border-none cursor-pointer hover:bg-blue-600'
+  'flex items-center justify-center size-7 rounded-md bg-brand text-white border-none cursor-pointer hover:bg-brand-strong'
 const iconButtonDangerClass =
   'flex items-center justify-center size-7 rounded-md bg-red-500 text-white border-none cursor-pointer hover:bg-red-600'
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const urlRegex = /^https?:\/\/.+\..+/
+
+const FEED_TYPE_OPTIONS = [
+  { value: 'internal', label: 'Internal' },
+  { value: 'CSV', label: 'CSV' },
+  { value: 'eosc-service-catalog', label: 'EOSC Service Catalog' },
+  { value: 'external', label: 'External' },
+]
+
+export type TopologyFeedFormState = {
+  type: string
+  feed_url: string
+  feed_service_groups: string
+  feed_service_endpoints: string
+  feed_service_endpoints_extensions: string
+}
 
 interface InfrastructureMetadataProps {
   metadata: {
@@ -38,31 +54,45 @@ interface InfrastructureMetadataProps {
     auth_name: string
     auth_url: string
   }) => void
+  topologyFeed: TopologyFeedFormState
+  onTopologyFeedChange: (feed: TopologyFeedFormState) => void
   onValidationChange?: (hasError: boolean) => void
-  initialData?: Metadata | null
 }
 
 const InfrastructureMetadata = ({
   metadata,
   onMetadataChange,
+  topologyFeed,
+  onTopologyFeedChange,
   onValidationChange,
 }: InfrastructureMetadataProps) => {
   const [errors, setErrors] = useState(() => ({
     uiUrl: '',
     poemUrl: '',
-    topologyUrl: '',
     authUrl: '',
     internalListsEmails: metadata.internalLists.map(() => ({ email: '' })),
   }))
-
   const { data: contactTypes, isLoading: isContactTypesLoading } =
     useGetUserContactTypes()
 
-  const urlErrorMesage =
+  const urlErrorMessage =
     'Please enter a valid URL (must start with http:// or https://)'
 
-  const handleTopologyTypeChange = (value: string) => {
-    onMetadataChange({ ...metadata, topology_type: value })
+  const handleFeedTypeChange = (value: string) => {
+    onTopologyFeedChange({
+      type: value,
+      feed_url: '',
+      feed_service_groups: '',
+      feed_service_endpoints: '',
+      feed_service_endpoints_extensions: '',
+    })
+  }
+
+  const handleFeedFieldChange = (
+    field: keyof Omit<TopologyFeedFormState, 'type'>,
+    value: string,
+  ) => {
+    onTopologyFeedChange({ ...topologyFeed, [field]: value })
   }
 
   const handleInternalListTypeChange = (index: number, value: string) => {
@@ -73,7 +103,6 @@ const InfrastructureMetadata = ({
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value: fieldValue } = e.target
-    const urlRegex = /^https?:\/\/.+\..+/
 
     onMetadataChange({
       ...metadata,
@@ -82,13 +111,12 @@ const InfrastructureMetadata = ({
 
     if (name === 'ui_url') {
       if (fieldValue && !urlRegex.test(fieldValue)) {
-        setErrors((prev) => ({ ...prev, uiUrl: urlErrorMesage }))
+        setErrors((prev) => ({ ...prev, uiUrl: urlErrorMessage }))
         onValidationChange?.(true)
       } else {
         setErrors((prev) => ({ ...prev, uiUrl: '' }))
         const hasErrors =
           !!errors.poemUrl ||
-          !!errors.topologyUrl ||
           !!errors.authUrl ||
           errors.internalListsEmails.some((err) => err.email)
         onValidationChange?.(hasErrors)
@@ -97,28 +125,12 @@ const InfrastructureMetadata = ({
 
     if (name === 'poem_url') {
       if (fieldValue && !urlRegex.test(fieldValue)) {
-        setErrors((prev) => ({ ...prev, poemUrl: urlErrorMesage }))
+        setErrors((prev) => ({ ...prev, poemUrl: urlErrorMessage }))
         onValidationChange?.(true)
       } else {
         setErrors((prev) => ({ ...prev, poemUrl: '' }))
         const hasErrors =
           !!errors.uiUrl ||
-          !!errors.topologyUrl ||
-          !!errors.authUrl ||
-          errors.internalListsEmails.some((err) => err.email)
-        onValidationChange?.(hasErrors)
-      }
-    }
-
-    if (name === 'topology_url') {
-      if (fieldValue && !urlRegex.test(fieldValue)) {
-        setErrors((prev) => ({ ...prev, topologyUrl: urlErrorMesage }))
-        onValidationChange?.(true)
-      } else {
-        setErrors((prev) => ({ ...prev, topologyUrl: '' }))
-        const hasErrors =
-          !!errors.uiUrl ||
-          !!errors.poemUrl ||
           !!errors.authUrl ||
           errors.internalListsEmails.some((err) => err.email)
         onValidationChange?.(hasErrors)
@@ -127,14 +139,13 @@ const InfrastructureMetadata = ({
 
     if (name === 'auth_url') {
       if (fieldValue && !urlRegex.test(fieldValue)) {
-        setErrors((prev) => ({ ...prev, authUrl: urlErrorMesage }))
+        setErrors((prev) => ({ ...prev, authUrl: urlErrorMessage }))
         onValidationChange?.(true)
       } else {
         setErrors((prev) => ({ ...prev, authUrl: '' }))
         const hasErrors =
           !!errors.uiUrl ||
           !!errors.poemUrl ||
-          !!errors.topologyUrl ||
           errors.internalListsEmails.some((err) => err.email)
         onValidationChange?.(hasErrors)
       }
@@ -166,7 +177,6 @@ const InfrastructureMetadata = ({
         const hasAnyError =
           !!errors.uiUrl ||
           !!errors.poemUrl ||
-          !!errors.topologyUrl ||
           !!errors.authUrl ||
           updatedErrors.some((err) => err.email)
         onValidationChange?.(hasAnyError)
@@ -208,7 +218,6 @@ const InfrastructureMetadata = ({
       const hasAnyError =
         !!errors.uiUrl ||
         !!errors.poemUrl ||
-        !!errors.topologyUrl ||
         !!errors.authUrl ||
         updatedErrors.some((err) => err.email)
       onValidationChange?.(hasAnyError)
@@ -220,8 +229,38 @@ const InfrastructureMetadata = ({
       <div className={sectionClass}>
         <div className="pt-2 pl-2">
           <h2 className="section-title">Instance URLs</h2>
+          <p className="section-description">Instance URL configurations</p>
+        </div>
+
+        <div className={sectionContentClass}>
+          <div className={fieldGridClass}>
+            <FormField
+              label="UI URL"
+              type="url"
+              name="ui_url"
+              value={metadata.ui_url}
+              onChange={handleChange}
+              placeholder="Enter UI URL"
+              error={errors.uiUrl}
+            />
+            <FormField
+              label="POEM URL"
+              type="url"
+              name="poem_url"
+              value={metadata.poem_url}
+              onChange={handleChange}
+              placeholder="Enter POEM URL"
+              error={errors.poemUrl}
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className={sectionClass}>
+        <div className="pt-2 pl-2">
+          <h2 className="section-title">Topology Feed</h2>
           <p className="section-description">
-            Primary instance URL configurations
+            Feed configuration for topology data
           </p>
         </div>
 
@@ -229,99 +268,68 @@ const InfrastructureMetadata = ({
           <div className={fieldGridClass}>
             <div className="flex flex-col">
               <label className="text-sm font-medium text-body mb-1">
-                UI URL
+                Type <span className="required">*</span>
               </label>
-              <input
-                type="url"
-                name="ui_url"
-                value={metadata.ui_url}
-                onChange={handleChange}
-                placeholder="Enter UI URL"
-              />
-              {errors.uiUrl && (
-                <span className="text-red-400 text-sm mt-1">
-                  {errors.uiUrl}
-                </span>
-              )}
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-body mb-1">
-                POEM URL
-              </label>
-              <input
-                type="url"
-                name="poem_url"
-                value={metadata.poem_url}
-                onChange={handleChange}
-                placeholder="Enter POEM URL"
-              />
-              {errors.poemUrl && (
-                <span className="text-red-400 text-sm mt-1">
-                  {errors.poemUrl}
-                </span>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className={sectionClass}>
-        <div className="pt-2 pl-2">
-          <h2 className="section-title">Topology</h2>
-          <p className="section-description">Topology configuration settings</p>
-        </div>
-
-        <div className={sectionContentClass}>
-          <div className={fieldGridClass}>
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-body mb-1">Type</label>
-              {isContactTypesLoading ? (
-                <div className="text-sm text-muted">Loading...</div>
-              ) : (
-                <SelectDropdown
-                  value={metadata.topology_type}
-                  onChange={handleTopologyTypeChange}
-                  options={[
-                    { value: 'GOCDB', label: 'GOCdb' },
-                    { value: 'CSV', label: 'CSV' },
-                  ]}
-                  placeholder="Select type"
-                />
-              )}
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-body mb-1">
-                Service URL
-              </label>
-              <input
-                type="url"
-                name="topology_url"
-                value={metadata.topology_url}
-                onChange={handleChange}
-                placeholder="Enter topology URL"
-              />
-              {errors.topologyUrl && (
-                <span className="text-red-400 text-sm mt-1">
-                  {errors.topologyUrl}
-                </span>
-              )}
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-body mb-1">
-                Data Feed
-              </label>
-              <input
-                type="text"
-                name="topology_feed"
-                value={metadata.topology_feed}
-                onChange={handleChange}
-                placeholder="Enter topology feed"
+              <SelectDropdown
+                value={topologyFeed.type}
+                onChange={handleFeedTypeChange}
+                options={FEED_TYPE_OPTIONS}
+                placeholder="Select feed type"
               />
             </div>
           </div>
+
+          {topologyFeed.type === 'CSV' && (
+            <div className={fieldGridClass}>
+              <FormField
+                label="URL"
+                type="url"
+                value={topologyFeed.feed_url}
+                onChange={(e) =>
+                  handleFeedFieldChange('feed_url', e.target.value)
+                }
+                placeholder="Enter feed URL"
+              />
+            </div>
+          )}
+
+          {topologyFeed.type === 'eosc-service-catalog' && (
+            <div className={fieldGridClass}>
+              <FormField
+                label="Service Groups URL"
+                type="url"
+                value={topologyFeed.feed_service_groups}
+                onChange={(e) =>
+                  handleFeedFieldChange('feed_service_groups', e.target.value)
+                }
+                placeholder="Enter service groups feed URL"
+              />
+              <FormField
+                label="Service Endpoints URL"
+                type="url"
+                value={topologyFeed.feed_service_endpoints}
+                onChange={(e) =>
+                  handleFeedFieldChange(
+                    'feed_service_endpoints',
+                    e.target.value,
+                  )
+                }
+                placeholder="Enter service endpoints feed URL"
+              />
+              <FormField
+                label="Service Endpoint Extensions URL"
+                type="url"
+                value={topologyFeed.feed_service_endpoints_extensions}
+                onChange={(e) =>
+                  handleFeedFieldChange(
+                    'feed_service_endpoints_extensions',
+                    e.target.value,
+                  )
+                }
+                placeholder="Enter service endpoint extensions feed URL"
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -335,7 +343,7 @@ const InfrastructureMetadata = ({
           {metadata.internalLists.map((list, index) => (
             <div
               key={index}
-              className="flex flex-col gap-2 pb-4 mb-2 border-b border-line last:border-b-0 last:mb-0 last:pb-0"
+              className="flex flex-col gap-1 pb-4 mb-2 border-b border-line last:border-b-0 last:mb-0 last:pb-0"
             >
               <div className="flex justify-between items-center mb-1.5">
                 <span className="text-base font-semibold text-body">
@@ -367,23 +375,15 @@ const InfrastructureMetadata = ({
               </div>
 
               <div className={fieldGridClass}>
-                <div className="flex flex-col">
-                  <label className="text-sm font-medium text-body mb-1">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    name="email"
-                    value={list.email}
-                    onChange={(e) => handleInternalListChange(index, e)}
-                    placeholder="Enter email address"
-                  />
-                  {errors.internalListsEmails[index]?.email && (
-                    <span className="text-red-400 text-sm mt-1">
-                      {errors.internalListsEmails[index].email}
-                    </span>
-                  )}
-                </div>
+                <FormField
+                  label="Email"
+                  type="email"
+                  name="email"
+                  value={list.email}
+                  onChange={(e) => handleInternalListChange(index, e)}
+                  placeholder="Enter email address"
+                  error={errors.internalListsEmails[index]?.email}
+                />
 
                 <div className="flex flex-col">
                   <label className="text-sm font-medium text-body mb-1">
@@ -425,36 +425,22 @@ const InfrastructureMetadata = ({
 
         <div className={sectionContentClass}>
           <div className={fieldGridClass}>
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-body mb-1">
-                Auth Name
-              </label>
-              <input
-                type="text"
-                name="auth_name"
-                value={metadata.auth_name}
-                onChange={handleChange}
-                placeholder="Enter authentication name"
-              />
-            </div>
-
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-body mb-1">
-                Auth URL
-              </label>
-              <input
-                type="url"
-                name="auth_url"
-                value={metadata.auth_url}
-                onChange={handleChange}
-                placeholder="Enter authentication URL"
-              />
-              {errors.authUrl && (
-                <span className="text-red-400 text-sm mt-1">
-                  {errors.authUrl}
-                </span>
-              )}
-            </div>
+            <FormField
+              label="Auth Name"
+              name="auth_name"
+              value={metadata.auth_name}
+              onChange={handleChange}
+              placeholder="Enter authentication name"
+            />
+            <FormField
+              label="Auth URL"
+              type="url"
+              name="auth_url"
+              value={metadata.auth_url}
+              onChange={handleChange}
+              placeholder="Enter authentication URL"
+              error={errors.authUrl}
+            />
           </div>
         </div>
       </div>

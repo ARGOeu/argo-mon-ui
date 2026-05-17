@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/16/solid'
-import { useSelectedTenant } from '@/contexts/selected-tenant'
 import {
   useGetTopologyEndpoints,
   useCreateTopologyEndpointMutation,
@@ -35,7 +34,6 @@ interface TopologyEndpointsProps {
 }
 
 const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
-  const { tenant: tenantData } = useSelectedTenant()
   const [monitoredFilter, setMonitoredFilter] = useState<
     'all' | 'monitored' | 'not_monitored'
   >('all')
@@ -59,6 +57,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
     dateInput,
     committedDate,
     showActions,
+    isExternal,
     handleDateInputChange,
     handleDateModeChange,
     handleSortChange,
@@ -148,7 +147,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
           placeholder="Search by service, hostname, URL or group..."
           className="!mb-0 flex-1 max-w-xs xl:max-w-none"
         />
-        {tenantData?.metadata?.instance?.topology?.type !== 'GOCDB' && (
+        {!isExternal && (
           <Button
             variant="primary"
             size="md"

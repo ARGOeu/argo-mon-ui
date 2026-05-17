@@ -8,7 +8,7 @@ const sectionClass =
 const sectionContentClass =
   'bg-surface-muted border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
 const iconButtonClass =
-  'flex items-center justify-center size-7 rounded-md bg-blue-500 text-white border-none cursor-pointer hover:bg-blue-600'
+  'flex items-center justify-center size-7 rounded-md bg-brand text-white border-none cursor-pointer hover:bg-brand-strong'
 const iconButtonDangerClass =
   'flex items-center justify-center size-7 rounded-md bg-red-500 text-white border-none cursor-pointer hover:bg-red-600'
 
