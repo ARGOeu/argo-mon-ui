@@ -31,7 +31,9 @@ export const ExpandableStatus = () => {
           <div className="bg-white rounded-xl shadow-lg overflow-hidden">
             <header
               className="flex items-center gap-4 px-8 py-5 border-b border-line"
-              style={{ backgroundColor: statusData.theming?.color || '#FFFFFF' }}
+              style={{
+                backgroundColor: statusData.theming?.color || '#FFFFFF',
+              }}
             >
               {statusData.theming?.logo && (
                 <img
