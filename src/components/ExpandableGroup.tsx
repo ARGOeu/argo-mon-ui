@@ -46,17 +46,23 @@ export default function ExpandableGroup({
       </button>
 
       {open && (
-        <div className={`border-t border-line ${columns === 'two' ? 'grid grid-cols-2' : ''}`}>
+        <div
+          className={`border-t border-line ${columns === 'two' ? 'grid grid-cols-2' : ''}`}
+        >
           {items.map((item, index) => (
             <div
               key={item.name}
               className={`flex items-center justify-between px-8 py-3 border-b border-line bg-white ${
                 columns === 'two'
-                  ? index % 2 === 0 ? 'border-r border-line' : ''
+                  ? index % 2 === 0
+                    ? 'border-r border-line'
+                    : ''
                   : 'last:border-b-0'
               }`}
             >
-              <span className="text-sm text-body">{item.alias || item.name}</span>
+              <span className="text-sm text-body">
+                {item.alias || item.name}
+              </span>
               <StatusIcon
                 status={item.status}
                 iconMode={iconMode}
