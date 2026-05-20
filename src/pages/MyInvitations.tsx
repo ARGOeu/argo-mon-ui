@@ -29,11 +29,23 @@ const MyInvitations = () => {
   })
   const respondMutation = useRespondToInvitation()
 
-  const handleRespond = (invitationId: string, action: 'ACCEPT' | 'REJECT') => {
+  const handleRespond = (
+    invitation: {
+      id: string
+      tenant_id: string
+      role: string
+    },
+    action: 'ACCEPT' | 'REJECT',
+  ) => {
     respondMutation.mutate(
-      { invitationId, data: { action } },
       {
-        onSuccess: async () => {
+        invitationId: invitation.id,
+        tenantId: invitation.tenant_id,
+        role: invitation.role,
+        action,
+      },
+      {
+        onSuccess: () => {
           toast.success(
             `Invitation ${action === 'ACCEPT' ? 'accepted' : 'rejected'} successfully!`,
           )
@@ -102,7 +114,7 @@ const MyInvitations = () => {
                               'bg-surface-strong text-muted'
                             }
                           >
-                            {invitation.role === 'admin'
+                            {invitation.role === 'tenant_admin'
                               ? 'Tenant Admin'
                               : 'Member'}
                           </Badge>
@@ -142,7 +154,7 @@ const MyInvitations = () => {
                                   <CheckCircleIcon className="size-6 shrink-0" />
                                 }
                                 onClick={() =>
-                                  handleRespond(invitation.id, 'ACCEPT')
+                                  handleRespond(invitation, 'ACCEPT')
                                 }
                                 disabled={respondMutation.isPending}
                                 className="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 w-auto"
@@ -153,7 +165,7 @@ const MyInvitations = () => {
                                   <XCircleIcon className="size-6 shrink-0" />
                                 }
                                 onClick={() =>
-                                  handleRespond(invitation.id, 'REJECT')
+                                  handleRespond(invitation, 'REJECT')
                                 }
                                 disabled={respondMutation.isPending}
                                 className="text-red-600 bg-red-50 hover:bg-red-100 w-auto"

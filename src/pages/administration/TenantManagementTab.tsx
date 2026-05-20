@@ -215,9 +215,9 @@ const TenantManagementTab = () => {
                               <Badge
                                 className={`shrink-0 mt-0.5 ${roleBadgeClass[role.toLowerCase()] ?? 'bg-surface-strong text-muted'}`}
                               >
-                                {role.toLowerCase() === 'admin'
+                                {role.toLowerCase() === 'tenant_admin'
                                   ? 'Admin'
-                                  : role.toLowerCase() === 'viewer'
+                                  : role.toLowerCase() === 'tenant_viewer'
                                     ? 'Member'
                                     : null}
                               </Badge>

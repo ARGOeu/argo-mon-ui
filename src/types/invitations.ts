@@ -1,13 +1,11 @@
 export type InvitationStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED'
 
-export type InvitationRole = 'admin' | 'viewer'
-
 export type Invitation = {
   id: string
   tenant_id: string
   tenant_name: string
   email: string
-  role: InvitationRole
+  role: string
   status: InvitationStatus
   created_at: string
 }
@@ -22,9 +20,12 @@ export type PaginatedInvitationsResponse = {
 
 export type CreateInvitationRequest = {
   email: string
-  role: InvitationRole
+  role: string
 }
 
 export type RespondToInvitationRequest = {
   action: 'ACCEPT' | 'REJECT'
+  api_resource: string
+  resource_id: string
+  role: string
 }

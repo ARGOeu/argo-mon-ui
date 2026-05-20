@@ -92,7 +92,7 @@ const TenantInvitations = ({
                           'bg-surface-strong text-muted'
                         }
                       >
-                        {invitation.role === 'admin'
+                        {invitation.role === 'tenant_admin'
                           ? 'Tenant Admin'
                           : 'Member'}
                       </Badge>

@@ -12,7 +12,6 @@ import type {
   Invitation,
   PaginatedInvitationsResponse,
   CreateInvitationRequest,
-  RespondToInvitationRequest,
 } from '@/types/invitations'
 
 export const useGetAdminInvitations = (
@@ -144,13 +143,27 @@ export const useRespondToInvitation = () => {
   return useMutation<
     Invitation,
     Error,
-    { invitationId: string; data: RespondToInvitationRequest }
+    {
+      invitationId: string
+      tenantId: string
+      role: string
+      action: 'ACCEPT' | 'REJECT'
+    }
   >({
-    mutationFn: ({ invitationId, data }) => {
+    mutationFn: ({ invitationId, tenantId, role, action }) => {
       if (!token) {
         throw new Error('No authentication token available')
       }
-      return respondToInvitation(invitationId, data, token)
+      return respondToInvitation(
+        invitationId,
+        {
+          action,
+          api_resource: 'Tenant',
+          resource_id: tenantId,
+          role,
+        },
+        token,
+      )
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-invitations'] })

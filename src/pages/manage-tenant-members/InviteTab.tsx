@@ -1,14 +1,15 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useCreateTenantInvitation } from '@/hooks/useInvitations'
+import { useGetRoles } from '@/hooks/useSecuredEndpoints'
 import { toast } from 'sonner'
 import Button from '@/components/Button'
 import SelectDropdown from '@/components/SelectDropdown'
-import type { InvitationRole } from '@/types/invitations'
 
-const roleOptions = [
-  { label: 'Tenant Admin', value: 'admin' as InvitationRole },
-  { label: 'Member', value: 'viewer' as InvitationRole },
-]
+const formatRoleName = (name: string) =>
+  name
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
 
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
@@ -19,11 +20,27 @@ interface InviteTabProps {
 const InviteTab = ({ tenantId }: InviteTabProps) => {
   const [inviteForm, setInviteForm] = useState({
     email: '',
-    role: 'viewer' as InvitationRole,
+    role: '',
   })
   const [errors, setErrors] = useState({ email: '' })
 
   const createInvitationMutation = useCreateTenantInvitation()
+  const { data: rolesData, isLoading: rolesLoading } = useGetRoles(1, 100)
+
+  const roleOptions =
+    rolesData?.content.map((r) => ({
+      label: formatRoleName(r.name),
+      value: r.name,
+    })) ?? []
+
+  useEffect(() => {
+    if (rolesData?.content.length && !inviteForm.role) {
+      setInviteForm((prev) => ({
+        ...prev,
+        role: rolesData.content[0].name,
+      }))
+    }
+  }, [rolesData, inviteForm.role])
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target
@@ -40,7 +57,7 @@ const InviteTab = ({ tenantId }: InviteTabProps) => {
   }
 
   const handleRoleChange = (value: string) => {
-    setInviteForm((prev) => ({ ...prev, role: value as InvitationRole }))
+    setInviteForm((prev) => ({ ...prev, role: value }))
   }
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -66,7 +83,7 @@ const InviteTab = ({ tenantId }: InviteTabProps) => {
       {
         onSuccess: () => {
           toast.success('Invitation sent successfully!')
-          setInviteForm({ email: '', role: 'viewer' })
+          setInviteForm({ email: '', role: rolesData?.content[0]?.name ?? '' })
           setErrors({ email: '' })
         },
         onError: (error) => {
@@ -120,6 +137,7 @@ const InviteTab = ({ tenantId }: InviteTabProps) => {
                 value={inviteForm.role}
                 onChange={handleRoleChange}
                 options={roleOptions}
+                disabled={rolesLoading}
               />
             </div>
           </div>
@@ -132,6 +150,7 @@ const InviteTab = ({ tenantId }: InviteTabProps) => {
               disabled={
                 !inviteForm.email.trim() ||
                 !!errors.email ||
+                !inviteForm.role ||
                 createInvitationMutation.isPending
               }
             >

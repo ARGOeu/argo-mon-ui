@@ -41,16 +41,18 @@ export const InvitationReview = () => {
   }, [initialized, authenticated, login])
 
   const handleAccept = () => {
-    if (!invitationId) return
+    if (!invitationId || !invitation) return
 
     setIsProcessing(true)
     respondMutation.mutate(
       {
         invitationId,
-        data: { action: 'ACCEPT' },
+        tenantId: invitation.tenant_id,
+        role: invitation.role,
+        action: 'ACCEPT',
       },
       {
-        onSuccess: async () => {
+        onSuccess: () => {
           toast.success('Invitation accepted successfully!')
 
           setTimeout(() => {
@@ -66,13 +68,15 @@ export const InvitationReview = () => {
   }
 
   const handleReject = () => {
-    if (!invitationId) return
+    if (!invitationId || !invitation) return
 
     setIsProcessing(true)
     respondMutation.mutate(
       {
         invitationId,
-        data: { action: 'REJECT' },
+        tenantId: invitation.tenant_id,
+        role: invitation.role,
+        action: 'REJECT',
       },
       {
         onSuccess: () => {
@@ -202,7 +206,9 @@ export const InvitationReview = () => {
                   Role
                 </label>
                 <div className="text-sm text-gray-800 px-3 py-2 bg-surface-muted rounded-md border border-line">
-                  {invitation?.role === 'admin' ? 'Tenant Admin' : 'Member'}
+                  {invitation?.role === 'tenant_admin'
+                    ? 'Tenant Admin'
+                    : 'Member'}
                 </div>
               </div>
 
@@ -237,11 +243,13 @@ export const InvitationReview = () => {
               <p className="m-0 text-sm text-blue-800 leading-relaxed">
                 By accepting this invitation, you will become a{' '}
                 <strong>
-                  {invitation?.role === 'admin' ? 'Tenant Admin' : 'Member'}
+                  {invitation?.role === 'tenant_admin'
+                    ? 'Tenant Admin'
+                    : 'Member'}
                 </strong>{' '}
                 of the <strong>{invitation?.tenant_name}</strong> tenant. You
                 will be able to
-                {invitation?.role === 'admin'
+                {invitation?.role === 'tenant_admin'
                   ? ' manage tenant settings, members, and projects.'
                   : ' view tenant information.'}
               </p>
@@ -257,7 +265,7 @@ export const InvitationReview = () => {
               disabled={isProcessing}
             >
               {isProcessing &&
-              respondMutation.variables?.data.action === 'REJECT' ? (
+              respondMutation.variables?.action === 'REJECT' ? (
                 <>
                   <LoadingSpinner size="sm" />
                   Rejecting...
@@ -277,7 +285,7 @@ export const InvitationReview = () => {
               disabled={isProcessing}
             >
               {isProcessing &&
-              respondMutation.variables?.data.action === 'ACCEPT' ? (
+              respondMutation.variables?.action === 'ACCEPT' ? (
                 <>
                   <LoadingSpinner size="sm" />
                   Accepting...

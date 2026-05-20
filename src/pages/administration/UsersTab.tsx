@@ -190,12 +190,12 @@ const UsersTab = () => {
                             <span
                               key={index}
                               className={`tooltip ${tenantBadgeBase} ${
-                                tenant.role === 'admin'
+                                tenant.role === 'tenant_admin'
                                   ? 'bg-amber-100 text-amber-700'
                                   : 'bg-brand-muted text-blue-800'
                               }`}
                               data-tip={
-                                tenant.role === 'admin'
+                                tenant.role === 'tenant_admin'
                                   ? 'Tenant Admin'
                                   : 'Tenant Member'
                               }

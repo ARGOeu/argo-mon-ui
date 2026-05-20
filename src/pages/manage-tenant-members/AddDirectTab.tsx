@@ -1,16 +1,17 @@
 import { useState, useEffect } from 'react'
 import { useGetMembers, useAddMemberDirectly } from '@/hooks/useTenants'
+import { useGetRoles } from '@/hooks/useSecuredEndpoints'
 import { XMarkIcon } from '@heroicons/react/16/solid'
 import { toast } from 'sonner'
 import Button from '@/components/Button'
 import SelectDropdown from '@/components/SelectDropdown'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import type { InvitationRole } from '@/types/invitations'
 
-const roleOptions = [
-  { label: 'Tenant Admin', value: 'admin' as InvitationRole },
-  { label: 'Member', value: 'viewer' as InvitationRole },
-]
+const formatRoleName = (name: string) =>
+  name
+    .split('_')
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+    .join(' ')
 
 interface AddDirectTabProps {
   tenantId: string
@@ -20,13 +21,14 @@ const AddDirectTab = ({ tenantId }: AddDirectTabProps) => {
   const [addDirectForm, setAddDirectForm] = useState<{
     username: string
     email: string
-    role: InvitationRole
-  }>({ username: '', email: '', role: 'viewer' as InvitationRole })
+    role: string
+  }>({ username: '', email: '', role: '' })
   const [addDirectErrors, setAddDirectErrors] = useState({ search: '' })
   const [searchInput, setSearchInput] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [showSearchResults, setShowSearchResults] = useState(false)
   const [selectedUser, setSelectedUser] = useState<{
+    username: string
     email: string
     firstName: string
     lastName: string
@@ -40,6 +42,13 @@ const AddDirectTab = ({ tenantId }: AddDirectTabProps) => {
   )
 
   const addMemberDirectlyMutation = useAddMemberDirectly()
+  const { data: rolesData, isLoading: rolesLoading } = useGetRoles(1, 100)
+
+  const roleOptions =
+    rolesData?.content.map((r) => ({
+      label: formatRoleName(r.name),
+      value: r.name,
+    })) ?? []
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -47,6 +56,15 @@ const AddDirectTab = ({ tenantId }: AddDirectTabProps) => {
     }, 500)
     return () => clearTimeout(timer)
   }, [searchInput])
+
+  useEffect(() => {
+    if (rolesData?.content.length && !addDirectForm.role) {
+      setAddDirectForm((prev) => ({
+        ...prev,
+        role: rolesData.content[0].name,
+      }))
+    }
+  }, [rolesData, addDirectForm.role])
 
   const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target
@@ -60,7 +78,7 @@ const AddDirectTab = ({ tenantId }: AddDirectTabProps) => {
   }
 
   const handleRoleChange = (value: string) => {
-    setAddDirectForm((prev) => ({ ...prev, role: value as InvitationRole }))
+    setAddDirectForm((prev) => ({ ...prev, role: value }))
   }
 
   const handleUserSelect = (user: {
@@ -111,7 +129,11 @@ const AddDirectTab = ({ tenantId }: AddDirectTabProps) => {
       {
         onSuccess: () => {
           toast.success('Member added successfully!')
-          setAddDirectForm({ username: '', email: '', role: 'viewer' })
+          setAddDirectForm({
+            username: '',
+            email: '',
+            role: rolesData?.content[0]?.name ?? '',
+          })
           setSelectedUser(null)
           setSearchInput('')
           setAddDirectErrors({ search: '' })
@@ -230,6 +252,7 @@ const AddDirectTab = ({ tenantId }: AddDirectTabProps) => {
                 value={addDirectForm.role}
                 onChange={handleRoleChange}
                 options={roleOptions}
+                disabled={rolesLoading}
               />
             </div>
           </div>
@@ -239,7 +262,11 @@ const AddDirectTab = ({ tenantId }: AddDirectTabProps) => {
               variant="primary"
               size="md"
               type="submit"
-              disabled={!selectedUser || addMemberDirectlyMutation.isPending}
+              disabled={
+                !selectedUser ||
+                !addDirectForm.role ||
+                addMemberDirectlyMutation.isPending
+              }
             >
               Add Member
             </Button>
