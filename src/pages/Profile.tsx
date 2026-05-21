@@ -6,8 +6,8 @@ import { useAuth } from '../auth/useAuth'
 import {
   useGetUserProfileByUsername,
   useGetTenantByName,
-  useRemoveMemberFromTenant,
 } from '@/hooks/useTenants'
+import { useRevokeRoleMutation } from '@/hooks/useResources'
 import { squishEmail } from '@/utils/profile'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -29,7 +29,6 @@ export const Profile = () => {
 
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
   const [tenantToRemove, setTenantToRemove] = useState<{
-    id: string
     name: string
     role: string
   } | null>(null)
@@ -41,7 +40,7 @@ export const Profile = () => {
   } = useGetUserProfileByUsername(username || '', !!username && isSuperAdmin)
 
   const getTenantByNameMutation = useGetTenantByName()
-  const removeMemberMutation = useRemoveMemberFromTenant()
+  const revokeRoleMutation = useRevokeRoleMutation()
 
   if (username && !isSuperAdmin) {
     return <Navigate to="/profile" replace />
@@ -52,7 +51,7 @@ export const Profile = () => {
   const displayProfile = isViewingOtherUser ? userProfileData : null
 
   const handleRemoveClick = (tenantName: string, role: string) => {
-    setTenantToRemove({ id: '', name: tenantName, role })
+    setTenantToRemove({ name: tenantName, role })
     setRemoveDialogOpen(true)
   }
 
@@ -61,25 +60,25 @@ export const Profile = () => {
 
     if (!tenantToRemove || !userId) return
 
-    // Get the tenant ID by name
-    getTenantByNameMutation.mutate('TENANT-INVITATIONS-TEST', {
+    getTenantByNameMutation.mutate(tenantToRemove.name, {
       onSuccess: (tenantData) => {
-        let tenantId = ''
-        if (!tenantData || (tenantData && tenantData.content.length === 0)) {
+        if (!tenantData || tenantData.content.length === 0) {
           toast.error('Tenant not found')
           return
         }
-        tenantId = tenantData.content[0].id || ''
 
+        const tenantId = tenantData.content[0].id || ''
         if (!tenantId) {
           toast.error('Tenant ID not found')
           return
         }
 
-        removeMemberMutation.mutate(
+        revokeRoleMutation.mutate(
           {
-            tenantId: tenantId,
-            memberId: userId,
+            api_resource: 'Tenant',
+            resource_id: tenantId,
+            role: tenantToRemove.role,
+            member_id: userId,
           },
           {
             onSuccess: () => {
@@ -149,12 +148,9 @@ export const Profile = () => {
     ? displayProfile?.tenants || []
     : profile?.groups || []
 
-  // Remove a specific record if the name is equal to "members"
-  currentGroups.forEach((group, index) => {
-    if (group.name === 'members') {
-      currentGroups.splice(index, 1)
-    }
-  })
+  const filteredGroups = currentGroups.filter(
+    (group) => group.name !== 'members',
+  )
 
   return (
     <div className="flex flex-col justify-center items-center">
@@ -286,9 +282,9 @@ export const Profile = () => {
                       Tenants
                     </label>
                     <div className="flex flex-col gap-4">
-                      {currentGroups && currentGroups.length > 0 ? (
+                      {filteredGroups && filteredGroups.length > 0 ? (
                         <div className="flex flex-col gap-3">
-                          {currentGroups.map((tenant, index) => (
+                          {filteredGroups.map((tenant, index) => (
                             <div
                               key={index}
                               className="w-fit flex items-center justify-between px-3 py-2 bg-surface-muted border border-line rounded-lg transition-all hover:bg-surface-strong"
@@ -301,7 +297,7 @@ export const Profile = () => {
                                   size="xs"
                                   className={
                                     roleBadgeClass[tenant.role] ??
-                                    roleBadgeClass['viewer']
+                                    roleBadgeClass['tenant_viewer']
                                   }
                                 >
                                   {tenant.role === 'super_admin'

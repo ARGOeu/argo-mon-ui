@@ -18,7 +18,6 @@ import {
   updateTenantStatus,
   fetchMembers,
   fetchTenantMembers,
-  addMemberDirectly,
   removeMemberFromTenant,
   revokeInvitation,
   fetchTenantReports,
@@ -34,6 +33,7 @@ import {
   fetchGetTopologyFeed,
   fetchUpdateTopologyFeed,
 } from '@/api/tenants'
+import { fetchAssignRole } from '@/api/resources'
 import type {
   Job,
   Tenant,
@@ -360,14 +360,30 @@ export const useAddMemberDirectly = () => {
     Error,
     {
       tenantId: string
-      data: { username: string; email: string; role: string }
+      data: {
+        username: string
+        email: string
+        role: string
+      }
     }
   >({
     mutationFn: ({ tenantId, data }) => {
       if (!token) {
         throw new Error('No authentication token available')
       }
-      return addMemberDirectly(tenantId, data, token)
+      return fetchAssignRole(
+        {
+          api_resource: 'Tenant',
+          resource_id: tenantId,
+          role: data.role,
+          username: data.username,
+          extras: {
+            email: data.email,
+            voperson_id: data.username,
+          },
+        },
+        token,
+      )
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({

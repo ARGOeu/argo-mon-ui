@@ -1,8 +1,6 @@
 import { useState } from 'react'
-import {
-  useGetTenantMembers,
-  useRemoveMemberFromTenant,
-} from '@/hooks/useTenants'
+import { useGetTenantMembers } from '@/hooks/useTenants'
+import { useRevokeRoleMutation } from '@/hooks/useResources'
 import { UserMinusIcon } from '@heroicons/react/16/solid'
 import { toast } from 'sonner'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -26,6 +24,7 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
   const [memberToRemove, setMemberToRemove] = useState<{
     id: string
     email: string
+    role: string
   } | null>(null)
 
   const { data: membersData, isLoading } = useGetTenantMembers(
@@ -35,18 +34,31 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
     !!tenantId,
   )
 
-  const removeMemberMutation = useRemoveMemberFromTenant()
+  const revokeRoleMutation = useRevokeRoleMutation()
 
-  const handleRemoveClick = (memberId: string, memberEmail: string) => {
-    setMemberToRemove({ id: memberId, email: memberEmail })
+  const handleRemoveClick = (
+    memberId: string,
+    memberEmail: string,
+    memberRole: string,
+  ) => {
+    setMemberToRemove({
+      id: memberId,
+      email: memberEmail,
+      role: memberRole,
+    })
     setRemoveDialogOpen(true)
   }
 
   const handleRemoveConfirm = () => {
     if (!tenantId || !memberToRemove) return
 
-    removeMemberMutation.mutate(
-      { tenantId, memberId: memberToRemove.id },
+    revokeRoleMutation.mutate(
+      {
+        api_resource: 'Tenant',
+        resource_id: tenantId,
+        role: memberToRemove.role,
+        member_id: memberToRemove.id,
+      },
       {
         onSuccess: () => {
           toast.success('Member removed successfully!')
@@ -105,11 +117,12 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
                         <td className={tdBase}>
                           <Badge
                             className={
-                              roleBadgeClass[tenantInfo?.role ?? 'viewer'] ??
-                              'bg-surface-strong text-muted'
+                              roleBadgeClass[
+                                tenantInfo?.role ?? 'tenant_viewer'
+                              ] ?? 'bg-surface-strong text-muted'
                             }
                           >
-                            {tenantInfo?.role === 'admin'
+                            {tenantInfo?.role === 'tenant_admin'
                               ? 'Tenant Admin'
                               : 'Member'}
                           </Badge>
@@ -119,7 +132,11 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
                             icon={<UserMinusIcon className="size-5" />}
                             label="Remove member"
                             onClick={() =>
-                              handleRemoveClick(member.id, member.email)
+                              handleRemoveClick(
+                                member.id,
+                                member.email,
+                                tenantInfo?.role ?? '',
+                              )
                             }
                             className="text-red-500 hover:bg-red-50"
                           />

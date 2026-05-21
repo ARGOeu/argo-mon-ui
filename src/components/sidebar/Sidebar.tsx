@@ -76,8 +76,7 @@ function Sidebar({
               onSelect={onCloseMobileMenu}
             />
 
-            {/* Tenant sub-navigation (only when inside a tenant context) */}
-            {effectiveTenantId && (
+            {effectiveTenantId && userTenants.length > 0 && (
               <div>
                 <SidebarNavItem
                   to={`/tenants/${effectiveTenantId}/details`}

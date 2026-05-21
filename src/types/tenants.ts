@@ -101,7 +101,7 @@ export type TenantProjectAssignment = {
 
 export type TenantMembership = {
   name: string
-  role: 'admin' | 'viewer'
+  role: string
 }
 
 export type Member = {
