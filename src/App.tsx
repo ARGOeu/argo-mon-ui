@@ -27,6 +27,7 @@ import {
 import { AuthProvider } from './auth/AuthProvider'
 import NotFound from './pages/NotFound'
 import { Toaster } from 'sonner'
+import Dashboard from '@/pages/Dashboard'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -106,6 +107,14 @@ function App() {
                   element={
                     <AuthProtected>
                       <ManageTenantMembers />
+                    </AuthProtected>
+                  }
+                />
+                <Route
+                  path="tenants/:id/dashboard"
+                  element={
+                    <AuthProtected>
+                      <Dashboard />
                     </AuthProtected>
                   }
                 />
