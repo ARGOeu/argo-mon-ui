@@ -14,6 +14,7 @@ import TenantDetails from './pages/tenant-details'
 import AssignProjects from './pages/AssignProjects'
 import CreateProject from './pages/CreateProject'
 import Administration from './pages/administration'
+import EndpointsAccess from './pages/endpoints-access'
 import ManageTenantMembers from './pages/manage-tenant-members'
 import MyInvitations from './pages/MyInvitations'
 import { InvitationReview } from './pages/InvitationReview'
@@ -153,6 +154,14 @@ function App() {
                   element={
                     <ProtectedRoute requiredRoles={['super_admin']}>
                       <Profile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="endpoints-access"
+                  element={
+                    <ProtectedRoute requiredRoles={['super_admin']}>
+                      <EndpointsAccess />
                     </ProtectedRoute>
                   }
                 />
