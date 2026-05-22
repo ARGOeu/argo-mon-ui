@@ -7,8 +7,16 @@ import type {
 } from '@/hooks/usePages'
 import type { useGroupsMutation } from '@/hooks/useGroups'
 import type { StatusItemType, StatusGroupType } from '@/types/common'
+import type { ThemeOption } from '@/types/pages'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
+
+const getNextGroupNumber = (groups: StatusGroupType[]): number => {
+  const usedNames = new Set(groups.map((g) => g.name))
+  let n = groups.length + 1
+  while (usedNames.has(`group-${n}`)) n++
+  return n
+}
 
 export type PageFormValues = {
   name: string
@@ -19,7 +27,7 @@ export type PageFormValues = {
   desc: string
   selectIcon: string
   selectText: string
-  themeOption: 'theme_1' | 'theme_2'
+  themeOption: ThemeOption
   color: string
   logo: string
   columns: string
@@ -49,7 +57,6 @@ interface UseBuildStatusPageParams {
   saveMutate: ReturnType<typeof useSavePageMutation>['mutate']
   updateMutate: ReturnType<typeof useUpdatePageMutation>['mutate']
   groupsMutate: ReturnType<typeof useGroupsMutation>['mutate']
-  nextGroupIdRef: RefObject<number>
   leftIndexRef: RefObject<Map<string, number>>
 }
 
@@ -63,7 +70,6 @@ export const useBuildStatusPage = ({
   saveMutate,
   updateMutate,
   groupsMutate,
-  nextGroupIdRef,
   leftIndexRef,
 }: UseBuildStatusPageParams) => {
   const navigate = useNavigate()
@@ -71,18 +77,6 @@ export const useBuildStatusPage = ({
   const initGroups = (groups: StatusGroupType[]) => {
     setStatusGroups(groups)
     setSaved(true)
-
-    if (groups.length > 0) {
-      const maxId = groups.reduce((max, group) => {
-        const match = group.name.match(/^group-(\d+)$/)
-        if (match) {
-          const id = parseInt(match[1], 10)
-          return id > max ? id : max
-        }
-        return max
-      }, 0)
-      nextGroupIdRef.current = maxId + 1
-    }
   }
 
   const triggerGroupsMutation = (tenantId: string, reportId: string) => {
@@ -90,16 +84,17 @@ export const useBuildStatusPage = ({
   }
 
   const handleAddStatusGroup = () => {
-    const newGroupId = nextGroupIdRef.current
-    setStatusGroups((prev) => [
-      ...prev,
-      {
-        name: `group-${newGroupId}`,
-        alias: `group-${newGroupId}`,
-        list: [],
-      },
-    ])
-    nextGroupIdRef.current = newGroupId + 1
+    setStatusGroups((prev) => {
+      const n = getNextGroupNumber(prev)
+      return [
+        ...prev,
+        {
+          name: `group-${n}`,
+          alias: `group-${n}`,
+          list: [],
+        },
+      ]
+    })
   }
 
   const handleChangeItemAlias = (
@@ -202,7 +197,7 @@ export const useBuildStatusPage = ({
         theming: {
           option: themeOption,
           status: { icon: selectIcon, text: selectText },
-          ...(themeOption !== 'theme_2' &&
+          ...(themeOption.includes('with_logo') &&
             logo && {
               logo:
                 logo.startsWith('http') || logo.startsWith('data:')

@@ -3,12 +3,12 @@ import {
   XMarkIcon,
   PhotoIcon,
   CheckCircleIcon,
-  QuestionMarkCircleIcon,
 } from '@heroicons/react/16/solid'
 import { BanIcon, Columns2Icon, SquareIcon } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
 import SelectGroup from './SelectGroup'
+import type { ThemeOption } from '@/types/pages'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
@@ -21,7 +21,7 @@ interface BuildThemingTabProps {
   selectIcon: string
   selectText: string
   columns: string
-  themeOption: 'theme_1' | 'theme_2'
+  themeOption: ThemeOption
   onColorChange: (value: string) => void
   onLogoUrlChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   onRemoveLogo: (e: React.MouseEvent) => void
@@ -29,7 +29,7 @@ interface BuildThemingTabProps {
   onIconChange: (value: string) => void
   onTextChange: (value: string) => void
   onColumnsChange: (value: string) => void
-  onThemeOptionChange: (value: 'theme_1' | 'theme_2') => void
+  onThemeOptionChange: (value: ThemeOption) => void
 }
 
 const BuildThemingTab = ({
@@ -112,33 +112,32 @@ const BuildThemingTab = ({
             </div>
 
             <div>
-              <label className="flex items-center gap-1 text-sm font-medium text-body mb-1">
-                Theme:
-                <div
-                  className="tooltip tooltip-right"
-                  data-tip="Select whether the public status page will feature a logo at the top."
-                >
-                  <QuestionMarkCircleIcon className="w-4.5 h-4.5 text-muted cursor-help" />
-                </div>
-              </label>
+              <label className={labelClass}>Theme:</label>
               <SelectGroup
                 selected={themeOption}
-                onChange={(val) =>
-                  onThemeOptionChange(val as 'theme_1' | 'theme_2')
-                }
+                className="grid grid-cols-2 gap-2"
+                onChange={(val) => onThemeOptionChange(val as ThemeOption)}
               >
-                <SelectGroup.Item value="theme_1">
-                  <PhotoIcon className="w-4" />
-                  <div>With Logo</div>
+                <SelectGroup.Item value="theme_1_with_logo">
+                  <PhotoIcon className="w-4 shrink-0" />
+                  <div>Theme 1 with Logo</div>
                 </SelectGroup.Item>
-                <SelectGroup.Item value="theme_2">
-                  <BanIcon className="w-4" />
-                  <div>No Logo</div>
+                <SelectGroup.Item value="theme_1_no_logo">
+                  <BanIcon className="w-4 shrink-0" />
+                  <div>Theme 1 with no Logo</div>
+                </SelectGroup.Item>
+                <SelectGroup.Item value="theme_2_with_logo">
+                  <PhotoIcon className="w-4 shrink-0" />
+                  <div>Theme 2 with Logo</div>
+                </SelectGroup.Item>
+                <SelectGroup.Item value="theme_2_no_logo">
+                  <BanIcon className="w-4 shrink-0" />
+                  <div>Theme 2 with no Logo</div>
                 </SelectGroup.Item>
               </SelectGroup>
             </div>
 
-            {themeOption === 'theme_1' && (
+            {themeOption.includes('with_logo') && (
               <div>
                 <label className={labelClass}>Logo:</label>
                 <div
@@ -165,7 +164,7 @@ const BuildThemingTab = ({
                       </button>
                       <img
                         alt="Logo"
-                        className="w-24 w-h-24 object-contain rounded"
+                        className="h-24 w-24 object-contain rounded"
                         src={
                           logoPreview?.startsWith('http') ||
                           logoPreview?.startsWith('data:')

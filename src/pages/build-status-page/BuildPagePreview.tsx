@@ -1,10 +1,11 @@
 import Button from '@/components/Button'
+import StatusLegend from '@/components/StatusLegend'
+import { isWithLogo, resolveLogoSrc } from '@/utils/logoUtils'
+import BuildExpandableGroup from '@/pages/build-status-page/BuildExpandableGroup'
+import BuildStatus from '@/pages/build-status-page/BuildStatus'
 import EditLabel from '@/pages/build-status-page/EditLabel'
-import StatusGroup from './StatusGroup'
-import { getStatusClass } from '@/utils/status'
 import type { StatusGroupType, StatusItemType } from '@/types/common'
-
-const BACKEND_API = import.meta.env.VITE_BACKEND_URI
+import type { ThemeOption } from '@/types/pages'
 
 interface BuildPagePreviewProps {
   color: string
@@ -17,7 +18,7 @@ interface BuildPagePreviewProps {
   selectIcon: string
   selectText: string
   report: string
-  themeOption: 'theme_1' | 'theme_2'
+  themeOption: ThemeOption
   groupsMutationIsPending: boolean
   onTitleChange: (value: string) => void
   onDescChange: (value: string) => void
@@ -52,60 +53,39 @@ const BuildPagePreview = ({
   onRemoveGroup,
   onChangeItemAlias,
   onAddStatusGroup,
-}: BuildPagePreviewProps) => (
-  <div className="border border-line rounded-lg p-4 shadow-md w-full max-w-3xl self-start">
-    <header style={{ backgroundColor: color }} className="p-3 mb-2 rounded-lg">
-      <div className="flex flex-col items-center">
-        {logo && themeOption === 'theme_1' && (
-          <img
-            src={
-              logo?.startsWith('http') || logo?.startsWith('data:')
-                ? logo
-                : `${BACKEND_API}${logo}`
-            }
-            className="my-2 h-20 w-auto object-contain"
-            alt="Logo"
-          />
-        )}
-        <div className="flex flex-row items-center gap-1 mb-1">
-          <EditLabel
-            label={title}
-            onChange={onTitleChange}
-            size="text-3xl"
-            placeholder="Add a title"
-          />
-          <span className="required h-8">*</span>
-        </div>
-        <EditLabel
-          label={desc}
-          onChange={onDescChange}
-          size="text-base"
-          textArea={true}
-          placeholder="Add a description"
-          color="#6a7282"
+}: BuildPagePreviewProps) => {
+  const theme2 = themeOption.startsWith('theme_2')
+
+  if (theme2) {
+    return (
+      <div className="w-full max-w-3xl self-start">
+        <BuildStatus
+          color={color}
+          logo={logo}
+          title={title}
+          desc={desc}
+          statusGroups={statusGroups}
+          groupName={groupName}
+          columns={columns}
+          selectIcon={selectIcon}
+          selectText={selectText}
+          report={report}
+          themeOption={themeOption}
+          groupsMutationIsPending={groupsMutationIsPending}
+          onTitleChange={onTitleChange}
+          onDescChange={onDescChange}
+          onUpdateGroup={onUpdateGroup}
+          onRenameGroup={onRenameGroup}
+          onRemoveGroup={onRemoveGroup}
+          onChangeItemAlias={onChangeItemAlias}
+          onAddStatusGroup={onAddStatusGroup}
         />
       </div>
-    </header>
-    <div>
-      {statusGroups.map((col, index) => (
-        <StatusGroup
-          key={col.name}
-          name={col.name}
-          alias={col.alias || ''}
-          items={col.list}
-          group={groupName}
-          columns={columns}
-          getStatusClass={getStatusClass}
-          onItemsChange={(next) => onUpdateGroup(index, next)}
-          onRename={(nextName) => onRenameGroup(index, nextName)}
-          onRemove={() => onRemoveGroup(index)}
-          onChangeAlias={onChangeItemAlias}
-          iconMode={selectIcon}
-          textMode={selectText}
-        />
-      ))}
-    </div>
-    <div className="text-center mt-6">
+    )
+  }
+
+  const addGroupButton = (
+    <div className="text-center mt-4">
       <div
         className={!report ? 'tooltip' : ''}
         data-tip={!report ? 'Please select a report first to add groups' : ''}
@@ -119,7 +99,76 @@ const BuildPagePreview = ({
         </Button>
       </div>
     </div>
-  </div>
-)
+  )
+
+  return (
+    <div className="border border-line rounded-lg shadow-md w-full max-w-3xl self-start">
+      {/* Theme 1 header */}
+      <header
+        className="flex items-center gap-4 px-6 py-4 border-b border-line rounded-t-lg"
+        style={{ backgroundColor: color }}
+      >
+        {isWithLogo(themeOption) && logo && (
+          <img
+            alt="Logo"
+            className="h-12 object-contain shrink-0"
+            src={resolveLogoSrc(logo)}
+          />
+        )}
+        <div>
+          <div className="flex flex-row items-center gap-1">
+            <EditLabel
+              label={title}
+              onChange={onTitleChange}
+              size="text-xl"
+              placeholder="Add a title"
+            />
+            <span className="required h-6">*</span>
+          </div>
+          <EditLabel
+            label={desc}
+            onChange={onDescChange}
+            size="text-sm"
+            textArea={true}
+            placeholder="Add a description"
+            color="#6a7282"
+          />
+        </div>
+      </header>
+
+      {/* Theme 1 layout */}
+      <main className="p-4">
+        <div className="mb-4">
+          <StatusLegend iconMode={selectIcon} />
+        </div>
+
+        {statusGroups.length > 0 && (
+          <div className="space-y-4">
+            {statusGroups.map((col, index) => (
+              <BuildExpandableGroup
+                key={col.name}
+                name={col.name}
+                alias={col.alias || ''}
+                items={col.list}
+                iconMode={selectIcon}
+                textMode={selectText}
+                columns={columns}
+                group={groupName}
+                onRename={(nextName) => onRenameGroup(index, nextName)}
+                onRemove={() => onRemoveGroup(index)}
+                onItemsChange={(next) => onUpdateGroup(index, next)}
+                onChangeAlias={(itemName, newAlias) =>
+                  onChangeItemAlias(col.name, itemName, newAlias)
+                }
+              />
+            ))}
+          </div>
+        )}
+
+        {addGroupButton}
+      </main>
+    </div>
+  )
+}
 
 export default BuildPagePreview

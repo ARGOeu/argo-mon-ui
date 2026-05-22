@@ -42,7 +42,7 @@ const StatusLabel = (props: StatusLabelProps) => {
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-3 min-w-0">
       {editMode && !props.readOnly ? (
         <>
           <input
@@ -64,24 +64,14 @@ const StatusLabel = (props: StatusLabelProps) => {
                 data-tip={props.readOnly ? '' : 'edit'}
               >
                 <span
-                  className={`${props.isGroupLabel ? 'font-bold text-xl' : 'font-medium text-sm'} ${props.readOnly ? 'text-body' : 'text-muted'} ${!props.readOnly ? 'cursor-pointer border-b border-transparent hover:border-black hover:border-dashed' : ''} tracking-wide break-words`}
-                  style={{
-                    wordBreak: 'break-word',
-                    overflowWrap: 'break-word',
-                  }}
+                  className={`${props.isGroupLabel ? 'font-bold text-lg' : 'font-medium text-sm'} ${props.readOnly ? 'text-body' : 'text-muted'} ${!props.readOnly ? 'cursor-pointer border-b border-transparent hover:border-black hover:border-dashed' : ''} tracking-wide break-all max-w-full line-clamp-2`}
                   onClick={props.readOnly ? undefined : handleEdit}
                 >
                   {props.alias ? props.alias : props.label}
                 </span>
               </div>
             ) : (
-              <span
-                className="font-medium text-muted border-b border-transparent text-sm tracking-wide break-words"
-                style={{
-                  wordBreak: 'break-word',
-                  overflowWrap: 'break-word',
-                }}
-              >
+              <span className="font-medium text-muted border-b border-transparent text-sm tracking-wide break-all line-clamp-2">
                 {props.label}
               </span>
             )}
