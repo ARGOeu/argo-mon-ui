@@ -52,8 +52,14 @@ export type PageThemingStatus = {
   text: string
 }
 
+export type ThemeOption =
+  | 'theme_1_with_logo'
+  | 'theme_1_no_logo'
+  | 'theme_2_with_logo'
+  | 'theme_2_no_logo'
+
 export type PageTheming = {
-  option?: 'theme_1' | 'theme_2'
+  option?: ThemeOption
   status: PageThemingStatus
   color?: string
   logo?: string

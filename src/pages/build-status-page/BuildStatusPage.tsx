@@ -26,6 +26,7 @@ import BuildThemingTab from './BuildThemingTab'
 import BuildPagePreview from './BuildPagePreview'
 import { useBuildStatusPage } from './useBuildStatusPage'
 import type { StatusItemType, StatusGroupType } from '@/types/common'
+import type { ThemeOption } from '@/types/pages'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 const DND_GROUP = 'status-board'
@@ -50,9 +51,8 @@ const BuildStatusPage = () => {
   const [desc, setDesc] = useState('')
   const [selectIcon, setSelectIcon] = useState('led')
   const [selectText, setSelectText] = useState('none')
-  const [themeOption, setThemeOption] = useState<'theme_1' | 'theme_2'>(
-    'theme_1',
-  )
+  const [themeOption, setThemeOption] =
+    useState<ThemeOption>('theme_1_with_logo')
   const [color, setColor] = useState('#FFFFFF')
   const [logo, setLogo] = useState('')
   const [logoUrl, setLogoUrl] = useState('')
@@ -62,8 +62,6 @@ const BuildStatusPage = () => {
   const [saved, setSaved] = useState(false)
   // remembers each item's last position in the LEFT list
   const leftIndexRef = useRef<Map<string, number>>(new Map())
-  // Track next group ID to avoid duplicate names when groups are deleted
-  const nextGroupIdRef = useRef(1)
 
   const { tenants: tenantsData } = useSelectedTenant()
   const { data: reportsData, isLoading: reportsLoading } = useGetTenantReports(
@@ -109,7 +107,6 @@ const BuildStatusPage = () => {
     saveMutate: savePageMutation.mutate,
     updateMutate: updatePageMutation.mutate,
     groupsMutate: groupsMutation.mutate,
-    nextGroupIdRef,
     leftIndexRef,
   })
 
@@ -133,7 +130,7 @@ const BuildStatusPage = () => {
       if (!tenantId) setTenantId(pageData.tenant_id)
       setSelectIcon(pageData.config?.theming?.status.icon || 'led')
       setSelectText(pageData.config?.theming?.status.text || 'none')
-      setThemeOption(pageData.config?.theming?.option || 'theme_1')
+      setThemeOption(pageData.config?.theming?.option || 'theme_1_with_logo')
       setColor(pageData.config?.theming?.color || '')
       setLogo(pageData.config?.theming?.logo || '')
       if (pageData.config?.theming?.logo) {
@@ -231,19 +228,6 @@ const BuildStatusPage = () => {
       columns,
     })
 
-  if (isEditMode && pageLoading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <LoadingSpinner size="md" />
-        <span className="ml-2">Loading page data...</span>
-      </div>
-    )
-  }
-
-  if (isEditMode && pageError) {
-    return <ErrorDisplay error={pageError} context="page" />
-  }
-
   return (
     <div>
       <div className="flex flex-col justify-center items-center px-6 md:px-0">
@@ -258,157 +242,165 @@ const BuildStatusPage = () => {
             className="pb-1 mb-3"
           />
 
-          <div className="flex flex-col md:flex-row justify-between md:items-center gap-3 md:gap-6 mb-1 md:mb-4">
-            <Tabs
-              tabs={[
-                {
-                  id: 'config',
-                  label: 'Config',
-                  icon: Cog6ToothIcon,
-                  hasError: !name.trim() || !slug.trim() || !tenantId,
-                },
-                {
-                  id: 'items',
-                  label: 'Items',
-                  icon: CubeIcon,
-                  hasError:
-                    statusGroups.length === 0 ||
-                    statusGroups.some((g) => g.list.length === 0),
-                },
-                { id: 'theming', label: 'Theming', icon: PaintBrushIcon },
-              ]}
-              activeTab={activeTab}
-              onChange={(id) =>
-                setActiveTab(id as 'config' | 'items' | 'theming')
-              }
-              className="flex-1 w-full"
-            />
-            <div className="flex justify-end gap-4 w-full md:w-auto 2xl:mr-25">
-              {saved && (
-                <Button
-                  variant="outline-primary"
-                  size="md"
-                  onClick={() =>
-                    window.open(
-                      `${window.location.origin}/status/${slug}`,
-                      '_blank',
-                    )
-                  }
-                >
-                  View Page
-                  <ArrowTopRightOnSquareIcon className="size-4 shrink-0" />
-                </Button>
-              )}
-              <Button
-                variant="primary"
-                size="md"
-                onClick={onSave}
-                disabled={isSaving}
-              >
-                {isSaving ? 'Saving...' : isEditMode ? 'Update' : 'Save'}
-              </Button>
+          {isEditMode && pageLoading ? (
+            <div className="loading-container">
+              <LoadingSpinner size="md" />
             </div>
-          </div>
-
-          <div className="flex items-center gap-[3px] mb-3">
-            <span className="inline-block size-[6px] rounded-full bg-red-500 shrink-0" />
-            <span className="text-sm text-muted font-medium">:</span>
-            <span className="text-sm text-subtle">
-              Indicates required fields are missing or invalid
-            </span>
-          </div>
-
-          <div
-            className={
-              activeTab === 'config'
-                ? ''
-                : 'flex flex-col xl:grid xl:grid-cols-[2fr_3fr] gap-8'
-            }
-          >
-            <div
-              className={activeTab === 'config' ? 'max-w-4xl w-full' : 'w-full'}
-            >
-              <div className={activeTab === 'config' ? 'block pt-1' : 'hidden'}>
-                <BuildConfigTab
-                  name={name}
-                  slug={slug}
-                  tenantId={tenantId}
-                  isEditMode={isEditMode}
-                  isTenantSelectionDisabled={isTenantSelectionDisabled}
-                  tenantsData={tenantsData}
-                  reportsData={reportsData}
-                  onNameChange={handleNameChange}
-                  onSlugChange={handleSlugChange}
-                  onTenantChange={handleTenantChange}
+          ) : isEditMode && pageError ? (
+            <ErrorDisplay error={pageError} context="page" />
+          ) : (
+            <>
+              <div className="flex flex-col md:flex-row justify-between md:items-center gap-3 md:gap-6 mb-1 md:mb-4">
+                <Tabs
+                  tabs={[
+                    {
+                      id: 'config',
+                      label: 'Config',
+                      icon: Cog6ToothIcon,
+                      hasError: !name.trim() || !slug.trim() || !tenantId,
+                    },
+                    {
+                      id: 'items',
+                      label: 'Items',
+                      icon: CubeIcon,
+                      hasError:
+                        statusGroups.length === 0 ||
+                        statusGroups.some((g) => g.list.length === 0),
+                    },
+                    { id: 'theming', label: 'Theming', icon: PaintBrushIcon },
+                  ]}
+                  activeTab={activeTab}
+                  onChange={(id) =>
+                    setActiveTab(id as 'config' | 'items' | 'theming')
+                  }
+                  className="flex-1 w-full"
                 />
+                <div className="flex justify-end gap-4 w-full md:w-auto 2xl:mr-25">
+                  {saved && (
+                    <Button
+                      variant="outline-primary"
+                      size="md"
+                      onClick={() =>
+                        window.open(
+                          `${window.location.origin}/status/${slug}`,
+                          '_blank',
+                        )
+                      }
+                    >
+                      View Page
+                      <ArrowTopRightOnSquareIcon className="size-4 shrink-0" />
+                    </Button>
+                  )}
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={onSave}
+                    disabled={isSaving}
+                  >
+                    {isSaving ? 'Saving...' : isEditMode ? 'Update' : 'Save'}
+                  </Button>
+                </div>
               </div>
 
-              <div className={activeTab === 'items' ? 'block pt-1' : 'hidden'}>
-                <BuildItemsTab
-                  tenantId={tenantId}
-                  report={report}
-                  reportsData={reportsData}
-                  reportsLoading={reportsLoading}
-                  groupsMutationIsPending={groupsMutationIsPending}
-                  groupsMutationData={groupsMutationData}
-                  parent={parent}
-                  items={items}
-                  statusGroups={statusGroups}
-                  selectIcon={selectIcon}
-                  selectText={selectText}
-                  onReportChange={(value) => setReport(value)}
-                />
+              <div className="flex items-center gap-[3px] mb-3">
+                <span className="inline-block size-[6px] rounded-full bg-red-500 shrink-0" />
+                <span className="text-sm text-muted font-medium">:</span>
+                <span className="text-sm text-subtle">
+                  Indicates required fields are missing or invalid
+                </span>
               </div>
 
               <div
-                className={activeTab === 'theming' ? 'block pt-1' : 'hidden'}
+                className={
+                  activeTab === 'config'
+                    ? ''
+                    : 'flex flex-col xl:grid xl:grid-cols-[2fr_3fr] gap-8'
+                }
               >
-                <BuildThemingTab
-                  color={color}
-                  logoUrl={logoUrl}
-                  logoPreview={logoPreview}
-                  selectIcon={selectIcon}
-                  selectText={selectText}
-                  columns={columns}
-                  themeOption={themeOption}
-                  onColorChange={(v) => setColor(v)}
-                  onLogoUrlChange={handleLogoUrlChange}
-                  onRemoveLogo={handleRemoveLogo}
-                  onLogoFileChange={handleLogoFileChange}
-                  onIconChange={(v) => setSelectIcon(v)}
-                  onTextChange={(v) => setSelectText(v)}
-                  onColumnsChange={(v) => setColumns(v)}
-                  onThemeOptionChange={(v) =>
-                    setThemeOption(v as 'theme_1' | 'theme_2')
+                <div
+                  className={
+                    activeTab === 'config' ? 'max-w-4xl w-full' : 'w-full'
                   }
-                />
-              </div>
-            </div>
+                >
+                  <div className={activeTab === 'config' ? 'block' : 'hidden'}>
+                    <BuildConfigTab
+                      name={name}
+                      slug={slug}
+                      tenantId={tenantId}
+                      isEditMode={isEditMode}
+                      isTenantSelectionDisabled={isTenantSelectionDisabled}
+                      tenantsData={tenantsData}
+                      reportsData={reportsData}
+                      onNameChange={handleNameChange}
+                      onSlugChange={handleSlugChange}
+                      onTenantChange={handleTenantChange}
+                    />
+                  </div>
 
-            {activeTab !== 'config' && (
-              <BuildPagePreview
-                color={color}
-                logo={logo}
-                title={title}
-                desc={desc}
-                statusGroups={statusGroups}
-                groupName={DND_GROUP}
-                columns={columns}
-                selectIcon={selectIcon}
-                selectText={selectText}
-                report={report}
-                themeOption={themeOption}
-                groupsMutationIsPending={groupsMutationIsPending}
-                onTitleChange={setTitle}
-                onDescChange={setDesc}
-                onUpdateGroup={updateGroup}
-                onRenameGroup={renameGroup}
-                onRemoveGroup={removeGroup}
-                onChangeItemAlias={handleChangeItemAlias}
-                onAddStatusGroup={handleAddStatusGroup}
-              />
-            )}
-          </div>
+                  <div className={activeTab === 'items' ? 'block' : 'hidden'}>
+                    <BuildItemsTab
+                      tenantId={tenantId}
+                      report={report}
+                      reportsData={reportsData}
+                      reportsLoading={reportsLoading}
+                      groupsMutationIsPending={groupsMutationIsPending}
+                      groupsMutationData={groupsMutationData}
+                      parent={parent}
+                      items={items}
+                      statusGroups={statusGroups}
+                      selectIcon={selectIcon}
+                      selectText={selectText}
+                      onReportChange={(value) => setReport(value)}
+                    />
+                  </div>
+
+                  <div className={activeTab === 'theming' ? 'block' : 'hidden'}>
+                    <BuildThemingTab
+                      color={color}
+                      logoUrl={logoUrl}
+                      logoPreview={logoPreview}
+                      selectIcon={selectIcon}
+                      selectText={selectText}
+                      columns={columns}
+                      themeOption={themeOption}
+                      onColorChange={(v) => setColor(v)}
+                      onLogoUrlChange={handleLogoUrlChange}
+                      onRemoveLogo={handleRemoveLogo}
+                      onLogoFileChange={handleLogoFileChange}
+                      onIconChange={(v) => setSelectIcon(v)}
+                      onTextChange={(v) => setSelectText(v)}
+                      onColumnsChange={(v) => setColumns(v)}
+                      onThemeOptionChange={(v) => setThemeOption(v)}
+                    />
+                  </div>
+                </div>
+
+                {activeTab !== 'config' && (
+                  <BuildPagePreview
+                    color={color}
+                    logo={logo}
+                    title={title}
+                    desc={desc}
+                    statusGroups={statusGroups}
+                    groupName={DND_GROUP}
+                    columns={columns}
+                    selectIcon={selectIcon}
+                    selectText={selectText}
+                    report={report}
+                    themeOption={themeOption}
+                    groupsMutationIsPending={groupsMutationIsPending}
+                    onTitleChange={setTitle}
+                    onDescChange={setDesc}
+                    onUpdateGroup={updateGroup}
+                    onRenameGroup={renameGroup}
+                    onRemoveGroup={removeGroup}
+                    onChangeItemAlias={handleChangeItemAlias}
+                    onAddStatusGroup={handleAddStatusGroup}
+                  />
+                )}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

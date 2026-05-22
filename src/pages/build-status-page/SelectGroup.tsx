@@ -13,6 +13,7 @@ interface SelectGroupProps {
   children: ReactElement<SelectItemProps> | ReactElement<SelectItemProps>[]
   selected?: string
   onChange?: (value: string) => void
+  className?: string
 }
 
 interface SelectItemData {
@@ -20,7 +21,12 @@ interface SelectItemData {
   children: ReactNode
 }
 
-const SelectGroup = ({ children, selected, onChange }: SelectGroupProps) => {
+const SelectGroup = ({
+  children,
+  selected,
+  onChange,
+  className,
+}: SelectGroupProps) => {
   const items =
     Children.map(children, (child: ReactElement<SelectItemProps>) => {
       if (child?.type === SelectItem) {
@@ -39,7 +45,7 @@ const SelectGroup = ({ children, selected, onChange }: SelectGroupProps) => {
   }
 
   return (
-    <div className="flex flex-row gap-2 flex-wrap">
+    <div className={className ?? 'flex flex-row gap-2 flex-wrap'}>
       {items.map((item: SelectItemData) => {
         const isSelected = selected === item.value
 
@@ -47,7 +53,7 @@ const SelectGroup = ({ children, selected, onChange }: SelectGroupProps) => {
           <button
             key={item.value}
             onClick={() => handleClick(item.value)}
-            className={`btn h-9 px-3 text-sm ${
+            className={`btn !h-auto !py-1.5 px-3 text-sm ${
               isSelected
                 ? 'bg-brand-subtle border-brand text-brand hover:bg-brand-muted hover:border-brand font-medium'
                 : 'bg-surface-muted border-line text-body hover:bg-surface-strong hover:border-line-strong font-normal'

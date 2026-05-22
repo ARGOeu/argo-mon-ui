@@ -18,7 +18,7 @@ import EndpointsAccess from './pages/endpoints-access'
 import ManageTenantMembers from './pages/manage-tenant-members'
 import MyInvitations from './pages/MyInvitations'
 import { InvitationReview } from './pages/InvitationReview'
-import { ExpandableStatus } from './pages/ExpandableStatus'
+import PublicStatusPage from './pages/PublicStatusPage'
 import {
   TenantTopology,
   CreateTopologyEndpoint,
@@ -65,7 +65,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <Routes>
-            <Route path="status/:slug" element={<ExpandableStatus />} />
+            <Route path="status/:slug" element={<PublicStatusPage />} />
             <Route element={<AuthLayout />}>
               <Route path="invitation/:id" element={<InvitationReview />} />
               <Route element={<Layout />}>

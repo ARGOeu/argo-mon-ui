@@ -51,8 +51,8 @@ export default function StatusGroup(props: StatusGroupProps) {
   }, [orderedItems, onItemsChange])
 
   return (
-    <div className="mb-5">
-      <div className="flex flex-row justify-center items-center px-0 py-2 relative">
+    <div className="mb-3">
+      <div className="flex flex-row justify-center items-center pr-12 py-2 relative">
         <StatusLabel
           group={props.name}
           label={props.name}
@@ -63,7 +63,7 @@ export default function StatusGroup(props: StatusGroupProps) {
         />
         {!props.readOnly && (
           <Button
-            className="p-0 absolute right-0 tooltip"
+            className="p-0 absolute right-0 tooltip tooltip-left"
             size="sm"
             variant="outline-secondary"
             onClick={props.onRemove}
