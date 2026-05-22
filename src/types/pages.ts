@@ -52,11 +52,7 @@ export type PageThemingStatus = {
   text: string
 }
 
-export type ThemeOption =
-  | 'theme_1_with_logo'
-  | 'theme_1_no_logo'
-  | 'theme_2_with_logo'
-  | 'theme_2_no_logo'
+export type ThemeOption = 'theme_1' | 'theme_2'
 
 export type PageTheming = {
   option?: ThemeOption
@@ -64,4 +60,5 @@ export type PageTheming = {
   color?: string
   logo?: string
   columns?: string
+  has_logo?: boolean
 }

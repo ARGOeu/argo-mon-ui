@@ -51,8 +51,8 @@ const BuildStatusPage = () => {
   const [desc, setDesc] = useState('')
   const [selectIcon, setSelectIcon] = useState('led')
   const [selectText, setSelectText] = useState('none')
-  const [themeOption, setThemeOption] =
-    useState<ThemeOption>('theme_1_with_logo')
+  const [themeOption, setThemeOption] = useState<ThemeOption>('theme_1')
+  const [hasLogo, setHasLogo] = useState(false)
   const [color, setColor] = useState('#FFFFFF')
   const [logo, setLogo] = useState('')
   const [logoUrl, setLogoUrl] = useState('')
@@ -130,7 +130,10 @@ const BuildStatusPage = () => {
       if (!tenantId) setTenantId(pageData.tenant_id)
       setSelectIcon(pageData.config?.theming?.status.icon || 'led')
       setSelectText(pageData.config?.theming?.status.text || 'none')
-      setThemeOption(pageData.config?.theming?.option || 'theme_1_with_logo')
+      setThemeOption(pageData.config?.theming?.option || 'theme_1')
+      setHasLogo(
+        pageData.config?.theming?.has_logo ?? !!pageData.config?.theming?.logo,
+      )
       setColor(pageData.config?.theming?.color || '')
       setLogo(pageData.config?.theming?.logo || '')
       if (pageData.config?.theming?.logo) {
@@ -226,6 +229,7 @@ const BuildStatusPage = () => {
       color,
       logo,
       columns,
+      hasLogo,
     })
 
   return (
@@ -267,7 +271,12 @@ const BuildStatusPage = () => {
                         statusGroups.length === 0 ||
                         statusGroups.some((g) => g.list.length === 0),
                     },
-                    { id: 'theming', label: 'Theming', icon: PaintBrushIcon },
+                    {
+                      id: 'theming',
+                      label: 'Theming',
+                      icon: PaintBrushIcon,
+                      hasError: hasLogo && !logo,
+                    },
                   ]}
                   activeTab={activeTab}
                   onChange={(id) =>
@@ -357,6 +366,7 @@ const BuildStatusPage = () => {
                   <div className={activeTab === 'theming' ? 'block' : 'hidden'}>
                     <BuildThemingTab
                       color={color}
+                      hasLogo={hasLogo}
                       logoUrl={logoUrl}
                       logoPreview={logoPreview}
                       selectIcon={selectIcon}
@@ -364,6 +374,7 @@ const BuildStatusPage = () => {
                       columns={columns}
                       themeOption={themeOption}
                       onColorChange={(v) => setColor(v)}
+                      onHasLogoChange={(v) => setHasLogo(v)}
                       onLogoUrlChange={handleLogoUrlChange}
                       onRemoveLogo={handleRemoveLogo}
                       onLogoFileChange={handleLogoFileChange}
@@ -379,6 +390,7 @@ const BuildStatusPage = () => {
                   <BuildPagePreview
                     color={color}
                     logo={logo}
+                    hasLogo={hasLogo}
                     title={title}
                     desc={desc}
                     statusGroups={statusGroups}

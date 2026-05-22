@@ -1,6 +1,6 @@
 import Button from '@/components/Button'
 import StatusLegend from '@/components/StatusLegend'
-import { isWithLogo, resolveLogoSrc } from '@/utils/logoUtils'
+import { resolveLogoSrc } from '@/pages/build-status-page/utils/logoUtils'
 import BuildExpandableGroup from '@/pages/build-status-page/BuildExpandableGroup'
 import BuildStatus from '@/pages/build-status-page/BuildStatus'
 import EditLabel from '@/pages/build-status-page/EditLabel'
@@ -10,6 +10,7 @@ import type { ThemeOption } from '@/types/pages'
 interface BuildPagePreviewProps {
   color: string
   logo: string
+  hasLogo: boolean
   title: string
   desc: string
   statusGroups: StatusGroupType[]
@@ -36,6 +37,7 @@ interface BuildPagePreviewProps {
 const BuildPagePreview = ({
   color,
   logo,
+  hasLogo,
   title,
   desc,
   statusGroups,
@@ -54,14 +56,13 @@ const BuildPagePreview = ({
   onChangeItemAlias,
   onAddStatusGroup,
 }: BuildPagePreviewProps) => {
-  const theme2 = themeOption.startsWith('theme_2')
-
-  if (theme2) {
+  if (themeOption === 'theme_2') {
     return (
       <div className="w-full max-w-3xl self-start">
         <BuildStatus
           color={color}
           logo={logo}
+          hasLogo={hasLogo}
           title={title}
           desc={desc}
           statusGroups={statusGroups}
@@ -70,7 +71,6 @@ const BuildPagePreview = ({
           selectIcon={selectIcon}
           selectText={selectText}
           report={report}
-          themeOption={themeOption}
           groupsMutationIsPending={groupsMutationIsPending}
           onTitleChange={onTitleChange}
           onDescChange={onDescChange}
@@ -108,7 +108,7 @@ const BuildPagePreview = ({
         className="flex items-center gap-4 px-6 py-4 border-b border-line rounded-t-lg"
         style={{ backgroundColor: color }}
       >
-        {isWithLogo(themeOption) && logo && (
+        {hasLogo && logo && (
           <img
             alt="Logo"
             className="h-12 object-contain shrink-0"

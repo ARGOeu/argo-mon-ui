@@ -53,7 +53,7 @@ const SelectGroup = ({
           <button
             key={item.value}
             onClick={() => handleClick(item.value)}
-            className={`btn !h-auto !py-1.5 px-3 text-sm ${
+            className={`btn rounded-lg !h-auto !py-1 px-3 text-sm ${
               isSelected
                 ? 'bg-brand-subtle border-brand text-brand hover:bg-brand-muted hover:border-brand font-medium'
                 : 'bg-surface-muted border-line text-body hover:bg-surface-strong hover:border-line-strong font-normal'

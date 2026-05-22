@@ -1,15 +1,15 @@
 import Button from '@/components/Button'
 import StatusLegend from '@/components/StatusLegend'
-import { isWithLogo, resolveLogoSrc } from '@/utils/logoUtils'
+import { resolveLogoSrc } from '@/pages/build-status-page/utils/logoUtils'
 import EditLabel from '@/pages/build-status-page/EditLabel'
 import StatusGroup from '@/pages/build-status-page/StatusGroup'
 import { getStatusClass } from '@/utils/status'
 import type { StatusGroupType, StatusItemType } from '@/types/common'
-import type { ThemeOption } from '@/types/pages'
 
 interface BuildStatusProps {
   color: string
   logo: string
+  hasLogo: boolean
   title: string
   desc: string
   statusGroups: StatusGroupType[]
@@ -18,7 +18,6 @@ interface BuildStatusProps {
   selectIcon: string
   selectText: string
   report: string
-  themeOption: ThemeOption
   groupsMutationIsPending: boolean
   onTitleChange: (value: string) => void
   onDescChange: (value: string) => void
@@ -44,7 +43,7 @@ const BuildStatus = ({
   selectIcon,
   selectText,
   report,
-  themeOption,
+  hasLogo,
   groupsMutationIsPending,
   onTitleChange,
   onDescChange,
@@ -54,8 +53,7 @@ const BuildStatus = ({
   onChangeItemAlias,
   onAddStatusGroup,
 }: BuildStatusProps) => {
-  const resolvedLogo =
-    logo && isWithLogo(themeOption) ? resolveLogoSrc(logo) : undefined
+  const resolvedLogo = logo && hasLogo ? resolveLogoSrc(logo) : undefined
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">

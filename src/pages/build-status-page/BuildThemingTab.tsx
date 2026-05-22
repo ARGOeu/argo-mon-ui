@@ -4,7 +4,7 @@ import {
   PhotoIcon,
   CheckCircleIcon,
 } from '@heroicons/react/16/solid'
-import { BanIcon, Columns2Icon, SquareIcon } from 'lucide-react'
+import { BanIcon, Columns2Icon, LayoutListIcon, SquareIcon } from 'lucide-react'
 import { useDropzone } from 'react-dropzone'
 import { toast } from 'sonner'
 import SelectGroup from './SelectGroup'
@@ -16,6 +16,7 @@ const labelClass = 'block text-sm font-medium text-body mb-1'
 
 interface BuildThemingTabProps {
   color: string
+  hasLogo: boolean
   logoUrl: string
   logoPreview: string | null
   selectIcon: string
@@ -23,6 +24,7 @@ interface BuildThemingTabProps {
   columns: string
   themeOption: ThemeOption
   onColorChange: (value: string) => void
+  onHasLogoChange: (value: boolean) => void
   onLogoUrlChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   onRemoveLogo: (e: React.MouseEvent) => void
   onLogoFileChange: (base64: string) => void
@@ -34,6 +36,7 @@ interface BuildThemingTabProps {
 
 const BuildThemingTab = ({
   color,
+  hasLogo,
   logoUrl,
   logoPreview,
   selectIcon,
@@ -41,6 +44,7 @@ const BuildThemingTab = ({
   columns,
   themeOption,
   onColorChange,
+  onHasLogoChange,
   onLogoUrlChange,
   onRemoveLogo,
   onLogoFileChange,
@@ -118,93 +122,103 @@ const BuildThemingTab = ({
                 className="grid grid-cols-2 gap-2"
                 onChange={(val) => onThemeOptionChange(val as ThemeOption)}
               >
-                <SelectGroup.Item value="theme_1_with_logo">
+                <SelectGroup.Item value="theme_1">
+                  <LayoutListIcon className="w-4 shrink-0" />
+                  <div>Theme 1</div>
+                </SelectGroup.Item>
+                <SelectGroup.Item value="theme_2">
                   <PhotoIcon className="w-4 shrink-0" />
-                  <div>Theme 1 with Logo</div>
-                </SelectGroup.Item>
-                <SelectGroup.Item value="theme_1_no_logo">
-                  <BanIcon className="w-4 shrink-0" />
-                  <div>Theme 1 with no Logo</div>
-                </SelectGroup.Item>
-                <SelectGroup.Item value="theme_2_with_logo">
-                  <PhotoIcon className="w-4 shrink-0" />
-                  <div>Theme 2 with Logo</div>
-                </SelectGroup.Item>
-                <SelectGroup.Item value="theme_2_no_logo">
-                  <BanIcon className="w-4 shrink-0" />
-                  <div>Theme 2 with no Logo</div>
+                  <div>Theme 2</div>
                 </SelectGroup.Item>
               </SelectGroup>
             </div>
 
-            {themeOption.includes('with_logo') && (
-              <div>
-                <label className={labelClass}>Logo:</label>
-                <div
-                  {...getRootProps()}
-                  className={`border-2 border-dashed rounded-lg p-3 text-center cursor-pointer transition-colors flex flex-col items-center justify-center ${
-                    isDragActive
-                      ? 'border-blue-400 bg-brand-subtle'
-                      : 'border-line-strong bg-surface-muted hover:border-gray-400'
-                  }`}
-                >
-                  <input {...getInputProps()} />
-                  {logoPreview ? (
-                    <div className="relative flex flex-col items-center gap-1 w-full">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          onRemoveLogo(e)
-                        }}
-                        className="absolute -top-1 -right-1 bg-gray-600 hover:bg-gray-700 rounded-full w-6 h-6 flex items-center justify-center z-10 shadow-md cursor-pointer"
-                        aria-label="Remove logo"
-                      >
-                        <XMarkIcon className="w-4 h-4 text-white" />
-                      </button>
-                      <img
-                        alt="Logo"
-                        className="h-24 w-24 object-contain rounded"
-                        src={
-                          logoPreview?.startsWith('http') ||
-                          logoPreview?.startsWith('data:')
-                            ? logoPreview
-                            : `${BACKEND_API}${logoPreview}`
-                        }
-                      />
-                      <p className="text-sm text-muted">
-                        Click or drag to change
-                      </p>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="text-subtle mb-1">
-                        <PhotoIcon className="mx-auto h-10 w-10" />
-                      </div>
-                      <p className="text-sm text-muted">
-                        {isDragActive
-                          ? 'Drop logo here'
-                          : 'Drop logo here or click to upload'}
-                      </p>
-                    </>
-                  )}
-                </div>
-                <div className="flex items-center my-2">
-                  <div className="flex-1 border-b border-line-strong"></div>
-                  <span className="px-3 text-xs text-muted font-medium uppercase">
-                    OR
+            <div>
+              <div className="flex items-center gap-3 mt-4 mb-1">
+                <span className={labelClass}>
+                  Logo:
+                  {hasLogo && <span className="required ml-0.5">*</span>}
+                </span>
+                <div className="flex items-center gap-2 mb-1">
+                  <input
+                    type="checkbox"
+                    className="toggle toggle-sm toggle-brand"
+                    checked={hasLogo}
+                    onChange={(e) => onHasLogoChange(e.target.checked)}
+                  />
+                  <span className="text-sm text-muted">
+                    {hasLogo ? 'Enabled' : 'Disabled'}
                   </span>
-                  <div className="flex-1 border-b border-line-strong"></div>
                 </div>
-                <input
-                  type="url"
-                  value={logoUrl}
-                  onChange={onLogoUrlChange}
-                  className="w-full"
-                  placeholder="Enter logo URL"
-                />
               </div>
-            )}
+              {hasLogo && (
+                <div className="space-y-2">
+                  <div
+                    {...getRootProps()}
+                    className={`border-2 border-dashed rounded-lg p-3 text-center cursor-pointer transition-colors flex flex-col items-center justify-center ${
+                      isDragActive
+                        ? 'border-blue-400 bg-brand-subtle'
+                        : 'border-line-strong bg-surface-muted hover:border-gray-400'
+                    }`}
+                  >
+                    <input {...getInputProps()} />
+                    {logoPreview ? (
+                      <div className="relative flex flex-col items-center gap-1 w-full">
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            onRemoveLogo(e)
+                          }}
+                          className="absolute -top-1 -right-1 bg-gray-600 hover:bg-gray-700 rounded-full w-6 h-6 flex items-center justify-center z-10 shadow-md cursor-pointer"
+                          aria-label="Remove logo"
+                        >
+                          <XMarkIcon className="w-4 h-4 text-white" />
+                        </button>
+                        <img
+                          alt="Logo"
+                          className="h-24 w-24 object-contain rounded"
+                          src={
+                            logoPreview?.startsWith('http') ||
+                            logoPreview?.startsWith('data:')
+                              ? logoPreview
+                              : `${BACKEND_API}${logoPreview}`
+                          }
+                        />
+                        <p className="text-sm text-muted">
+                          Click or drag to change
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="text-subtle mb-1">
+                          <PhotoIcon className="mx-auto h-10 w-10" />
+                        </div>
+                        <p className="text-sm text-muted">
+                          {isDragActive
+                            ? 'Drop logo here'
+                            : 'Drop logo here or click to upload'}
+                        </p>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex items-center my-1">
+                    <div className="flex-1 border-b border-line-strong"></div>
+                    <span className="px-3 text-xs text-muted font-medium uppercase">
+                      OR
+                    </span>
+                    <div className="flex-1 border-b border-line-strong"></div>
+                  </div>
+                  <input
+                    type="url"
+                    value={logoUrl}
+                    onChange={onLogoUrlChange}
+                    className="w-full"
+                    placeholder="Enter logo URL"
+                  />
+                </div>
+              )}
+            </div>
 
             <div>
               <label className={labelClass}>Status Icon:</label>
