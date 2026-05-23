@@ -516,9 +516,6 @@ export default function Dashboard() {
               {weekAvg}
               <span className="text-base text-neutral-400">%</span>
             </p>
-            <p className="mt-2 text-[11px] text-neutral-400">
-              SLA target: 99.5%
-            </p>
           </div>
         </div>
       </section>
