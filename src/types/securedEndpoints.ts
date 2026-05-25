@@ -3,6 +3,7 @@ export type SecuredEndpoint = {
   action: string
   path: string
   description?: string
+  scopes?: string[]
 }
 
 export type SecuredEndpointsPage = {
@@ -13,10 +14,15 @@ export type SecuredEndpointsPage = {
   total_pages: number
 }
 
+export type EndpointAssignment = {
+  secured_endpoint_id: string
+  scope?: string
+}
+
 export type RoleAssignment = {
   role_id: string
   role_name: string
-  secured_endpoint_ids: string[]
+  secured_endpoints: EndpointAssignment[]
 }
 
 export type RoleAssignmentsResponse = {
@@ -24,7 +30,7 @@ export type RoleAssignmentsResponse = {
 }
 
 export type AssignEndpointsRequest = {
-  secured_endpoint_ids: string[]
+  secured_endpoint_assignments: EndpointAssignment[]
 }
 
 export type RoleEndpointAssignmentResponse = {
