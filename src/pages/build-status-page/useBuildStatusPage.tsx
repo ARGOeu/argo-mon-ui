@@ -31,6 +31,7 @@ export type PageFormValues = {
   color: string
   logo: string
   columns: string
+  hasLogo: boolean
 }
 
 const toastErrors = (error: Error & { errors?: string[] }, action: string) => {
@@ -184,6 +185,7 @@ export const useBuildStatusPage = ({
       color,
       logo,
       columns,
+      hasLogo,
     } = values
 
     const data = {
@@ -197,13 +199,14 @@ export const useBuildStatusPage = ({
         theming: {
           option: themeOption,
           status: { icon: selectIcon, text: selectText },
-          ...(themeOption.includes('with_logo') &&
-            logo && {
-              logo:
-                logo.startsWith('http') || logo.startsWith('data:')
-                  ? logo
-                  : `${BACKEND_API}${logo}`,
-            }),
+          has_logo: hasLogo,
+          ...(hasLogo && {
+            logo: logo
+              ? logo.startsWith('http') || logo.startsWith('data:')
+                ? logo
+                : `${BACKEND_API}${logo}`
+              : '',
+          }),
           color,
           columns,
         },

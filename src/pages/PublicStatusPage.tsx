@@ -4,15 +4,11 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import { ExpandableStatus } from './ExpandableStatus'
 import { Status } from './Status'
-import type { ThemeOption } from '@/types/pages'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
-const resolveLogo = (
-  option?: ThemeOption,
-  raw?: string,
-): string | undefined => {
-  if (!raw || !option?.includes('with_logo')) return undefined
+const resolveLogo = (hasLogo?: boolean, raw?: string): string | undefined => {
+  if (!raw || !hasLogo) return undefined
   return raw.startsWith('http') || raw.startsWith('data:')
     ? raw
     : `${BACKEND_API}${raw}`
@@ -32,11 +28,11 @@ const PublicStatusPage = () => {
             <div className="text-lg text-muted">Loading status page...</div>
           </div>
         ) : statusData ? (
-          statusData.theming?.option?.startsWith('theme_2') ? (
+          statusData.theming?.option === 'theme_2' ? (
             <Status
               statusData={statusData}
               logo={resolveLogo(
-                statusData.theming?.option,
+                statusData.theming?.has_logo ?? !!statusData.theming?.logo,
                 statusData.theming?.logo,
               )}
             />
@@ -44,7 +40,7 @@ const PublicStatusPage = () => {
             <ExpandableStatus
               statusData={statusData}
               logo={resolveLogo(
-                statusData.theming?.option,
+                statusData.theming?.has_logo ?? !!statusData.theming?.logo,
                 statusData.theming?.logo,
               )}
             />
