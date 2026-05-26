@@ -105,26 +105,25 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {membersData?.content && membersData.content.length > 0 ? (
-                  membersData.content.map((member) => {
-                    const tenantInfo = member.tenants?.find(
-                      (t) => t.name === tenantName,
-                    )
-                    return (
-                      <tr key={member.id} className="hover:bg-surface-muted">
+                  membersData.content.flatMap((member) => {
+                    const tenantRoles =
+                      member.tenants?.filter((t) => t.name === tenantName) ?? []
+                    return tenantRoles.map((tenantInfo) => (
+                      <tr
+                        key={`${member.id}-${tenantInfo.role}`}
+                        className="hover:bg-surface-muted"
+                      >
                         <td className={tdBase}>{member.firstName || '-'}</td>
                         <td className={tdBase}>{member.lastName || '-'}</td>
                         <td className={tdBase}>{member.email}</td>
                         <td className={tdBase}>
                           <Badge
                             className={
-                              roleBadgeClass[
-                                tenantInfo?.role ?? 'tenant_viewer'
-                              ] ?? 'bg-surface-strong text-muted'
+                              roleBadgeClass[tenantInfo.role] ??
+                              'bg-surface-strong text-muted'
                             }
                           >
-                            {tenantInfo?.role === 'tenant_admin'
-                              ? 'Tenant Admin'
-                              : 'Member'}
+                            {tenantInfo.role}
                           </Badge>
                         </td>
                         <td className={`${tdBase} px-6`}>
@@ -135,14 +134,14 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
                               handleRemoveClick(
                                 member.id,
                                 member.email,
-                                tenantInfo?.role ?? '',
+                                tenantInfo.role,
                               )
                             }
                             className="text-red-500 hover:bg-red-50"
                           />
                         </td>
                       </tr>
-                    )
+                    ))
                   })
                 ) : (
                   <tr>
@@ -182,12 +181,13 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
         message={
           memberToRemove ? (
             <>
-              Are you sure you want to remove user with email{' '}
-              <strong>{memberToRemove.email}</strong> from tenant{' '}
+              Are you sure you want to revoke the{' '}
+              <strong>{memberToRemove.role}</strong> role from{' '}
+              <strong>{memberToRemove.email}</strong> in tenant{' '}
               <strong>{tenantName}</strong>?
               <br />
               <span className="text-amber-600 font-medium">
-                The user will lose access to this tenant.
+                The user will lose all permissions associated with this role.
               </span>
             </>
           ) : (

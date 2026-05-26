@@ -206,9 +206,7 @@ export const InvitationReview = () => {
                   Role
                 </label>
                 <div className="text-sm text-gray-800 px-3 py-2 bg-surface-muted rounded-md border border-line">
-                  {invitation?.role === 'tenant_admin'
-                    ? 'Tenant Admin'
-                    : 'Member'}
+                  {invitation?.role}
                 </div>
               </div>
 
@@ -242,13 +240,9 @@ export const InvitationReview = () => {
             <div className="mt-4 p-4 bg-brand-subtle border border-blue-200 rounded-lg">
               <p className="m-0 text-sm text-blue-800 leading-relaxed">
                 By accepting this invitation, you will become a{' '}
-                <strong>
-                  {invitation?.role === 'tenant_admin'
-                    ? 'Tenant Admin'
-                    : 'Member'}
-                </strong>{' '}
-                of the <strong>{invitation?.tenant_name}</strong> tenant. You
-                will be able to
+                <strong>{invitation?.role}</strong> of the{' '}
+                <strong>{invitation?.tenant_name}</strong> tenant. You will be
+                able to
                 {invitation?.role === 'tenant_admin'
                   ? ' manage tenant settings, members, and projects.'
                   : ' view tenant information.'}
