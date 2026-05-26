@@ -240,11 +240,13 @@ const CreateTopologyEndpoint = ({
     }
 
     const fullUrl = formData.url.trim()
+    const hasScheme = /^https?:\/\//i.test(fullUrl)
     let extractedHostname = fullUrl
     try {
-      extractedHostname = new URL(fullUrl).hostname
-    } catch (e) {
-      console.warn('Could not parse URL hostname:', e)
+      extractedHostname = new URL(hasScheme ? fullUrl : `https://${fullUrl}`)
+        .hostname
+    } catch {
+      extractedHostname = fullUrl.split('/')[0]
     }
 
     const existingEndpoint = latestEndpoints?.find(
