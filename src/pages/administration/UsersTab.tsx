@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react'
+import { useState, useMemo, useEffect, useRef } from 'react'
 import { useAuth } from '@/auth/useAuth'
 import { useGetMembers } from '@/hooks/useTenants'
 import { UserCircleIcon } from '@heroicons/react/16/solid'
@@ -16,7 +16,38 @@ type SortDirection = 'asc' | 'desc'
 const pageSize = 10
 
 const tenantBadgeBase =
-  'inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap'
+  'tooltip inline-flex items-center px-2 py-0.5 text-xs font-medium rounded-full max-w-[120px]'
+
+const TenantBadge = ({
+  name,
+  role,
+  colorClass,
+}: {
+  name: string
+  role: string
+  colorClass: string
+}) => {
+  const textRef = useRef<HTMLSpanElement>(null)
+  const [isTruncated, setIsTruncated] = useState(false)
+
+  useEffect(() => {
+    const el = textRef.current
+    if (el) {
+      setIsTruncated(el.scrollWidth > el.clientWidth)
+    }
+  }, [name])
+
+  return (
+    <span
+      className={`${tenantBadgeBase} ${colorClass}`}
+      data-tip={isTruncated ? `${name} (${role})` : role}
+    >
+      <span ref={textRef} className="truncate min-w-0">
+        {name}
+      </span>
+    </span>
+  )
+}
 
 const UsersTab = () => {
   const [searchInput, setSearchInput] = useState('')
@@ -135,7 +166,7 @@ const UsersTab = () => {
                       Last Name
                     </SortableColumnHeader>
                   </th>
-                  <th className={`${thBase} w-[30%]`}>
+                  <th className={`${thBase} w-[25%]`}>
                     <SortableColumnHeader
                       isActive={sortColumn === 'email'}
                       isAscending={sortDirection === 'asc'}
@@ -144,7 +175,7 @@ const UsersTab = () => {
                       Email
                     </SortableColumnHeader>
                   </th>
-                  <th className={`${thBase} w-[20%]`}>
+                  <th className={`${thBase} w-[25%]`}>
                     <SortableColumnHeader
                       isActive={sortColumn === 'tenants'}
                       isAscending={sortDirection === 'asc'}
@@ -187,21 +218,16 @@ const UsersTab = () => {
                       <div className="flex flex-wrap gap-1.5">
                         {user.tenants && user.tenants.length > 0 ? (
                           user.tenants.map((tenant, index) => (
-                            <span
+                            <TenantBadge
                               key={index}
-                              className={`tooltip ${tenantBadgeBase} ${
+                              name={tenant.name}
+                              role={tenant.role}
+                              colorClass={
                                 tenant.role === 'tenant_admin'
                                   ? 'bg-amber-100 text-amber-700'
                                   : 'bg-brand-muted text-blue-800'
-                              }`}
-                              data-tip={
-                                tenant.role === 'tenant_admin'
-                                  ? 'Tenant Admin'
-                                  : 'Tenant Member'
                               }
-                            >
-                              {tenant.name}
-                            </span>
+                            />
                           ))
                         ) : (
                           <span className="text-subtle text-sm italic">

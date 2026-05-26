@@ -215,7 +215,7 @@ const AdminInvitationsTab = ({ isSuperAdmin }: AdminInvitationsProps) => {
                       'bg-surface-strong text-muted'
                     }
                   >
-                    {invitation.role === 'tenant_admin' ? 'Admin' : 'Viewer'}
+                    {invitation.role}
                   </Badge>
                 </td>
                 <td className={tdBase}>
