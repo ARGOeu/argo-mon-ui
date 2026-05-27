@@ -1,18 +1,18 @@
-import { ChevronDownIcon, ChevronRightIcon } from '@heroicons/react/16/solid'
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  ChevronRightIcon,
+} from '@heroicons/react/16/solid'
 import EndpointListItem from './EndpointListItem'
-import type {
-  SecuredEndpoint,
-  EndpointAssignment,
-} from '@/types/securedEndpoints'
+import type { SecuredEndpoint } from '@/types/securedEndpoints'
 
 export interface CategoryPanelProps {
   label: string
   endpoints: SecuredEndpoint[]
   isCollapsed: boolean
   onToggleCollapse: () => void
-  selectedAssignments: Map<string, EndpointAssignment>
-  onToggleAction: (id: string) => void
-  onSetScope: (endpointId: string, scope: string) => void
+  selectedActionIds: Set<string>
+  onToggleAction: (id: string, selectAll?: boolean, allIds?: string[]) => void
 }
 
 const CategoryPanel = ({
@@ -20,15 +20,22 @@ const CategoryPanel = ({
   endpoints,
   isCollapsed,
   onToggleCollapse,
-  selectedAssignments,
+  selectedActionIds,
   onToggleAction,
-  onSetScope,
 }: CategoryPanelProps) => {
   if (endpoints.length === 0) return null
 
-  const selectedCount = endpoints.filter((ep) =>
-    selectedAssignments.has(ep.secured_endpoint_id),
+  const endpointIds = endpoints.map((ep) => ep.secured_endpoint_id)
+  const selectedCount = endpointIds.filter((id) =>
+    selectedActionIds.has(id),
   ).length
+  const isAllChecked =
+    endpointIds.length > 0 && selectedCount === endpointIds.length
+  const isIndeterminate = selectedCount > 0 && !isAllChecked
+
+  const handleCategoryCheckboxChange = () => {
+    onToggleAction('', !isAllChecked, endpointIds)
+  }
 
   return (
     <div className="border border-line rounded-lg overflow-hidden bg-white shadow-sm ring-1 ring-black/5">
@@ -39,9 +46,32 @@ const CategoryPanel = ({
         aria-expanded={!isCollapsed}
       >
         <div className="flex items-center gap-3 shrink-0">
+          <label
+            className="cursor-pointer group p-1 -m-1"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className={`relative size-4 shrink-0 rounded border flex items-center justify-center transition-colors ${
+                isAllChecked || isIndeterminate
+                  ? 'bg-brand border-brand'
+                  : 'border-line-strong bg-white group-hover:border-brand-muted'
+              }`}
+            >
+              <input
+                type="checkbox"
+                className="sr-only"
+                checked={isAllChecked || isIndeterminate}
+                onChange={handleCategoryCheckboxChange}
+              />
+              {isAllChecked && <CheckIcon className="size-3 text-white" />}
+              {isIndeterminate && !isAllChecked && (
+                <div className="w-2.5 h-0.5 bg-white rounded-full" />
+              )}
+            </div>
+          </label>
           <span className="font-bold text-sm text-foreground">{label}</span>
           <span className="text-xs text-muted font-normal">
-            ({selectedCount}/{endpoints.length})
+            ({selectedCount}/{endpointIds.length})
           </span>
         </div>
 
@@ -60,11 +90,8 @@ const CategoryPanel = ({
             <EndpointListItem
               key={endpoint.secured_endpoint_id}
               endpoint={endpoint}
-              assignment={selectedAssignments.get(endpoint.secured_endpoint_id)}
+              isChecked={selectedActionIds.has(endpoint.secured_endpoint_id)}
               onToggle={() => onToggleAction(endpoint.secured_endpoint_id)}
-              onSetScope={(scope: string) =>
-                onSetScope(endpoint.secured_endpoint_id, scope)
-              }
             />
           ))}
         </div>

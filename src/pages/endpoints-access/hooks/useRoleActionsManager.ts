@@ -1,74 +1,66 @@
 import { useState, useEffect, useMemo } from 'react'
-import type { EndpointAssignment } from '@/types/securedEndpoints'
 
 export const useRoleActionsManager = (
-  roleAssignments: EndpointAssignment[],
+  selectedRoleId: string | null,
+  roleActionIds: string[],
 ) => {
-  const [selectedAssignments, setSelectedAssignments] = useState<
-    EndpointAssignment[]
-  >([])
+  const [selectedActionIds, setSelectedActionIds] = useState<string[]>([])
   const [hasUserModified, setHasUserModified] = useState(false)
 
   useEffect(() => {
-    setSelectedAssignments(roleAssignments)
+    setSelectedActionIds(roleActionIds)
     setHasUserModified(false)
-  }, [roleAssignments])
+  }, [selectedRoleId, roleActionIds])
 
   const isDirty = useMemo(() => {
     if (!hasUserModified) return false
-    const savedMap = new Map(
-      roleAssignments.map((a) => [a.secured_endpoint_id, a.scope]),
-    )
-    const currentMap = new Map(
-      selectedAssignments.map((a) => [a.secured_endpoint_id, a.scope]),
-    )
-    if (savedMap.size !== currentMap.size) return true
-    for (const [id, scope] of savedMap) {
-      if (!currentMap.has(id) || currentMap.get(id) !== scope) return true
-    }
-    return false
-  }, [roleAssignments, selectedAssignments, hasUserModified])
+    const saved = new Set(roleActionIds)
+    const current = new Set(selectedActionIds)
+    if (saved.size !== current.size) return true
+    return [...saved].some((id) => !current.has(id))
+  }, [roleActionIds, selectedActionIds, hasUserModified])
 
   const addedCount = useMemo(() => {
     if (!hasUserModified) return 0
-    const savedIds = new Set(roleAssignments.map((a) => a.secured_endpoint_id))
-    return selectedAssignments.filter(
-      (a) => !savedIds.has(a.secured_endpoint_id),
-    ).length
-  }, [roleAssignments, selectedAssignments, hasUserModified])
+    const saved = new Set(roleActionIds)
+    return selectedActionIds.filter((id) => !saved.has(id)).length
+  }, [roleActionIds, selectedActionIds, hasUserModified])
 
   const removedCount = useMemo(() => {
     if (!hasUserModified) return 0
-    const currentIds = new Set(
-      selectedAssignments.map((a) => a.secured_endpoint_id),
-    )
-    return roleAssignments.filter((a) => !currentIds.has(a.secured_endpoint_id))
-      .length
-  }, [roleAssignments, selectedAssignments, hasUserModified])
+    const current = new Set(selectedActionIds)
+    return roleActionIds.filter((id) => !current.has(id)).length
+  }, [roleActionIds, selectedActionIds, hasUserModified])
 
-  const toggleAction = (actionId: string) => {
+  const toggleAction = (
+    actionId: string,
+    selectAll?: boolean,
+    allIds?: string[],
+  ) => {
     setHasUserModified(true)
-    setSelectedAssignments((current) => {
-      const exists = current.some((a) => a.secured_endpoint_id === actionId)
-      return exists
-        ? current.filter((a) => a.secured_endpoint_id !== actionId)
-        : [...current, { secured_endpoint_id: actionId }]
-    })
-  }
+    if (allIds && selectAll !== undefined) {
+      setSelectedActionIds((current) => {
+        const next = new Set(current)
+        if (selectAll) {
+          allIds.forEach((id) => next.add(id))
+        } else {
+          allIds.forEach((id) => next.delete(id))
+        }
+        return Array.from(next)
+      })
+      return
+    }
 
-  const setScope = (endpointId: string, scope: string) => {
-    setHasUserModified(true)
-    setSelectedAssignments((current) =>
-      current.map((a) =>
-        a.secured_endpoint_id === endpointId ? { ...a, scope } : a,
-      ),
+    setSelectedActionIds((current) =>
+      current.includes(actionId)
+        ? current.filter((id) => id !== actionId)
+        : [...current, actionId],
     )
   }
 
   return {
-    selectedAssignments,
+    selectedActionIds,
     toggleAction,
-    setScope,
     isDirty,
     addedCount,
     removedCount,

@@ -85,15 +85,6 @@
   textarea::placeholder {
     color: var(--color-subtle);
   }
-
-  input[type='radio'] {
-    appearance: auto !important;
-    border: none !important;
-    background: transparent !important;
-    padding: 0 !important;
-    box-shadow: none !important;
-    cursor: pointer;
-  }
 }
 
 /* Reusable UI classes used across the codebase. */
