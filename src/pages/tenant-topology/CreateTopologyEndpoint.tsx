@@ -208,9 +208,19 @@ const CreateTopologyEndpoint = ({
       hasError = true
     }
 
-    if (!formData.url.trim()) {
+    const trimmedUrl = formData.url.trim()
+    if (!trimmedUrl) {
       newErrors.url = 'URL is required'
       hasError = true
+    } else {
+      try {
+        new URL(trimmedUrl)
+      } catch {
+        newErrors.url = !trimmedUrl.includes('://')
+          ? 'Please enter a URL with a protocol (e.g. https://, http://, ftp://)'
+          : 'Please enter a valid URL (e.g. https://example.com)'
+        hasError = true
+      }
     }
 
     if (!formData.group) {
@@ -239,15 +249,7 @@ const CreateTopologyEndpoint = ({
       return
     }
 
-    const fullUrl = formData.url.trim()
-    const hasScheme = /^https?:\/\//i.test(fullUrl)
-    let extractedHostname = fullUrl
-    try {
-      extractedHostname = new URL(hasScheme ? fullUrl : `https://${fullUrl}`)
-        .hostname
-    } catch {
-      extractedHostname = fullUrl.split('/')[0]
-    }
+    const extractedHostname = new URL(trimmedUrl).hostname
 
     const existingEndpoint = latestEndpoints?.find(
       (e) =>
@@ -266,7 +268,7 @@ const CreateTopologyEndpoint = ({
       hostname: rootHostname,
       tags: {
         monitored: formData.monitored ? '1' : '0',
-        info_URL: fullUrl,
+        info_URL: trimmedUrl,
         hostname: extractedHostname,
         ...(formData.tags.length > 0
           ? { labels: formData.tags.join(',') }
@@ -438,7 +440,7 @@ const CreateTopologyEndpoint = ({
               name="url"
               value={formData.url}
               onChange={handleUrlChange}
-              placeholder="Enter the endpoint URL"
+              placeholder="Enter the endpoint URL (e.g. https://example.com/path)"
               className={
                 errors.url
                   ? '!border-red-500 focus:!border-red-500 focus:!ring-red-500/10'
