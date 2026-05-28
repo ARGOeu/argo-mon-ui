@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import {
   Activity,
@@ -15,7 +15,9 @@ import {
 import { useGetResultsGroups, useGetStatusGroups } from '@/hooks/useData'
 import { useGetTenantReports } from '@/hooks/useTenants'
 import { useSelectedTenant } from '@/contexts/selected-tenant/useSelectedTenant'
-import TenantAvatar from '@/components/sidebar/TenantAvatar'
+import PageHeader from '@/components/PageHeader'
+import LoadingSpinner from '@/components/LoadingSpinner'
+import ErrorDisplay from '@/components/ErrorDisplay'
 
 type ServiceStatus = 'healthy' | 'degraded' | 'critical'
 
@@ -204,13 +206,21 @@ function MiniBars({ daily, dates }: { daily: number[]; dates: string[] }) {
 export default function Dashboard() {
   const { tenant } = useSelectedTenant()
   const tenantName = tenant?.info?.name ?? ''
-  const tenantImg = tenant?.info?.image ?? ''
 
   const { id: tenantId } = useParams<{ id: string }>()
   const [filter, setFilter] = useState<FilterId>('all')
   const [search, setSearch] = useState('')
   const [selectedReport, setSelectedReport] = useState('')
   const [copied, setCopied] = useState(false)
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) {
+        clearTimeout(copyTimerRef.current)
+      }
+    }
+  }, [])
 
   const {
     data: reports,
@@ -353,268 +363,271 @@ export default function Dashboard() {
   const error = reportsError || resultsError || statusError
   const hasMultipleReports = (reports?.length ?? 0) > 1
 
-  if (!tenantId) {
-    return (
-      <div className="mx-auto max-w-5xl px-6 py-8 text-sm text-neutral-500">
-        No tenant selected.
-      </div>
-    )
-  }
-  if (isLoading && !resultsData) {
-    return (
-      <div className="mx-auto max-w-5xl px-6 py-8 text-sm text-neutral-500">
-        Loading tenant status…
-      </div>
-    )
-  }
-  if (error) {
-    return (
-      <div className="mx-auto max-w-5xl px-6 py-8">
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800">
-          Failed to load tenant data: {error.message}
-        </div>
-      </div>
-    )
-  }
-
   const filterTabs: { id: FilterId; label: string; count: number | null }[] = [
     { id: 'all', label: 'All', count: services.length },
     { id: 'problem', label: 'Has problems', count: null },
     { id: 'healthy', label: 'Healthy', count: null },
   ]
 
-  return (
-    <div className="mx-auto max-w-5xl px-2 py-2 font-sans text-neutral-900 antialiased">
-      <header className="mb-6 overflow-hidden rounded-xl border border-neutral-200 bg-white">
-        <div className="flex flex-wrap items-center gap-4 px-5 py-3">
-          <TenantAvatar name={tenantName} image={tenantImg} />
-
-          <div className="min-w-0 flex-1">
-            <h1 className="text-[18px] font-semibold leading-tight tracking-tight text-neutral-900">
-              {tenantName || 'Tenant'}
-            </h1>
-            <div className="mt-0.5 flex items-center gap-1.5 text-[12px] text-neutral-500">
-              <span className="truncate font-mono" title={tenantId}>
-                {tenantId}
-              </span>
-              <button
-                type="button"
-                onClick={() => {
-                  void navigator.clipboard?.writeText(tenantId)
-                  setCopied(true)
-                  setTimeout(() => setCopied(false), 1500)
-                }}
-                className={`flex-shrink-0 rounded p-1 transition-colors ${
-                  copied
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-700'
-                }`}
-                aria-label={copied ? 'Copied' : 'Copy tenant ID'}
-                title={copied ? 'Copied!' : 'Copy tenant ID'}
-              >
-                {copied ? (
-                  <Check className="h-3 w-3" strokeWidth={2.5} />
-                ) : (
-                  <Copy className="h-3 w-3" strokeWidth={2} />
-                )}
-              </button>
-            </div>
-          </div>
-
-          {hasMultipleReports && (
-            <div className="flex flex-shrink-0 items-center gap-3">
-              <span className="text-[11px] font-medium uppercase tracking-[0.08em] text-neutral-500">
-                Report
-              </span>
-              <select
-                value={selectedReport}
-                onChange={(e) => setSelectedReport(e.target.value)}
-                className="max-w-[180px] truncate rounded-md border border-neutral-200 bg-white py-1.5 pl-2.5 pr-7 text-xs font-medium text-neutral-900 shadow-sm focus:border-neutral-400 focus:outline-none focus:ring-2 focus:ring-neutral-200"
-              >
-                {reports?.map((r) => (
-                  <option key={r.name} value={r.name}>
-                    {r.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-        </div>
-
-        <div
-          className={`flex flex-wrap items-center gap-3 border-t px-5 py-3 ${b.border} ${b.bg}`}
-        >
-          <BannerIcon
-            className={`h-5 w-5 flex-shrink-0 ${b.headline}`}
-            strokeWidth={2}
-          />
-          <div className="min-w-0 flex-1">
-            <span className={`text-[14px] font-semibold ${b.headline}`}>
-              {overall.headline}
-            </span>
-            <span className={`mx-2 ${b.meta}`}>·</span>
-            <span className={`text-[13px] ${b.detail}`}>{overall.detail}</span>
-          </div>
-        </div>
-      </header>
-
-      <div className="mb-6 flex flex-wrap items-center rounded-md border border-neutral-200 bg-white px-1 py-2">
-        <NowItem icon={Activity} label="Tenant status">
-          <span
-            className={`h-2 w-2 rounded-full ${STATUS_STYLES[overall.state].dot}`}
-          />
-          <span className={STATUS_STYLES[overall.state].text}>
-            {STATUS_STYLES[overall.state].label}
-          </span>
-        </NowItem>
-        <NowItem icon={Server} label="Services">
-          <span>{services.length}</span>
-          <span className="text-[11px] font-normal text-neutral-500">
-            <span className="text-emerald-600">{counts.healthy}</span>·
-            <span className="text-amber-600">{counts.degraded}</span>·
-            <span className="text-red-600">{counts.critical}</span>
-          </span>
-        </NowItem>
-        <NowItem icon={ShieldCheck} label="Availability today" last>
-          <span>{todayAvail}</span>
-          <span className="text-[11px] font-normal text-neutral-500">%</span>
-        </NowItem>
+  if (!tenantId) {
+    return (
+      <div className="page-container">
+        <p className="text-sm text-muted">No tenant selected.</p>
       </div>
+    )
+  }
 
-      <SectionLabel>This week</SectionLabel>
-      <section className="mb-6 rounded-xl border border-neutral-200 bg-white px-5 py-4">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-[15px] font-medium">Tenant-wide availability</h2>
-          <span className="text-xs text-neutral-500">
-            last {tenantDaily.length} day{tenantDaily.length === 1 ? '' : 's'} ·
-            all services averaged
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_180px] md:items-center">
-          <div
-            className="grid h-[110px] items-end gap-1.5"
-            style={{
-              gridTemplateColumns: `repeat(${Math.max(tenantDaily.length, 1)}, minmax(0, 1fr))`,
-            }}
-          >
-            {tenantDaily.map((v, i) => (
-              <WeekBar
-                key={tenantDailyDates[i] ?? i}
-                value={v}
-                day={formatShortDay(tenantDailyDates[i])}
-                fullDate={formatShortDate(tenantDailyDates[i])}
-              />
-            ))}
-          </div>
-
-          <div className="md:text-right">
-            <p className="text-xs text-neutral-500">
-              {tenantDaily.length}-day average
-            </p>
-            <p className="mt-0.5 text-[32px] font-medium leading-none tabular-nums">
-              {weekAvg}
-              <span className="text-base text-neutral-400">%</span>
-            </p>
-          </div>
-        </div>
-      </section>
-
-      <SectionLabel>All services</SectionLabel>
-      <section className="rounded-xl border border-neutral-200 bg-white px-5 py-4">
-        <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-[15px] font-medium">Service breakdown</h2>
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search services…"
-              className="h-8 w-56 rounded-md border border-neutral-200 bg-white pl-8 pr-3 text-sm text-neutral-700 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none"
-            />
-          </div>
-        </div>
-
-        <div className="mb-3 flex gap-1 border-b border-neutral-200">
-          {filterTabs.map((t) => (
-            <button
-              key={t.id}
-              type="button"
-              onClick={() => setFilter(t.id)}
-              className={`-mb-px border-b-2 px-2.5 py-1.5 text-xs transition-colors ${
-                filter === t.id
-                  ? 'border-neutral-900 text-neutral-900'
-                  : 'border-transparent text-neutral-500 hover:text-neutral-900'
-              }`}
-            >
-              {t.label}
-              {t.count !== null && (
-                <span className="ml-1 text-neutral-400">{t.count}</span>
-              )}
-            </button>
-          ))}
-        </div>
-
-        <table className="w-full table-fixed text-sm">
-          <thead>
-            <tr className="text-[11px] font-medium uppercase tracking-[0.04em] text-neutral-400">
-              <th className="w-[30%] border-b border-neutral-200 px-1.5 py-2 text-left">
-                Service
-              </th>
-              <th className="w-[18%] border-b border-neutral-200 px-1.5 py-2 text-left">
-                Status
-              </th>
-              <th className="w-[18%] border-b border-neutral-200 px-1.5 py-2 text-left">
-                Avail (Week)
-              </th>
-              <th className="w-[34%] border-b border-neutral-200 px-1.5 py-2 text-left">
-                Per Day
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 && (
-              <tr>
-                <td
-                  colSpan={4}
-                  className="px-1.5 py-6 text-center text-neutral-400"
+  return (
+    <div className="page-container">
+      <PageHeader
+        title="Dashboard"
+        subtitle={
+          tenantName ? (
+            <span className="inline-flex items-center gap-2 flex-wrap">
+              <span>
+                Overview for <strong>{tenantName}</strong>
+              </span>
+              <span className="inline-flex items-center gap-1 font-mono text-xs text-subtle">
+                <span title={tenantId}>{tenantId}</span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void navigator.clipboard?.writeText(tenantId)
+                    setCopied(true)
+                    copyTimerRef.current = setTimeout(
+                      () => setCopied(false),
+                      1500,
+                    )
+                  }}
+                  className={`flex-shrink-0 rounded p-0.5 transition-colors ${
+                    copied
+                      ? 'bg-emerald-100 text-emerald-700'
+                      : 'text-subtle hover:bg-surface-strong hover:text-body'
+                  }`}
+                  aria-label={copied ? 'Copied' : 'Copy tenant ID'}
+                  title={copied ? 'Copied!' : 'Copy tenant ID'}
                 >
-                  No services match
-                </td>
-              </tr>
-            )}
-            {filtered.map((svc) => {
-              const st = STATUS_STYLES[svc.status]
-              return (
-                <tr key={svc.name}>
-                  <td className="border-b border-neutral-100 px-1.5 py-2.5">
-                    <div className="flex items-center gap-2">
-                      <span className={`h-2 w-2 rounded-full ${st.dot}`} />
-                      <span className="truncate font-medium text-neutral-800">
-                        {svc.name}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="border-b border-neutral-100 px-1.5 py-2.5">
-                    <span
-                      className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${st.pill}`}
-                    >
-                      {st.label}
-                    </span>
-                  </td>
-                  <td className="border-b border-neutral-100 px-1.5 py-2.5 tabular-nums text-neutral-700">
-                    {avg(svc.daily).toFixed(2)}%
-                  </td>
-                  <td className="border-b border-neutral-100 px-1.5 py-2.5">
-                    <MiniBars daily={svc.daily} dates={svc.dailyDates} />
-                  </td>
+                  {copied ? (
+                    <Check className="h-3 w-3" strokeWidth={2.5} />
+                  ) : (
+                    <Copy className="h-3 w-3" strokeWidth={2} />
+                  )}
+                </button>
+              </span>
+            </span>
+          ) : undefined
+        }
+        className="mb-2"
+      >
+        {hasMultipleReports && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-semibold text-body">
+              Select a report:
+            </span>
+            <select
+              value={selectedReport}
+              onChange={(e) => setSelectedReport(e.target.value)}
+              className="max-w-[220px] truncate rounded-md border border-line-strong bg-white py-2 pl-3 pr-8 text-sm font-medium text-foreground shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-subtle"
+            >
+              {reports?.map((r) => (
+                <option key={r.name} value={r.name}>
+                  {r.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
+      </PageHeader>
+
+      {isLoading && !resultsData ? (
+        <div className="loading-container">
+          <LoadingSpinner size="md" />
+        </div>
+      ) : error ? (
+        <ErrorDisplay error={error} context="tenant data" />
+      ) : (
+        <>
+          <div
+            className={`mb-6 flex flex-wrap items-center gap-3 rounded-xl border px-5 py-2 ${b.border} ${b.bg}`}
+          >
+            <BannerIcon
+              className={`h-5 w-5 flex-shrink-0 ${b.headline}`}
+              strokeWidth={2}
+            />
+            <div className="min-w-0 flex-1">
+              <span className={`text-[14px] font-semibold ${b.headline}`}>
+                {overall.headline}
+              </span>
+              <span className={`mx-1 ${b.meta}`}>·</span>
+              <span className={`text-[13px] ${b.detail}`}>
+                {overall.detail}
+              </span>
+            </div>
+          </div>
+
+          <div className="mb-6 flex flex-wrap items-center rounded-md border border-neutral-200 bg-white px-1 py-2">
+            <NowItem icon={Activity} label="Tenant status">
+              <span
+                className={`h-2 w-2 rounded-full ${STATUS_STYLES[overall.state].dot}`}
+              />
+              <span className={STATUS_STYLES[overall.state].text}>
+                {STATUS_STYLES[overall.state].label}
+              </span>
+            </NowItem>
+            <NowItem icon={Server} label="Services">
+              <span>{services.length}</span>
+              <span className="text-[11px] font-normal text-neutral-500">
+                <span className="text-emerald-600">{counts.healthy}</span>·
+                <span className="text-amber-600">{counts.degraded}</span>·
+                <span className="text-red-600">{counts.critical}</span>
+              </span>
+            </NowItem>
+            <NowItem icon={ShieldCheck} label="Availability today" last>
+              <span>{todayAvail}</span>
+              <span className="text-[11px] font-normal text-neutral-500">
+                %
+              </span>
+            </NowItem>
+          </div>
+
+          <SectionLabel>This week</SectionLabel>
+          <section className="mb-6 rounded-xl border border-neutral-200 bg-white px-5 py-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-[15px] font-medium">
+                Tenant-wide availability
+              </h2>
+              <span className="text-xs text-neutral-500">
+                last {tenantDaily.length} day
+                {tenantDaily.length === 1 ? '' : 's'} · all services averaged
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_180px] md:items-center">
+              <div
+                className="grid h-[110px] items-end gap-1.5"
+                style={{
+                  gridTemplateColumns: `repeat(${Math.max(tenantDaily.length, 1)}, minmax(0, 1fr))`,
+                }}
+              >
+                {tenantDaily.map((v, i) => (
+                  <WeekBar
+                    key={tenantDailyDates[i] ?? i}
+                    value={v}
+                    day={formatShortDay(tenantDailyDates[i])}
+                    fullDate={formatShortDate(tenantDailyDates[i])}
+                  />
+                ))}
+              </div>
+
+              <div className="md:text-right">
+                <p className="text-xs text-neutral-500">
+                  {tenantDaily.length}-day average
+                </p>
+                <p className="mt-0.5 text-[32px] font-medium leading-none tabular-nums">
+                  {weekAvg}
+                  <span className="text-base text-neutral-400">%</span>
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <SectionLabel>All services</SectionLabel>
+          <section className="rounded-xl border border-neutral-200 bg-white px-5 py-4">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-[15px] font-medium">Service breakdown</h2>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search services…"
+                  className="h-8 w-56 rounded-md border border-neutral-200 bg-white pl-8 pr-3 text-sm text-neutral-700 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="mb-3 flex gap-1 border-b border-neutral-200">
+              {filterTabs.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setFilter(t.id)}
+                  className={`-mb-px border-b-2 px-2.5 py-1.5 text-xs transition-colors ${
+                    filter === t.id
+                      ? 'border-neutral-900 text-neutral-900'
+                      : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                  }`}
+                >
+                  {t.label}
+                  {t.count !== null && (
+                    <span className="ml-1 text-neutral-400">{t.count}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <table className="w-full table-fixed text-sm">
+              <thead>
+                <tr className="text-[11px] font-medium uppercase tracking-[0.04em] text-neutral-400">
+                  <th className="w-[30%] border-b border-neutral-200 px-1.5 py-2 text-left">
+                    Service
+                  </th>
+                  <th className="w-[18%] border-b border-neutral-200 px-1.5 py-2 text-left">
+                    Status
+                  </th>
+                  <th className="w-[18%] border-b border-neutral-200 px-1.5 py-2 text-left">
+                    Avail (Week)
+                  </th>
+                  <th className="w-[34%] border-b border-neutral-200 px-1.5 py-2 text-left">
+                    Per Day
+                  </th>
                 </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </section>
+              </thead>
+              <tbody>
+                {filtered.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-1.5 py-6 text-center text-neutral-400"
+                    >
+                      No services match
+                    </td>
+                  </tr>
+                )}
+                {filtered.map((svc) => {
+                  const st = STATUS_STYLES[svc.status]
+                  return (
+                    <tr key={svc.name}>
+                      <td className="border-b border-neutral-100 px-1.5 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full ${st.dot}`} />
+                          <span className="truncate font-medium text-neutral-800">
+                            {svc.name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="border-b border-neutral-100 px-1.5 py-2.5">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${st.pill}`}
+                        >
+                          {st.label}
+                        </span>
+                      </td>
+                      <td className="border-b border-neutral-100 px-1.5 py-2.5 tabular-nums text-neutral-700">
+                        {avg(svc.daily).toFixed(2)}%
+                      </td>
+                      <td className="border-b border-neutral-100 px-1.5 py-2.5">
+                        <MiniBars daily={svc.daily} dates={svc.dailyDates} />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </section>
+        </>
+      )}
     </div>
   )
 }
