@@ -53,7 +53,7 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
     dateInput,
     committedDate,
     showActions,
-    isExternal,
+    isInternal,
     handleDateInputChange,
     handleDateModeChange,
     handleSortChange,
@@ -149,7 +149,7 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
             ]}
             className="w-36"
           />
-          {!isExternal && (
+          {isInternal && (
             <Button
               size="md"
               variant="primary"

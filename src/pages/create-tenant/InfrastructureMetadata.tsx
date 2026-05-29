@@ -18,28 +18,10 @@ const iconButtonDangerClass =
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const urlRegex = /^https?:\/\/.+\..+/
 
-const FEED_TYPE_OPTIONS = [
-  { value: 'internal', label: 'Internal' },
-  { value: 'CSV', label: 'CSV' },
-  { value: 'eosc-service-catalog', label: 'EOSC Service Catalog' },
-  { value: 'external', label: 'External' },
-]
-
-export type TopologyFeedFormState = {
-  type: string
-  feed_url: string
-  feed_service_groups: string
-  feed_service_endpoints: string
-  feed_service_endpoints_extensions: string
-}
-
 interface InfrastructureMetadataProps {
   metadata: {
     ui_url: string
     poem_url: string
-    topology_type: string
-    topology_url: string
-    topology_feed: string
     internalLists: Array<{ email: string; type: string }>
     auth_name: string
     auth_url: string
@@ -47,23 +29,16 @@ interface InfrastructureMetadataProps {
   onMetadataChange: (metadata: {
     ui_url: string
     poem_url: string
-    topology_type: string
-    topology_url: string
-    topology_feed: string
     internalLists: Array<{ email: string; type: string }>
     auth_name: string
     auth_url: string
   }) => void
-  topologyFeed: TopologyFeedFormState
-  onTopologyFeedChange: (feed: TopologyFeedFormState) => void
   onValidationChange?: (hasError: boolean) => void
 }
 
 const InfrastructureMetadata = ({
   metadata,
   onMetadataChange,
-  topologyFeed,
-  onTopologyFeedChange,
   onValidationChange,
 }: InfrastructureMetadataProps) => {
   const [errors, setErrors] = useState(() => ({
@@ -77,23 +52,6 @@ const InfrastructureMetadata = ({
 
   const urlErrorMessage =
     'Please enter a valid URL (must start with http:// or https://)'
-
-  const handleFeedTypeChange = (value: string) => {
-    onTopologyFeedChange({
-      type: value,
-      feed_url: '',
-      feed_service_groups: '',
-      feed_service_endpoints: '',
-      feed_service_endpoints_extensions: '',
-    })
-  }
-
-  const handleFeedFieldChange = (
-    field: keyof Omit<TopologyFeedFormState, 'type'>,
-    value: string,
-  ) => {
-    onTopologyFeedChange({ ...topologyFeed, [field]: value })
-  }
 
   const handleInternalListTypeChange = (index: number, value: string) => {
     const updatedLists = [...metadata.internalLists]
@@ -253,83 +211,6 @@ const InfrastructureMetadata = ({
               error={errors.poemUrl}
             />
           </div>
-        </div>
-      </div>
-
-      <div className={sectionClass}>
-        <div className="pt-2 pl-2">
-          <h2 className="section-title">Topology Feed</h2>
-          <p className="section-description">
-            Feed configuration for topology data
-          </p>
-        </div>
-
-        <div className={sectionContentClass}>
-          <div className={fieldGridClass}>
-            <div className="flex flex-col">
-              <label className="text-sm font-medium text-body mb-1">
-                Type <span className="required">*</span>
-              </label>
-              <SelectDropdown
-                value={topologyFeed.type}
-                onChange={handleFeedTypeChange}
-                options={FEED_TYPE_OPTIONS}
-                placeholder="Select feed type"
-              />
-            </div>
-          </div>
-
-          {topologyFeed.type === 'CSV' && (
-            <div className={fieldGridClass}>
-              <FormField
-                label="URL"
-                type="url"
-                value={topologyFeed.feed_url}
-                onChange={(e) =>
-                  handleFeedFieldChange('feed_url', e.target.value)
-                }
-                placeholder="Enter feed URL"
-              />
-            </div>
-          )}
-
-          {topologyFeed.type === 'eosc-service-catalog' && (
-            <div className={fieldGridClass}>
-              <FormField
-                label="Service Groups URL"
-                type="url"
-                value={topologyFeed.feed_service_groups}
-                onChange={(e) =>
-                  handleFeedFieldChange('feed_service_groups', e.target.value)
-                }
-                placeholder="Enter service groups feed URL"
-              />
-              <FormField
-                label="Service Endpoints URL"
-                type="url"
-                value={topologyFeed.feed_service_endpoints}
-                onChange={(e) =>
-                  handleFeedFieldChange(
-                    'feed_service_endpoints',
-                    e.target.value,
-                  )
-                }
-                placeholder="Enter service endpoints feed URL"
-              />
-              <FormField
-                label="Service Endpoint Extensions URL"
-                type="url"
-                value={topologyFeed.feed_service_endpoints_extensions}
-                onChange={(e) =>
-                  handleFeedFieldChange(
-                    'feed_service_endpoints_extensions',
-                    e.target.value,
-                  )
-                }
-                placeholder="Enter service endpoint extensions feed URL"
-              />
-            </div>
-          )}
         </div>
       </div>
 

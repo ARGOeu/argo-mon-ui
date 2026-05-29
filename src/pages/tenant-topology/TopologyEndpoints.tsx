@@ -57,7 +57,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
     dateInput,
     committedDate,
     showActions,
-    isExternal,
+    isInternal,
     handleDateInputChange,
     handleDateModeChange,
     handleSortChange,
@@ -147,7 +147,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
           placeholder="Search by service, hostname, URL or group..."
           className="!mb-0 flex-1 max-w-xs xl:max-w-none"
         />
-        {!isExternal && (
+        {isInternal && (
           <Button
             variant="primary"
             size="md"
