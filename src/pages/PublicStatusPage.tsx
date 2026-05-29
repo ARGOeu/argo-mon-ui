@@ -7,6 +7,14 @@ import { Status } from './Status'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
+const resolveErrorMessage = (message: string): string => {
+  // handles the HTTP error code 500 the backend returns, when the tenant has no report data
+  if (message.toLowerCase().includes('no status groups retrieved')) {
+    return 'The current tenant has no recent data for the selected report'
+  }
+  return message
+}
+
 const resolveLogo = (hasLogo?: boolean, raw?: string): string | undefined => {
   if (!raw || !hasLogo) return undefined
   return raw.startsWith('http') || raw.startsWith('data:')
@@ -17,7 +25,11 @@ const resolveLogo = (hasLogo?: boolean, raw?: string): string | undefined => {
 const PublicStatusPage = () => {
   const { slug } = useParams<{ slug: string }>()
 
-  const { data: statusData, isLoading } = useGetStatusQuery(slug || '')
+  const { data: statusData, isLoading, error } = useGetStatusQuery(slug || '')
+
+  const errorMessage = error?.message
+    ? resolveErrorMessage(error.message)
+    : 'This status page could not be loaded.'
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6">
@@ -47,10 +59,7 @@ const PublicStatusPage = () => {
           )
         ) : (
           <div className="page-container">
-            <ErrorDisplay
-              error="Failed to load status page"
-              context="status page"
-            />
+            <ErrorDisplay error={errorMessage} context="status page" />
           </div>
         )}
       </div>
