@@ -11,6 +11,7 @@ export const useGetStatusQuery = (slug: string) => {
       }
       return fetchStatus(slug)
     },
+    retry: false,
     enabled: !!slug,
   })
 }
