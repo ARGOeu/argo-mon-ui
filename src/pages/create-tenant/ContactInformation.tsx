@@ -102,9 +102,9 @@ const ContactInformation = ({
         {contacts.map((contact, index) => (
           <div
             key={index}
-            className="flex flex-col gap-2 pb-4 mb-2 border-b border-line last:border-b-0 last:mb-0 last:pb-0"
+            className="flex flex-col gap-1.5 pb-4 mb-1 border-b border-line last:border-b-0 last:mb-0 last:pb-0"
           >
-            <div className="flex justify-between items-center mb-1.5">
+            <div className="flex justify-between items-center">
               <span className="text-base font-semibold text-body">
                 Contact {index + 1}
               </span>
@@ -133,7 +133,7 @@ const ContactInformation = ({
             </div>
 
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-body mb-1">
+              <label className="text-sm font-medium text-body mb-0.5">
                 Name <span className="required">*</span>
               </label>
               <input

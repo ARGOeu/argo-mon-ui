@@ -35,8 +35,6 @@ const CreateTenant = () => {
     ui_url: '',
     poem_url: '',
     internalLists: [{ email: '', type: '' }],
-    auth_name: '',
-    auth_url: '',
   })
   const [imageUrl, setImageUrl] = useState('')
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -107,8 +105,6 @@ const CreateTenant = () => {
           ui_url: tenantData.metadata.instance?.ui_url || '',
           poem_url: tenantData.metadata.instance?.poem_url || '',
           internalLists: loadedInternalLists,
-          auth_name: tenantData.metadata.auth_metadata?.auth_name || '',
-          auth_url: tenantData.metadata.auth_metadata?.auth_url || '',
         })
       }
     }
@@ -172,13 +168,6 @@ const CreateTenant = () => {
 
     if (internalListsData.length > 0)
       metadataObj.internalLists = internalListsData
-
-    if (metadata?.auth_name || metadata?.auth_url) {
-      metadataObj.auth_metadata = {
-        auth_name: metadata.auth_name || undefined,
-        auth_url: metadata.auth_url || undefined,
-      }
-    }
 
     const onError = (error: Error & { errors?: string[] }) => {
       if (error.errors && error.errors.length > 0) {

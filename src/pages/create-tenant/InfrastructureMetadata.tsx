@@ -23,15 +23,11 @@ interface InfrastructureMetadataProps {
     ui_url: string
     poem_url: string
     internalLists: Array<{ email: string; type: string }>
-    auth_name: string
-    auth_url: string
   }
   onMetadataChange: (metadata: {
     ui_url: string
     poem_url: string
     internalLists: Array<{ email: string; type: string }>
-    auth_name: string
-    auth_url: string
   }) => void
   onValidationChange?: (hasError: boolean) => void
 }
@@ -44,7 +40,6 @@ const InfrastructureMetadata = ({
   const [errors, setErrors] = useState(() => ({
     uiUrl: '',
     poemUrl: '',
-    authUrl: '',
     internalListsEmails: metadata.internalLists.map(() => ({ email: '' })),
   }))
   const { data: contactTypes, isLoading: isContactTypesLoading } =
@@ -75,7 +70,6 @@ const InfrastructureMetadata = ({
         setErrors((prev) => ({ ...prev, uiUrl: '' }))
         const hasErrors =
           !!errors.poemUrl ||
-          !!errors.authUrl ||
           errors.internalListsEmails.some((err) => err.email)
         onValidationChange?.(hasErrors)
       }
@@ -88,23 +82,7 @@ const InfrastructureMetadata = ({
       } else {
         setErrors((prev) => ({ ...prev, poemUrl: '' }))
         const hasErrors =
-          !!errors.uiUrl ||
-          !!errors.authUrl ||
-          errors.internalListsEmails.some((err) => err.email)
-        onValidationChange?.(hasErrors)
-      }
-    }
-
-    if (name === 'auth_url') {
-      if (fieldValue && !urlRegex.test(fieldValue)) {
-        setErrors((prev) => ({ ...prev, authUrl: urlErrorMessage }))
-        onValidationChange?.(true)
-      } else {
-        setErrors((prev) => ({ ...prev, authUrl: '' }))
-        const hasErrors =
-          !!errors.uiUrl ||
-          !!errors.poemUrl ||
-          errors.internalListsEmails.some((err) => err.email)
+          !!errors.uiUrl || errors.internalListsEmails.some((err) => err.email)
         onValidationChange?.(hasErrors)
       }
     }
@@ -135,7 +113,6 @@ const InfrastructureMetadata = ({
         const hasAnyError =
           !!errors.uiUrl ||
           !!errors.poemUrl ||
-          !!errors.authUrl ||
           updatedErrors.some((err) => err.email)
         onValidationChange?.(hasAnyError)
       }
@@ -176,7 +153,6 @@ const InfrastructureMetadata = ({
       const hasAnyError =
         !!errors.uiUrl ||
         !!errors.poemUrl ||
-        !!errors.authUrl ||
         updatedErrors.some((err) => err.email)
       onValidationChange?.(hasAnyError)
     }
@@ -224,9 +200,9 @@ const InfrastructureMetadata = ({
           {metadata.internalLists.map((list, index) => (
             <div
               key={index}
-              className="flex flex-col gap-1 pb-4 mb-2 border-b border-line last:border-b-0 last:mb-0 last:pb-0"
+              className="flex flex-col gap-0.5 pb-3 border-b border-line last:border-b-0 last:mb-0 last:pb-0"
             >
-              <div className="flex justify-between items-center mb-1.5">
+              <div className="flex justify-between items-center">
                 <span className="text-base font-semibold text-body">
                   Internal List {index + 1}
                 </span>
@@ -293,36 +269,6 @@ const InfrastructureMetadata = ({
               </div>
             </div>
           ))}
-        </div>
-      </div>
-
-      <div className={sectionClass}>
-        <div className="pt-2 pl-2">
-          <h2 className="section-title">Authentication Metadata</h2>
-          <p className="section-description">
-            Authentication configuration settings
-          </p>
-        </div>
-
-        <div className={sectionContentClass}>
-          <div className={fieldGridClass}>
-            <FormField
-              label="Auth Name"
-              name="auth_name"
-              value={metadata.auth_name}
-              onChange={handleChange}
-              placeholder="Enter authentication name"
-            />
-            <FormField
-              label="Auth URL"
-              type="url"
-              name="auth_url"
-              value={metadata.auth_url}
-              onChange={handleChange}
-              placeholder="Enter authentication URL"
-              error={errors.authUrl}
-            />
-          </div>
         </div>
       </div>
     </>

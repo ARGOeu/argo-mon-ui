@@ -101,9 +101,9 @@ const BuildItemsTab = ({
               )}
 
               {groupsMutationData &&
-                (groupsMutationData.length === 1 ? (
+                (groupsMutationData.length === 0 ? (
                   <div className="text-sm required p-2 mt-2 bg-red-50 border-red-400 border text-center rounded">
-                    Report is empty!
+                    No data available for the report today.
                   </div>
                 ) : (
                   <>

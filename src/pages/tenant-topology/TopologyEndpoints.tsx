@@ -123,7 +123,6 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
     return (
       e.service.toLowerCase().includes(q) ||
       e.group.toLowerCase().includes(q) ||
-      e.hostname.toLowerCase().includes(q) ||
       (e.tags?.info_URL ?? '').toLowerCase().includes(q) ||
       monitoredLabel.includes(q)
     )
@@ -144,7 +143,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
           value={searchInput}
           onChange={setSearchInput}
           onClear={handleSearchClear}
-          placeholder="Search by service, hostname, URL or group..."
+          placeholder="Search by service, URL or group..."
           className="!mb-0 flex-1 max-w-xs xl:max-w-none"
         />
         {isInternal && (
@@ -205,7 +204,6 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
                 Service
               </SortableColumnHeader>
             </th>
-            <th className={`${thBase} min-w-32`}>Hostname</th>
             <th className={`${thBase} min-w-40`}>URL</th>
             <th className={`${thBase} min-w-24`}>
               <SortableColumnHeader
@@ -232,7 +230,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
         <tbody className="divide-y divide-gray-100">
           {isLoading || isFetching ? (
             <tr>
-              <td colSpan={showActions ? 7 : 6} className="py-12">
+              <td colSpan={showActions ? 6 : 5} className="py-12">
                 <div className="flex justify-center">
                   <LoadingSpinner size="md" />
                 </div>
@@ -240,14 +238,14 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
             </tr>
           ) : error ? (
             <tr>
-              <td colSpan={showActions ? 7 : 6} className="py-6 px-12">
+              <td colSpan={showActions ? 6 : 5} className="py-6 px-12">
                 <ErrorDisplay error={error} context="topology endpoints" />
               </td>
             </tr>
           ) : !endpoints?.length ? (
             <tr>
               <td
-                colSpan={showActions ? 7 : 6}
+                colSpan={showActions ? 6 : 5}
                 className="text-center text-sm text-subtle italic py-6 px-12"
               >
                 No topology endpoints found
@@ -256,7 +254,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
           ) : !paginated.length ? (
             <tr>
               <td
-                colSpan={showActions ? 7 : 6}
+                colSpan={showActions ? 6 : 5}
                 className="text-center text-sm text-subtle italic py-6 px-12"
               >
                 No endpoints match your filters
@@ -269,11 +267,6 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
                 className="hover:bg-surface-muted transition-colors"
               >
                 <td className={tdBase}>{endpoint.service}</td>
-                <td className={`${tdBase} font-mono text-xs break-all`}>
-                  {endpoint.hostname || (
-                    <span className="pl-2 text-subtle">-</span>
-                  )}
-                </td>
                 <td className={`${tdBase} font-mono text-xs break-all`}>
                   {endpoint.tags?.info_URL || (
                     <span className="pl-2 text-subtle">-</span>

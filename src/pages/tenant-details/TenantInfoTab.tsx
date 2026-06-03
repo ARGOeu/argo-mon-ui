@@ -1,4 +1,15 @@
-import { useEffect } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import {
+  ArrowUpRightFromSquare,
+  Layers,
+  ChartNetwork,
+  Check,
+  ClipboardList,
+  Copy,
+  Globe,
+  Mail,
+  Server,
+} from 'lucide-react'
 import {
   useGetUserTenantProjects,
   useGetTopologyFeedQuery,
@@ -15,10 +26,7 @@ const formatDate = (dateString: string) => {
   })
 }
 
-const cardClass = 'bg-surface-muted rounded-lg py-2 px-4 flex flex-col gap-3'
-
-const cardRowClass =
-  'grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4'
+const cardClass = 'bg-surface-strong rounded-lg py-2 px-4 flex flex-col gap-2'
 
 const infoGroupClass = 'flex flex-col gap-0.5'
 
@@ -36,6 +44,9 @@ interface TenantInfoTabProps {
 }
 
 const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null)
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   const {
     tenant: tenantData,
     isTenantLoading,
@@ -58,6 +69,19 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
     }
   }, [projectsData, hasNextProjectsPage, fetchNextProjectsPage])
 
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+    }
+  }, [])
+
+  const handleCopyEmail = (email: string) => {
+    if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
+    void navigator.clipboard?.writeText(email)
+    setCopiedEmail(email)
+    copyTimerRef.current = setTimeout(() => setCopiedEmail(null), 1500)
+  }
+
   if (isTenantLoading)
     return (
       <div className="loading-container">
@@ -75,199 +99,212 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
     projectsData?.pages?.flatMap((page) => page.content || []) || []
 
   return (
-    <>
-      {/* Projects */}
-      <div className="mb-5">
-        <div className="mb-1">
-          <h2 className="text-lg font-semibold text-foreground">Projects</h2>
+    <div className="grid grid-cols-1 md:grid-cols-[3fr_1fr] items-start gap-x-20 py-1 mb-12">
+      {/* Left column */}
+      <div className="flex flex-col gap-6">
+        {/* Description */}
+        <div>
+          {tenantData.info.description ? (
+            <p
+              className="text-sm text-body leading-relaxed m-0 line-clamp-6"
+              title={tenantData.info.description}
+            >
+              {tenantData.info.description}
+            </p>
+          ) : (
+            <p className={noDataClass}>No description provided</p>
+          )}
         </div>
-        {projectsLoading ? (
-          <div className={`${cardClass} items-center max-w-[180px]`}>
-            <LoadingSpinner size="xs" inline />
-          </div>
-        ) : projects && projects.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
-            {projects.map((project) => (
-              <div key={project.id} className={cardClass}>
-                <div className="flex flex-col gap-1">
-                  <p className="text-base font-semibold text-foreground m-0">
-                    {project.name}
-                  </p>
-                  {project.description && (
-                    <p
-                      className="text-sm text-muted m-0 line-clamp-8"
-                      title={project.description}
-                    >
-                      {project.description}
-                    </p>
-                  )}
-                  <div className="text-xs text-muted m-0 mt-0.5">
-                    <span>
-                      {formatDate(project.start_date)} -{' '}
-                      {formatDate(project.end_date)}
-                    </span>
-                    {project.sustainability_end_date && (
-                      <span className="block mt-0.5">
-                        Sustainability:{' '}
-                        {formatDate(project.sustainability_end_date)}
-                      </span>
-                    )}
+
+        {/* Projects */}
+        {(projectsLoading || projects.length > 0) && (
+          <div>
+            <div className="mb-1">
+              <h2 className="text-md font-semibold text-foreground flex items-center gap-1.5">
+                <Layers className="size-4" />
+                Projects
+              </h2>
+            </div>
+            {projectsLoading ? (
+              <div className={`${cardClass} items-center max-w-[180px]`}>
+                <LoadingSpinner size="xs" inline />
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
+                {projects.map((project) => (
+                  <div key={project.id} className={cardClass}>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-sm font-medium text-foreground m-0">
+                        {project.name}
+                      </p>
+                      {project.description && (
+                        <p
+                          className="text-sm text-muted m-0 line-clamp-4"
+                          title={project.description}
+                        >
+                          {project.description}
+                        </p>
+                      )}
+                      <div className="text-xs text-muted m-0 mt-0.5">
+                        <span>
+                          {formatDate(project.start_date)} -{' '}
+                          {formatDate(project.end_date)}
+                        </span>
+                        {project.sustainability_end_date && (
+                          <span className="block mt-0.5">
+                            Sustainability:{' '}
+                            {formatDate(project.sustainability_end_date)}
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   </div>
-                </div>
+                ))}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className={`${cardClass} w-fit max-w-[320px] min-w-[180px]`}>
-            <p className={noDataClass}>No projects assigned</p>
+            )}
           </div>
         )}
-      </div>
 
-      {/* Contacts */}
-      <div className="mb-5">
-        <div className="mb-1">
-          <h2 className="text-lg font-semibold text-foreground">Contacts</h2>
-        </div>
-        {contacts && contacts.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
-            {contacts.map((contact, index) => (
-              <div key={index} className={cardClass}>
-                <div className="flex flex-col gap-1">
-                  <p className="text-base font-semibold text-foreground m-0">
-                    {contact.name}
-                  </p>
-                  <p className="text-sm text-muted m-0">{contact.email}</p>
-                  {contact.type && (
-                    <span className="inline-block mt-1 px-2.5 py-1 bg-brand-muted text-brand-strong text-xs font-medium rounded-full w-fit">
-                      {contact.type}
-                    </span>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className={`${cardClass} w-fit max-w-[320px] min-w-[180px]`}>
-            <p className={noDataClass}>No contacts available</p>
-          </div>
-        )}
-      </div>
-
-      {/* Infrastructure Metadata */}
-      <div className="mb-5">
-        <div className="mb-1">
-          <h2 className="text-lg font-semibold text-foreground">
-            Infrastructure Metadata
-          </h2>
-        </div>
-        {(metadata &&
-          (metadata.instance ||
-            metadata.internalLists ||
-            metadata.auth_metadata)) ||
-        topologyFeedData ||
-        topologyFeedLoading ? (
-          <div className="bg-surface-muted rounded-lg py-2 px-4 flex flex-col gap-2">
-            {/* Instance Information */}
-            {metadata?.instance && (
-              <>
-                <div className="pt-2 border-t border-line first:pt-0 first:border-t-0">
-                  <h3 className="text-base font-semibold text-body">
-                    Instance
-                  </h3>
-                </div>
-                <div className={cardRowClass}>
-                  <div className={infoGroupClass}>
-                    <label className={labelClass}>UI URL</label>
-                    <p className={valueClass}>
-                      {metadata.instance.ui_url ? (
+        {/* Infrastructure Metadata */}
+        {(metadata?.instance?.ui_url ||
+          metadata?.instance?.poem_url ||
+          !!metadata?.internalLists?.length) && (
+          <div>
+            <div className="mb-1">
+              <h2 className="text-md font-semibold text-foreground flex items-center gap-1.5">
+                <Server className="size-4" />
+                Infrastructure Metadata
+              </h2>
+            </div>
+            <div className="bg-surface-strong rounded-lg py-2 px-4 flex flex-col gap-4 w-fit">
+              {(metadata?.instance?.ui_url || metadata?.instance?.poem_url) && (
+                <div className="flex flex-wrap gap-x-8 gap-y-3">
+                  {metadata.instance?.ui_url && (
+                    <div className={`${infoGroupClass} min-w-0`}>
+                      <label
+                        className={`${labelClass} flex items-center gap-1`}
+                      >
+                        <Globe className="size-3.5" />
+                        UI URL
+                      </label>
+                      <p className={valueClass}>
                         <a
                           href={metadata.instance.ui_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={linkClass}
+                          className={`${linkClass} inline-flex items-center gap-0.5`}
                         >
                           {metadata.instance.ui_url}
+                          <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
                         </a>
-                      ) : (
-                        <span className={noDataClass}>Not provided</span>
-                      )}
-                    </p>
-                  </div>
-                  <div className={infoGroupClass}>
-                    <label className={labelClass}>POEM URL</label>
-                    <p className={valueClass}>
-                      {metadata.instance.poem_url ? (
+                      </p>
+                    </div>
+                  )}
+                  {metadata.instance?.poem_url && (
+                    <div className={`${infoGroupClass} min-w-0`}>
+                      <label
+                        className={`${labelClass} flex items-center gap-1`}
+                      >
+                        <ClipboardList className="size-3.5" />
+                        POEM URL
+                      </label>
+                      <p className={valueClass}>
                         <a
                           href={metadata.instance.poem_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={linkClass}
+                          className={`${linkClass} inline-flex items-center gap-0.5`}
                         >
                           {metadata.instance.poem_url}
+                          <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
                         </a>
-                      ) : (
-                        <span className={noDataClass}>Not provided</span>
-                      )}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {metadata?.internalLists && metadata.internalLists.length > 0 && (
+                <div
+                  className={`flex flex-col gap-3${metadata?.instance?.ui_url || metadata?.instance?.poem_url ? ' border-t border-line pt-2' : ''}`}
+                >
+                  <label className={labelClass}>Internal Lists</label>
+                  {metadata.internalLists.map((list, index) => (
+                    <div key={index} className="flex flex-wrap gap-x-8 gap-y-3">
+                      <div className={infoGroupClass}>
+                        <label className={labelClass}>Email</label>
+                        <p className={valueClass}>{list.email}</p>
+                      </div>
+                      <div className={infoGroupClass}>
+                        <label className={labelClass}>Type</label>
+                        <p className={`${valueClass} lowercase`}>{list.type}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Topology Feed */}
+        {(topologyFeedLoading || topologyFeedData) && (
+          <div>
+            <div className="mb-1">
+              <h2 className="text-md font-semibold text-foreground flex items-center gap-1.5">
+                <ChartNetwork className="size-4" />
+                Topology Feed
+              </h2>
+            </div>
+            {topologyFeedLoading ? (
+              <div className={`${cardClass} items-center max-w-[180px]`}>
+                <LoadingSpinner size="xs" inline />
+              </div>
+            ) : (
+              <div className={`${cardClass} w-fit`}>
+                <div className="flex flex-wrap gap-x-8 gap-y-3">
+                  <div className={infoGroupClass}>
+                    <label className={labelClass}>Type</label>
+                    <p className={`${valueClass} capitalize`}>
+                      {topologyFeedData!.type}
                     </p>
                   </div>
-                </div>
-              </>
-            )}
 
-            {/* Topology Feed */}
-            <>
-              <div className="pt-2 border-t border-line first:pt-0 first:border-t-0">
-                <h3 className="text-base font-semibold text-body">
-                  Topology Feed
-                </h3>
-              </div>
-              {topologyFeedLoading ? (
-                <LoadingSpinner size="xs" inline />
-              ) : topologyFeedData ? (
-                <>
-                  <div className={cardRowClass}>
+                  {topologyFeedData!.type === 'CSV' && (
                     <div className={infoGroupClass}>
-                      <label className={labelClass}>Type</label>
-                      <p className={valueClass}>{topologyFeedData.type}</p>
-                    </div>
-                  </div>
-
-                  {topologyFeedData.type === 'CSV' && (
-                    <div className={cardRowClass}>
-                      <div className={infoGroupClass}>
-                        <label className={labelClass}>Feed URL</label>
-                        <p className={valueClass}>
-                          {topologyFeedData.feed_url ? (
-                            <a
-                              href={topologyFeedData.feed_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`${linkClass} break-words`}
-                            >
-                              {topologyFeedData.feed_url}
-                            </a>
-                          ) : (
-                            <span className={noDataClass}>Not provided</span>
-                          )}
-                        </p>
-                      </div>
+                      <label className={labelClass}>Feed URL</label>
+                      <p className={valueClass}>
+                        {topologyFeedData!.feed_url ? (
+                          <a
+                            href={topologyFeedData!.feed_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`${linkClass} inline-flex items-center gap-0.5 break-words`}
+                          >
+                            {topologyFeedData!.feed_url}
+                            <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
+                          </a>
+                        ) : (
+                          <span className={noDataClass}>Not provided</span>
+                        )}
+                      </p>
                     </div>
                   )}
 
-                  {topologyFeedData.type === 'eosc-service-catalog' && (
-                    <div className={cardRowClass}>
+                  {topologyFeedData!.type === 'eosc-service-catalog' && (
+                    <>
                       <div className={infoGroupClass}>
                         <label className={labelClass}>Service Groups URL</label>
                         <p className={valueClass}>
-                          {topologyFeedData.feed_service_groups ? (
+                          {topologyFeedData!.feed_service_groups ? (
                             <a
-                              href={topologyFeedData.feed_service_groups}
+                              href={topologyFeedData!.feed_service_groups}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`${linkClass} break-words`}
+                              className={`${linkClass} inline-flex items-center gap-0.5 break-words`}
                             >
-                              {topologyFeedData.feed_service_groups}
+                              {topologyFeedData!.feed_service_groups}
+                              <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
                             </a>
                           ) : (
                             <span className={noDataClass}>Not provided</span>
@@ -279,14 +316,15 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
                           Service Endpoints URL
                         </label>
                         <p className={valueClass}>
-                          {topologyFeedData.feed_service_endpoints ? (
+                          {topologyFeedData!.feed_service_endpoints ? (
                             <a
-                              href={topologyFeedData.feed_service_endpoints}
+                              href={topologyFeedData!.feed_service_endpoints}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`${linkClass} break-words`}
+                              className={`${linkClass} inline-flex items-center gap-0.5 break-words`}
                             >
-                              {topologyFeedData.feed_service_endpoints}
+                              {topologyFeedData!.feed_service_endpoints}
+                              <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
                             </a>
                           ) : (
                             <span className={noDataClass}>Not provided</span>
@@ -298,130 +336,118 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
                           Service Endpoint Extensions URL
                         </label>
                         <p className={valueClass}>
-                          {topologyFeedData.feed_service_endpoints_extensions ? (
+                          {topologyFeedData!
+                            .feed_service_endpoints_extensions ? (
                             <a
                               href={
-                                topologyFeedData.feed_service_endpoints_extensions
+                                topologyFeedData!
+                                  .feed_service_endpoints_extensions
                               }
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`${linkClass} break-words`}
+                              className={`${linkClass} inline-flex items-center gap-0.5 break-words`}
                             >
                               {
-                                topologyFeedData.feed_service_endpoints_extensions
+                                topologyFeedData!
+                                  .feed_service_endpoints_extensions
                               }
+                              <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
                             </a>
                           ) : (
                             <span className={noDataClass}>Not provided</span>
                           )}
                         </p>
                       </div>
-                    </div>
+                    </>
                   )}
-                </>
-              ) : (
-                <span className={noDataClass}>Not configured</span>
-              )}
-            </>
-
-            {/* Internal Lists */}
-            {metadata?.internalLists && metadata.internalLists.length > 0 && (
-              <>
-                <div className="pt-2 border-t border-line">
-                  <h3 className="text-base font-semibold text-body">
-                    Internal Lists
-                  </h3>
                 </div>
-                <div className="flex flex-col gap-4 mb-1">
-                  {metadata.internalLists.map((list, index) => (
-                    <div
-                      key={index}
-                      className="grid grid-cols-1 md:grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-4 bg-surface-muted"
-                    >
-                      <div className={infoGroupClass}>
-                        <label className={labelClass}>Email</label>
-                        <p className={valueClass}>{list.email}</p>
-                      </div>
-                      <div className={infoGroupClass}>
-                        <label className={labelClass}>Type</label>
-                        <p className={valueClass}>{list.type}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </>
+              </div>
             )}
-
-            {/* Authentication Metadata */}
-            {metadata?.auth_metadata && (
-              <>
-                <div className="pt-2 border-t border-line">
-                  <h3 className="text-base font-semibold text-body">
-                    Authentication
-                  </h3>
-                </div>
-                <div className={cardRowClass}>
-                  <div className={infoGroupClass}>
-                    <label className={labelClass}>Auth Name</label>
-                    <p className={valueClass}>
-                      {metadata.auth_metadata.auth_name || (
-                        <span className={noDataClass}>Not provided</span>
-                      )}
-                    </p>
-                  </div>
-                  <div className={infoGroupClass}>
-                    <label className={labelClass}>Auth URL</label>
-                    <p className={valueClass}>
-                      {metadata.auth_metadata.auth_url ? (
-                        <a
-                          href={metadata.auth_metadata.auth_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={linkClass}
-                        >
-                          {metadata.auth_metadata.auth_url}
-                        </a>
-                      ) : (
-                        <span className={noDataClass}>Not provided</span>
-                      )}
-                    </p>
-                  </div>
-                </div>
-              </>
-            )}
-          </div>
-        ) : (
-          <div className={cardClass}>
-            <p className={noDataClass}>No infrastructure metadata available</p>
           </div>
         )}
       </div>
 
-      {/* Additional Information */}
-      <div className="mb-5">
-        <div className="mb-1">
-          <h2 className="text-lg font-semibold text-foreground">
-            Additional Information
-          </h2>
+      {/* Right column — Contacts */}
+      <div className={`${cardClass} self-start`}>
+        <div className="flex flex-col gap-0.5">
+          <p className={labelClass}>Organisation</p>
+          {tenantData.info.email ? (
+            <p className="text-xs text-muted m-0 flex items-center gap-1.5">
+              <Mail className="size-3 flex-shrink-0" />
+              <span className="break-all">{tenantData.info.email}</span>
+              <button
+                type="button"
+                onClick={() => handleCopyEmail(tenantData.info.email)}
+                className={`flex-shrink-0 rounded p-0.5 transition-colors ${copiedEmail === tenantData.info.email ? 'bg-emerald-100 text-emerald-700' : 'text-subtle hover:bg-surface-strong hover:text-body'}`}
+                aria-label={
+                  copiedEmail === tenantData.info.email
+                    ? 'Copied'
+                    : 'Copy email'
+                }
+                title={
+                  copiedEmail === tenantData.info.email
+                    ? 'Copied!'
+                    : 'Copy email'
+                }
+              >
+                {copiedEmail === tenantData.info.email ? (
+                  <Check className="size-3" strokeWidth={2.5} />
+                ) : (
+                  <Copy className="size-3" strokeWidth={2} />
+                )}
+              </button>
+            </p>
+          ) : (
+            <p className="text-xs text-subtle italic m-0">Not provided</p>
+          )}
         </div>
-        <div className={cardClass}>
-          <div className={cardRowClass}>
-            <div className={infoGroupClass}>
-              <label className={labelClass}>Created</label>
-              <p className={valueClass}>
-                {formatDate(tenantData.info.created_at || '')}
-              </p>
-            </div>
-            <div className={infoGroupClass}>
-              <label className={labelClass}>Updated</label>
-              <p className={valueClass}>
-                {formatDate(tenantData.info.updated_at || '')}
-              </p>
+
+        {contacts && contacts.length > 0 && (
+          <div className="overflow-hidden border-t border-line pt-2">
+            <div className="flex items-start flex-wrap gap-y-3 -ml-[13px]">
+              {contacts.map((contact, index) => (
+                <div
+                  key={index}
+                  className="flex flex-col gap-0.5 min-w-0 border-l border-line-strong ps-3 pe-1"
+                >
+                  <div className="flex items-center gap-2 min-w-0">
+                    <p className="text-sm text-foreground m-0 truncate">
+                      {contact.name}
+                    </p>
+                    {contact.type && (
+                      <span className="flex-shrink-0 px-1.5 py-0.5 bg-brand-muted text-brand-strong text-[11px] font-medium rounded-full lowercase">
+                        {contact.type}
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted m-0 flex items-center gap-1.5">
+                    <Mail className="size-3 flex-shrink-0" />
+                    <span className="break-all">{contact.email}</span>
+                    <button
+                      type="button"
+                      onClick={() => handleCopyEmail(contact.email)}
+                      className={`flex-shrink-0 rounded p-0.5 transition-colors ${copiedEmail === contact.email ? 'bg-emerald-100 text-emerald-700' : 'text-subtle hover:bg-surface-strong hover:text-body'}`}
+                      aria-label={
+                        copiedEmail === contact.email ? 'Copied' : 'Copy email'
+                      }
+                      title={
+                        copiedEmail === contact.email ? 'Copied!' : 'Copy email'
+                      }
+                    >
+                      {copiedEmail === contact.email ? (
+                        <Check className="size-3" strokeWidth={2.5} />
+                      ) : (
+                        <Copy className="size-3" strokeWidth={2} />
+                      )}
+                    </button>
+                  </p>
+                </div>
+              ))}
             </div>
           </div>
-        </div>
+        )}
       </div>
-    </>
+    </div>
   )
 }
 
