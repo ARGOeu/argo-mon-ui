@@ -10,6 +10,7 @@ import {
   CircleStackIcon,
   LockClosedIcon,
 } from '@heroicons/react/16/solid'
+import { ChartNetwork } from 'lucide-react'
 import { useGetUserInvitations } from '@/hooks/useInvitations'
 import type { Tenant } from '@/types/tenants'
 import type { AuthContextType } from '@/auth/context'
@@ -78,15 +79,13 @@ function Sidebar({
 
             {effectiveTenantId && userTenants.length > 0 && (
               <div>
-                {(isSuperAdmin || isAdminOfTenant) && (
-                  <SidebarNavItem
-                    to={`/tenants/${effectiveTenantId}/Dashboard`}
-                    onClick={onCloseMobileMenu}
-                  >
-                    <CircleStackIcon className="size-4" aria-hidden />
-                    Dashboard
-                  </SidebarNavItem>
-                )}
+                <SidebarNavItem
+                  to={`/tenants/${effectiveTenantId}/dashboard`}
+                  onClick={onCloseMobileMenu}
+                >
+                  <CircleStackIcon className="size-4" aria-hidden />
+                  Dashboard
+                </SidebarNavItem>
                 <SidebarNavItem
                   to={`/tenants/${effectiveTenantId}/details`}
                   end
@@ -100,7 +99,7 @@ function Sidebar({
                     to={`/tenants/${effectiveTenantId}/topology`}
                     onClick={onCloseMobileMenu}
                   >
-                    <CircleStackIcon className="size-4" aria-hidden />
+                    <ChartNetwork className="size-4" aria-hidden />
                     Topology
                   </SidebarNavItem>
                 )}

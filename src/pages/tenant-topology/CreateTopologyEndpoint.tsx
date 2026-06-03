@@ -29,6 +29,7 @@ const sectionClass =
   'grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-2 lg:gap-8 mb-6 animate-fade-in'
 const sectionContentClass =
   'bg-surface-muted border border-line rounded-lg px-5 py-3 flex flex-col gap-2'
+const labelClass = 'text-sm font-medium text-body mb-1'
 
 const today = new Date().toISOString().split('T')[0]
 
@@ -392,9 +393,21 @@ const CreateTopologyEndpoint = ({
           </p>
         </div>
         <div className={sectionContentClass}>
+          {isEditMode && editingEndpoint?.tags?.info_ID && (
+            <div className="flex flex-col">
+              <label className={labelClass}>Endpoint ID</label>
+              <input
+                type="text"
+                value={editingEndpoint.tags.info_ID}
+                disabled
+                className="font-mono"
+              />
+            </div>
+          )}
+
           {/* Service type */}
           <div className="flex flex-col">
-            <label className="text-sm font-medium text-body mb-1">
+            <label className={labelClass}>
               Service Type <span className="required">*</span>
             </label>
             {isLoadingTypes ? (
@@ -432,7 +445,7 @@ const CreateTopologyEndpoint = ({
 
           {/* Hostname / URL */}
           <div className="flex flex-col">
-            <label className="text-sm font-medium text-body mb-1">
+            <label className={labelClass}>
               URL <span className="required">*</span>
             </label>
             <input
@@ -454,7 +467,7 @@ const CreateTopologyEndpoint = ({
 
           {/* Labels */}
           <div className="flex flex-col">
-            <label className="text-sm font-medium text-body mb-1">Labels</label>
+            <label className={labelClass}>Labels</label>
             <LabelsInput
               tags={formData.tags}
               onChange={(tags) => setFormData((prev) => ({ ...prev, tags }))}

@@ -234,6 +234,10 @@ const BuildThemingTab = ({
                   <CheckCircleIcon className="text-green-500 size-4" />
                   <div>Icon</div>
                 </SelectGroup.Item>
+                <SelectGroup.Item value="none">
+                  <BanIcon className="w-4" />
+                  <div>None</div>
+                </SelectGroup.Item>
               </SelectGroup>
             </div>
 

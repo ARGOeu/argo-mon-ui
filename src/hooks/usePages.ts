@@ -92,6 +92,7 @@ export const useGetTenantPages = (
       return fetchPages(tenantId, token, page, size)
     },
     retry: false,
+    refetchOnMount: 'always',
     enabled: enabled && !!token && !!tenantId,
   })
 }

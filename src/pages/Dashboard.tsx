@@ -7,6 +7,7 @@ import {
   Check,
   CheckCircle2,
   Copy,
+  Info,
   Search,
   Server,
   ShieldCheck,
@@ -361,6 +362,12 @@ export default function Dashboard() {
   const BannerIcon = b.icon
   const isLoading = reportsLoading || resultsLoading || statusLoading
   const error = reportsError || resultsError || statusError
+
+  let errorContext = 'dashboard metrics'
+  if (reportsError) errorContext = 'tenant reports'
+  else if (statusError) errorContext = 'current status'
+  else if (resultsError) errorContext = 'daily results'
+
   const hasMultipleReports = (reports?.length ?? 0) > 1
 
   const filterTabs: { id: FilterId; label: string; count: number | null }[] = [
@@ -376,6 +383,9 @@ export default function Dashboard() {
       </div>
     )
   }
+
+  const noData =
+    !reports?.length || !resultsData?.data?.length || !statusData?.data?.length
 
   return (
     <div className="page-container">
@@ -444,7 +454,20 @@ export default function Dashboard() {
           <LoadingSpinner size="md" />
         </div>
       ) : error ? (
-        <ErrorDisplay error={error} context="tenant data" />
+        <ErrorDisplay error={error} context={errorContext} />
+      ) : noData ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-neutral-200 bg-white px-12 py-4 mt-8 text-center shadow-sm">
+          <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-full bg-blue-50">
+            <Info className="h-6 w-6 text-brand" />
+          </div>
+          <h3 className="mb-1 text-lg font-medium text-neutral-900">
+            No data available for the selected report
+          </h3>
+          <p className="max-w-sm text-sm text-neutral-500">
+            There is no status or result data available for the "
+            {selectedReport || 'selected'}" report yet.
+          </p>
+        </div>
       ) : (
         <>
           <div
