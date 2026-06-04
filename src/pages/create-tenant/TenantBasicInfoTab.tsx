@@ -8,6 +8,8 @@ const sectionClass =
 const sectionContentClass =
   'bg-surface-muted border border-line rounded-lg px-6 py-4 flex flex-col gap-2.5'
 
+const DESCRIPTION_MAX_CHARS = 900
+
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 interface FormData {
@@ -93,6 +95,27 @@ const TenantBasicInfoTab = ({
       } else {
         setErrors((prev) => ({ ...prev, website: '' }))
       }
+    }
+  }
+
+  const handleDescriptionPaste = (
+    e: React.ClipboardEvent<HTMLTextAreaElement>,
+  ) => {
+    const pasted = e.clipboardData.getData('text')
+    const current = formData.description
+    const remaining = DESCRIPTION_MAX_CHARS - current.length
+
+    if (pasted.length > remaining) {
+      e.preventDefault()
+      if (remaining > 0) {
+        setFormData((prev) => ({
+          ...prev,
+          description: current + pasted.slice(0, remaining),
+        }))
+      }
+      toast.warning(
+        `Description has been truncated to ${DESCRIPTION_MAX_CHARS} characters.`,
+      )
     }
   }
 
@@ -222,10 +245,20 @@ const TenantBasicInfoTab = ({
               name="description"
               value={formData.description}
               onChange={handleChange}
+              onPaste={handleDescriptionPaste}
               placeholder="A small description about the tenant"
-              rows={2}
+              rows={Math.max(
+                2,
+                Math.min(12, Math.ceil(formData.description.length / 100)),
+              )}
+              maxLength={DESCRIPTION_MAX_CHARS}
               required
             />
+            <span
+              className={`text-xs mt-1 self-end ${formData.description.length >= DESCRIPTION_MAX_CHARS ? 'text-red-500' : 'text-subtle'}`}
+            >
+              {formData.description.length} / {DESCRIPTION_MAX_CHARS}
+            </span>
           </div>
         </div>
       </div>
