@@ -353,6 +353,8 @@ const CreateTenant = () => {
                 metadata={metadata}
                 onMetadataChange={setMetadata}
                 onValidationChange={setHasMetadataValidationError}
+                isEditMode={isEditMode}
+                tenantId={tenantId}
               />
             </div>
           </form>

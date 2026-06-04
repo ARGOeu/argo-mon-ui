@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useGetUserContactTypes } from '@/hooks/useTenants'
 import { PlusIcon, TrashIcon } from '@heroicons/react/16/solid'
+import { Link } from 'react-router-dom'
+import { Info } from 'lucide-react'
 import SelectDropdown from '@/components/SelectDropdown'
 import FormField from './FormField'
 
@@ -30,12 +32,16 @@ interface InfrastructureMetadataProps {
     internalLists: Array<{ email: string; type: string }>
   }) => void
   onValidationChange?: (hasError: boolean) => void
+  isEditMode?: boolean
+  tenantId?: string
 }
 
 const InfrastructureMetadata = ({
   metadata,
   onMetadataChange,
   onValidationChange,
+  isEditMode,
+  tenantId,
 }: InfrastructureMetadataProps) => {
   const [errors, setErrors] = useState(() => ({
     uiUrl: '',
@@ -271,6 +277,32 @@ const InfrastructureMetadata = ({
           ))}
         </div>
       </div>
+
+      {isEditMode && tenantId && (
+        <div className={sectionClass}>
+          <div className="pt-2 pl-2">
+            <h2 className="section-title">Topology Feed</h2>
+            <p className="section-description">
+              Topology data source configuration
+            </p>
+          </div>
+          <div className={sectionContentClass}>
+            <div className="flex items-center gap-1.5">
+              <Info className="size-4.5 text-muted flex-shrink-0" />
+              <p className="text-sm text-muted m-0">
+                The topology feed can be configured on the{' '}
+                <Link
+                  to={`/tenants/${tenantId}/topology#feed-configuration`}
+                  className="text-brand font-medium hover:text-brand-strong hover:underline"
+                >
+                  Configure Topology Feed
+                </Link>{' '}
+                page.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
