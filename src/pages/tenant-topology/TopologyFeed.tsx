@@ -60,8 +60,6 @@ const sectionClass =
 const sectionContentClass =
   'bg-surface-muted border border-line rounded-lg px-5 py-3 flex flex-col gap-2'
 const labelClass = 'text-sm font-medium text-body mb-1'
-const fieldGridClass =
-  'grid grid-cols-[repeat(auto-fit,minmax(250px,1fr))] gap-3'
 
 interface TopologyFeedProps {
   tenantId: string
@@ -163,42 +161,38 @@ const TopologyFeed = ({ tenantId }: TopologyFeedProps) => {
             </p>
           </div>
           <div className={sectionContentClass}>
-            <div className={fieldGridClass}>
-              <div className="flex flex-col">
-                <label className={labelClass}>
-                  Type <span className="required">*</span>
-                </label>
-                <SelectDropdown
-                  value={form.type}
-                  onChange={handleTypeChange}
-                  options={
-                    originalForm.type
-                      ? FEED_TYPE_OPTIONS
-                      : [NONE_OPTION, ...FEED_TYPE_OPTIONS]
-                  }
-                  placeholder="Select feed type"
-                />
-              </div>
+            <div className="flex flex-col">
+              <label className={labelClass}>
+                Type <span className="required">*</span>
+              </label>
+              <SelectDropdown
+                value={form.type}
+                onChange={handleTypeChange}
+                options={
+                  originalForm.type
+                    ? FEED_TYPE_OPTIONS
+                    : [NONE_OPTION, ...FEED_TYPE_OPTIONS]
+                }
+                placeholder="Select feed type"
+              />
             </div>
 
             {form.type === 'CSV' && (
-              <div className={fieldGridClass}>
-                <div className="flex flex-col">
-                  <label className={labelClass}>URL</label>
-                  <input
-                    type="url"
-                    value={form.feed_url}
-                    onChange={(e) =>
-                      handleFieldChange('feed_url', e.target.value)
-                    }
-                    placeholder="Enter feed URL"
-                  />
-                </div>
+              <div className="flex flex-col">
+                <label className={labelClass}>URL</label>
+                <input
+                  type="url"
+                  value={form.feed_url}
+                  onChange={(e) =>
+                    handleFieldChange('feed_url', e.target.value)
+                  }
+                  placeholder="Enter feed URL"
+                />
               </div>
             )}
 
             {form.type === 'eosc-service-catalog' && (
-              <div className={fieldGridClass}>
+              <>
                 <div className="flex flex-col">
                   <label className={labelClass}>Service Groups URL</label>
                   <input
@@ -240,7 +234,7 @@ const TopologyFeed = ({ tenantId }: TopologyFeedProps) => {
                     placeholder="Enter service endpoint extensions feed URL"
                   />
                 </div>
-              </div>
+              </>
             )}
           </div>
         </div>
