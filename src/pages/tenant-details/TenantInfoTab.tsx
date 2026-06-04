@@ -8,6 +8,7 @@ import {
   Copy,
   Globe,
   Mail,
+  Mails,
   Server,
 } from 'lucide-react'
 import {
@@ -24,6 +25,15 @@ const formatDate = (dateString: string) => {
     month: 'short',
     year: 'numeric',
   })
+}
+
+const URL_MAX_CHARS = 60
+
+const truncateUrl = (url: string): string => {
+  if (url.length <= URL_MAX_CHARS) return url
+  const start = Math.ceil(URL_MAX_CHARS * 0.6)
+  const end = URL_MAX_CHARS - start
+  return `${url.slice(0, start)}…${url.slice(-end)}`
 }
 
 const cardClass = 'bg-surface-strong rounded-lg py-2 px-4 flex flex-col gap-2'
@@ -106,7 +116,7 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
         <div>
           {tenantData.info.description ? (
             <p
-              className="text-sm text-body leading-relaxed m-0 line-clamp-6"
+              className="text-sm text-body leading-relaxed m-0 line-clamp-15 lg:line-clamp-10"
               title={tenantData.info.description}
             >
               {tenantData.info.description}
@@ -166,9 +176,7 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
         )}
 
         {/* Infrastructure Metadata */}
-        {(metadata?.instance?.ui_url ||
-          metadata?.instance?.poem_url ||
-          !!metadata?.internalLists?.length) && (
+        {(metadata?.instance?.ui_url || metadata?.instance?.poem_url) && (
           <div>
             <div className="mb-1">
               <h2 className="text-md font-semibold text-foreground flex items-center gap-1.5">
@@ -177,72 +185,74 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
               </h2>
             </div>
             <div className="bg-surface-strong rounded-lg py-2 px-4 flex flex-col gap-4 w-fit">
-              {(metadata?.instance?.ui_url || metadata?.instance?.poem_url) && (
-                <div className="flex flex-wrap gap-x-8 gap-y-3">
-                  {metadata.instance?.ui_url && (
-                    <div className={`${infoGroupClass} min-w-0`}>
-                      <label
-                        className={`${labelClass} flex items-center gap-1`}
+              <div className="flex flex-wrap gap-x-8 gap-y-3">
+                {metadata.instance?.ui_url && (
+                  <div className={`${infoGroupClass} min-w-0`}>
+                    <label className={`${labelClass} flex items-center gap-1`}>
+                      <Globe className="size-3.5" />
+                      UI URL
+                    </label>
+                    <p className={valueClass}>
+                      <a
+                        href={metadata.instance.ui_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={metadata.instance.ui_url}
+                        className={`${linkClass} inline-flex items-center gap-0.5`}
                       >
-                        <Globe className="size-3.5" />
-                        UI URL
-                      </label>
-                      <p className={valueClass}>
-                        <a
-                          href={metadata.instance.ui_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`${linkClass} inline-flex items-center gap-0.5`}
-                        >
-                          {metadata.instance.ui_url}
-                          <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
-                        </a>
-                      </p>
-                    </div>
-                  )}
-                  {metadata.instance?.poem_url && (
-                    <div className={`${infoGroupClass} min-w-0`}>
-                      <label
-                        className={`${labelClass} flex items-center gap-1`}
+                        {truncateUrl(metadata.instance.ui_url)}
+                        <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
+                      </a>
+                    </p>
+                  </div>
+                )}
+                {metadata.instance?.poem_url && (
+                  <div className={`${infoGroupClass} min-w-0`}>
+                    <label className={`${labelClass} flex items-center gap-1`}>
+                      <ClipboardList className="size-3.5" />
+                      POEM URL
+                    </label>
+                    <p className={valueClass}>
+                      <a
+                        href={metadata.instance.poem_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={metadata.instance.poem_url}
+                        className={`${linkClass} inline-flex items-center gap-0.5`}
                       >
-                        <ClipboardList className="size-3.5" />
-                        POEM URL
-                      </label>
-                      <p className={valueClass}>
-                        <a
-                          href={metadata.instance.poem_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={`${linkClass} inline-flex items-center gap-0.5`}
-                        >
-                          {metadata.instance.poem_url}
-                          <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
-                        </a>
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
+                        {truncateUrl(metadata.instance.poem_url)}
+                        <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
+                      </a>
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
-              {metadata?.internalLists && metadata.internalLists.length > 0 && (
-                <div
-                  className={`flex flex-col gap-3${metadata?.instance?.ui_url || metadata?.instance?.poem_url ? ' border-t border-line pt-2' : ''}`}
-                >
-                  <label className={labelClass}>Internal Lists</label>
-                  {metadata.internalLists.map((list, index) => (
-                    <div key={index} className="flex flex-wrap gap-x-8 gap-y-3">
-                      <div className={infoGroupClass}>
-                        <label className={labelClass}>Email</label>
-                        <p className={valueClass}>{list.email}</p>
-                      </div>
-                      <div className={infoGroupClass}>
-                        <label className={labelClass}>Type</label>
-                        <p className={`${valueClass} lowercase`}>{list.type}</p>
-                      </div>
-                    </div>
-                  ))}
+        {/* Internal Lists */}
+        {!!metadata?.internalLists?.length && (
+          <div>
+            <div className="mb-1">
+              <h2 className="text-md font-semibold text-foreground flex items-center gap-1.5">
+                <Mails className="size-4" />
+                Internal Lists
+              </h2>
+            </div>
+            <div className={`${cardClass} w-fit`}>
+              {metadata.internalLists.map((list, index) => (
+                <div key={index} className="flex flex-wrap gap-x-8 gap-y-3">
+                  <div className={infoGroupClass}>
+                    <label className={labelClass}>Email</label>
+                    <p className={valueClass}>{list.email}</p>
+                  </div>
+                  <div className={infoGroupClass}>
+                    <label className={labelClass}>Type</label>
+                    <p className={`${valueClass} lowercase`}>{list.type}</p>
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
           </div>
         )}
@@ -279,9 +289,10 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
                             href={topologyFeedData!.feed_url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className={`${linkClass} inline-flex items-center gap-0.5 break-words`}
+                            title={topologyFeedData!.feed_url}
+                            className={`${linkClass} inline-flex items-center gap-0.5`}
                           >
-                            {topologyFeedData!.feed_url}
+                            {truncateUrl(topologyFeedData!.feed_url)}
                             <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
                           </a>
                         ) : (
@@ -301,9 +312,12 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
                               href={topologyFeedData!.feed_service_groups}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`${linkClass} inline-flex items-center gap-0.5 break-words`}
+                              title={topologyFeedData!.feed_service_groups}
+                              className={`${linkClass} inline-flex items-center gap-0.5`}
                             >
-                              {topologyFeedData!.feed_service_groups}
+                              {truncateUrl(
+                                topologyFeedData!.feed_service_groups,
+                              )}
                               <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
                             </a>
                           ) : (
@@ -321,9 +335,12 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
                               href={topologyFeedData!.feed_service_endpoints}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`${linkClass} inline-flex items-center gap-0.5 break-words`}
+                              title={topologyFeedData!.feed_service_endpoints}
+                              className={`${linkClass} inline-flex items-center gap-0.5`}
                             >
-                              {topologyFeedData!.feed_service_endpoints}
+                              {truncateUrl(
+                                topologyFeedData!.feed_service_endpoints,
+                              )}
                               <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
                             </a>
                           ) : (
@@ -345,12 +362,16 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
                               }
                               target="_blank"
                               rel="noopener noreferrer"
-                              className={`${linkClass} inline-flex items-center gap-0.5 break-words`}
-                            >
-                              {
+                              title={
                                 topologyFeedData!
                                   .feed_service_endpoints_extensions
                               }
+                              className={`${linkClass} inline-flex items-center gap-0.5`}
+                            >
+                              {truncateUrl(
+                                topologyFeedData!
+                                  .feed_service_endpoints_extensions,
+                              )}
                               <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
                             </a>
                           ) : (
