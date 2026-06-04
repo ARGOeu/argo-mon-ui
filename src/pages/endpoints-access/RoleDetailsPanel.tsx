@@ -9,17 +9,17 @@ import SelectDropdown from '@/components/SelectDropdown'
 import CategoryPanel from './CategoryPanel'
 import { CATEGORY_MATCHERS } from './constants/endpointCategories'
 import { getFriendlyLabel } from './utils/friendlyLabels'
-import type { SecuredEndpoint } from '@/types/securedEndpoints'
+import type {
+  SecuredEndpoint,
+  EndpointAssignment,
+} from '@/types/securedEndpoints'
 
 interface RoleDetailsPanelProps {
   roleName: string
   endpointsList: SecuredEndpoint[]
-  selectedActionIds: string[]
-  onToggleAction: (
-    actionId: string,
-    selectAll?: boolean,
-    allIds?: string[],
-  ) => void
+  selectedAssignments: EndpointAssignment[]
+  onToggleAction: (actionId: string) => void
+  onSetScope: (endpointId: string, scope: string) => void
   onSubmit: () => void
   isMutating: boolean
   isDirty: boolean
@@ -32,8 +32,9 @@ interface RoleDetailsPanelProps {
 const RoleDetailsPanel = ({
   roleName,
   endpointsList,
-  selectedActionIds,
+  selectedAssignments,
   onToggleAction,
+  onSetScope,
   onSubmit,
   isMutating,
   isDirty,
@@ -83,9 +84,9 @@ const RoleDetailsPanel = ({
     return options
   }, [endpointsList])
 
-  const selectedActionIdsSet = useMemo(
-    () => new Set(selectedActionIds),
-    [selectedActionIds],
+  const selectedAssignmentsMap = useMemo(
+    () => new Map(selectedAssignments.map((a) => [a.secured_endpoint_id, a])),
+    [selectedAssignments],
   )
 
   const groupedEndpoints = useMemo(() => {
@@ -160,7 +161,7 @@ const RoleDetailsPanel = ({
       />
 
       <div
-        className={`sticky top-0 z-10 px-1 bg-white transition-all ${isStuck ? 'py-3 border-b border-line' : 'pb-1'}`}
+        className={`lg:sticky lg:top-0 z-10 px-1 bg-white transition-all ${isStuck ? 'py-3 border-b border-line' : 'pb-1'}`}
       >
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="min-w-0 flex-1">
@@ -249,8 +250,9 @@ const RoleDetailsPanel = ({
                 endpoints={endpoints}
                 isCollapsed={collapsedGroups.has(label)}
                 onToggleCollapse={() => handleToggleGroup(label)}
-                selectedActionIds={selectedActionIdsSet}
+                selectedAssignments={selectedAssignmentsMap}
                 onToggleAction={onToggleAction}
+                onSetScope={onSetScope}
               />
             ))}
           </div>

@@ -20,13 +20,17 @@ const EndpointsAccess = () => {
 
   useEffect(() => {
     const main = document.querySelector('main')
-    if (main) {
-      main.style.overflowY = 'scroll'
+    if (!main) return
+
+    const apply = () => {
+      main.style.overflowY = window.innerWidth >= 1024 ? 'scroll' : ''
     }
+
+    apply()
+    window.addEventListener('resize', apply)
     return () => {
-      if (main) {
-        main.style.overflowY = ''
-      }
+      window.removeEventListener('resize', apply)
+      main.style.overflowY = ''
     }
   }, [])
 
@@ -64,28 +68,34 @@ const EndpointsAccess = () => {
   const { mutate: saveRoleActions, isPending: isMutating } =
     useAssignEndpointsToRoleMutation()
 
-  const roleActionIds = useMemo(
-    () => roleAssignmentsData?.assignments?.[0]?.secured_endpoint_ids ?? [],
+  const roleAssignments = useMemo(
+    () => roleAssignmentsData?.assignments?.[0]?.secured_endpoints ?? [],
     [roleAssignmentsData],
   )
 
-  const { selectedActionIds, toggleAction, isDirty, addedCount, removedCount } =
-    useRoleActionsManager(selectedRoleId, roleActionIds)
+  const {
+    selectedAssignments,
+    toggleAction,
+    setScope,
+    isDirty,
+    addedCount,
+    removedCount,
+  } = useRoleActionsManager(roleAssignments)
 
   const actionCounts = useMemo(() => {
     const saved = Object.fromEntries(
       (allAssignmentsData?.assignments ?? []).map((a) => [
         a.role_id,
-        a.secured_endpoint_ids.length,
+        a.secured_endpoints?.length ?? 0,
       ]),
     )
     return {
       ...saved,
       ...(selectedRoleId && isDirty
-        ? { [selectedRoleId]: selectedActionIds.length }
+        ? { [selectedRoleId]: selectedAssignments.length }
         : {}),
     }
-  }, [allAssignmentsData, selectedRoleId, selectedActionIds, isDirty])
+  }, [allAssignmentsData, selectedRoleId, selectedAssignments, isDirty])
 
   const roles = useMemo(() => rolesData?.content ?? [], [rolesData])
 
@@ -125,7 +135,7 @@ const EndpointsAccess = () => {
     saveRoleActions(
       {
         roleId: selectedRoleId,
-        data: { secured_endpoint_ids: selectedActionIds },
+        data: { secured_endpoint_assignments: selectedAssignments },
       },
       {
         onSuccess: () => {
@@ -162,7 +172,7 @@ const EndpointsAccess = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-x-8 items-start pb-10">
-          <div className="sticky top-4 bg-surface-muted rounded-lg p-4">
+          <div className="lg:sticky lg:top-4 bg-surface-muted rounded-lg p-4 mb-6 lg:mb-0">
             <RoleListPanel
               roles={roles}
               selectedRoleId={selectedRoleId}
@@ -178,8 +188,9 @@ const EndpointsAccess = () => {
                 key={selectedRoleId}
                 roleName={selectedRole.name}
                 endpointsList={endpointsList}
-                selectedActionIds={selectedActionIds}
+                selectedAssignments={selectedAssignments}
                 onToggleAction={toggleAction}
+                onSetScope={setScope}
                 onSubmit={handleSubmitActions}
                 isMutating={isMutating}
                 isDirty={isDirty}
