@@ -88,7 +88,12 @@ export default function TenantPicker({
                 image={tenant.info.image}
                 size="sm"
               />
-              <span className="truncate">{tenant.info.name}</span>
+              <span className="truncate flex-1 min-w-0">
+                {tenant.info.name}
+              </span>
+              {tenant.error && (
+                <span className="size-2 rounded-full bg-red-500 flex-shrink-0" />
+              )}
             </Link>
           ))
         )}
