@@ -4,14 +4,17 @@ import { useAuth } from './auth/useAuth'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
 import { SelectedTenantProvider } from '@/contexts/selected-tenant'
 import LoginPrompt from './components/LoginPrompt'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import Sidebar from '@/components/sidebar/Sidebar'
 import MobileMenuToggle from '@/components/sidebar/MobileMenuToggle'
 
 function LayoutContent() {
   const { authenticated, isSuperAdmin, profile, logout } = useAuth()
-  const { effectiveTenantId, tenants, isTenantAdmin } = useSelectedTenant()
+  const { effectiveTenantId, tenants, isTenantAdmin, tenant } =
+    useSelectedTenant()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const tDetsRoute = useMatch('/tenants/:id/details')
+  const tenantRoute = useMatch('/tenants/:id/*')
 
   return (
     <div className="h-screen flex overflow-hidden">
@@ -35,9 +38,15 @@ function LayoutContent() {
 
       <main className="flex-1 bg-white overflow-auto">
         <div
-          className={`${tDetsRoute ? '' : 'container mx-2 md:mx-auto py-2 px-4 md:px-6'}`}
+          className={`${tDetsRoute && !tenant?.error ? '' : 'container mx-2 md:mx-auto py-2 px-4 md:px-6'}`}
         >
-          <Outlet />
+          {tenantRoute && tenant?.error ? (
+            <div className="py-6 px-16 md:px-24">
+              <ErrorDisplay error={new Error(tenant.error)} context="tenant" />
+            </div>
+          ) : (
+            <Outlet />
+          )}
         </div>
       </main>
     </div>
