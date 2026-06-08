@@ -132,7 +132,8 @@ const TenantManagementTab = () => {
           tenantToDelete ? (
             <>
               Are you sure you want to delete tenant{' '}
-              <strong>{tenantToDelete.name}</strong> ?
+              <strong>{tenantToDelete.name}</strong>
+              ?
               <br />
               <span className="text-amber-600 font-medium">
                 This action cannot be undone.
@@ -144,6 +145,9 @@ const TenantManagementTab = () => {
         }
         confirmLabel="Delete"
         cancelLabel="Cancel"
+        typeToConfirm={tenantToDelete?.name}
+        confirmSuffix="to confirm the deletion of this tenant:"
+        closeOnClickOutside={false}
         onConfirm={handleDeleteConfirm}
         onCancel={handleDeleteCancel}
       />
