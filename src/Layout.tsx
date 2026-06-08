@@ -13,8 +13,17 @@ function LayoutContent() {
   const { effectiveTenantId, tenants, isTenantAdmin, tenant } =
     useSelectedTenant()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
-  const tDetsRoute = useMatch('/tenants/:id/details')
-  const tenantRoute = useMatch('/tenants/:id/*')
+  const tenantScopeMatch = useMatch('/tenants/:tenantKey/*')
+  const isTenantScopedRoute =
+    !!tenant &&
+    (tenantScopeMatch?.params.tenantKey === tenant.id ||
+      tenantScopeMatch?.params.tenantKey === tenant.info.name)
+
+  const tenantDetailsMatch = useMatch('/tenants/:tenantKey/details')
+  const isActiveTenantDetailsRoute =
+    !!tenant &&
+    (tenantDetailsMatch?.params.tenantKey === tenant.id ||
+      tenantDetailsMatch?.params.tenantKey === tenant.info.name)
 
   return (
     <div className="h-screen flex overflow-hidden">
@@ -38,9 +47,9 @@ function LayoutContent() {
 
       <main className="flex-1 bg-white overflow-auto">
         <div
-          className={`${tDetsRoute && !tenant?.error ? '' : 'container mx-2 md:mx-auto py-2 px-4 md:px-6'}`}
+          className={`${isActiveTenantDetailsRoute && !tenant?.error ? '' : 'container mx-2 md:mx-auto py-2 px-4 md:px-6'}`}
         >
-          {tenantRoute && tenant?.error ? (
+          {isTenantScopedRoute && tenant?.error ? (
             <div className="py-6 px-16 md:px-24">
               <ErrorDisplay error={new Error(tenant.error)} context="tenant" />
             </div>
