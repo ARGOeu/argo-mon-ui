@@ -1,4 +1,11 @@
-import { useState, useRef, useEffect, useId } from 'react'
+import {
+  useState,
+  useRef,
+  useEffect,
+  useLayoutEffect,
+  useCallback,
+  useId,
+} from 'react'
 import { createPortal } from 'react-dom'
 import {
   ChevronUpDownIcon,
@@ -32,8 +39,13 @@ const SelectDropdown = ({
 }: SelectDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
-  const [menuPos, setMenuPos] = useState({ top: 0, left: 0, width: 0 })
   const [searchQuery, setSearchQuery] = useState('')
+  const [menuPos, setMenuPos] = useState<{
+    top?: number
+    bottom?: number
+    left: number
+    width: number
+  }>({ left: 0, width: 0 })
   const containerRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
@@ -46,6 +58,15 @@ const SelectDropdown = ({
         )
       : options
 
+  const activeIndexRef = useRef(activeIndex)
+  activeIndexRef.current = activeIndex
+
+  const handleClose = useCallback(() => {
+    setIsOpen(false)
+    setActiveIndex(-1)
+    setSearchQuery('')
+  }, [])
+
   useEffect(() => {
     if (!isOpen) return
     const handleMouseDown = (e: MouseEvent) => {
@@ -56,22 +77,26 @@ const SelectDropdown = ({
         handleClose()
       }
     }
-
-    const handleResize = () => handleClose()
+    const handleScroll = (e: Event) => {
+      if (!menuRef.current?.contains(e.target as Node)) handleClose()
+    }
 
     document.addEventListener('mousedown', handleMouseDown)
-    window.addEventListener('resize', handleResize)
+    window.addEventListener('resize', handleClose)
+    window.addEventListener('scroll', handleScroll, true)
     return () => {
       document.removeEventListener('mousedown', handleMouseDown)
-      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('resize', handleClose)
+      window.removeEventListener('scroll', handleScroll, true)
     }
-  }, [isOpen])
+  }, [isOpen, handleClose])
 
   useEffect(() => {
-    if (activeIndex < 0 || !isOpen) return
-    document
-      .getElementById(`${listboxId}-option-${activeIndex}`)
-      ?.scrollIntoView({ block: 'nearest' })
+    if (activeIndex >= 0 && isOpen) {
+      document
+        .getElementById(`${listboxId}-option-${activeIndex}`)
+        ?.scrollIntoView({ block: 'nearest' })
+    }
   }, [activeIndex, isOpen, listboxId])
 
   useEffect(() => {
@@ -80,18 +105,33 @@ const SelectDropdown = ({
     }
   }, [isOpen, searchable])
 
-  const handleClose = () => {
-    setIsOpen(false)
-    setActiveIndex(-1)
-    setSearchQuery('')
-  }
+  useLayoutEffect(() => {
+    if (!isOpen || !menuRef.current || !containerRef.current) return
 
-  const selectedLabel = options.find((option) => option.value === value)?.label
+    const gap = 4
+    const trigger = containerRef.current.getBoundingClientRect()
+    const menuHeight = menuRef.current.getBoundingClientRect().height
+    const left = Math.max(
+      0,
+      Math.min(trigger.left, window.innerWidth - trigger.width),
+    )
+    const spaceBelow = window.innerHeight - trigger.bottom
+    const spaceNeeded = menuHeight + gap
+    const fitsBelow = spaceBelow >= spaceNeeded
+
+    setMenuPos(
+      fitsBelow
+        ? { top: trigger.bottom + gap, left, width: trigger.width }
+        : {
+            bottom: window.innerHeight - trigger.top + gap,
+            left,
+            width: trigger.width,
+          },
+    )
+  }, [isOpen])
 
   const openMenu = () => {
     if (!containerRef.current) return
-    const rect = containerRef.current.getBoundingClientRect()
-    setMenuPos({ top: rect.bottom + 4, left: rect.left, width: rect.width })
     setActiveIndex(filteredOptions.findIndex((o) => o.value === value))
     setIsOpen(true)
   }
@@ -115,9 +155,9 @@ const SelectDropdown = ({
     allowSpace = false,
   ) => {
     if (disabled) return
-    const selectOrOpen = () => {
-      if (isOpen && activeIndex >= 0) {
-        handleSelect(filteredOptions[activeIndex].value)
+    const handleActivate = () => {
+      if (isOpen && activeIndexRef.current >= 0) {
+        handleSelect(filteredOptions[activeIndexRef.current].value)
       } else if (!isOpen) {
         openMenu()
       }
@@ -125,12 +165,12 @@ const SelectDropdown = ({
     switch (e.key) {
       case 'Enter':
         e.preventDefault()
-        selectOrOpen()
+        handleActivate()
         break
       case ' ':
         if (!allowSpace) break
         e.preventDefault()
-        selectOrOpen()
+        handleActivate()
         break
       case 'Escape':
         e.preventDefault()
@@ -154,6 +194,8 @@ const SelectDropdown = ({
         break
     }
   }
+
+  const selectedLabel = options.find((o) => o.value === value)?.label
 
   return (
     <div className={`relative ${className ?? ''}`} ref={containerRef}>
@@ -182,6 +224,7 @@ const SelectDropdown = ({
             ref={menuRef}
             style={{
               top: menuPos.top,
+              bottom: menuPos.bottom,
               left: menuPos.left,
               width: menuPos.width,
             }}
@@ -214,7 +257,7 @@ const SelectDropdown = ({
                 filteredOptions.map((option, index) => (
                   <li
                     id={`${listboxId}-option-${index}`}
-                    key={`${option.value}-${index}`}
+                    key={option.value}
                     role="option"
                     aria-selected={option.value === value}
                     onClick={() => handleSelect(option.value)}
