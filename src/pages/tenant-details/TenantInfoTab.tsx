@@ -280,7 +280,8 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
                     </p>
                   </div>
 
-                  {topologyFeedData!.type === 'CSV' && (
+                  {(topologyFeedData!.type === 'CSV' ||
+                    topologyFeedData!.type === 'desy-marketplace') && (
                     <div className={infoGroupClass}>
                       <label className={labelClass}>Feed URL</label>
                       <p className={valueClass}>

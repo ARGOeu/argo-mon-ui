@@ -19,9 +19,10 @@ type TopologyFeedFormState = {
 
 const FEED_TYPE_OPTIONS = [
   { value: 'internal', label: 'Internal' },
-  { value: 'CSV', label: 'CSV' },
-  { value: 'eosc-service-catalog', label: 'EOSC Service Catalog' },
   { value: 'external', label: 'External' },
+  { value: 'CSV', label: 'CSV' },
+  { value: 'desy-marketplace', label: 'Desy Marketplace' },
+  { value: 'eosc-service-catalog', label: 'EOSC Service Catalog' },
 ]
 
 const NONE_OPTION = { value: '', label: 'None' }
@@ -43,6 +44,9 @@ const buildFeedPayload = (feed: TopologyFeedFormState): TopologyFeedPayload => {
       fetch_type: ['ServiceGroups'],
       uid_endpoints: '',
     }
+  }
+  if (feed.type === 'desy-marketplace') {
+    return { type: feed.type, feed_url: feed.feed_url }
   }
   if (feed.type === 'eosc-service-catalog') {
     return {
@@ -177,7 +181,7 @@ const TopologyFeed = ({ tenantId }: TopologyFeedProps) => {
               />
             </div>
 
-            {form.type === 'CSV' && (
+            {(form.type === 'CSV' || form.type === 'desy-marketplace') && (
               <div className="flex flex-col">
                 <label className={labelClass}>URL</label>
                 <input
