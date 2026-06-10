@@ -12,9 +12,9 @@ import NodeConfigPanel from './NodeConfigPanel'
 const TenantCapabilities = () => {
   const { id } = useParams<{ id: string }>()
   const { isSuperAdmin } = useAuth()
-  const { tenant, isTenantLoading, tenantError, isTenantAdmin } =
+  const { tenant, isTenantLoading, tenantError, roleInSelectedTenant } =
     useSelectedTenant()
-  const canConfigureNode = isSuperAdmin || isTenantAdmin
+  const canConfigureNode = isSuperAdmin || roleInSelectedTenant === 'admin'
 
   const {
     data: reports,

@@ -1,3 +1,5 @@
+import { useEffect } from 'react'
+import { useGetUserInvitations } from '@/hooks/useInvitations'
 import {
   RectangleStackIcon,
   UserGroupIcon,
@@ -11,13 +13,45 @@ import {
   LockClosedIcon,
 } from '@heroicons/react/16/solid'
 import { ChartNetwork } from 'lucide-react'
-import { useGetUserInvitations } from '@/hooks/useInvitations'
-import type { Tenant } from '@/types/tenants'
-import type { AuthContextType } from '@/auth/context'
+import { useLocation, useNavigate } from 'react-router-dom'
 import TenantPicker from './TenantPicker'
 import SidebarNavItem from './SidebarNavItem'
 import SidebarHeader from './SidebarHeader'
 import SidebarFooter from './SidebarFooter'
+import type { Tenant } from '@/types/tenants'
+import type { AuthContextType } from '@/auth/context'
+
+interface TenantNavItem {
+  path: string
+  label: string
+  icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
+  requiredRoles?: string[]
+  end?: boolean
+}
+
+const tenantNavItems: TenantNavItem[] = [
+  {
+    path: 'dashboard',
+    label: 'Dashboard',
+    icon: CircleStackIcon,
+  },
+  { path: 'details', label: 'Overview', icon: HomeIcon, end: true },
+  {
+    path: 'topology',
+    label: 'Topology',
+    icon: ChartNetwork,
+    requiredRoles: ['admin'],
+  },
+  { path: 'status-pages', label: 'Status Pages', icon: RectangleStackIcon },
+  { path: 'reports', label: 'Reports', icon: DocumentChartBarIcon },
+  { path: 'capabilities', label: 'Capabilities', icon: ShieldCheckIcon },
+  {
+    path: 'members',
+    label: 'Members',
+    icon: UsersIcon,
+    requiredRoles: ['admin'],
+  },
+]
 
 interface SidebarProps {
   isMobileMenuOpen: boolean
@@ -26,7 +60,7 @@ interface SidebarProps {
   isSuperAdmin: boolean
   userTenants: Tenant[]
   effectiveTenantId: string | null
-  isAdminOfTenant: boolean
+  roleInSelectedTenant: string | null
   profile: AuthContextType['profile']
   onLogout: () => void
 }
@@ -46,10 +80,39 @@ function Sidebar({
   isSuperAdmin,
   userTenants,
   effectiveTenantId,
-  isAdminOfTenant,
+  roleInSelectedTenant,
   profile,
   onLogout,
 }: SidebarProps) {
+  const navigate = useNavigate()
+  const { pathname } = useLocation()
+
+  const isItemVisible = (item: TenantNavItem) =>
+    !item.requiredRoles ||
+    isSuperAdmin ||
+    (roleInSelectedTenant !== null &&
+      item.requiredRoles.includes(roleInSelectedTenant))
+
+  const visibleTenantNavItems = tenantNavItems.filter(isItemVisible)
+
+  const firstTenantSubPath = visibleTenantNavItems[0]?.path ?? 'dashboard'
+
+  useEffect(() => {
+    if (!effectiveTenantId || userTenants.length === 0 || !profile) return
+    if (pathname.replace(/\/$/, '') === `/tenants/${effectiveTenantId}`) {
+      navigate(`/tenants/${effectiveTenantId}/${firstTenantSubPath}`, {
+        replace: true,
+      })
+    }
+  }, [
+    pathname,
+    effectiveTenantId,
+    firstTenantSubPath,
+    navigate,
+    userTenants.length,
+    profile,
+  ])
+
   const { data: invitationsData } = useGetUserInvitations(
     authenticated,
     { size: 100 },
@@ -79,60 +142,17 @@ function Sidebar({
 
             {effectiveTenantId && userTenants.length > 0 && (
               <div>
-                <SidebarNavItem
-                  to={`/tenants/${effectiveTenantId}/dashboard`}
-                  onClick={onCloseMobileMenu}
-                >
-                  <CircleStackIcon className="size-4" aria-hidden />
-                  Dashboard
-                </SidebarNavItem>
-                <SidebarNavItem
-                  to={`/tenants/${effectiveTenantId}/details`}
-                  end
-                  onClick={onCloseMobileMenu}
-                >
-                  <HomeIcon className="size-4" aria-hidden />
-                  Overview
-                </SidebarNavItem>
-                {(isSuperAdmin || isAdminOfTenant) && (
+                {visibleTenantNavItems.map((item) => (
                   <SidebarNavItem
-                    to={`/tenants/${effectiveTenantId}/topology`}
+                    key={item.path}
+                    to={`/tenants/${effectiveTenantId}/${item.path}`}
+                    end={item.end}
                     onClick={onCloseMobileMenu}
                   >
-                    <ChartNetwork className="size-4" aria-hidden />
-                    Topology
+                    <item.icon className="size-4" aria-hidden />
+                    {item.label}
                   </SidebarNavItem>
-                )}
-                <SidebarNavItem
-                  to={`/tenants/${effectiveTenantId}/status-pages`}
-                  onClick={onCloseMobileMenu}
-                >
-                  <RectangleStackIcon className="size-4" aria-hidden />
-                  Status Pages
-                </SidebarNavItem>
-                <SidebarNavItem
-                  to={`/tenants/${effectiveTenantId}/reports`}
-                  onClick={onCloseMobileMenu}
-                >
-                  <DocumentChartBarIcon className="size-4" aria-hidden />
-                  Reports
-                </SidebarNavItem>
-                <SidebarNavItem
-                  to={`/tenants/${effectiveTenantId}/capabilities`}
-                  onClick={onCloseMobileMenu}
-                >
-                  <ShieldCheckIcon className="size-4" aria-hidden />
-                  Capabilities
-                </SidebarNavItem>
-                {(isSuperAdmin || isAdminOfTenant) && (
-                  <SidebarNavItem
-                    to={`/tenants/${effectiveTenantId}/members`}
-                    onClick={onCloseMobileMenu}
-                  >
-                    <UsersIcon className="size-4" aria-hidden />
-                    Members
-                  </SidebarNavItem>
-                )}
+                ))}
               </div>
             )}
           </div>

@@ -84,12 +84,10 @@ const SelectedTenantProvider = ({ children }: SelectedTenantProviderProps) => {
     [tenants, effectiveTenantId],
   )
 
-  const isTenantAdmin = useMemo(
+  const roleInSelectedTenant = useMemo(
     () =>
-      !!profile?.groups?.find(
-        (group) =>
-          group.name === selectedTenant?.info.name && group.role === 'admin',
-      ),
+      profile?.groups?.find((group) => group.name === selectedTenant?.info.name)
+        ?.role ?? null,
     [profile, selectedTenant],
   )
 
@@ -99,7 +97,7 @@ const SelectedTenantProvider = ({ children }: SelectedTenantProviderProps) => {
         tenant: selectedTenant,
         isTenantLoading,
         tenantError,
-        isTenantAdmin,
+        roleInSelectedTenant,
         effectiveTenantId,
         tenants,
       }}

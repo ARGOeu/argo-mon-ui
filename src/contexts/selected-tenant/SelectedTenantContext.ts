@@ -5,7 +5,7 @@ export interface SelectedTenantContextValue {
   tenant: Tenant | undefined
   isTenantLoading: boolean
   tenantError: Error | null
-  isTenantAdmin: boolean
+  roleInSelectedTenant: string | null
   effectiveTenantId: string | null
   tenants: Tenant[]
 }
