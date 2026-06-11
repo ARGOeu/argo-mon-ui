@@ -270,7 +270,7 @@ const TenantStatusTab = ({ tenantId }: TenantStatusTabProps) => {
                 <div className="flex items-center gap-2">
                   <Badge
                     size="lg"
-                    className={`capitalize ${JOB_STATUS_BADGE_CLASS[job.status] ?? 'bg-surface-strong text-muted'}`}
+                    className={`capitalize shadow-sm ${JOB_STATUS_BADGE_CLASS[job.status] ?? 'bg-surface-strong text-muted'}`}
                   >
                     {job.status?.toLowerCase()}
                   </Badge>
@@ -294,7 +294,7 @@ const TenantStatusTab = ({ tenantId }: TenantStatusTabProps) => {
                               <div
                                 className={`w-7 h-7 rounded-full border-2 transition-all relative flex items-center justify-center ${
                                   stepStatus === 'active'
-                                    ? 'border-blue-500 bg-blue-500 animate-pulse-ring'
+                                    ? 'border-blue-500 bg-blue-500'
                                     : stepStatus === 'completed'
                                       ? 'border-emerald-500 bg-emerald-500'
                                       : stepStatus === 'failed'
@@ -303,7 +303,10 @@ const TenantStatusTab = ({ tenantId }: TenantStatusTabProps) => {
                                 }`}
                               >
                                 {stepStatus === 'active' && (
-                                  <span className="absolute top-1/2 left-1/2 w-2 h-2 bg-white rounded-full animate-pulse-dot" />
+                                  <>
+                                    <span className="absolute inset-0 rounded-full bg-blue-500 animate-pulse-ring pointer-events-none" />
+                                    <span className="absolute top-1/2 left-1/2 w-2 h-2 bg-white rounded-full animate-pulse-dot" />
+                                  </>
                                 )}
                                 {stepStatus === 'completed' && (
                                   <span className="text-white text-sm font-bold leading-none">

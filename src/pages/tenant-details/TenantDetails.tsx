@@ -192,7 +192,7 @@ const TenantDetails = () => {
             )}
 
             <Button
-              href={`/tenants/edit/${tenantId}`}
+              href={`/tenants/${tenantId}/edit`}
               size="sm"
               variant="primary"
               className="whitespace-nowrap flex-shrink-0 ml-auto self-start"
