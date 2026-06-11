@@ -86,6 +86,7 @@ const TenantManagementTab = () => {
         ...tenant?.info,
         id: tenant?.id,
         status: tenant?.status,
+        error: tenant?.error,
       }))) ||
     []
 
@@ -213,6 +214,18 @@ const TenantManagementTab = () => {
                           >
                             {tenant.name}
                           </h3>
+                          {tenant.error && (
+                            <span
+                              tabIndex={0}
+                              className="tooltip tooltip-bottom shrink-0 before:whitespace-normal before:max-w-[200px] before:text-left"
+                              data-tip={tenant.error}
+                              aria-label={`Unavailable: ${tenant.error}`}
+                            >
+                              <Badge className="bg-amber-100 text-amber-700">
+                                Unavailable
+                              </Badge>
+                            </span>
+                          )}
                           {(() => {
                             const role = getRoleForTenant(tenant.name)
                             return role ? (

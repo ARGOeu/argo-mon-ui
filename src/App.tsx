@@ -87,7 +87,7 @@ function App() {
                   }
                 />
                 <Route
-                  path="tenants/edit/:id"
+                  path="tenants/:id/edit"
                   element={
                     <AuthProtected>
                       <CreateTenant />

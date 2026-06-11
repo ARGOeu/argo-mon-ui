@@ -36,7 +36,7 @@ const TenantCardFooter = ({
       <IconButton
         label="Edit Tenant"
         icon={<PencilSquareIcon className={actionIconClass} />}
-        href={`/tenants/edit/${tenantId}`}
+        href={`/tenants/${tenantId}/edit`}
         className="text-muted hover:bg-gray-200"
       />
     )}
