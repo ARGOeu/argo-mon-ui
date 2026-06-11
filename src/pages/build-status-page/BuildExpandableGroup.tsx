@@ -120,7 +120,7 @@ const BuildExpandableGroup = ({
                   : 'last:border-b-0'
               }`}
             >
-              <div className="dnd-handle cursor-grab flex items-center gap-3 px-8 py-3 w-full">
+              <div className="dnd-handle cursor-grab flex items-center gap-3 px-4 py-3 w-full">
                 <GripVertical className="text-subtle h-4 w-4 flex-shrink-0" />
                 <div className="flex-1 min-w-0 flex items-center justify-between gap-4">
                   <StatusLabel

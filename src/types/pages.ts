@@ -45,6 +45,8 @@ export type PageConfig = {
   title?: string
   description?: string
   theming?: PageTheming
+  tenant_name?: string
+  tenant_image?: string
 }
 
 export type PageThemingStatus = {

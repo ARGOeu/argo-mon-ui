@@ -141,7 +141,7 @@ export const fetchCheckSlug = async (
   tenantId: string,
   slug: string,
   token: string,
-): Promise<{ available: boolean }> => {
+): Promise<{ name: string; exist: boolean }> => {
   const response = await fetch(
     `${BACKEND_API}/v1/tenants/${tenantId}/pages/check-slug/${slug}`,
     {

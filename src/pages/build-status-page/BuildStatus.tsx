@@ -58,13 +58,13 @@ const BuildStatus = ({
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
       <header className="relative">
-        <div className="relative h-48">
+        <div className="relative h-40">
           <div
             className="absolute inset-0"
             style={{
-              backgroundImage: 'url(/background-image-public-status-pages.png)',
+              backgroundImage: 'url(/public-status-page-placeholder.svg)',
               backgroundSize: 'cover',
-              backgroundPosition: 'center',
+              backgroundPosition: 'center bottom',
               backgroundRepeat: 'no-repeat',
             }}
           />

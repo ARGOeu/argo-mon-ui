@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import ViewGroup from '@/components/ViewGroup'
 import StatusLegend from '@/components/StatusLegend'
 import type { PageConfig } from '@/types/pages'
@@ -9,20 +10,58 @@ interface StatusProps {
 
 export const Status = ({ statusData, logo }: StatusProps) => {
   const iconMode = statusData.theming?.status.icon || 'led'
+  const [tenantImgError, setTenantImgError] = useState(false)
+
+  useEffect(() => {
+    setTenantImgError(false)
+  }, [statusData.tenant_image])
 
   return (
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
       <header className="relative">
-        <div className="relative h-64">
+        <div className="relative h-66">
           <div
             className="absolute inset-0"
             style={{
-              backgroundImage: 'url(/background-image-public-status-pages.png)',
+              backgroundImage: 'url(/public-status-page-placeholder.svg)',
               backgroundSize: 'cover',
-              backgroundPosition: 'center',
+              backgroundPosition: 'center bottom',
               backgroundRepeat: 'no-repeat',
             }}
           />
+          {statusData.tenant_name && (
+            <div className="absolute top-5 left-6 flex items-center gap-3 bg-white/80 backdrop-blur-sm rounded-lg px-3 py-1.5 shadow-xl">
+              {statusData.tenant_image && !tenantImgError && (
+                <img
+                  src={statusData.tenant_image}
+                  alt={statusData.tenant_name}
+                  className="h-7 object-contain"
+                  onError={() => setTenantImgError(true)}
+                />
+              )}
+              <span className="text-base font-medium text-foreground">
+                {statusData.tenant_name}
+              </span>
+            </div>
+          )}
+          <div className="absolute -bottom-8 right-6">
+            <span className="text-sm font-medium text-muted shrink-0">
+              Last updated:{' '}
+              {new Date().toLocaleDateString('en-GB', {
+                day: 'numeric',
+                month: 'short',
+                year: 'numeric',
+                timeZone: 'UTC',
+              })}
+              ,{' '}
+              {new Date().toLocaleTimeString('en-GB', {
+                hour: '2-digit',
+                minute: '2-digit',
+                timeZone: 'UTC',
+              })}{' '}
+              (UTC)
+            </span>
+          </div>
         </div>
 
         {logo && (
@@ -43,28 +82,28 @@ export const Status = ({ statusData, logo }: StatusProps) => {
         )}
 
         <div
-          className={`text-center pt-2 pb-3 px-24 ${logo ? 'mt-4' : 'mt-8'}`}
+          className={`text-center py-2 px-24 ${logo ? 'mt-3' : 'mt-9'}`}
           style={{ backgroundColor: statusData.theming?.color || '#FFFFFF' }}
         >
           <div className="space-y-3">
-            <h1 className="text-4xl font-semibold text-muted mb-1">
+            <h1 className="text-2xl font-semibold text-muted mb-0">
               {statusData.title}
             </h1>
             {statusData.description && (
-              <p className="text-lg text-body max-w-2xl mx-auto">
+              <p className="text-base text-body max-w-2xl mx-auto">
                 {statusData.description}
               </p>
             )}
           </div>
         </div>
 
-        <div className="px-16 mt-6 mb-2 flex justify-center">
+        <div className="px-16 mt-3 flex justify-center">
           <StatusLegend iconMode={iconMode} />
         </div>
       </header>
 
       <main
-        className={`py-2 ${statusData.theming?.columns === 'one' ? 'px-36' : 'px-18'}`}
+        className={`py-3 ${statusData.theming?.columns === 'one' ? 'px-36' : 'px-18'}`}
       >
         {statusData.groups && statusData.groups.length > 0 ? (
           <div className="space-y-4">
@@ -87,25 +126,6 @@ export const Status = ({ statusData, logo }: StatusProps) => {
           </div>
         )}
       </main>
-
-      <footer className="p-8 mt-8 bg-surface-muted border-t border-line">
-        <div className="text-center text-sm font-medium text-muted tracking-wide">
-          Last updated:{' '}
-          {new Date().toLocaleDateString('en-GB', {
-            day: 'numeric',
-            month: 'short',
-            year: 'numeric',
-            timeZone: 'UTC',
-          })}
-          ,{' '}
-          {new Date().toLocaleTimeString('en-GB', {
-            hour: '2-digit',
-            minute: '2-digit',
-            timeZone: 'UTC',
-          })}{' '}
-          (UTC)
-        </div>
-      </footer>
     </div>
   )
 }

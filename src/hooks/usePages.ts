@@ -159,7 +159,7 @@ export const useCheckSlugQuery = (
 ) => {
   const { token } = useAuth()
 
-  return useQuery<{ available: boolean }, Error>({
+  return useQuery<{ name: string; exist: boolean }, Error>({
     queryKey: ['check-slug', tenantId, slug],
     queryFn: () => {
       if (!token) {

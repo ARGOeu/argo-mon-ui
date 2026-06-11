@@ -60,6 +60,7 @@ const BuildStatusPage = () => {
   const [columns, setColumns] = useState('one')
   const [statusGroups, setStatusGroups] = useState<StatusGroupType[]>([])
   const [saved, setSaved] = useState(false)
+  const [slugExists, setSlugExists] = useState(false)
   // remembers each item's last position in the LEFT list
   const leftIndexRef = useRef<Map<string, number>>(new Map())
 
@@ -261,7 +262,8 @@ const BuildStatusPage = () => {
                       id: 'config',
                       label: 'Config',
                       icon: Cog6ToothIcon,
-                      hasError: !name.trim() || !slug.trim() || !tenantId,
+                      hasError:
+                        !name.trim() || !slug.trim() || !tenantId || slugExists,
                     },
                     {
                       id: 'items',
@@ -343,6 +345,7 @@ const BuildStatusPage = () => {
                       onNameChange={handleNameChange}
                       onSlugChange={handleSlugChange}
                       onTenantChange={handleTenantChange}
+                      onSlugExistsChange={setSlugExists}
                     />
                   </div>
 
