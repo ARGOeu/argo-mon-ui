@@ -58,6 +58,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
     committedDate,
     showActions,
     isInternal,
+    isExternal,
     handleDateInputChange,
     handleDateModeChange,
     handleSortChange,
@@ -156,8 +157,20 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
             Add Endpoint
           </Button>
         )}
-        <div className="flex items-center gap-2 w-full xl:w-auto">
+        <div className="flex items-center gap-1.5 w-full xl:w-auto">
           <div className="hidden xl:block h-8 w-px bg-line-strong me-1" />
+          <SelectDropdown
+            value={dateMode}
+            onChange={handleDateModeChange}
+            options={[
+              {
+                value: 'latest',
+                label: latestDate ? `Latest (${latestDate})` : 'Latest',
+              },
+              { value: 'custom', label: 'Select date' },
+            ]}
+            className="w-46 shrink-0"
+          />
           {dateMode === 'custom' && (
             <input
               type="date"
@@ -167,15 +180,6 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
               className="text-sm"
             />
           )}
-          <SelectDropdown
-            value={dateMode}
-            onChange={handleDateModeChange}
-            options={[
-              { value: 'latest', label: 'Latest' },
-              { value: 'custom', label: 'Select date' },
-            ]}
-            className="w-36"
-          />
           <SelectDropdown
             value={monitoredFilter}
             onChange={(value) => {
@@ -195,7 +199,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
       <DataTable>
         <thead className="bg-surface-strong border-b border-line">
           <tr>
-            <th className={`${thBase} min-w-28`}>
+            <th className={`${thBase} w-[22%]`}>
               <SortableColumnHeader
                 isActive={sortColumn === 'service'}
                 isAscending={sortAsc}
@@ -204,8 +208,9 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
                 Service
               </SortableColumnHeader>
             </th>
-            <th className={`${thBase} min-w-40`}>URL</th>
-            <th className={`${thBase} min-w-24`}>
+            {isExternal && <th className={thBase}>Hostname</th>}
+            <th className={thBase}>URL</th>
+            <th className={`${thBase} w-[22%]`}>
               <SortableColumnHeader
                 isActive={sortColumn === 'group'}
                 isAscending={sortAsc}
@@ -214,7 +219,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
                 Group
               </SortableColumnHeader>
             </th>
-            <th className={`${thBase} min-w-24`}>
+            <th className={`${thBase} w-40`}>
               <SortableColumnHeader
                 isActive={sortColumn === 'tags.monitored'}
                 isAscending={sortAsc}
@@ -223,14 +228,16 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
                 Monitored
               </SortableColumnHeader>
             </th>
-            <th className={`${thBase} min-w-28`}>Date</th>
             {showActions && <th className={`${thBase} w-24`}>Actions</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {isLoading || isFetching ? (
             <tr>
-              <td colSpan={showActions ? 6 : 5} className="py-12">
+              <td
+                colSpan={4 + (isExternal ? 1 : 0) + (showActions ? 1 : 0)}
+                className="py-12"
+              >
                 <div className="flex justify-center">
                   <LoadingSpinner size="md" />
                 </div>
@@ -238,14 +245,17 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
             </tr>
           ) : error ? (
             <tr>
-              <td colSpan={showActions ? 6 : 5} className="py-6 px-12">
+              <td
+                colSpan={4 + (isExternal ? 1 : 0) + (showActions ? 1 : 0)}
+                className="py-6 px-12"
+              >
                 <ErrorDisplay error={error} context="topology endpoints" />
               </td>
             </tr>
           ) : !endpoints?.length ? (
             <tr>
               <td
-                colSpan={showActions ? 6 : 5}
+                colSpan={4 + (isExternal ? 1 : 0) + (showActions ? 1 : 0)}
                 className="text-center text-sm text-subtle italic py-6 px-12"
               >
                 No topology endpoints found
@@ -254,7 +264,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
           ) : !paginated.length ? (
             <tr>
               <td
-                colSpan={showActions ? 6 : 5}
+                colSpan={4 + (isExternal ? 1 : 0) + (showActions ? 1 : 0)}
                 className="text-center text-sm text-subtle italic py-6 px-12"
               >
                 No endpoints match your filters
@@ -267,6 +277,13 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
                 className="hover:bg-surface-muted transition-colors"
               >
                 <td className={tdBase}>{endpoint.service}</td>
+                {isExternal && (
+                  <td className={`${tdBase} font-mono text-xs break-all`}>
+                    {endpoint.hostname || (
+                      <span className="pl-2 text-subtle">-</span>
+                    )}
+                  </td>
+                )}
                 <td className={`${tdBase} font-mono text-xs break-all`}>
                   {endpoint.tags?.info_URL || (
                     <span className="pl-2 text-subtle">-</span>
@@ -289,7 +306,6 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
                     </Badge>
                   ) : null}
                 </td>
-                <td className={tdBase}>{endpoint.date}</td>
                 {showActions && (
                   <td className={`${tdBase} whitespace-nowrap`}>
                     <div className="flex items-center gap-1">

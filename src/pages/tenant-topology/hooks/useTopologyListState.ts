@@ -41,6 +41,7 @@ export const useTopologyListState = <TSort extends string>({
     !!tenant?.id,
   )
   const isInternal = topologyFeedData?.type === 'internal'
+  const isExternal = topologyFeedData?.type === 'external'
 
   const showActions =
     isInternal &&
@@ -89,6 +90,7 @@ export const useTopologyListState = <TSort extends string>({
     committedDate,
     showActions,
     isInternal,
+    isExternal,
     handleDateInputChange,
     handleDateModeChange,
     handleSortChange,
