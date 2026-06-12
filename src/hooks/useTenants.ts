@@ -728,6 +728,15 @@ export const useUpdateTopologyFeedMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ['topology-feed', variables.tenantId],
       })
+      queryClient.invalidateQueries({
+        queryKey: ['topology-endpoints', variables.tenantId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['topology-groups', variables.tenantId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['user-tenant-status', variables.tenantId],
+      })
     },
     onError: (error) => {
       console.error('Update topology feed error:', error)
