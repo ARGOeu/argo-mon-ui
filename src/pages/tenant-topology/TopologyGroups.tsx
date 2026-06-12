@@ -130,7 +130,19 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
             className="!mb-0 w-full"
           />
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0">
+          <SelectDropdown
+            value={dateMode}
+            onChange={handleDateModeChange}
+            options={[
+              {
+                value: 'latest',
+                label: latestDate ? `Latest (${latestDate})` : 'Latest',
+              },
+              { value: 'custom', label: 'Select date' },
+            ]}
+            className="w-46 shrink-0"
+          />
           {dateMode === 'custom' && (
             <input
               type="date"
@@ -140,15 +152,6 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
               className="text-sm"
             />
           )}
-          <SelectDropdown
-            value={dateMode}
-            onChange={handleDateModeChange}
-            options={[
-              { value: 'latest', label: 'Latest' },
-              { value: 'custom', label: 'Select date' },
-            ]}
-            className="w-36"
-          />
           {isInternal && (
             <Button
               size="md"
@@ -175,14 +178,13 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
               </SortableColumnHeader>
             </th>
             <th className={`${thBase}`}>Contacts</th>
-            <th className={`${thBase} w-44`}>Date</th>
             {showActions && <th className={`${thBase} w-30`}>Actions</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {isLoading || isFetching ? (
             <tr>
-              <td colSpan={showActions ? 4 : 3} className="py-12">
+              <td colSpan={showActions ? 3 : 2} className="py-12">
                 <div className="flex justify-center">
                   <LoadingSpinner size="md" />
                 </div>
@@ -190,14 +192,14 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
             </tr>
           ) : error ? (
             <tr>
-              <td colSpan={showActions ? 4 : 3} className="py-6 px-12">
+              <td colSpan={showActions ? 3 : 2} className="py-6 px-12">
                 <ErrorDisplay error={error} context="topology groups" />
               </td>
             </tr>
           ) : !groups?.length ? (
             <tr>
               <td
-                colSpan={showActions ? 4 : 3}
+                colSpan={showActions ? 3 : 2}
                 className="text-center text-sm text-subtle italic py-6 px-12"
               >
                 No topology groups found
@@ -206,7 +208,7 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
           ) : !paginated.length ? (
             <tr>
               <td
-                colSpan={showActions ? 4 : 3}
+                colSpan={showActions ? 3 : 2}
                 className="text-center text-sm text-subtle italic py-6 px-12"
               >
                 No groups match your filters
@@ -233,7 +235,6 @@ const TopologyGroups = ({ tenantId, onEdit }: TopologyGroupsProps) => {
                     <span className="ms-7">-</span>
                   )}
                 </td>
-                <td className={tdBase}>{group.date}</td>
                 {showActions && (
                   <td className={`${tdBase} whitespace-nowrap`}>
                     <div className="flex items-center gap-1">
