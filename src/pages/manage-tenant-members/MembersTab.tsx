@@ -107,7 +107,9 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
                 {membersData?.content && membersData.content.length > 0 ? (
                   membersData.content.flatMap((member) => {
                     const tenantRoles =
-                      member.tenants?.filter((t) => t.name === tenantName) ?? []
+                      member.memberships?.filter(
+                        (t) => t.name === tenantName,
+                      ) ?? []
                     return tenantRoles.map((tenantInfo) => (
                       <tr
                         key={`${member.id}-${tenantInfo.role}`}

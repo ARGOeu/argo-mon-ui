@@ -145,7 +145,7 @@ export const Profile = () => {
     : profile?.email || 'Not available'
 
   const currentGroups = isViewingOtherUser
-    ? displayProfile?.tenants || []
+    ? displayProfile?.memberships || []
     : profile?.groups || []
 
   const filteredGroups = currentGroups.filter(

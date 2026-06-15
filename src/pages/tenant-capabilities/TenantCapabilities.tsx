@@ -14,7 +14,8 @@ const TenantCapabilities = () => {
   const { isSuperAdmin } = useAuth()
   const { tenant, isTenantLoading, tenantError, roleInSelectedTenant } =
     useSelectedTenant()
-  const canConfigureNode = isSuperAdmin || roleInSelectedTenant === 'admin'
+  const canConfigureNode =
+    isSuperAdmin || roleInSelectedTenant === 'tenant_admin'
 
   const {
     data: reports,

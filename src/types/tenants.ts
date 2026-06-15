@@ -111,7 +111,7 @@ export type Member = {
   firstName: string
   lastName: string
   email: string
-  tenants?: TenantMembership[]
+  memberships?: TenantMembership[]
 }
 
 export type PaginatedMembersResponse = {
@@ -132,6 +132,8 @@ export type ReportListItem = {
   updated_at: string
   node_report?: boolean
 }
+
+export type PublicReportItem = { id: string; name: string }
 
 export type ReportProfile = {
   id: string
