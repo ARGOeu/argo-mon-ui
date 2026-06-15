@@ -67,7 +67,7 @@ const TenantManagementTab = () => {
     const group = userProfileData?.groups?.find(
       (g: UserGroup) => g?.name === tenantName,
     )
-    return group?.role === 'admin'
+    return group?.role === 'tenant_admin'
   }
 
   useEffect(() => {

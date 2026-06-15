@@ -10,7 +10,12 @@ import Pagination from '@/components/Pagination'
 import IconButton from '@/components/IconButton'
 import { squishEmail } from '@/utils/profile'
 
-type SortColumn = 'username' | 'firstName' | 'lastName' | 'email' | 'tenants'
+type SortColumn =
+  | 'username'
+  | 'firstName'
+  | 'lastName'
+  | 'email'
+  | 'memberships'
 type SortDirection = 'asc' | 'desc'
 
 const pageSize = 10
@@ -84,9 +89,9 @@ const UsersTab = () => {
         let aValue: string | number
         let bValue: string | number
 
-        if (sortColumn === 'tenants') {
-          aValue = a.tenants?.length || 0
-          bValue = b.tenants?.length || 0
+        if (sortColumn === 'memberships') {
+          aValue = a.memberships?.length || 0
+          bValue = b.memberships?.length || 0
         } else {
           aValue = a[sortColumn]?.toLowerCase() || ''
           bValue = b[sortColumn]?.toLowerCase() || ''
@@ -177,9 +182,9 @@ const UsersTab = () => {
                   </th>
                   <th className={`${thBase} w-[25%]`}>
                     <SortableColumnHeader
-                      isActive={sortColumn === 'tenants'}
+                      isActive={sortColumn === 'memberships'}
                       isAscending={sortDirection === 'asc'}
-                      onClick={() => handleSort('tenants')}
+                      onClick={() => handleSort('memberships')}
                     >
                       Tenants
                     </SortableColumnHeader>
@@ -216,8 +221,8 @@ const UsersTab = () => {
                     </td>
                     <td className="px-4 py-3 break-words text-sm">
                       <div className="flex flex-wrap gap-1.5">
-                        {user.tenants && user.tenants.length > 0 ? (
-                          user.tenants.map((tenant, index) => (
+                        {user.memberships && user.memberships.length > 0 ? (
+                          user.memberships.map((tenant, index) => (
                             <TenantBadge
                               key={index}
                               name={tenant.name}

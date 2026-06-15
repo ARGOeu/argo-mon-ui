@@ -40,7 +40,7 @@ const tenantNavItems: TenantNavItem[] = [
     path: 'topology',
     label: 'Topology',
     icon: ChartNetwork,
-    requiredRoles: ['admin'],
+    requiredRoles: ['tenant_admin'],
   },
   { path: 'status-pages', label: 'Status Pages', icon: RectangleStackIcon },
   { path: 'reports', label: 'Reports', icon: DocumentChartBarIcon },
@@ -49,7 +49,7 @@ const tenantNavItems: TenantNavItem[] = [
     path: 'members',
     label: 'Members',
     icon: UsersIcon,
-    requiredRoles: ['admin'],
+    requiredRoles: ['tenant_admin'],
   },
 ]
 
