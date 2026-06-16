@@ -10,6 +10,7 @@ import Pagination from '@/components/Pagination'
 import Badge from '@/components/Badge'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import { roleBadgeClass } from '@/utils/badges'
+import { TENANT_MEMBERSHIP_ENTITY } from '@/utils/memberships'
 
 const pageSize = 10
 
@@ -107,8 +108,8 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
                 {membersData?.content && membersData.content.length > 0 ? (
                   membersData.content.flatMap((member) => {
                     const tenantRoles =
-                      member.memberships?.filter(
-                        (t) => t.name === tenantName,
+                      member.memberships?.[TENANT_MEMBERSHIP_ENTITY]?.filter(
+                        (m) => m.name === tenantName,
                       ) ?? []
                     return tenantRoles.map((tenantInfo) => (
                       <tr

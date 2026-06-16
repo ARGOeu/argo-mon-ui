@@ -16,6 +16,7 @@ import ErrorDisplay from '@/components/ErrorDisplay'
 import PageHeader from '@/components/PageHeader'
 import Badge from '@/components/Badge'
 import { roleBadgeClass } from '@/utils/badges'
+import { TENANT_MEMBERSHIP_ENTITY } from '@/utils/memberships'
 
 const fieldValueClass = 'text-sm text-gray-800 font-medium'
 const fieldValueUnavailableClass = 'text-sm text-subtle italic'
@@ -145,7 +146,9 @@ export const Profile = () => {
     : profile?.email || 'Not available'
 
   const currentGroups = isViewingOtherUser
-    ? displayProfile?.memberships || []
+    ? (displayProfile?.memberships?.[TENANT_MEMBERSHIP_ENTITY] || []).map(
+        (m) => ({ name: m.name, role: m.role }),
+      )
     : profile?.groups || []
 
   const filteredGroups = currentGroups.filter(
