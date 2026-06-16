@@ -21,7 +21,10 @@ import {
   removeMemberFromTenant,
   revokeInvitation,
   fetchTenantReports,
+  fetchPublicTenantReports,
   fetchTenantReportById,
+  fetchSetReportPublic,
+  fetchSetReportPrivate,
   fetchTenantMetricProfile,
   fetchTenantReadiness,
   notifyAmsCheckReadiness,
@@ -42,6 +45,7 @@ import type {
   Member,
   PaginatedMembersResponse,
   ReportListItem,
+  PublicReportItem,
   ReportDetail,
   MetricProfileResponse,
   TenantReadinessResponse,
@@ -465,12 +469,13 @@ export const useRevokeInvitation = () => {
 export const useGetTenantReports = (
   tenantId: string,
   search?: string,
+  isPublic?: boolean,
   enabled: boolean = true,
 ) => {
   const { token } = useAuth()
 
   return useQuery<ReportListItem[], Error>({
-    queryKey: ['tenant-reports', tenantId, search],
+    queryKey: ['tenant-reports', tenantId, search, isPublic],
     queryFn: () => {
       if (!token) {
         throw new Error('No authentication token available')
@@ -478,10 +483,69 @@ export const useGetTenantReports = (
       if (!tenantId) {
         throw new Error('Tenant ID is required')
       }
-      return fetchTenantReports(tenantId, token, search)
+      return fetchTenantReports(tenantId, token, search, isPublic)
     },
     retry: false,
     enabled: enabled && !!token && !!tenantId,
+  })
+}
+
+export const useGetPublicTenantReports = (
+  tenantName: string,
+  enabled: boolean = true,
+) => {
+  return useQuery<PublicReportItem[], Error>({
+    queryKey: ['public-tenant-reports', tenantName],
+    queryFn: () => {
+      if (!tenantName) throw new Error('Tenant name is required')
+      return fetchPublicTenantReports(tenantName)
+    },
+    retry: false,
+    enabled: enabled && !!tenantName,
+  })
+}
+
+export const useSetReportPublicMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<string, Error, { tenantId: string; reportId: string }>({
+    mutationFn: ({ tenantId, reportId }) => {
+      if (!token) throw new Error('No authentication token available')
+      if (!tenantId) throw new Error('Tenant ID is required')
+      if (!reportId) throw new Error('Report ID is required')
+      return fetchSetReportPublic(tenantId, reportId, token)
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['tenant-reports', variables.tenantId],
+      })
+    },
+    onError: (error) => {
+      console.error('Set report public error:', error)
+    },
+  })
+}
+
+export const useSetReportPrivateMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<string, Error, { tenantId: string; reportId: string }>({
+    mutationFn: ({ tenantId, reportId }) => {
+      if (!token) throw new Error('No authentication token available')
+      if (!tenantId) throw new Error('Tenant ID is required')
+      if (!reportId) throw new Error('Report ID is required')
+      return fetchSetReportPrivate(tenantId, reportId, token)
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ['tenant-reports', variables.tenantId],
+      })
+    },
+    onError: (error) => {
+      console.error('Set report private error:', error)
+    },
   })
 }
 

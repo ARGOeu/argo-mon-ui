@@ -21,7 +21,7 @@ const TenantCapabilities = () => {
     data: reports,
     isLoading: isReportsLoading,
     error: reportsError,
-  } = useGetTenantReports(tenant?.id || '', undefined, !!tenant?.id)
+  } = useGetTenantReports(tenant?.id || '', undefined, undefined, !!tenant?.id)
 
   const isNodeEnabled = !!tenant?.node
   const hasNodeReport = reports?.some((report) => !!report.node_report)

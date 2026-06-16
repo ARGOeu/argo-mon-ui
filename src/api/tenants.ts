@@ -5,6 +5,7 @@ import type {
   TenantList,
   PaginatedMembersResponse,
   ReportListItem,
+  PublicReportItem,
   ReportDetail,
   MetricProfileResponse,
   TenantReadinessResponse,
@@ -372,10 +373,16 @@ export const fetchTenantReports = async (
   tenantId: string,
   token: string,
   search?: string,
+  isPublic?: boolean,
 ): Promise<ReportListItem[]> => {
-  const searchParam = search ? `?search=${encodeURIComponent(search)}` : ''
+  const params = new URLSearchParams()
+  if (search) params.set('search', search)
+  if (isPublic === true || isPublic === false)
+    params.set('public', String(isPublic))
+  const queryString = params.toString() ? `?${params.toString()}` : ''
+
   const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/reports${searchParam}`,
+    `${BACKEND_API}/v1/tenants/${tenantId}/reports${queryString}`,
     {
       method: 'GET',
       headers: {
@@ -393,6 +400,72 @@ export const fetchTenantReports = async (
   }
 
   return response.json()
+}
+
+export const fetchPublicTenantReports = async (
+  tenantName: string,
+): Promise<PublicReportItem[]> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/public/tenants/${tenantName}/reports/public`,
+    {
+      headers: { 'Content-Type': 'application/json' },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchSetReportPublic = async (
+  tenantId: string,
+  reportId: string,
+  token: string,
+): Promise<string> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/reports/${reportId}/set-public`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.message || `HTTP error! status: ${response.status}`)
+  }
+  return data.status?.message ?? ''
+}
+
+export const fetchSetReportPrivate = async (
+  tenantId: string,
+  reportId: string,
+  token: string,
+): Promise<string> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/reports/${reportId}/set-private`,
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  const data = await response.json().catch(() => ({}))
+  if (!response.ok) {
+    throw new Error(data.message || `HTTP error! status: ${response.status}`)
+  }
+  return data.status?.message ?? ''
 }
 
 export const fetchTenantReportById = async (

@@ -21,7 +21,10 @@ const TenantReports = () => {
         }
         className="pb-2 mb-4"
       />
-      <TenantReportsContent tenantId={id || ''} />
+      <TenantReportsContent
+        tenantId={id || ''}
+        tenantName={tenantData?.info.name || ''}
+      />
     </div>
   )
 }

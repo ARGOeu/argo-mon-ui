@@ -1,9 +1,26 @@
-import { useState, useEffect } from 'react'
-import { useGetTenantReports, useGetTenantReportById } from '@/hooks/useTenants'
-import LoadingSpinner from '@/components/LoadingSpinner'
-import ErrorDisplay from '@/components/ErrorDisplay'
-import MetricProfileItem from '@/pages/tenant-reports/MetricProfileItem'
+import { useState, useEffect, useMemo } from 'react'
+import {
+  useGetTenantReports,
+  useGetTenantReportById,
+  useSetReportPublicMutation,
+  useSetReportPrivateMutation,
+} from '@/hooks/useTenants'
+import { useAuth } from '@/auth/useAuth'
+import {
+  CheckCircleIcon,
+  GlobeAltIcon,
+  LockClosedIcon,
+  XCircleIcon,
+} from '@heroicons/react/16/solid'
+import { toast } from 'sonner'
 import Badge from '@/components/Badge'
+import Button from '@/components/Button'
+import ErrorDisplay from '@/components/ErrorDisplay'
+import LoadingSpinner from '@/components/LoadingSpinner'
+import MetricProfileItem from '@/pages/tenant-reports/MetricProfileItem'
+import type { ReportListItem } from '@/types/tenants'
+
+type ReportWithVisibility = ReportListItem & { isPublic: boolean }
 
 const cardClass =
   'bg-white border border-line rounded-lg px-4 py-3 flex flex-col gap-2'
@@ -12,17 +29,58 @@ const simpleItemClass =
 const simpleItemTitleClass =
   'text-sm font-semibold text-body leading-[1.4] flex-1 break-words'
 
-const TenantReportsTab = ({ tenantId }: { tenantId: string }) => {
+interface TenantReportsTabProps {
+  tenantId: string
+  tenantName: string
+}
+
+const TenantReportsTab = ({ tenantId, tenantName }: TenantReportsTabProps) => {
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
   const [expandedServices, setExpandedServices] = useState<
     Record<string, Set<string>>
   >({})
+  const [pendingReportId, setPendingReportId] = useState<string | null>(null)
+
+  const { isSuperAdmin, profile } = useAuth()
+
+  const canManageVisibility =
+    isSuperAdmin ||
+    (!!tenantName &&
+      profile?.groups?.some(
+        (g) => g.name === tenantName && g.role === 'tenant_admin',
+      ) === true)
 
   const {
-    data: reportsData,
-    isLoading: reportsLoading,
-    error: reportsError,
+    data: publicReports,
+    isLoading: publicLoading,
+    error: publicError,
   } = useGetTenantReports(tenantId, undefined, true)
+
+  const {
+    data: privateReports,
+    isLoading: privateLoading,
+    error: privateError,
+  } = useGetTenantReports(tenantId, undefined, false)
+
+  const reports = useMemo<ReportWithVisibility[]>(() => {
+    const finalPublicReports = (publicReports ?? []).map((report) => ({
+      ...report,
+      isPublic: true,
+    }))
+    const finalPrivateReports = (privateReports ?? []).map((report) => ({
+      ...report,
+      isPublic: false,
+    }))
+    const visitedReportIds = new Set<string>()
+    return [...finalPublicReports, ...finalPrivateReports].filter((report) => {
+      if (visitedReportIds.has(report.id)) return false
+      visitedReportIds.add(report.id)
+      return true
+    })
+  }, [publicReports, privateReports])
+
+  const reportsLoading = publicLoading || privateLoading
+  const reportsError = publicError || privateError
 
   const {
     data: reportDetail,
@@ -34,12 +92,14 @@ const TenantReportsTab = ({ tenantId }: { tenantId: string }) => {
     !!selectedReportId,
   )
 
-  // Auto-select first report when reports data loads
+  const setPublicMutation = useSetReportPublicMutation()
+  const setPrivateMutation = useSetReportPrivateMutation()
+
   useEffect(() => {
-    if (reportsData && reportsData.length > 0 && !selectedReportId) {
-      setSelectedReportId(reportsData[0].id)
+    if (reports.length > 0 && !selectedReportId) {
+      setSelectedReportId(reports[0].id)
     }
-  }, [reportsData, selectedReportId])
+  }, [reports, selectedReportId])
 
   const toggleService = (profileId: string, serviceName: string) => {
     setExpandedServices((prev) => {
@@ -65,6 +125,26 @@ const TenantReportsTab = ({ tenantId }: { tenantId: string }) => {
     }))
   }
 
+  const handleVisibilityClick = (report: ReportWithVisibility) => {
+    const mutation = report.isPublic ? setPrivateMutation : setPublicMutation
+    setPendingReportId(report.id)
+    mutation.mutate(
+      { tenantId, reportId: report.id },
+      {
+        onSuccess: (message) => {
+          setPendingReportId(null)
+          toast.success(message)
+        },
+        onError: (error) => {
+          setPendingReportId(null)
+          toast.error(error.message || 'Failed to update report visibility')
+        },
+      },
+    )
+  }
+
+  const selectedReport = reports.find((r) => r.id === selectedReportId)
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 lg:gap-10 lg:min-h-[500px]">
       <div className="bg-surface-muted rounded-lg p-4 h-fit max-h-[400px] lg:max-h-[calc(100vh-300px)] overflow-y-auto">
@@ -77,9 +157,9 @@ const TenantReportsTab = ({ tenantId }: { tenantId: string }) => {
           <div className="flex justify-center py-8">
             <LoadingSpinner size="sm" />
           </div>
-        ) : reportsData && reportsData.length > 0 ? (
+        ) : reports.length > 0 ? (
           <ul className="flex flex-col gap-2">
-            {reportsData.map((report) => (
+            {reports.map((report) => (
               <li
                 key={report.id}
                 className={`p-3 bg-white border rounded-md cursor-pointer transition-all ${
@@ -89,19 +169,33 @@ const TenantReportsTab = ({ tenantId }: { tenantId: string }) => {
                 }`}
                 onClick={() => setSelectedReportId(report.id)}
               >
-                <div className="flex justify-between items-start gap-4">
-                  <span className="text-sm font-semibold text-foreground break-words">
-                    {report.name}
-                  </span>
-                  {report.disabled ? (
-                    <Badge className="bg-red-100 text-red-800 border border-red-300">
-                      Inactive
-                    </Badge>
-                  ) : (
-                    <Badge className="bg-emerald-100 text-emerald-800 border border-emerald-300">
-                      Active
-                    </Badge>
-                  )}
+                <div className="flex justify-between items-center gap-2">
+                  <div className="flex items-center gap-1.5 min-w-0">
+                    <span
+                      className="tooltip tooltip-right shrink-0"
+                      data-tip={
+                        report.disabled ? 'Report disabled' : 'Report enabled'
+                      }
+                    >
+                      {report.disabled ? (
+                        <XCircleIcon className="size-4 text-red-400" />
+                      ) : (
+                        <CheckCircleIcon className="size-4 text-emerald-500" />
+                      )}
+                    </span>
+                    <span className="text-sm font-semibold text-foreground break-words">
+                      {report.name}
+                    </span>
+                  </div>
+                  <Badge
+                    className={
+                      report.isPublic
+                        ? 'bg-brand-muted text-brand border border-blue-300'
+                        : 'bg-surface-strong text-subtle border border-line-strong'
+                    }
+                  >
+                    {report.isPublic ? 'Public' : 'Private'}
+                  </Badge>
                 </div>
                 {report.description && (
                   <p className="text-xs text-muted leading-[1.4]">
@@ -129,16 +223,44 @@ const TenantReportsTab = ({ tenantId }: { tenantId: string }) => {
           <>
             {/* Info Header */}
             <div className="mb-1 pb-1">
-              <h1 className="text-xl font-bold text-foreground leading-[1.3]">
-                {reportDetail.info.name}
-              </h1>
-              <p className="text-base text-muted mb-2.5 leading-normal">
-                {reportDetail.info.description || (
-                  <span className="text-sm text-subtle italic">
-                    No description available
-                  </span>
+              <div className="flex justify-between items-start gap-4 mb-2.5">
+                <div className="min-w-0">
+                  <h1 className="text-xl font-bold text-foreground leading-[1.3]">
+                    {reportDetail.info.name}
+                  </h1>
+                  <p className="text-base text-muted leading-normal">
+                    {reportDetail.info.description || (
+                      <span className="text-sm text-subtle italic">
+                        No description available
+                      </span>
+                    )}
+                  </p>
+                </div>
+                {canManageVisibility && selectedReport && (
+                  <div className="flex flex-col items-end gap-0.5 shrink-0">
+                    <span className="text-sm font-medium text-muted">
+                      Set report visibility:
+                    </span>
+                    <Button
+                      variant={
+                        selectedReport.isPublic
+                          ? 'outline-secondary'
+                          : 'outline-primary'
+                      }
+                      size="sm"
+                      onClick={() => handleVisibilityClick(selectedReport)}
+                      disabled={pendingReportId === selectedReport.id}
+                    >
+                      {selectedReport.isPublic ? (
+                        <LockClosedIcon className="size-4" />
+                      ) : (
+                        <GlobeAltIcon className="size-4" />
+                      )}
+                      {selectedReport.isPublic ? 'Make private' : 'Make public'}
+                    </Button>
+                  </div>
                 )}
-              </p>
+              </div>
               <div className="flex flex-wrap gap-y-2 gap-x-4 items-center">
                 <div className="flex items-center gap-1.5">
                   <span className="text-sm font-semibold text-muted">
@@ -467,8 +589,8 @@ const TenantReportsTab = ({ tenantId }: { tenantId: string }) => {
           <div className={cardClass}>
             <p className="text-sm text-subtle italic text-center">
               {selectedReportId
-                ? 'Select a report from the list'
-                : 'No report selected'}
+                ? 'No details available'
+                : 'Select a report from the list'}
             </p>
           </div>
         )}

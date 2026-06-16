@@ -30,8 +30,8 @@ export const fetchGroupsApi = async (
 }
 
 export const fetchResultsGroups = async (
-  tenantId: string,
-  token: string,
+  tenantIdentifier: string,
+  token: string | undefined,
   report?: string,
   item?: string,
   period?: string,
@@ -41,14 +41,18 @@ export const fetchResultsGroups = async (
   if (period) params.set('period', period)
 
   const query = params.toString()
+  const base = token
+    ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}/results/groups`
+    : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}/results/groups`
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/results/groups${item ? `/${item}` : ''}${query ? `?${query}` : ''}`,
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    },
+    `${base}${item ? `/${item}` : ''}${query ? `?${query}` : ''}`,
+    { headers },
   )
 
   if (!response.ok) {
@@ -62,21 +66,23 @@ export const fetchResultsGroups = async (
 }
 
 export const fetchStatusGroups = async (
-  tenantId: string,
+  tenantIdentifier: string,
   report: string,
-  token: string,
+  token: string | undefined,
   item?: string,
 ): Promise<GroupStatusResponse> => {
+  const base = token
+    ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}/status/groups`
+    : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}/status/groups`
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/status/groups${
-      item ? `/${item}` : ''
-    }?report=${report}`,
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    },
+    `${base}${item ? `/${item}` : ''}?report=${report}`,
+    { headers },
   )
 
   if (!response.ok) {

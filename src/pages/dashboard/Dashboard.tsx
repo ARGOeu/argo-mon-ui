@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useMemo, useRef, useState, useEffect, type ReactNode } from 'react'
 import {
   Activity,
   AlertOctagon,
   AlertTriangle,
+  ArrowUpRightFromSquare,
   Check,
   CheckCircle2,
   Copy,
@@ -13,12 +13,37 @@ import {
   ShieldCheck,
   type LucideIcon,
 } from 'lucide-react'
-import { useGetResultsGroups, useGetStatusGroups } from '@/hooks/useData'
-import { useGetTenantReports } from '@/hooks/useTenants'
-import { useSelectedTenant } from '@/contexts/selected-tenant/useSelectedTenant'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
+import SelectDropdown from '@/components/SelectDropdown'
+import type { SelectOption } from '@/components/SelectDropdown'
+import type { GroupResultsResponse, GroupStatusResponse } from '@/types/data'
+
+const buildReportOptions = (
+  reports: Array<{ name: string; isPublic?: boolean }> | undefined,
+): SelectOption[] => {
+  if (!reports) return []
+  const hasVisibility = reports.some((r) => r.isPublic !== undefined)
+  if (!hasVisibility)
+    return reports.map((r) => ({ value: r.name, label: r.name }))
+
+  const options: SelectOption[] = []
+  const privateReports = reports.filter((r) => r.isPublic === false)
+  const publicReports = reports.filter((r) => r.isPublic === true)
+
+  if (privateReports.length > 0) {
+    options.push({ value: 'group_private', label: 'Private', disabled: true })
+    privateReports.forEach((r) =>
+      options.push({ value: r.name, label: r.name }),
+    )
+  }
+  if (publicReports.length > 0) {
+    options.push({ value: 'group_public', label: 'Public', disabled: true })
+    publicReports.forEach((r) => options.push({ value: r.name, label: r.name }))
+  }
+  return options
+}
 
 type ServiceStatus = 'healthy' | 'degraded' | 'critical'
 
@@ -129,10 +154,10 @@ interface NowItemProps {
   icon: LucideIcon
   label: string
   last?: boolean
-  children: React.ReactNode
+  children: ReactNode
 }
 
-function NowItem({ icon: Icon, label, last, children }: NowItemProps) {
+const NowItem = ({ icon: Icon, label, last, children }: NowItemProps) => {
   return (
     <div
       className={`flex-1 min-w-[120px] px-4 py-2 ${
@@ -150,7 +175,7 @@ function NowItem({ icon: Icon, label, last, children }: NowItemProps) {
   )
 }
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
+const SectionLabel = ({ children }: { children: ReactNode }) => {
   return (
     <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.08em] text-neutral-400">
       {children}
@@ -164,7 +189,7 @@ interface WeekBarProps {
   fullDate: string
 }
 
-function WeekBar({ value, day, fullDate }: WeekBarProps) {
+const WeekBar = ({ value, day, fullDate }: WeekBarProps) => {
   const h = Math.max(8, ((value - 98) / 2) * 100)
   return (
     <div
@@ -185,7 +210,7 @@ function WeekBar({ value, day, fullDate }: WeekBarProps) {
   )
 }
 
-function MiniBars({ daily, dates }: { daily: number[]; dates: string[] }) {
+const MiniBars = ({ daily, dates }: { daily: number[]; dates: string[] }) => {
   return (
     <div
       className="grid gap-[2px]"
@@ -204,14 +229,39 @@ function MiniBars({ daily, dates }: { daily: number[]; dates: string[] }) {
   )
 }
 
-export default function Dashboard() {
-  const { tenant } = useSelectedTenant()
-  const tenantName = tenant?.info?.name ?? ''
+export interface DashboardProps {
+  tenantName: string
+  tenantId?: string
+  reports: Array<{ name: string; isPublic?: boolean }> | undefined
+  reportsLoading: boolean
+  reportsError: Error | null
+  resultsData: GroupResultsResponse | undefined
+  resultsLoading: boolean
+  resultsError: Error | null
+  statusData: GroupStatusResponse | undefined
+  statusLoading: boolean
+  statusError: Error | null
+  selectedReport: string
+  onReportChange: (name: string) => void
+}
 
-  const { id: tenantId } = useParams<{ id: string }>()
+const Dashboard = ({
+  tenantName,
+  tenantId,
+  reports,
+  reportsLoading,
+  reportsError,
+  resultsData,
+  resultsLoading,
+  resultsError,
+  statusData,
+  statusLoading,
+  statusError,
+  selectedReport,
+  onReportChange,
+}: DashboardProps) => {
   const [filter, setFilter] = useState<FilterId>('all')
   const [search, setSearch] = useState('')
-  const [selectedReport, setSelectedReport] = useState('')
   const [copied, setCopied] = useState(false)
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -223,41 +273,12 @@ export default function Dashboard() {
     }
   }, [])
 
-  const {
-    data: reports,
-    isLoading: reportsLoading,
-    error: reportsError,
-  } = useGetTenantReports(tenantId ?? '')
-
-  // Pick the first report once it loads; reset if the current one disappears.
-  useEffect(() => {
-    if (!reports || reports.length === 0) return
-    const stillValid = reports.some((r) => r.name === selectedReport)
-    if (!stillValid) setSelectedReport(reports[0].name)
-  }, [reports, selectedReport])
-
-  const {
-    data: resultsData,
-    isLoading: resultsLoading,
-    error: resultsError,
-  } = useGetResultsGroups(
-    tenantId ?? '',
-    selectedReport,
-    undefined,
-    '1w',
-    !!selectedReport,
-  )
-
-  const {
-    data: statusData,
-    isLoading: statusLoading,
-    error: statusError,
-  } = useGetStatusGroups(
-    tenantId ?? '',
-    selectedReport,
-    undefined,
-    !!selectedReport,
-  )
+  const handleCopyTenantId = () => {
+    if (!tenantId) return
+    void navigator.clipboard?.writeText(tenantId)
+    setCopied(true)
+    copyTimerRef.current = setTimeout(() => setCopied(false), 1500)
+  }
 
   const services = useMemo<Service[]>(() => {
     if (!resultsData?.data) return []
@@ -376,16 +397,10 @@ export default function Dashboard() {
     { id: 'healthy', label: 'Healthy', count: null },
   ]
 
-  if (!tenantId) {
-    return (
-      <div className="page-container">
-        <p className="text-sm text-muted">No tenant selected.</p>
-      </div>
-    )
-  }
-
   const noData =
-    !reports?.length || !resultsData?.data?.length || !statusData?.data?.length
+    !reportsLoading &&
+    (!reports?.length ||
+      (!resultsData?.data?.length && !statusData?.data?.length))
 
   return (
     <div className="page-container">
@@ -393,58 +408,68 @@ export default function Dashboard() {
         title="Dashboard"
         subtitle={
           tenantName ? (
-            <span className="inline-flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-x-2 gap-y-0.5 flex-wrap">
               <span>
                 Overview for <strong>{tenantName}</strong>
+                {reports?.length === 1 && selectedReport && (
+                  <>
+                    {' · '}
+                    <strong>{selectedReport}</strong> report
+                  </>
+                )}
               </span>
-              <span className="inline-flex items-center gap-1 font-mono text-xs text-subtle">
-                <span title={tenantId}>{tenantId}</span>
-                <button
-                  type="button"
-                  onClick={() => {
-                    void navigator.clipboard?.writeText(tenantId)
-                    setCopied(true)
-                    copyTimerRef.current = setTimeout(
-                      () => setCopied(false),
-                      1500,
-                    )
-                  }}
-                  className={`flex-shrink-0 rounded p-0.5 transition-colors ${
-                    copied
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'text-subtle hover:bg-surface-strong hover:text-body'
-                  }`}
-                  aria-label={copied ? 'Copied' : 'Copy tenant ID'}
-                  title={copied ? 'Copied!' : 'Copy tenant ID'}
-                >
-                  {copied ? (
-                    <Check className="h-3 w-3" strokeWidth={2.5} />
-                  ) : (
-                    <Copy className="h-3 w-3" strokeWidth={2} />
-                  )}
-                </button>
-              </span>
+              {tenantId && (
+                <span className="inline-flex items-center gap-1 font-mono text-xs text-subtle">
+                  <span title={tenantId}>{tenantId}</span>
+                  <button
+                    type="button"
+                    onClick={handleCopyTenantId}
+                    className={`flex-shrink-0 rounded p-0.5 transition-colors ${
+                      copied
+                        ? 'bg-emerald-100 text-emerald-700'
+                        : 'text-subtle hover:bg-surface-strong hover:text-body'
+                    }`}
+                    aria-label={copied ? 'Copied' : 'Copy tenant ID'}
+                    title={copied ? 'Copied!' : 'Copy tenant ID'}
+                  >
+                    {copied ? (
+                      <Check className="h-3 w-3" strokeWidth={2.5} />
+                    ) : (
+                      <Copy className="h-3 w-3" strokeWidth={2} />
+                    )}
+                  </button>
+                </span>
+              )}
             </span>
           ) : undefined
         }
-        className="mb-2"
+        className="items-start mb-4"
       >
         {hasMultipleReports && (
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-semibold text-body">
-              Select a report:
-            </span>
-            <select
-              value={selectedReport}
-              onChange={(e) => setSelectedReport(e.target.value)}
-              className="max-w-[220px] truncate rounded-md border border-line-strong bg-white py-2 pl-3 pr-8 text-sm font-medium text-foreground shadow-sm focus:border-brand focus:outline-none focus:ring-2 focus:ring-brand-subtle"
-            >
-              {reports?.map((r) => (
-                <option key={r.name} value={r.name}>
-                  {r.name}
-                </option>
-              ))}
-            </select>
+          <div className="flex flex-col items-stretch gap-1">
+            <div className="flex items-center gap-2">
+              <span className="text-[15px] font-semibold text-body">
+                Select a report:
+              </span>
+              <SelectDropdown
+                value={selectedReport}
+                onChange={onReportChange}
+                options={buildReportOptions(reports)}
+                className="w-[220px]"
+              />
+            </div>
+            {reports?.find((r) => r.name === selectedReport)?.isPublic ===
+              true && (
+              <a
+                href={`/public/tenants/${encodeURIComponent(tenantName)}/dashboard#${encodeURIComponent(selectedReport)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="self-end inline-flex items-center gap-0.5 text-sm text-brand no-underline transition-colors hover:text-brand-strong hover:underline"
+              >
+                View public dashboard
+                <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
+              </a>
+            )}
           </div>
         )}
       </PageHeader>
@@ -454,10 +479,12 @@ export default function Dashboard() {
           <LoadingSpinner size="md" />
         </div>
       ) : error ? (
-        <ErrorDisplay error={error} context={errorContext} />
+        <div className="my-12">
+          <ErrorDisplay error={error} context={errorContext} />
+        </div>
       ) : noData ? (
         <div className="flex flex-col items-center justify-center rounded-xl border border-neutral-200 bg-white px-12 py-4 mt-8 text-center shadow-sm">
-          <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-full bg-blue-50">
+          <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-full bg-brand-subtle">
             <Info className="h-6 w-6 text-brand" />
           </div>
           <h3 className="mb-1 text-lg font-medium text-neutral-900">
@@ -654,3 +681,5 @@ export default function Dashboard() {
     </div>
   )
 }
+
+export default Dashboard
