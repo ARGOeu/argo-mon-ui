@@ -68,6 +68,7 @@ const BuildStatusPage = () => {
   const { data: reportsData, isLoading: reportsLoading } = useGetTenantReports(
     tenantId,
     undefined,
+    undefined,
     !!tenantId,
   )
   const {

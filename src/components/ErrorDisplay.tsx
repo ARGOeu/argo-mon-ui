@@ -25,8 +25,8 @@ const ErrorDisplay = ({ error, context = 'data' }: ErrorDisplayProps) => {
 
   if (isNotFound) {
     return (
-      <div className="text-center px-8 py-3 bg-surface-muted rounded-lg">
-        <p className="text-muted text-sm italic">No {context} found</p>
+      <div className="text-center px-8 py-5 bg-surface-muted rounded-lg">
+        <p className="text-muted text-base italic">No {context} found</p>
       </div>
     )
   }

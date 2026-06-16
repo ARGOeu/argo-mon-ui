@@ -16,6 +16,7 @@ import type { KeyboardEvent } from 'react'
 export interface SelectOption {
   value: string
   label: string
+  disabled?: boolean
 }
 
 interface SelectDropdownProps {
@@ -136,9 +137,21 @@ const SelectDropdown = ({
     setIsOpen(true)
   }
 
-  const handleSelect = (optionValue: string) => {
-    onChange(optionValue)
+  const handleSelect = (option: SelectOption) => {
+    if (option.disabled) return
+    onChange(option.value)
     handleClose()
+  }
+
+  const findNextEnabledIndex = (from: number, direction: 1 | -1): number => {
+    let index = from + direction
+    while (index >= 0 && index < filteredOptions.length) {
+      if (!filteredOptions[index].disabled) {
+        return index
+      }
+      index += direction
+    }
+    return from
   }
 
   const handleToggle = () => {
@@ -157,7 +170,7 @@ const SelectDropdown = ({
     if (disabled) return
     const handleActivate = () => {
       if (isOpen && activeIndexRef.current >= 0) {
-        handleSelect(filteredOptions[activeIndexRef.current].value)
+        handleSelect(filteredOptions[activeIndexRef.current])
       } else if (!isOpen) {
         openMenu()
       }
@@ -181,15 +194,13 @@ const SelectDropdown = ({
         if (!isOpen) {
           openMenu()
         } else {
-          setActiveIndex((prev) =>
-            Math.min(prev + 1, filteredOptions.length - 1),
-          )
+          setActiveIndex((prev) => findNextEnabledIndex(prev, 1))
         }
         break
       case 'ArrowUp':
         e.preventDefault()
         if (isOpen) {
-          setActiveIndex((prev) => Math.max(prev - 1, 0))
+          setActiveIndex((prev) => findNextEnabledIndex(prev, -1))
         }
         break
     }
@@ -254,22 +265,32 @@ const SelectDropdown = ({
                   No results found
                 </li>
               ) : (
-                filteredOptions.map((option, index) => (
-                  <li
-                    id={`${listboxId}-option-${index}`}
-                    key={option.value}
-                    role="option"
-                    aria-selected={option.value === value}
-                    onClick={() => handleSelect(option.value)}
-                    className={`px-4 py-1.5 mb-px last:mb-0 rounded-md text-sm cursor-pointer transition-colors ${
-                      option.value === value || index === activeIndex
-                        ? 'bg-brand-subtle text-brand font-medium'
-                        : 'text-foreground hover:bg-surface-muted'
-                    }`}
-                  >
-                    {option.label}
-                  </li>
-                ))
+                filteredOptions.map((option, index) =>
+                  option.disabled ? (
+                    <li
+                      key={option.value}
+                      role="presentation"
+                      className="px-3 pt-2.5 pb-0.5 text-xs font-semibold uppercase tracking-wider text-muted select-none cursor-default"
+                    >
+                      {option.label}
+                    </li>
+                  ) : (
+                    <li
+                      id={`${listboxId}-option-${index}`}
+                      key={option.value}
+                      role="option"
+                      aria-selected={option.value === value}
+                      onClick={() => handleSelect(option)}
+                      className={`px-4 py-1.5 mb-px last:mb-0 rounded-md text-sm cursor-pointer transition-colors ${
+                        option.value === value || index === activeIndex
+                          ? 'bg-brand-subtle text-brand font-medium'
+                          : 'text-foreground hover:bg-surface-muted'
+                      }`}
+                    >
+                      {option.label}
+                    </li>
+                  ),
+                )
               )}
             </ul>
           </div>,

@@ -13,7 +13,7 @@ export const useGetResultsGroups = (
   const { token } = useAuth()
 
   return useQuery<GroupResultsResponse, Error>({
-    queryKey: ['results-groups', tenantId, report, item],
+    queryKey: ['results-groups', tenantId, report, item, period],
     queryFn: () => {
       if (!token) throw new Error('No authentication token available')
       if (!tenantId) throw new Error('Tenant ID is required')
@@ -41,5 +41,40 @@ export const useGetStatusGroups = (
     },
     retry: false,
     enabled: enabled && !!token && !!tenantId,
+  })
+}
+
+export const useGetPublicResultsGroups = (
+  tenantName: string,
+  report?: string,
+  item?: string,
+  period?: string,
+  enabled: boolean = true,
+) => {
+  return useQuery<GroupResultsResponse, Error>({
+    queryKey: ['public-results-groups', tenantName, report, item, period],
+    queryFn: () => {
+      if (!tenantName) throw new Error('Tenant name is required')
+      return fetchResultsGroups(tenantName, undefined, report, item, period)
+    },
+    retry: false,
+    enabled: enabled && !!tenantName,
+  })
+}
+
+export const useGetPublicStatusGroups = (
+  tenantName: string,
+  report: string = '',
+  item?: string,
+  enabled: boolean = true,
+) => {
+  return useQuery<GroupStatusResponse, Error>({
+    queryKey: ['public-status-groups', tenantName, report, item],
+    queryFn: () => {
+      if (!tenantName) throw new Error('Tenant name is required')
+      return fetchStatusGroups(tenantName, report, undefined, item)
+    },
+    retry: false,
+    enabled: enabled && !!tenantName,
   })
 }

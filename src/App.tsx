@@ -24,10 +24,11 @@ import {
   CreateTopologyEndpoint,
   CreateTopologyGroup,
 } from './pages/tenant-topology'
+import PrivateDashboardContainer from './pages/dashboard'
+import PublicDashboard from './pages/public-dashboard'
 import { AuthProvider } from './auth/AuthProvider'
 import NotFound from './pages/NotFound'
 import { Toaster } from 'sonner'
-import Dashboard from '@/pages/Dashboard'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -66,6 +67,10 @@ function App() {
         <BrowserRouter>
           <Routes>
             <Route path="status/:slug" element={<PublicStatusPage />} />
+            <Route
+              path="public/tenants/:tenantName/dashboard"
+              element={<PublicDashboard />}
+            />
             <Route element={<AuthLayout />}>
               <Route path="invitation/:id" element={<InvitationReview />} />
               <Route element={<Layout />}>
@@ -114,7 +119,7 @@ function App() {
                   path="tenants/:id/dashboard"
                   element={
                     <AuthProtected>
-                      <Dashboard />
+                      <PrivateDashboardContainer />
                     </AuthProtected>
                   }
                 />

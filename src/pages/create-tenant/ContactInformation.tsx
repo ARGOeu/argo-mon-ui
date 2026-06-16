@@ -74,7 +74,7 @@ const ContactInformation = ({
   }
 
   const handleAddContact = () => {
-    if (contacts.length < 5) {
+    if (contacts.length < 10) {
       onContactsChange([...contacts, { name: '', email: '', type: '' }])
       setErrors([...errors, { email: '' }])
     }
@@ -109,7 +109,7 @@ const ContactInformation = ({
                 Contact {index + 1}
               </span>
               <div className="flex gap-2">
-                {index === contacts.length - 1 && contacts.length < 5 && (
+                {index === contacts.length - 1 && contacts.length < 10 && (
                   <button
                     type="button"
                     onClick={handleAddContact}
