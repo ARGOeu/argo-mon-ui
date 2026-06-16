@@ -9,6 +9,7 @@ import DataTable, { thBase, SortableColumnHeader } from '@/components/DataTable'
 import Pagination from '@/components/Pagination'
 import IconButton from '@/components/IconButton'
 import { squishEmail } from '@/utils/profile'
+import { TENANT_MEMBERSHIP_ENTITY } from '@/utils/memberships'
 
 type SortColumn =
   | 'username'
@@ -90,8 +91,8 @@ const UsersTab = () => {
         let bValue: string | number
 
         if (sortColumn === 'memberships') {
-          aValue = a.memberships?.length || 0
-          bValue = b.memberships?.length || 0
+          aValue = a.memberships?.[TENANT_MEMBERSHIP_ENTITY]?.length || 0
+          bValue = b.memberships?.[TENANT_MEMBERSHIP_ENTITY]?.length || 0
         } else {
           aValue = a[sortColumn]?.toLowerCase() || ''
           bValue = b[sortColumn]?.toLowerCase() || ''
@@ -221,19 +222,22 @@ const UsersTab = () => {
                     </td>
                     <td className="px-4 py-3 break-words text-sm">
                       <div className="flex flex-wrap gap-1.5">
-                        {user.memberships && user.memberships.length > 0 ? (
-                          user.memberships.map((tenant, index) => (
-                            <TenantBadge
-                              key={index}
-                              name={tenant.name}
-                              role={tenant.role}
-                              colorClass={
-                                tenant.role === 'tenant_admin'
-                                  ? 'bg-amber-100 text-amber-700'
-                                  : 'bg-brand-muted text-blue-800'
-                              }
-                            />
-                          ))
+                        {user.memberships?.[TENANT_MEMBERSHIP_ENTITY]
+                          ?.length ? (
+                          user.memberships[TENANT_MEMBERSHIP_ENTITY].map(
+                            (tenant, index) => (
+                              <TenantBadge
+                                key={index}
+                                name={tenant.name}
+                                role={tenant.role}
+                                colorClass={
+                                  tenant.role === 'tenant_admin'
+                                    ? 'bg-amber-100 text-amber-700'
+                                    : 'bg-brand-muted text-blue-800'
+                                }
+                              />
+                            ),
+                          )
                         ) : (
                           <span className="text-subtle text-sm italic">
                             No tenants

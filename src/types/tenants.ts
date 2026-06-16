@@ -100,10 +100,9 @@ export type TenantProjectAssignment = {
   project_ids: string[]
 }
 
-export type TenantMembership = {
-  name: string
-  role: string
-}
+export type TenantRole = { name: string; role: string }
+
+export type TenantMembership = Record<string, TenantRole[]>
 
 export type Member = {
   id: string
@@ -111,7 +110,7 @@ export type Member = {
   firstName: string
   lastName: string
   email: string
-  memberships?: TenantMembership[]
+  memberships?: TenantMembership
 }
 
 export type PaginatedMembersResponse = {
