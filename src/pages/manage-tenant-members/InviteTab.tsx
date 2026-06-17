@@ -5,12 +5,6 @@ import { toast } from 'sonner'
 import Button from '@/components/Button'
 import SelectDropdown from '@/components/SelectDropdown'
 
-const formatRoleName = (name: string) =>
-  name
-    .split('_')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ')
-
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 interface InviteTabProps {
@@ -29,7 +23,7 @@ const InviteTab = ({ tenantId }: InviteTabProps) => {
 
   const roleOptions =
     rolesData?.content.map((r) => ({
-      label: formatRoleName(r.name),
+      label: r.name,
       value: r.name,
     })) ?? []
 

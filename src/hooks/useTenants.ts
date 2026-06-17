@@ -360,7 +360,7 @@ export const useAddMemberDirectly = () => {
   const { token } = useAuth()
 
   return useMutation<
-    void,
+    string,
     Error,
     {
       tenantId: string

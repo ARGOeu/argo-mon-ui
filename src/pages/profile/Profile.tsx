@@ -1,20 +1,21 @@
-import { UserCircleIcon } from '@heroicons/react/16/solid'
-import { UserMinusIcon } from '@heroicons/react/24/solid'
-import { Navigate, useParams } from 'react-router-dom'
 import { useState } from 'react'
-import { useAuth } from '../auth/useAuth'
 import {
   useGetUserProfileByUsername,
   useGetTenantByName,
 } from '@/hooks/useTenants'
 import { useRevokeRoleMutation } from '@/hooks/useResources'
-import { squishEmail } from '@/utils/profile'
+import { useAuth } from '../../auth/useAuth'
+import { Navigate, useParams } from 'react-router-dom'
+import { UserCircleIcon } from '@heroicons/react/16/solid'
+import { UserMinusIcon } from '@heroicons/react/24/solid'
+import { toast } from 'sonner'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ConfirmDialog from '@/components/ConfirmDialog'
-import { toast } from 'sonner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import PageHeader from '@/components/PageHeader'
 import Badge from '@/components/Badge'
+import AssignRoleToUser from './AssignRoleToUser'
+import { squishEmail } from '@/utils/profile'
 import { roleBadgeClass } from '@/utils/badges'
 import { TENANT_MEMBERSHIP_ENTITY } from '@/utils/memberships'
 
@@ -23,13 +24,14 @@ const fieldValueUnavailableClass = 'text-sm text-subtle italic'
 
 const profileGridClass = 'grid grid-cols-[200px_1fr] gap-6'
 
-export const Profile = () => {
+const Profile = () => {
   const { username } = useParams<{ username: string }>()
 
   const { isSuperAdmin, profile } = useAuth()
 
   const [removeDialogOpen, setRemoveDialogOpen] = useState(false)
-  const [tenantToRemove, setTenantToRemove] = useState<{
+  const [membershipToRemove, setMembershipToRemove] = useState<{
+    entityType: string
     name: string
     role: string
   } | null>(null)
@@ -51,57 +53,63 @@ export const Profile = () => {
   const isViewingOtherUser = !!username
   const displayProfile = isViewingOtherUser ? userProfileData : null
 
-  const handleRemoveClick = (tenantName: string, role: string) => {
-    setTenantToRemove({ name: tenantName, role })
+  const handleRemoveClick = (
+    entityType: string,
+    name: string,
+    role: string,
+  ) => {
+    setMembershipToRemove({ entityType, name, role })
     setRemoveDialogOpen(true)
   }
 
   const handleRemoveConfirm = () => {
     const userId = userProfileData?.id || ''
 
-    if (!tenantToRemove || !userId) return
+    if (!membershipToRemove || !userId) return
 
-    getTenantByNameMutation.mutate(tenantToRemove.name, {
-      onSuccess: (tenantData) => {
-        if (!tenantData || tenantData.content.length === 0) {
-          toast.error('Tenant not found')
-          return
-        }
-
-        const tenantId = tenantData.content[0].id || ''
-        if (!tenantId) {
-          toast.error('Tenant ID not found')
-          return
-        }
-
-        revokeRoleMutation.mutate(
-          {
-            api_resource: 'Tenant',
-            resource_id: tenantId,
-            role: tenantToRemove.role,
-            member_id: userId,
+    const revoke = (resourceId?: string) => {
+      revokeRoleMutation.mutate(
+        {
+          api_resource: membershipToRemove.entityType,
+          resource_id: resourceId,
+          role: membershipToRemove.role,
+          member_id: userId,
+        },
+        {
+          onSuccess: () => {
+            toast.success('Role revoked successfully!')
+            setRemoveDialogOpen(false)
+            setMembershipToRemove(null)
           },
-          {
-            onSuccess: () => {
-              toast.success('Member removed successfully!')
-              setRemoveDialogOpen(false)
-              setTenantToRemove(null)
-            },
-            onError: (error) => {
-              toast.error(`Failed to remove member: ${error.message}`)
-            },
+          onError: (error) => {
+            toast.error(`Failed to revoke role: ${error.message}`)
           },
-        )
-      },
-      onError: (error) => {
-        toast.error(`Failed to find tenant: ${error.message}`)
-      },
-    })
+        },
+      )
+    }
+
+    if (membershipToRemove.entityType === TENANT_MEMBERSHIP_ENTITY) {
+      getTenantByNameMutation.mutate(membershipToRemove.name, {
+        onSuccess: (tenantData) => {
+          if (!tenantData?.content[0]) {
+            toast.error('Failed to find tenant')
+            return
+          }
+          const tenantId = tenantData.content[0].id || ''
+          revoke(tenantId)
+        },
+        onError: (error) => {
+          toast.error(`Failed to find tenant: ${error.message}`)
+        },
+      })
+    } else {
+      revoke(membershipToRemove.name)
+    }
   }
 
   const handleRemoveCancel = () => {
     setRemoveDialogOpen(false)
-    setTenantToRemove(null)
+    setMembershipToRemove(null)
   }
 
   if (isLoading) {
@@ -145,37 +153,47 @@ export const Profile = () => {
     ? displayProfile?.email || 'Not available'
     : profile?.email || 'Not available'
 
-  const currentGroups = isViewingOtherUser
-    ? (displayProfile?.memberships?.[TENANT_MEMBERSHIP_ENTITY] || []).map(
-        (m) => ({ name: m.name, role: m.role }),
-      )
-    : profile?.groups || []
-
+  const currentGroups = isViewingOtherUser ? [] : profile?.groups || []
   const filteredGroups = currentGroups.filter(
     (group) => group.name !== 'members',
   )
+
+  const membershipEntries =
+    isViewingOtherUser && displayProfile?.memberships
+      ? Object.entries(displayProfile.memberships)
+          .filter(([, roles]) => roles.length > 0)
+          .sort(([a], [b]) => {
+            if (a === TENANT_MEMBERSHIP_ENTITY) return -1
+            if (b === TENANT_MEMBERSHIP_ENTITY) return 1
+            return a.localeCompare(b)
+          })
+      : []
 
   return (
     <div className="flex flex-col justify-center items-center">
       <ConfirmDialog
         isOpen={removeDialogOpen}
-        title="Remove from Tenant"
+        title="Revoke Role"
         message={
-          tenantToRemove ? (
+          membershipToRemove ? (
             <>
-              Are you sure you want to remove this user from tenant{' '}
-              <strong>{tenantToRemove.name}</strong> ?
+              Are you sure you want to revoke the{' '}
+              <strong>{membershipToRemove.role}</strong> role from{' '}
+              <strong>{membershipToRemove.name}</strong>?
               <br />
               <span className="text-amber-600 font-medium">
-                The user will lose access to this tenant.
+                The user will lose access to this resource.
               </span>
             </>
           ) : (
             ''
           )
         }
-        confirmLabel="Remove"
+        confirmLabel="Revoke"
         cancelLabel="Cancel"
+        isPending={
+          getTenantByNameMutation.isPending || revokeRoleMutation.isPending
+        }
         onConfirm={handleRemoveConfirm}
         onCancel={handleRemoveCancel}
       />
@@ -187,7 +205,7 @@ export const Profile = () => {
               ? 'View and manage user account'
               : 'View your account information'
           }
-          className="mb-6"
+          className="mb-4"
           navigateTo={
             isViewingOtherUser
               ? { label: 'Back to Users', to: '/administration#users' }
@@ -197,7 +215,7 @@ export const Profile = () => {
 
         {(profile || displayProfile) && (
           <div className="bg-white border border-line rounded-lg shadow-sm overflow-hidden">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-line">
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-4 border-b border-line">
               <div className="flex items-center gap-4">
                 <div className="bg-white rounded-full p-3 shadow-sm">
                   <UserCircleIcon className="size-12 text-blue-600" />
@@ -216,7 +234,7 @@ export const Profile = () => {
               </div>
             </div>
 
-            <div className="px-8 py-6">
+            <div className="px-8 py-4">
               <div className={profileGridClass}>
                 <div>
                   <h3 className="text-sm font-semibold text-body uppercase tracking-wider">
@@ -271,26 +289,96 @@ export const Profile = () => {
                 </div>
               </div>
 
-              <div className="h-px bg-gray-200 my-6" />
+              <div className="h-px bg-gray-200 my-5" />
 
               <div className={profileGridClass}>
                 <div>
                   <h3 className="text-sm font-semibold text-body uppercase tracking-wider">
-                    Tenant Memberships
+                    Memberships
                   </h3>
                 </div>
                 <div className="flex flex-col gap-3">
-                  <div className="flex flex-col">
-                    <label className="text-sm font-medium text-muted mb-4">
-                      Tenants
-                    </label>
-                    <div className="flex flex-col gap-4">
-                      {filteredGroups && filteredGroups.length > 0 ? (
-                        <div className="flex flex-col gap-3">
+                  {isSuperAdmin && isViewingOtherUser ? (
+                    membershipEntries.length > 0 ? (
+                      <div className="flex flex-col gap-3">
+                        {membershipEntries.map(([entityType, roles]) => {
+                          const filteredRoles = roles.filter(
+                            (r) => r.name !== 'members',
+                          )
+                          return (
+                            <div key={entityType} className="flex flex-col">
+                              <label className="text-sm font-medium text-muted mb-1">
+                                {entityType === TENANT_MEMBERSHIP_ENTITY
+                                  ? 'Tenants'
+                                  : entityType}
+                              </label>
+                              {filteredRoles.length > 0 ? (
+                                <div className="flex flex-col gap-2.5">
+                                  {filteredRoles.map((role, index) => (
+                                    <div
+                                      key={index}
+                                      className="w-fit flex items-center justify-between px-4 py-1 bg-surface-muted border border-line rounded-lg transition-all hover:bg-surface-strong"
+                                    >
+                                      <div className="flex items-center gap-5 flex-1">
+                                        <span className="text-sm font-medium text-gray-800">
+                                          {role.name}
+                                        </span>
+                                        <Badge
+                                          size="xs"
+                                          className={
+                                            roleBadgeClass[role.role] ??
+                                            roleBadgeClass['tenant_viewer']
+                                          }
+                                        >
+                                          {role.role === 'super_admin'
+                                            ? 'Super Admin'
+                                            : role.role}
+                                        </Badge>
+                                      </div>
+
+                                      <button
+                                        aria-label="Revoke role"
+                                        className="p-1 rounded-md cursor-pointer transition-all text-red-600 hover:bg-red-50 border-none bg-transparent ml-4 tooltip"
+                                        data-tip="Revoke this role"
+                                        onClick={() =>
+                                          handleRemoveClick(
+                                            entityType,
+                                            role.name,
+                                            role.role,
+                                          )
+                                        }
+                                        title="Revoke this role"
+                                      >
+                                        <UserMinusIcon className="size-4" />
+                                      </button>
+                                    </div>
+                                  ))}
+                                </div>
+                              ) : (
+                                <p className={fieldValueUnavailableClass}>
+                                  No memberships
+                                </p>
+                              )}
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <p className={fieldValueUnavailableClass}>
+                        Not a member of any group
+                      </p>
+                    )
+                  ) : (
+                    <div className="flex flex-col">
+                      <label className="text-sm font-medium text-muted mb-2">
+                        Tenants
+                      </label>
+                      {filteredGroups.length > 0 ? (
+                        <div className="flex flex-col gap-2.5">
                           {filteredGroups.map((tenant, index) => (
                             <div
                               key={index}
-                              className="w-fit flex items-center justify-between px-3 py-2 bg-surface-muted border border-line rounded-lg transition-all hover:bg-surface-strong"
+                              className="w-fit flex items-center justify-between px-4 py-1 bg-surface-muted border border-line rounded-lg transition-all hover:bg-surface-strong"
                             >
                               <div className="flex items-center gap-5 flex-1">
                                 <span className="text-sm font-medium text-gray-800">
@@ -308,19 +396,6 @@ export const Profile = () => {
                                     : tenant.role}
                                 </Badge>
                               </div>
-                              {isSuperAdmin && isViewingOtherUser && (
-                                <button
-                                  aria-label="Remove from tenant"
-                                  className="p-1 rounded-md cursor-pointer transition-all text-red-600 hover:bg-red-50 border-none bg-transparent ml-4 tooltip"
-                                  data-tip="Remove user from this tenant"
-                                  onClick={() =>
-                                    handleRemoveClick(tenant.name, tenant.role)
-                                  }
-                                  title="Remove user from this tenant"
-                                >
-                                  <UserMinusIcon className="size-5" />
-                                </button>
-                              )}
                             </div>
                           ))}
                         </div>
@@ -330,9 +405,16 @@ export const Profile = () => {
                         </p>
                       )}
                     </div>
-                  </div>
+                  )}
                 </div>
               </div>
+
+              {isSuperAdmin && isViewingOtherUser && (
+                <AssignRoleToUser
+                  username={displayProfile?.username ?? ''}
+                  email={displayProfile?.email ?? ''}
+                />
+              )}
             </div>
           </div>
         )}
@@ -340,3 +422,5 @@ export const Profile = () => {
     </div>
   )
 }
+
+export default Profile

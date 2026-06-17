@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { XMarkIcon } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
+import LoadingSpinner from '@/components/LoadingSpinner'
 
 type ConfirmDialogProps = {
   isOpen: boolean
@@ -11,6 +12,7 @@ type ConfirmDialogProps = {
   typeToConfirm?: string
   confirmSuffix?: string
   closeOnClickOutside?: boolean
+  isPending?: boolean
   onConfirm: () => void
   onCancel: () => void
 }
@@ -24,6 +26,7 @@ const ConfirmDialog = ({
   typeToConfirm,
   confirmSuffix = 'to confirm:',
   closeOnClickOutside = true,
+  isPending = false,
   onConfirm,
   onCancel,
 }: ConfirmDialogProps) => {
@@ -41,7 +44,7 @@ const ConfirmDialog = ({
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-[1000] p-4"
-      onClick={closeOnClickOutside ? onCancel : undefined}
+      onClick={closeOnClickOutside && !isPending ? onCancel : undefined}
     >
       <div
         className="bg-white rounded-lg shadow-xl max-w-[30rem] w-full overflow-hidden mb-32"
@@ -53,6 +56,7 @@ const ConfirmDialog = ({
             className="p-1 rounded-full text-muted bg-transparent border-none cursor-pointer transition-colors hover:bg-surface-strong hover:text-foreground"
             onClick={onCancel}
             aria-label="Close dialog"
+            disabled={isPending}
           >
             <XMarkIcon className="size-6" />
           </button>
@@ -85,16 +89,28 @@ const ConfirmDialog = ({
         </div>
 
         <div className="flex justify-between gap-6 px-5 py-3 mt-2 bg-surface-muted border-t border-line">
-          <Button onClick={onCancel} size="sm" variant="outline-secondary">
+          <Button
+            onClick={onCancel}
+            size="sm"
+            variant="outline-secondary"
+            disabled={isPending}
+          >
             {cancelLabel}
           </Button>
           <Button
             onClick={onConfirm}
             size="sm"
             variant="primary"
-            disabled={isConfirmDisabled}
+            disabled={isConfirmDisabled || isPending}
           >
-            {confirmLabel}
+            {isPending ? (
+              <span className="flex items-center gap-1.5">
+                <LoadingSpinner size="xs" />
+                {confirmLabel}...
+              </span>
+            ) : (
+              confirmLabel
+            )}
           </Button>
         </div>
       </div>

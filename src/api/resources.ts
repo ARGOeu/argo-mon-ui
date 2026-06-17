@@ -35,7 +35,7 @@ export const fetchApiResources = async (
 export const fetchAssignRole = async (
   data: AssignRoleRequest,
   token: string,
-): Promise<void> => {
+): Promise<string> => {
   const response = await fetch(`${BACKEND_API}/roles/assign`, {
     method: 'POST',
     headers: {
@@ -45,14 +45,15 @@ export const fetchAssignRole = async (
     body: JSON.stringify(data),
   })
 
+  const responseData = await response.json().catch(() => ({}))
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
     const error = new Error(
-      errorData.message || `HTTP error! status: ${response.status}`,
+      responseData.message || `HTTP error! status: ${response.status}`,
     ) as Error & { errors?: string[] }
-    error.errors = errorData.errors || []
+    error.errors = responseData.errors || []
     throw error
   }
+  return responseData.status?.message ?? responseData.message
 }
 
 export const fetchRevokeRole = async (
