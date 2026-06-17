@@ -404,49 +404,50 @@ const Dashboard = ({
 
   return (
     <div className="page-container">
-      <PageHeader
-        title="Dashboard"
-        subtitle={
-          tenantName ? (
-            <span className="inline-flex items-center gap-x-2 gap-y-0.5 flex-wrap">
-              <span>
-                Overview for <strong>{tenantName}</strong>
-                {reports?.length === 1 && selectedReport && (
-                  <>
-                    {' · '}
-                    <strong>{selectedReport}</strong> report
-                  </>
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+        <PageHeader
+          title="Dashboard"
+          subtitle={
+            tenantName ? (
+              <span className="inline-flex items-center gap-x-2 gap-y-0.5 flex-wrap">
+                <span>
+                  Overview for <strong>{tenantName}</strong>
+                  {reports?.length === 1 && selectedReport && (
+                    <>
+                      {' · '}
+                      <strong>{selectedReport}</strong> report
+                    </>
+                  )}
+                </span>
+                {tenantId && (
+                  <span className="inline-flex items-center gap-1 font-mono text-xs text-subtle">
+                    <span title={tenantId}>{tenantId}</span>
+                    <button
+                      type="button"
+                      onClick={handleCopyTenantId}
+                      className={`flex-shrink-0 rounded p-0.5 transition-colors ${
+                        copied
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'text-subtle hover:bg-surface-strong hover:text-body'
+                      }`}
+                      aria-label={copied ? 'Copied' : 'Copy tenant ID'}
+                      title={copied ? 'Copied!' : 'Copy tenant ID'}
+                    >
+                      {copied ? (
+                        <Check className="h-3 w-3" strokeWidth={2.5} />
+                      ) : (
+                        <Copy className="h-3 w-3" strokeWidth={2} />
+                      )}
+                    </button>
+                  </span>
                 )}
               </span>
-              {tenantId && (
-                <span className="inline-flex items-center gap-1 font-mono text-xs text-subtle">
-                  <span title={tenantId}>{tenantId}</span>
-                  <button
-                    type="button"
-                    onClick={handleCopyTenantId}
-                    className={`flex-shrink-0 rounded p-0.5 transition-colors ${
-                      copied
-                        ? 'bg-emerald-100 text-emerald-700'
-                        : 'text-subtle hover:bg-surface-strong hover:text-body'
-                    }`}
-                    aria-label={copied ? 'Copied' : 'Copy tenant ID'}
-                    title={copied ? 'Copied!' : 'Copy tenant ID'}
-                  >
-                    {copied ? (
-                      <Check className="h-3 w-3" strokeWidth={2.5} />
-                    ) : (
-                      <Copy className="h-3 w-3" strokeWidth={2} />
-                    )}
-                  </button>
-                </span>
-              )}
-            </span>
-          ) : undefined
-        }
-        className="items-start mb-4"
-      >
+            ) : undefined
+          }
+          className="items-start"
+        />
         {hasMultipleReports && (
-          <div className="flex flex-col items-stretch gap-1">
+          <div className="flex flex-col items-stretch gap-1 sm:shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-[15px] font-semibold text-body">
                 Select a report:
@@ -464,7 +465,7 @@ const Dashboard = ({
                 href={`/public/tenants/${encodeURIComponent(tenantName)}/dashboard#${encodeURIComponent(selectedReport)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="self-end inline-flex items-center gap-0.5 text-sm text-brand no-underline transition-colors hover:text-brand-strong hover:underline"
+                className="self-start sm:self-end inline-flex items-center gap-0.5 text-sm text-brand no-underline transition-colors hover:text-brand-strong hover:underline"
               >
                 View public dashboard
                 <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
@@ -472,7 +473,7 @@ const Dashboard = ({
             )}
           </div>
         )}
-      </PageHeader>
+      </div>
 
       {isLoading && !resultsData ? (
         <div className="loading-container">
@@ -552,11 +553,11 @@ const Dashboard = ({
               </span>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-[1fr_180px] md:items-center">
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] md:items-center gap-4 md:gap-6 lg:gap-12 xl:gap-24">
               <div
-                className="grid h-[110px] items-end gap-1.5"
+                className="grid h-[110px] items-end gap-2 sm:gap-3 md:gap-4 lg:gap-8 xl:gap-16"
                 style={{
-                  gridTemplateColumns: `repeat(${Math.max(tenantDaily.length, 1)}, minmax(0, 1fr))`,
+                  gridTemplateColumns: `repeat(${Math.max(tenantDaily.length, 1)}, minmax(40px, 120px))`,
                 }}
               >
                 {tenantDaily.map((v, i) => (
