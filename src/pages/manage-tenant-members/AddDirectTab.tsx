@@ -7,12 +7,6 @@ import Button from '@/components/Button'
 import SelectDropdown from '@/components/SelectDropdown'
 import LoadingSpinner from '@/components/LoadingSpinner'
 
-const formatRoleName = (name: string) =>
-  name
-    .split('_')
-    .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
-    .join(' ')
-
 interface AddDirectTabProps {
   tenantId: string
 }
@@ -46,7 +40,7 @@ const AddDirectTab = ({ tenantId }: AddDirectTabProps) => {
 
   const roleOptions =
     rolesData?.content.map((r) => ({
-      label: formatRoleName(r.name),
+      label: r.name,
       value: r.name,
     })) ?? []
 
@@ -127,8 +121,8 @@ const AddDirectTab = ({ tenantId }: AddDirectTabProps) => {
         },
       },
       {
-        onSuccess: () => {
-          toast.success('Member added successfully!')
+        onSuccess: (message) => {
+          toast.success(message)
           setAddDirectForm({
             username: '',
             email: '',

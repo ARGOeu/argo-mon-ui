@@ -35,7 +35,7 @@ export const useAssignRoleMutation = () => {
   const queryClient = useQueryClient()
   const { token } = useAuth()
 
-  return useMutation<void, Error, AssignRoleRequest>({
+  return useMutation<string, Error, AssignRoleRequest>({
     mutationFn: (data: AssignRoleRequest) => {
       if (!token) {
         throw new Error('No authentication token available')
@@ -43,7 +43,7 @@ export const useAssignRoleMutation = () => {
       return fetchAssignRole(data, token)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['api-resources'] })
+      queryClient.invalidateQueries({ queryKey: ['user-profile'] })
     },
     onError: (error) => {
       console.error('Assign role error:', error)
