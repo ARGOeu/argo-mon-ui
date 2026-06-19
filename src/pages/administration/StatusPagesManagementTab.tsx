@@ -170,6 +170,7 @@ const StatusPagesManagementTab = () => {
           isLoading={isLoading}
           error={error}
           isAllSelected={isAllSelected}
+          canModifyPages
           embedded
           onView={handlePageView}
           onEdit={handlePageEdit}

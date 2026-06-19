@@ -26,7 +26,7 @@ interface TenantNavItem {
   label: string
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
   requiredRoles?: string[]
-  end?: boolean
+  exactPathMatch?: boolean
 }
 
 const tenantNavItems: TenantNavItem[] = [
@@ -35,7 +35,7 @@ const tenantNavItems: TenantNavItem[] = [
     label: 'Dashboard',
     icon: CircleStackIcon,
   },
-  { path: 'details', label: 'Overview', icon: HomeIcon, end: true },
+  { path: 'details', label: 'Overview', icon: HomeIcon },
   {
     path: 'topology',
     label: 'Topology',
@@ -44,7 +44,12 @@ const tenantNavItems: TenantNavItem[] = [
   },
   { path: 'status-pages', label: 'Status Pages', icon: RectangleStackIcon },
   { path: 'reports', label: 'Reports', icon: DocumentChartBarIcon },
-  { path: 'capabilities', label: 'Capabilities', icon: ShieldCheckIcon },
+  {
+    path: 'capabilities',
+    label: 'Capabilities',
+    icon: ShieldCheckIcon,
+    requiredRoles: ['tenant_admin'],
+  },
   {
     path: 'members',
     label: 'Members',
@@ -146,7 +151,7 @@ function Sidebar({
                   <SidebarNavItem
                     key={item.path}
                     to={`/tenants/${effectiveTenantId}/${item.path}`}
-                    end={item.end}
+                    exactPathMatch={item.exactPathMatch}
                     onClick={onCloseMobileMenu}
                   >
                     <item.icon className="size-4" aria-hidden />
