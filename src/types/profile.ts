@@ -1,6 +1,7 @@
 export interface UserGroup {
   name: string
   role: string
+  attributes?: Record<string, string[]>
 }
 
 export interface UserProfile {

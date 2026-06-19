@@ -41,6 +41,7 @@ export type RoleEndpointAssignmentResponse = {
 export type Role = {
   id: string
   name: string
+  attributes?: Record<string, string[]>
 }
 
 export type RolesPage = {
@@ -54,4 +55,15 @@ export type RolesPage = {
 
 export type CreateRoleRequest = {
   name: string
+  attributes?: Record<string, string[]>
+}
+
+export type RoleMetadataAttribute = {
+  key: string
+  label: string
+  required: boolean
+}
+
+export type RoleMetadata = {
+  attributes: RoleMetadataAttribute[]
 }

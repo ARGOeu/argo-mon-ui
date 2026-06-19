@@ -1,3 +1,5 @@
+import type { RoleMetadataAttribute } from '@/types/securedEndpoints'
+
 export type ApiResourceMetadata = {
   resourceName: string
   className: string
@@ -17,6 +19,7 @@ export type AssignRoleRequest = {
   role: string
   username: string
   extras?: Record<string, unknown>
+  attributes?: Record<string, string[]>
 }
 
 export type RevokeRoleRequest = {
@@ -24,4 +27,8 @@ export type RevokeRoleRequest = {
   resource_id?: unknown
   role: string
   member_id: string
+}
+
+export type AssignRoleMetadata = {
+  resources: Record<string, RoleMetadataAttribute[]>
 }

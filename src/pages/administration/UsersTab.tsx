@@ -10,6 +10,7 @@ import Pagination from '@/components/Pagination'
 import IconButton from '@/components/IconButton'
 import { squishEmail } from '@/utils/profile'
 import { TENANT_MEMBERSHIP_ENTITY } from '@/utils/memberships'
+import { tenantMapper } from '@/utils/roleAssignmentMapper'
 
 type SortColumn =
   | 'username'
@@ -27,10 +28,12 @@ const tenantBadgeBase =
 const TenantBadge = ({
   name,
   role,
+  preferredRoleName,
   colorClass,
 }: {
   name: string
   role: string
+  preferredRoleName?: string
   colorClass: string
 }) => {
   const textRef = useRef<HTMLSpanElement>(null)
@@ -43,10 +46,12 @@ const TenantBadge = ({
     }
   }, [name])
 
+  const displayRole = preferredRoleName ?? role
+
   return (
     <span
       className={`${tenantBadgeBase} ${colorClass}`}
-      data-tip={isTruncated ? `${name} (${role})` : role}
+      data-tip={isTruncated ? `${name} (${displayRole})` : displayRole}
     >
       <span ref={textRef} className="truncate min-w-0">
         {name}
@@ -230,6 +235,11 @@ const UsersTab = () => {
                                 key={index}
                                 name={tenant.name}
                                 role={tenant.role}
+                                preferredRoleName={
+                                  tenant.attributes?.[
+                                    tenantMapper.preferred_role_name
+                                  ]?.[0]
+                                }
                                 colorClass={
                                   tenant.role === 'tenant_admin'
                                     ? 'bg-amber-100 text-amber-700'

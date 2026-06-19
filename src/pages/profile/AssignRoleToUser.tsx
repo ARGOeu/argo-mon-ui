@@ -1,14 +1,19 @@
 import { useState } from 'react'
 import {
   useAssignRoleMutation,
-  useGetApiResourcesQuery,
+  useGetApiResources,
+  useGetAssignRoleMetadata,
 } from '@/hooks/useResources'
 import { useGetRoles } from '@/hooks/useSecuredEndpoints'
 import { useSelectedTenant } from '@/contexts/selected-tenant/useSelectedTenant'
+import { TENANT_MEMBERSHIP_ENTITY } from '@/utils/memberships'
+import {
+  tenantMapper,
+  mapAssignmentAttributes,
+} from '@/utils/roleAssignmentMapper'
 import { toast } from 'sonner'
 import SelectDropdown from '@/components/SelectDropdown'
 import Button from '@/components/Button'
-import { TENANT_MEMBERSHIP_ENTITY } from '@/utils/memberships'
 
 interface AssignRoleToUserProps {
   username: string
@@ -24,12 +29,13 @@ const AssignRoleToUser = ({ username, email }: AssignRoleToUserProps) => {
 
   const assignRoleMutation = useAssignRoleMutation()
   const { data: rolesData } = useGetRoles(1, 100)
-  const { data: apiResourcesData } = useGetApiResourcesQuery(1, 100)
+  const { data: apiResourcesData } = useGetApiResources(1, 100)
+  const { data: assignRoleMetadata } = useGetAssignRoleMetadata()
   const { tenants } = useSelectedTenant()
 
   const roleOptions =
     rolesData?.content.map((r) => ({
-      label: r.name,
+      label: r.attributes?.preferred_name?.[0] ?? r.name,
       value: r.name,
     })) ?? []
 
@@ -49,13 +55,38 @@ const AssignRoleToUser = ({ username, email }: AssignRoleToUserProps) => {
   const handleAssignSubmit = () => {
     if (!username) return
 
+    const selectedRole = rolesData?.content.find(
+      (r) => r.name === assignForm.role,
+    )
+    const selectedTenant = tenants.find((t) => t.id === assignForm.resourceId)
+    const metadataKeys =
+      assignRoleMetadata?.resources?.[assignForm.apiResource]?.map(
+        (a) => a.key,
+      ) ?? []
+
+    const attributes = mapAssignmentAttributes({
+      keys: metadataKeys,
+      values: {
+        [tenantMapper.preferred_role_name]:
+          selectedRole?.attributes?.preferred_name?.[0],
+        [tenantMapper.role_description]:
+          selectedRole?.attributes?.description?.[0],
+        [tenantMapper.tenant_name]: selectedTenant?.info.name,
+      },
+      resourceType: assignForm.apiResource || undefined,
+    })
+
     assignRoleMutation.mutate(
       {
         role: assignForm.role,
         username,
         api_resource: assignForm.apiResource || undefined,
         resource_id: assignForm.resourceId || undefined,
-        extras: { email, voperson_id: username },
+        extras: {
+          email,
+          voperson_id: username,
+        },
+        attributes,
       },
       {
         onSuccess: (message) => {

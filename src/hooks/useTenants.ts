@@ -368,6 +368,7 @@ export const useAddMemberDirectly = () => {
         username: string
         email: string
         role: string
+        attributes?: Record<string, string[]>
       }
     }
   >({
@@ -385,6 +386,7 @@ export const useAddMemberDirectly = () => {
             email: data.email,
             voperson_id: data.username,
           },
+          attributes: data.attributes,
         },
         token,
       )
