@@ -1,69 +1,70 @@
-# React + TypeScript + Vite
+# Status Pages UI
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is a React and TypeScript application built with Vite. It relies on two backend services:
 
-Currently, two official plugins are available:
+- argo-web-api
+- api-status-mon-api
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Local Environment Setup
 
-## Expanding the ESLint configuration
+Before running the project locally, ensure you have a working Docker environment set up.
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+### Step 1: Run argo-web-api locally
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+To begin issue:
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
-
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+```
+git clone https://github.com/argoeu/argo-web-api -b devel
+cd argo-web-api/docker
+docker-compose up --build
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+### Step 2: Run argo-status-mon-api locally
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+Dependencies:
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+- Java 17
+- Apache Maven 3.9.15
+
+To begin issue:
+
+```
+git clone https://github.com/argoeu/argo-mon-status-api
+cd argo-mon-status-api
+```
+
+Add your GitHub credentials to your Maven settings.xml so that Maven can pull the quarkus-auth dependency from the GitHub Packages repository:
+
+```xml
+<settings xmlns="http://maven.apache.org/SETTINGS/1.0.0">
+  <servers>
+    <server>
+      <id>github</id>
+      <username>your-github-username-here</username>
+      <password>your-github-access-key-here</password>
+    </server>
+  </servers>
+</settings>
+```
+
+Then issue:
+
+```
+mvn clean && mvn quarkus:dev
+```
+
+### Step 3: Run the status-ui React app
+
+Depedencies:
+
+- Node 20.x
+
+To begin issue:
+
+```
+git clone https://github.com/argoeu/status-ui -b devel
+cd status-ui
+Copy .env.example to .env and use it as is, or modify it to suit your needs.
+npm install
+npm run dev
 ```
