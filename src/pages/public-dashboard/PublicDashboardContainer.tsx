@@ -4,16 +4,19 @@ import {
   useGetPublicResultsGroups,
   useGetPublicStatusGroups,
 } from '@/hooks/useData'
-import { useParams, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { BuildingOffice2Icon, CircleStackIcon } from '@heroicons/react/16/solid'
 import Dashboard from '@/pages/dashboard/Dashboard'
 import MobileMenuToggle from '@/components/sidebar/MobileMenuToggle'
 import SidebarHeader from '@/components/sidebar/SidebarHeader'
 import SidebarNavItem from '@/components/sidebar/SidebarNavItem'
 import TenantAvatar from '@/components/sidebar/TenantAvatar'
+import NotFound from '../NotFound'
+import { isPlatformDomain } from '@/utils/domains'
+import { useTenantName } from '@/hooks/useTenantName'
 
 const PublicDashboardContainer = () => {
-  const { tenantName = '' } = useParams<{ tenantName: string }>()
+  const { tenantName, loading: tenantLoading } = useTenantName()
   const { hash } = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const [selectedReport, setSelectedReport] = useState('')
@@ -22,7 +25,7 @@ const PublicDashboardContainer = () => {
     data: reports,
     isLoading: reportsLoading,
     error: reportsError,
-  } = useGetPublicTenantReports(tenantName)
+  } = useGetPublicTenantReports(tenantName ?? '')
 
   useEffect(() => {
     if (!reports || reports.length === 0) return
@@ -39,7 +42,7 @@ const PublicDashboardContainer = () => {
     isLoading: resultsLoading,
     error: resultsError,
   } = useGetPublicResultsGroups(
-    tenantName,
+    tenantName ?? '',
     selectedReport,
     undefined,
     '1w',
@@ -51,11 +54,27 @@ const PublicDashboardContainer = () => {
     isLoading: statusLoading,
     error: statusError,
   } = useGetPublicStatusGroups(
-    tenantName,
+    tenantName ?? '',
     selectedReport,
     undefined,
     !!selectedReport,
   )
+
+  if (tenantLoading) {
+    return (
+      <div className="h-screen flex items-center justify-center text-subtle">
+        Loading…
+      </div>
+    )
+  }
+
+  if (!tenantName) {
+    return <NotFound />
+  }
+
+  const dashboardPath = isPlatformDomain()
+    ? `/public/tenants/${tenantName}/dashboard`
+    : '/dashboard'
 
   return (
     <div className="h-screen flex overflow-hidden">
@@ -91,7 +110,7 @@ const PublicDashboardContainer = () => {
           </div>
 
           <SidebarNavItem
-            to={`/public/tenants/${tenantName}/dashboard`}
+            to={dashboardPath}
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <CircleStackIcon className="size-4" aria-hidden />

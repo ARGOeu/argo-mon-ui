@@ -29,6 +29,7 @@ import PublicDashboard from './pages/public-dashboard'
 import { AuthProvider } from './auth/AuthProvider'
 import NotFound from './pages/NotFound'
 import { Toaster } from 'sonner'
+import { isPlatformDomain } from './utils/domains'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,202 +60,218 @@ export function AuthLayout() {
   )
 }
 
+function PlatformRoutes() {
+  return (
+    <Routes>
+      <Route path="status/:slug" element={<PublicStatusPage />} />
+      <Route
+        path="public/tenants/:tenantName/dashboard"
+        element={<PublicDashboard />}
+      />
+      <Route element={<AuthLayout />}>
+        <Route path="invitation/:id" element={<InvitationReview />} />
+        <Route element={<Layout />}>
+          <Route index element={<Home />} />
+          <Route
+            path="tenants/:id/details"
+            element={
+              <AuthProtected>
+                <TenantDetails />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/create"
+            element={
+              <ProtectedRoute requiredRoles={['super_admin']}>
+                <CreateTenant />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="tenants/:id/edit"
+            element={
+              <AuthProtected>
+                <CreateTenant />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/projects/assign"
+            element={
+              <AuthProtected>
+                <AssignProjects />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/members"
+            element={
+              <AuthProtected>
+                <ManageTenantMembers />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/dashboard"
+            element={
+              <AuthProtected>
+                <PrivateDashboardContainer />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/reports"
+            element={
+              <AuthProtected>
+                <TenantReports />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/capabilities"
+            element={
+              <AuthProtected>
+                <TenantCapabilities />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="projects/create"
+            element={
+              <ProtectedRoute requiredRoles={['super_admin']}>
+                <CreateProject />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="projects/edit/:id"
+            element={
+              <ProtectedRoute requiredRoles={['super_admin']}>
+                <CreateProject />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="administration"
+            element={
+              <ProtectedRoute requiredRoles={['super_admin']}>
+                <Administration />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="administration/users/:username"
+            element={
+              <ProtectedRoute requiredRoles={['super_admin']}>
+                <Profile />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="endpoints-access"
+            element={
+              <ProtectedRoute requiredRoles={['super_admin']}>
+                <EndpointsAccess />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="my-invitations"
+            element={
+              <AuthProtected>
+                <MyInvitations />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="profile"
+            element={
+              <AuthProtected>
+                <Profile />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="status-pages/tenants/:tenantId/pages/:pageId"
+            element={
+              <AuthProtected>
+                <BuildStatusPage />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="status-pages/tenants/:tenantId/build"
+            element={
+              <AuthProtected>
+                <BuildStatusPage />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="status-pages/build"
+            element={
+              <AuthProtected>
+                <BuildStatusPage />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/status-pages"
+            element={
+              <AuthProtected>
+                <TenantStatusPages />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/topology"
+            element={
+              <AuthProtected>
+                <TenantTopology />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/topology/groups/create"
+            element={
+              <AuthProtected>
+                <CreateTopologyGroup />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/topology/create"
+            element={
+              <AuthProtected>
+                <CreateTopologyEndpoint />
+              </AuthProtected>
+            }
+          />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Route>
+    </Routes>
+  )
+}
+
+function CustomDomainRoutes() {
+  return (
+    <Routes>
+      <Route path="/" element={<PublicDashboard />} />
+      <Route path="/dashboard" element={<PublicDashboard />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  )
+}
+
 function App() {
   return (
     <>
       <Toaster richColors position="top-center" duration={2000} />
       <QueryClientProvider client={queryClient}>
         <BrowserRouter>
-          <Routes>
-            <Route path="status/:slug" element={<PublicStatusPage />} />
-            <Route
-              path="public/tenants/:tenantName/dashboard"
-              element={<PublicDashboard />}
-            />
-            <Route element={<AuthLayout />}>
-              <Route path="invitation/:id" element={<InvitationReview />} />
-              <Route element={<Layout />}>
-                <Route index element={<Home />} />
-                <Route
-                  path="tenants/:id/details"
-                  element={
-                    <AuthProtected>
-                      <TenantDetails />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="tenants/create"
-                  element={
-                    <ProtectedRoute requiredRoles={['super_admin']}>
-                      <CreateTenant />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="tenants/:id/edit"
-                  element={
-                    <AuthProtected>
-                      <CreateTenant />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="tenants/:id/projects/assign"
-                  element={
-                    <AuthProtected>
-                      <AssignProjects />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="tenants/:id/members"
-                  element={
-                    <AuthProtected>
-                      <ManageTenantMembers />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="tenants/:id/dashboard"
-                  element={
-                    <AuthProtected>
-                      <PrivateDashboardContainer />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="tenants/:id/reports"
-                  element={
-                    <AuthProtected>
-                      <TenantReports />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="tenants/:id/capabilities"
-                  element={
-                    <AuthProtected>
-                      <TenantCapabilities />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="projects/create"
-                  element={
-                    <ProtectedRoute requiredRoles={['super_admin']}>
-                      <CreateProject />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="projects/edit/:id"
-                  element={
-                    <ProtectedRoute requiredRoles={['super_admin']}>
-                      <CreateProject />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="administration"
-                  element={
-                    <ProtectedRoute requiredRoles={['super_admin']}>
-                      <Administration />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="administration/users/:username"
-                  element={
-                    <ProtectedRoute requiredRoles={['super_admin']}>
-                      <Profile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="endpoints-access"
-                  element={
-                    <ProtectedRoute requiredRoles={['super_admin']}>
-                      <EndpointsAccess />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="my-invitations"
-                  element={
-                    <AuthProtected>
-                      <MyInvitations />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="profile"
-                  element={
-                    <AuthProtected>
-                      <Profile />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="status-pages/tenants/:tenantId/pages/:pageId"
-                  element={
-                    <AuthProtected>
-                      <BuildStatusPage />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="status-pages/tenants/:tenantId/build"
-                  element={
-                    <AuthProtected>
-                      <BuildStatusPage />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="status-pages/build"
-                  element={
-                    <AuthProtected>
-                      <BuildStatusPage />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="tenants/:id/status-pages"
-                  element={
-                    <AuthProtected>
-                      <TenantStatusPages />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="tenants/:id/topology"
-                  element={
-                    <AuthProtected>
-                      <TenantTopology />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="tenants/:id/topology/groups/create"
-                  element={
-                    <AuthProtected>
-                      <CreateTopologyGroup />
-                    </AuthProtected>
-                  }
-                />
-                <Route
-                  path="tenants/:id/topology/create"
-                  element={
-                    <AuthProtected>
-                      <CreateTopologyEndpoint />
-                    </AuthProtected>
-                  }
-                />
-                <Route path="*" element={<NotFound />} />
-              </Route>
-            </Route>
-          </Routes>
+          {isPlatformDomain() ? <PlatformRoutes /> : <CustomDomainRoutes />}
         </BrowserRouter>
       </QueryClientProvider>
     </>
