@@ -14,10 +14,11 @@ interface StatusPagesTableProps {
   isLoading: boolean
   error: Error | null
   isAllSelected: boolean
+  canModifyPages?: boolean
   embedded?: boolean
   onView: (slug: string) => void
-  onEdit: (id: string | undefined, tenantId: string | undefined) => void
-  onDeleteClick: (
+  onEdit?: (id: string | undefined, tenantId: string | undefined) => void
+  onDeleteClick?: (
     id: string | undefined,
     name: string,
     tenantId: string | undefined,
@@ -29,6 +30,7 @@ const StatusPagesTable = ({
   isLoading,
   error,
   isAllSelected,
+  canModifyPages = false,
   embedded,
   onView,
   onEdit,
@@ -150,20 +152,24 @@ const StatusPagesTable = ({
                   onClick={() => onView(item.slug)}
                   className="text-blue-600 hover:bg-brand-subtle"
                 />
-                <IconButton
-                  icon={<PencilSquareIcon className="size-4 md:size-5" />}
-                  label="Edit Page"
-                  onClick={() => onEdit(item.id, item.tenant_id)}
-                  className="text-muted hover:bg-surface-strong"
-                />
-                <IconButton
-                  icon={<TrashIcon className="size-4 md:size-5" />}
-                  label="Delete Page"
-                  onClick={() =>
-                    onDeleteClick(item.id, item.name, item.tenant_id)
-                  }
-                  className="text-red-600 hover:bg-red-50"
-                />
+                {canModifyPages && (
+                  <IconButton
+                    icon={<PencilSquareIcon className="size-4 md:size-5" />}
+                    label="Edit Page"
+                    onClick={() => onEdit?.(item.id, item.tenant_id)}
+                    className="text-muted hover:bg-surface-strong"
+                  />
+                )}
+                {canModifyPages && (
+                  <IconButton
+                    icon={<TrashIcon className="size-4 md:size-5" />}
+                    label="Delete Page"
+                    onClick={() =>
+                      onDeleteClick?.(item.id, item.name, item.tenant_id)
+                    }
+                    className="text-red-600 hover:bg-red-50"
+                  />
+                )}
               </div>
             </td>
           </tr>

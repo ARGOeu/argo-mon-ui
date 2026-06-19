@@ -2,7 +2,7 @@ import { NavLink } from 'react-router'
 
 interface SidebarNavItemProps {
   to: string
-  end?: boolean
+  exactPathMatch?: boolean
   children: React.ReactNode
   onClick?: () => void
 }
@@ -10,13 +10,13 @@ interface SidebarNavItemProps {
 export default function SidebarNavItem({
   to,
   children,
-  end,
+  exactPathMatch,
   onClick,
 }: SidebarNavItemProps) {
   return (
     <NavLink
       to={to}
-      end={end}
+      end={exactPathMatch}
       onClick={onClick}
       className={({ isActive }) =>
         [

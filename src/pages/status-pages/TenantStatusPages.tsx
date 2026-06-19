@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
 import { useGetTenantPages, useDeletePageMutation } from '@/hooks/usePages'
+import { useAuth } from '@/auth/useAuth'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -15,7 +16,16 @@ const TenantStatusPages = () => {
   const { id: tenantId } = useParams<{ id: string }>()
   const [currentPage, setCurrentPage] = useState(1)
 
-  const { tenant: tenantData } = useSelectedTenant()
+  const { isSuperAdmin } = useAuth()
+  const {
+    tenant: tenantData,
+    roleInSelectedTenant,
+    isTenantLoading,
+  } = useSelectedTenant()
+
+  const canModifyPages =
+    !isTenantLoading &&
+    (isSuperAdmin || roleInSelectedTenant === 'tenant_admin')
 
   const { data, isLoading, error } = useGetTenantPages(
     tenantId ?? '',
@@ -120,19 +130,22 @@ const TenantStatusPages = () => {
           }
           className="pb-1 mb-2 md:mb-4 px-2 md:px-0"
         >
-          <Button
-            variant="primary"
-            size="md"
-            href={`/status-pages/tenants/${tenantId}/build`}
-          >
-            Create Status Page
-          </Button>
+          {canModifyPages && (
+            <Button
+              variant="primary"
+              size="md"
+              href={`/status-pages/tenants/${tenantId}/build`}
+            >
+              Create Status Page
+            </Button>
+          )}
         </PageHeader>
         <StatusPagesTable
           data={data}
           isLoading={isLoading}
           error={error}
           isAllSelected={false}
+          canModifyPages={canModifyPages}
           onView={handlePageView}
           onEdit={handlePageEdit}
           onDeleteClick={handlePageDeleteClick}
