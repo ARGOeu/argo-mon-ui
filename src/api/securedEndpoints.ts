@@ -42,7 +42,7 @@ export const assignEndpointsToRole = async (
   token: string,
 ): Promise<RoleEndpointAssignmentResponse> => {
   const response = await fetch(
-    `${BACKEND_API}/v1/admin/roles/${roleId}/assign-endpoints`,
+    `${BACKEND_API}/roles/${roleId}/assign-endpoints`,
     {
       method: 'POST',
       headers: {
@@ -68,16 +68,13 @@ export const assignEndpointsToRole = async (
 export const fetchAssignedEndpoints = async (
   token: string,
 ): Promise<RoleAssignmentsResponse> => {
-  const response = await fetch(
-    `${BACKEND_API}/v1/admin/roles/assigned-endpoints`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+  const response = await fetch(`${BACKEND_API}/roles/assigned-endpoints`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
     },
-  )
+  })
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
@@ -94,7 +91,7 @@ export const fetchRoleAssignedEndpoints = async (
   token: string,
 ): Promise<RoleAssignmentsResponse> => {
   const response = await fetch(
-    `${BACKEND_API}/v1/admin/roles/${roleId}/assigned-endpoints`,
+    `${BACKEND_API}/roles/${roleId}/assigned-endpoints`,
     {
       method: 'GET',
       headers: {
