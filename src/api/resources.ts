@@ -1,6 +1,7 @@
 import type {
   ApiResourcesPage,
   AssignRoleRequest,
+  AssignRoleMetadata,
   RevokeRoleRequest,
 } from '@/types/resources'
 
@@ -54,6 +55,30 @@ export const fetchAssignRole = async (
     throw error
   }
   return responseData.status?.message ?? responseData.message
+}
+
+export const fetchAssignRoleMetadata = async (
+  token: string,
+): Promise<AssignRoleMetadata> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/admin/roles/assign/metadata`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
 }
 
 export const fetchRevokeRole = async (

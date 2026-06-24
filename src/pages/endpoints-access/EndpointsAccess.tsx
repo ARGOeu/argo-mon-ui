@@ -172,7 +172,7 @@ const EndpointsAccess = () => {
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-x-8 items-start pb-10">
-          <div className="lg:sticky lg:top-4 bg-surface-muted rounded-lg p-4 mb-6 lg:mb-0">
+          <div className="lg:sticky lg:top-4 bg-surface-muted rounded-lg px-4 pt-2 pb-4 mb-6 lg:mb-0">
             <RoleListPanel
               roles={roles}
               selectedRoleId={selectedRoleId}
@@ -186,7 +186,10 @@ const EndpointsAccess = () => {
             {selectedRole ? (
               <RoleDetailsPanel
                 key={selectedRoleId}
-                roleName={selectedRole.name}
+                roleName={
+                  selectedRole.attributes?.preferred_name?.[0] ??
+                  selectedRole.name
+                }
                 endpointsList={endpointsList}
                 selectedAssignments={selectedAssignments}
                 onToggleAction={toggleAction}

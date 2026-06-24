@@ -12,6 +12,7 @@ import Card from '@/components/Card'
 import TenantCardFooter from '@/pages/administration/TenantCardFooter'
 import Badge from '@/components/Badge'
 import { roleBadgeClass } from '@/utils/badges'
+import { tenantMapper } from '@/utils/roleAssignmentMapper'
 import { toast } from 'sonner'
 import type { UserGroup } from '@/types/profile'
 import type { Job, JobStatus } from '@/types/tenants'
@@ -50,13 +51,20 @@ const TenantManagementTab = () => {
 
   const deleteMutation = useDeleteTenantMutation()
 
-  const getRoleForTenant = (tenantName: string): string | null => {
+  const getRoleForTenant = (
+    tenantName: string,
+  ): { role: string; displayName: string } | null => {
     if (isSuperAdmin || !userProfileData?.groups) return null
 
     const group = userProfileData?.groups?.find(
       (g: UserGroup) => g?.name === tenantName,
     )
-    return group?.role || null
+    if (!group?.role) return null
+    return {
+      role: group.role,
+      displayName:
+        group.attributes?.[tenantMapper.preferred_role_name]?.[0] ?? group.role,
+    }
   }
 
   const isTenantAdmin = (tenantName: string) => {
@@ -227,12 +235,12 @@ const TenantManagementTab = () => {
                             </span>
                           )}
                           {(() => {
-                            const role = getRoleForTenant(tenant.name)
-                            return role ? (
+                            const tenantRole = getRoleForTenant(tenant.name)
+                            return tenantRole ? (
                               <Badge
-                                className={`shrink-0 mt-0.5 ${roleBadgeClass[role.toLowerCase()] ?? 'bg-surface-strong text-muted'}`}
+                                className={`shrink-0 mt-0.5 ${roleBadgeClass[tenantRole.role.toLowerCase()] ?? 'bg-surface-strong text-muted'}`}
                               >
-                                {role}
+                                {tenantRole.displayName}
                               </Badge>
                             ) : null
                           })()}

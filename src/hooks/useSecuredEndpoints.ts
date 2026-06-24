@@ -12,6 +12,7 @@ import {
   fetchRoleAssignedEndpoints,
   fetchRoles,
   createRole,
+  fetchRoleMetadata,
 } from '@/api/securedEndpoints'
 import type {
   SecuredEndpointsPage,
@@ -21,6 +22,7 @@ import type {
   Role,
   RolesPage,
   CreateRoleRequest,
+  RoleMetadata,
 } from '@/types/securedEndpoints'
 
 export const useGetSecuredEndpoints = (
@@ -113,6 +115,20 @@ export const useGetRoles = (
     queryFn: () => {
       if (!token) throw new Error('No authentication token available')
       return fetchRoles(page, size, token)
+    },
+    retry: false,
+    enabled: enabled && !!token,
+  })
+}
+
+export const useGetRoleMetadata = (enabled: boolean = true) => {
+  const { token } = useAuth()
+
+  return useQuery<RoleMetadata, Error>({
+    queryKey: ['role-metadata'],
+    queryFn: () => {
+      if (!token) throw new Error('No authentication token available')
+      return fetchRoleMetadata(token)
     },
     retry: false,
     enabled: enabled && !!token,

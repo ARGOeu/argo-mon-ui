@@ -15,6 +15,7 @@ export type AuthContextType = {
     groups: Array<{
       name: string
       role: string
+      attributes?: Record<string, string[]>
     }>
   }
   isSuperAdmin: boolean

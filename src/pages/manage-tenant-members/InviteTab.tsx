@@ -23,7 +23,7 @@ const InviteTab = ({ tenantId }: InviteTabProps) => {
 
   const roleOptions =
     rolesData?.content.map((r) => ({
-      label: r.name,
+      label: r.attributes?.preferred_name?.[0] ?? r.name,
       value: r.name,
     })) ?? []
 
@@ -91,17 +91,17 @@ const InviteTab = ({ tenantId }: InviteTabProps) => {
     <div className="animate-fade-in">
       <form onSubmit={handleSubmit} className="max-w-xl">
         <div className="bg-surface-muted border border-line rounded-lg px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-800 mb-2.5">
+          <h2 className="text-lg font-semibold text-gray-800">
             Invite New Member
           </h2>
-          <p className="text-sm text-muted mb-6 leading-relaxed">
+          <p className="text-sm text-muted mb-4 leading-relaxed">
             Send an invitation to a new member to join this tenant. They will
             receive an email with instructions to accept the invitation.
           </p>
 
-          <div className="max-w-[400px] flex flex-col gap-5 mb-6">
+          <div className="max-w-[400px] flex flex-col gap-3 mb-5">
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-body mb-1.5">
+              <label className="text-sm font-medium text-body mb-0.5">
                 Email Address <span className="required">*</span>
               </label>
               <input
@@ -124,7 +124,7 @@ const InviteTab = ({ tenantId }: InviteTabProps) => {
             </div>
 
             <div className="flex flex-col">
-              <label className="text-sm font-medium text-body mb-1.5">
+              <label className="text-sm font-medium text-body mb-0.5">
                 Role <span className="required">*</span>
               </label>
               <SelectDropdown

@@ -6,6 +6,7 @@ import type {
   Role,
   RolesPage,
   CreateRoleRequest,
+  RoleMetadata,
 } from '@/types/securedEndpoints'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
@@ -129,6 +130,27 @@ export const fetchRoles = async (
       },
     },
   )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchRoleMetadata = async (
+  token: string,
+): Promise<RoleMetadata> => {
+  const response = await fetch(`${BACKEND_API}/v1/admin/roles/metadata`, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+  })
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))

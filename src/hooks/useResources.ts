@@ -3,15 +3,17 @@ import { useAuth } from '@/auth/useAuth'
 import {
   fetchApiResources,
   fetchAssignRole,
+  fetchAssignRoleMetadata,
   fetchRevokeRole,
 } from '@/api/resources'
 import type {
   ApiResourcesPage,
   AssignRoleRequest,
+  AssignRoleMetadata,
   RevokeRoleRequest,
 } from '@/types/resources'
 
-export const useGetApiResourcesQuery = (
+export const useGetApiResources = (
   page: number = 1,
   size: number = 10,
   enabled: boolean = true,
@@ -31,6 +33,20 @@ export const useGetApiResourcesQuery = (
   })
 }
 
+export const useGetAssignRoleMetadata = (enabled: boolean = true) => {
+  const { token } = useAuth()
+
+  return useQuery<AssignRoleMetadata, Error>({
+    queryKey: ['assign-role-metadata'],
+    queryFn: () => {
+      if (!token) throw new Error('No authentication token available')
+      return fetchAssignRoleMetadata(token)
+    },
+    retry: false,
+    enabled: enabled && !!token,
+  })
+}
+
 export const useAssignRoleMutation = () => {
   const queryClient = useQueryClient()
   const { token } = useAuth()
@@ -42,8 +58,13 @@ export const useAssignRoleMutation = () => {
       }
       return fetchAssignRole(data, token)
     },
-    onSuccess: () => {
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['user-profile'] })
+      if (variables.resource_id) {
+        queryClient.invalidateQueries({
+          queryKey: ['tenant-members', variables.resource_id],
+        })
+      }
     },
     onError: (error) => {
       console.error('Assign role error:', error)

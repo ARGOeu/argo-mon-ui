@@ -4,7 +4,7 @@ import {
   useGetTenantByName,
 } from '@/hooks/useTenants'
 import { useRevokeRoleMutation } from '@/hooks/useResources'
-import { useAuth } from '../../auth/useAuth'
+import { useAuth } from '@/auth/useAuth'
 import { Navigate, useParams } from 'react-router-dom'
 import { UserCircleIcon } from '@heroicons/react/16/solid'
 import { UserMinusIcon } from '@heroicons/react/24/solid'
@@ -18,6 +18,7 @@ import AssignRoleToUser from './AssignRoleToUser'
 import { squishEmail } from '@/utils/profile'
 import { roleBadgeClass } from '@/utils/badges'
 import { TENANT_MEMBERSHIP_ENTITY } from '@/utils/memberships'
+import { tenantMapper } from '@/utils/roleAssignmentMapper'
 
 const fieldValueClass = 'text-sm text-gray-800 font-medium'
 const fieldValueUnavailableClass = 'text-sm text-subtle italic'
@@ -34,6 +35,7 @@ const Profile = () => {
     entityType: string
     name: string
     role: string
+    displayName: string
   } | null>(null)
 
   const {
@@ -57,8 +59,9 @@ const Profile = () => {
     entityType: string,
     name: string,
     role: string,
+    displayName: string,
   ) => {
-    setMembershipToRemove({ entityType, name, role })
+    setMembershipToRemove({ entityType, name, role, displayName })
     setRemoveDialogOpen(true)
   }
 
@@ -178,7 +181,7 @@ const Profile = () => {
           membershipToRemove ? (
             <>
               Are you sure you want to revoke the{' '}
-              <strong>{membershipToRemove.role}</strong> role from{' '}
+              <strong>{membershipToRemove.displayName}</strong> role from{' '}
               <strong>{membershipToRemove.name}</strong>?
               <br />
               <span className="text-amber-600 font-medium">
@@ -214,7 +217,7 @@ const Profile = () => {
         />
 
         {(profile || displayProfile) && (
-          <div className="bg-white border border-line rounded-lg shadow-sm overflow-hidden">
+          <div className="bg-white border border-line rounded-lg shadow-sm overflow-hidden mb-8">
             <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-4 border-b border-line">
               <div className="flex items-center gap-4">
                 <div className="bg-white rounded-full p-3 shadow-sm">
@@ -330,9 +333,12 @@ const Profile = () => {
                                             roleBadgeClass['tenant_viewer']
                                           }
                                         >
-                                          {role.role === 'super_admin'
-                                            ? 'Super Admin'
-                                            : role.role}
+                                          {role.attributes?.[
+                                            tenantMapper.preferred_role_name
+                                          ]?.[0] ??
+                                            (role.role === 'super_admin'
+                                              ? 'Super Admin'
+                                              : role.role)}
                                         </Badge>
                                       </div>
 
@@ -345,6 +351,9 @@ const Profile = () => {
                                             entityType,
                                             role.name,
                                             role.role,
+                                            role.attributes?.[
+                                              tenantMapper.preferred_role_name
+                                            ]?.[0] ?? role.role,
                                           )
                                         }
                                         title="Revoke this role"
@@ -391,9 +400,12 @@ const Profile = () => {
                                     roleBadgeClass['tenant_viewer']
                                   }
                                 >
-                                  {tenant.role === 'super_admin'
-                                    ? 'Super Admin'
-                                    : tenant.role}
+                                  {tenant.attributes?.[
+                                    tenantMapper.preferred_role_name
+                                  ]?.[0] ??
+                                    (tenant.role === 'super_admin'
+                                      ? 'Super Admin'
+                                      : tenant.role)}
                                 </Badge>
                               </div>
                             </div>

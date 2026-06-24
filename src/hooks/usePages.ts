@@ -43,6 +43,7 @@ export const useSavePageMutation = () => {
 }
 
 export const useUpdatePageMutation = () => {
+  const queryClient = useQueryClient()
   const { token } = useAuth()
   return useMutation<
     PageContent,
@@ -65,6 +66,10 @@ export const useUpdatePageMutation = () => {
         throw new Error('Tenant ID is required')
       }
       return fetchUpdatePage(tenantId, pageId, data, token)
+    },
+    onSuccess: (_, { tenantId, pageId }) => {
+      queryClient.invalidateQueries({ queryKey: ['all-pages'] })
+      queryClient.invalidateQueries({ queryKey: ['page', tenantId, pageId] })
     },
     onError: (error) => {
       console.error('Page update error:', error)

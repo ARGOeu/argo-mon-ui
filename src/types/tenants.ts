@@ -100,7 +100,11 @@ export type TenantProjectAssignment = {
   project_ids: string[]
 }
 
-export type TenantRole = { name: string; role: string }
+export type TenantRole = {
+  name: string
+  role: string
+  attributes?: Record<string, string[]>
+}
 
 export type TenantMembership = Record<string, TenantRole[]>
 
