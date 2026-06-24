@@ -18,7 +18,6 @@ interface CapabilityCardProps {
   title: string
   description: string
   icon: ReactElement
-  uiUrl: string
   apiUrl: string
   apiDoc?: string
   apiAccess?: string
@@ -34,7 +33,6 @@ const CapabilityCard = ({
   title,
   description,
   icon,
-  uiUrl,
   apiUrl,
   apiDoc,
   apiAccess,
@@ -129,7 +127,6 @@ const CapabilityCard = ({
         )}
 
         <div className="space-y-3">
-          <CapabilityEndpoint label="User Interface" url={uiUrl} />
           <CapabilityEndpoint
             label="API Access"
             url={apiUrl}
