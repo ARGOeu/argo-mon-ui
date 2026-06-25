@@ -1,12 +1,12 @@
-import { useParams } from 'react-router-dom'
-import { useAuth } from '@/auth/useAuth'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
 import { useGetTenantReports } from '@/hooks/useTenants'
-import { Info } from 'lucide-react'
+import { useAuth } from '@/auth/useAuth'
+import { useParams } from 'react-router-dom'
+import { ArrowUpRightFromSquare, Info } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
-import TenantCapabilitiesTab from './TenantCapabilitiesTab'
+import PrivateCapabilitiesContainer from './PrivateCapabilitiesContainer'
 import NodeConfigPanel from './NodeConfigPanel'
 
 const TenantCapabilities = () => {
@@ -23,9 +23,18 @@ const TenantCapabilities = () => {
     error: reportsError,
   } = useGetTenantReports(tenant?.id || '', undefined, undefined, !!tenant?.id)
 
+  const { data: publicReports } = useGetTenantReports(
+    tenant?.id || '',
+    undefined,
+    true,
+    !!tenant?.id,
+  )
+
   const isNodeEnabled = !!tenant?.node
   const hasNodeReport = reports?.some((report) => !!report.node_report)
   const capabilitiesEnabled = isNodeEnabled && hasNodeReport
+  const hasPublicNodeReport =
+    publicReports?.some((r) => !!r.node_report) ?? false
 
   return (
     <div className="page-container">
@@ -72,7 +81,22 @@ const TenantCapabilities = () => {
               </p>
             </div>
           ) : (
-            <TenantCapabilitiesTab />
+            <>
+              {hasPublicNodeReport && tenant?.info.name && (
+                <div className="flex justify-end mb-3">
+                  <a
+                    href={`/public/tenants/${encodeURIComponent(tenant.info.name)}/capabilities`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-0.5 text-sm text-brand no-underline transition-colors hover:text-brand-strong hover:underline"
+                  >
+                    View public capabilities
+                    <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
+                  </a>
+                </div>
+              )}
+              <PrivateCapabilitiesContainer />
+            </>
           )}
         </>
       )}

@@ -404,9 +404,12 @@ export const fetchTenantReports = async (
 
 export const fetchPublicTenantReports = async (
   tenantName: string,
+  node?: boolean,
 ): Promise<PublicReportItem[]> => {
+  const params = node !== undefined ? `?node=${node}` : ''
+
   const response = await fetch(
-    `${BACKEND_API}/v1/public/tenants/${tenantName}/reports/public`,
+    `${BACKEND_API}/v1/public/tenants/${tenantName}/reports/public${params}`,
     {
       headers: { 'Content-Type': 'application/json' },
     },
