@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   useCreateTenantMutation,
   useGetUserTenantById,
@@ -22,6 +22,8 @@ const CreateTenant = () => {
   const { id: tenantId } = useParams<{ id?: string }>()
   const isEditMode = Boolean(tenantId)
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const returnToPanel = searchParams.get('returnTo') === 'panel'
 
   const [formData, setFormData] = useState({
     name: '',
@@ -199,7 +201,12 @@ const CreateTenant = () => {
           onSuccess: () => {
             toast.success('Tenant updated successfully!')
             navigateTimerRef.current = setTimeout(
-              () => navigate(`/tenants/${tenantId}/details`),
+              () =>
+                navigate(
+                  returnToPanel
+                    ? '/administration#tenants'
+                    : `/tenants/${tenantId}/details`,
+                ),
               2000,
             )
           },
@@ -254,10 +261,14 @@ const CreateTenant = () => {
             }
             className="mb-1 pb-1"
             navigateTo={{
-              label: isEditMode ? 'Back to Overview' : 'Back to Tenants',
-              to: isEditMode
-                ? `/tenants/${tenantId}/details`
-                : '/administration#tenants',
+              label:
+                isEditMode && !returnToPanel
+                  ? 'Back to Overview'
+                  : 'Back to Tenants',
+              to:
+                isEditMode && !returnToPanel
+                  ? `/tenants/${tenantId}/details`
+                  : '/administration#tenants',
             }}
           />
 

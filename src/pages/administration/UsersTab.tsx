@@ -233,7 +233,11 @@ const UsersTab = () => {
                             (tenant, index) => (
                               <TenantBadge
                                 key={index}
-                                name={tenant.name}
+                                name={
+                                  tenant.attributes?.[
+                                    tenantMapper.tenant_name
+                                  ]?.[0] ?? tenant.name
+                                }
                                 role={tenant.role}
                                 preferredRoleName={
                                   tenant.attributes?.[

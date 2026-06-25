@@ -134,6 +134,7 @@ export type ReportListItem = {
   created_at: string
   updated_at: string
   node_report?: boolean
+  public?: boolean
 }
 
 export type PublicReportItem = { id: string; name: string; node?: boolean }

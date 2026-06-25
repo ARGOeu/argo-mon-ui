@@ -1,10 +1,11 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect } from 'react'
 import {
   useGetTenantReports,
   useGetTenantReportById,
   useSetReportPublicMutation,
   useSetReportPrivateMutation,
 } from '@/hooks/useTenants'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import { useAuth } from '@/auth/useAuth'
 import {
   CheckCircleIcon,
@@ -20,8 +21,6 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import MetricProfileItem from '@/pages/tenant-reports/MetricProfileItem'
 import type { ReportListItem } from '@/types/tenants'
 
-type ReportWithVisibility = ReportListItem & { isPublic: boolean }
-
 const cardClass =
   'bg-white border border-line rounded-lg px-4 py-3 flex flex-col gap-2'
 const simpleItemClass =
@@ -31,56 +30,26 @@ const simpleItemTitleClass =
 
 interface TenantReportsTabProps {
   tenantId: string
-  tenantName: string
 }
 
-const TenantReportsTab = ({ tenantId, tenantName }: TenantReportsTabProps) => {
+const TenantReportsTab = ({ tenantId }: TenantReportsTabProps) => {
   const [selectedReportId, setSelectedReportId] = useState<string | null>(null)
   const [expandedServices, setExpandedServices] = useState<
     Record<string, Set<string>>
   >({})
   const [pendingReportId, setPendingReportId] = useState<string | null>(null)
 
-  const { isSuperAdmin, profile } = useAuth()
+  const { isSuperAdmin } = useAuth()
+  const { roleInSelectedTenant } = useSelectedTenant()
 
   const canManageVisibility =
-    isSuperAdmin ||
-    (!!tenantName &&
-      profile?.groups?.some(
-        (g) => g.name === tenantName && g.role === 'tenant_admin',
-      ) === true)
+    isSuperAdmin || roleInSelectedTenant === 'tenant_admin'
 
   const {
-    data: publicReports,
-    isLoading: publicLoading,
-    error: publicError,
-  } = useGetTenantReports(tenantId, undefined, true)
-
-  const {
-    data: privateReports,
-    isLoading: privateLoading,
-    error: privateError,
-  } = useGetTenantReports(tenantId, undefined, false)
-
-  const reports = useMemo<ReportWithVisibility[]>(() => {
-    const finalPublicReports = (publicReports ?? []).map((report) => ({
-      ...report,
-      isPublic: true,
-    }))
-    const finalPrivateReports = (privateReports ?? []).map((report) => ({
-      ...report,
-      isPublic: false,
-    }))
-    const visitedReportIds = new Set<string>()
-    return [...finalPublicReports, ...finalPrivateReports].filter((report) => {
-      if (visitedReportIds.has(report.id)) return false
-      visitedReportIds.add(report.id)
-      return true
-    })
-  }, [publicReports, privateReports])
-
-  const reportsLoading = publicLoading || privateLoading
-  const reportsError = publicError || privateError
+    data: reports,
+    isLoading: reportsLoading,
+    error: reportsError,
+  } = useGetTenantReports(tenantId)
 
   const {
     data: reportDetail,
@@ -96,7 +65,7 @@ const TenantReportsTab = ({ tenantId, tenantName }: TenantReportsTabProps) => {
   const setPrivateMutation = useSetReportPrivateMutation()
 
   useEffect(() => {
-    if (reports.length > 0 && !selectedReportId) {
+    if (reports && reports.length > 0 && !selectedReportId) {
       setSelectedReportId(reports[0].id)
     }
   }, [reports, selectedReportId])
@@ -125,8 +94,9 @@ const TenantReportsTab = ({ tenantId, tenantName }: TenantReportsTabProps) => {
     }))
   }
 
-  const handleVisibilityClick = (report: ReportWithVisibility) => {
-    const mutation = report.isPublic ? setPrivateMutation : setPublicMutation
+  const handleVisibilityClick = (report: ReportListItem) => {
+    const mutation =
+      report.public === true ? setPrivateMutation : setPublicMutation
     setPendingReportId(report.id)
     mutation.mutate(
       { tenantId, reportId: report.id },
@@ -143,7 +113,7 @@ const TenantReportsTab = ({ tenantId, tenantName }: TenantReportsTabProps) => {
     )
   }
 
-  const selectedReport = reports.find((r) => r.id === selectedReportId)
+  const selectedReport = reports?.find((r) => r.id === selectedReportId)
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-6 lg:gap-10 lg:min-h-[500px]">
@@ -157,9 +127,9 @@ const TenantReportsTab = ({ tenantId, tenantName }: TenantReportsTabProps) => {
           <div className="flex justify-center py-8">
             <LoadingSpinner size="sm" />
           </div>
-        ) : reports.length > 0 ? (
+        ) : (reports?.length ?? 0) > 0 ? (
           <ul className="flex flex-col gap-2">
-            {reports.map((report) => (
+            {reports!.map((report) => (
               <li
                 key={report.id}
                 className={`p-3 bg-white border rounded-md cursor-pointer transition-all ${
@@ -189,12 +159,12 @@ const TenantReportsTab = ({ tenantId, tenantName }: TenantReportsTabProps) => {
                   </div>
                   <Badge
                     className={
-                      report.isPublic
+                      report.public === true
                         ? 'bg-brand-muted text-brand border border-blue-300'
                         : 'bg-surface-strong text-subtle border border-line-strong'
                     }
                   >
-                    {report.isPublic ? 'Public' : 'Private'}
+                    {report.public === true ? 'Public' : 'Private'}
                   </Badge>
                 </div>
                 {report.description && (
@@ -243,7 +213,7 @@ const TenantReportsTab = ({ tenantId, tenantName }: TenantReportsTabProps) => {
                     </span>
                     <Button
                       variant={
-                        selectedReport.isPublic
+                        selectedReport.public === true
                           ? 'outline-secondary'
                           : 'outline-primary'
                       }
@@ -251,12 +221,14 @@ const TenantReportsTab = ({ tenantId, tenantName }: TenantReportsTabProps) => {
                       onClick={() => handleVisibilityClick(selectedReport)}
                       disabled={pendingReportId === selectedReport.id}
                     >
-                      {selectedReport.isPublic ? (
+                      {selectedReport.public === true ? (
                         <LockClosedIcon className="size-4" />
                       ) : (
                         <GlobeAltIcon className="size-4" />
                       )}
-                      {selectedReport.isPublic ? 'Make private' : 'Make public'}
+                      {selectedReport.public === true
+                        ? 'Make private'
+                        : 'Make public'}
                     </Button>
                   </div>
                 )}

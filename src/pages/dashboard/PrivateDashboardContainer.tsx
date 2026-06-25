@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from 'react'
+import { useEffect, useState } from 'react'
 import { useGetTenantReports } from '@/hooks/useTenants'
 import { useGetResultsGroups, useGetStatusGroups } from '@/hooks/useData'
 import { useSelectedTenant } from '@/contexts/selected-tenant/useSelectedTenant'
@@ -13,32 +13,14 @@ const PrivateDashboardContainer = () => {
   const [selectedReport, setSelectedReport] = useState('')
 
   const {
-    data: privateReports,
-    isLoading: privateReportsLoading,
-    error: privateReportsError,
-  } = useGetTenantReports(tenantId ?? '', undefined, false)
+    data: reports,
+    isLoading: reportsLoading,
+    error: reportsError,
+  } = useGetTenantReports(tenantId ?? '')
 
-  const {
-    data: publicReports,
-    isLoading: publicReportsLoading,
-    error: publicReportsError,
-  } = useGetTenantReports(tenantId ?? '', undefined, true)
-
-  const reports = useMemo(() => {
-    const merged = [
-      ...(privateReports ?? []).map((r) => ({ ...r, isPublic: false })),
-      ...(publicReports ?? []).map((r) => ({ ...r, isPublic: true })),
-    ]
-    const visitedReportIds = new Set<string>()
-    return merged.filter((report) => {
-      if (visitedReportIds.has(report.id)) return false
-      visitedReportIds.add(report.id)
-      return true
-    })
-  }, [privateReports, publicReports])
-
-  const reportsLoading = privateReportsLoading || publicReportsLoading
-  const reportsError = privateReportsError || publicReportsError
+  useEffect(() => {
+    setSelectedReport('')
+  }, [tenantId])
 
   useEffect(() => {
     if (!reports || reports.length === 0) return
@@ -46,6 +28,9 @@ const PrivateDashboardContainer = () => {
       setSelectedReport(reports[0].name)
     }
   }, [reports, selectedReport])
+
+  const selectedReportValid =
+    reports?.some((r) => r.name === selectedReport) ?? false
 
   const {
     data: resultsData,
@@ -56,7 +41,7 @@ const PrivateDashboardContainer = () => {
     selectedReport,
     undefined,
     '1w',
-    !!selectedReport,
+    !!selectedReport && selectedReportValid,
   )
 
   const {
@@ -67,7 +52,7 @@ const PrivateDashboardContainer = () => {
     tenantId ?? '',
     selectedReport,
     undefined,
-    !!selectedReport,
+    !!selectedReport && selectedReportValid,
   )
 
   if (!tenantId) {
