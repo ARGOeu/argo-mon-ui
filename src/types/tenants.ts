@@ -136,7 +136,7 @@ export type ReportListItem = {
   node_report?: boolean
 }
 
-export type PublicReportItem = { id: string; name: string }
+export type PublicReportItem = { id: string; name: string; node?: boolean }
 
 export type ReportProfile = {
   id: string

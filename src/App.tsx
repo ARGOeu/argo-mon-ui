@@ -1,4 +1,10 @@
-import { BrowserRouter, Outlet, Route, Routes } from 'react-router-dom'
+import {
+  BrowserRouter,
+  Navigate,
+  Outlet,
+  Route,
+  Routes,
+} from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Layout from './Layout'
 import { Home } from './pages/Home'
@@ -25,7 +31,11 @@ import {
   CreateTopologyGroup,
 } from './pages/tenant-topology'
 import PrivateDashboardContainer from './pages/dashboard'
-import PublicDashboard from './pages/public-dashboard'
+import {
+  PublicTenantLayout,
+  PublicDashboardContainer,
+  PublicCapabilitiesContainer,
+} from './pages/public-tenant'
 import { AuthProvider } from './auth/AuthProvider'
 import NotFound from './pages/NotFound'
 import { Toaster } from 'sonner'
@@ -64,10 +74,12 @@ function PlatformRoutes() {
   return (
     <Routes>
       <Route path="status/:slug" element={<PublicStatusPage />} />
-      <Route
-        path="public/tenants/:tenantName/dashboard"
-        element={<PublicDashboard />}
-      />
+      <Route path="public/tenants/:tenantName" element={<PublicTenantLayout />}>
+        <Route index element={<Navigate to="dashboard" replace />} />
+        <Route path="dashboard" element={<PublicDashboardContainer />} />
+        <Route path="capabilities" element={<PublicCapabilitiesContainer />} />
+        <Route path="*" element={<NotFound />} />
+      </Route>
       <Route element={<AuthLayout />}>
         <Route path="invitation/:id" element={<InvitationReview />} />
         <Route element={<Layout />}>
@@ -258,8 +270,11 @@ function PlatformRoutes() {
 function CustomDomainRoutes() {
   return (
     <Routes>
-      <Route path="/" element={<PublicDashboard />} />
-      <Route path="/dashboard" element={<PublicDashboard />} />
+      <Route element={<PublicTenantLayout />}>
+        <Route path="/" element={<PublicDashboardContainer />} />
+        <Route path="/dashboard" element={<PublicDashboardContainer />} />
+        <Route path="/capabilities" element={<PublicCapabilitiesContainer />} />
+      </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
   )

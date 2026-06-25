@@ -494,13 +494,14 @@ export const useGetTenantReports = (
 
 export const useGetPublicTenantReports = (
   tenantName: string,
+  node?: boolean,
   enabled: boolean = true,
 ) => {
   return useQuery<PublicReportItem[], Error>({
-    queryKey: ['public-tenant-reports', tenantName],
+    queryKey: ['public-tenant-reports', tenantName, node],
     queryFn: () => {
       if (!tenantName) throw new Error('Tenant name is required')
-      return fetchPublicTenantReports(tenantName)
+      return fetchPublicTenantReports(tenantName, node)
     },
     retry: false,
     enabled: enabled && !!tenantName,
@@ -683,12 +684,14 @@ export const useSetTenantNodeMutation = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['user-tenant', variables.id] })
       queryClient.invalidateQueries({ queryKey: ['user-tenants'] })
-      queryClient.invalidateQueries({
-        queryKey: ['tenant-capability-availability', variables.id],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['tenant-capability-status', variables.id],
-      })
+      if (variables.node) {
+        queryClient.invalidateQueries({
+          queryKey: ['tenant-capability-availability', variables.id],
+        })
+        queryClient.invalidateQueries({
+          queryKey: ['tenant-capability-status', variables.id],
+        })
+      }
     },
     onError: (error) => {
       console.error('Set tenant node error:', error)

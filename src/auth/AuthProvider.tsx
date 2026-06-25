@@ -135,7 +135,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       redirectUri: import.meta.env.VITE_REDIRECT_URI || window.location.origin,
     })
 
-  const isSuperAdmin = !!profile?.roles?.includes('super_admin')
+  const isSuperAdmin = !!profile?.roles?.includes('member')
 
   return (
     <AuthContext.Provider
