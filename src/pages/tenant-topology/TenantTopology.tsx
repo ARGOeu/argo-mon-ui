@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
 import PageHeader from '@/components/PageHeader'
@@ -22,7 +22,12 @@ const TenantTopology = () => {
   const { id } = useParams<{ id: string }>()
   const tenantId = id ?? ''
 
-  const { tenant: tenantData } = useSelectedTenant()
+  const {
+    tenant: tenantData,
+    topologyFeedType,
+    topologyFeedError,
+    isTopologyFeedLoading,
+  } = useSelectedTenant()
 
   const location = useLocation()
   const [activeTab, setActiveTab] = useState<
@@ -41,6 +46,34 @@ const TenantTopology = () => {
       setActiveTab('endpoints')
     }
   }, [location.hash])
+
+  const initialRedirectDone = useRef(false)
+
+  useEffect(() => {
+    initialRedirectDone.current = false
+  }, [tenantId])
+
+  useEffect(() => {
+    if (initialRedirectDone.current || isTopologyFeedLoading || location.hash) {
+      return
+    }
+
+    const feedStatus = (
+      topologyFeedError as (Error & { status?: number }) | null
+    )?.status
+    const isFeedClientError =
+      feedStatus !== undefined && feedStatus >= 400 && feedStatus < 500
+
+    if (!topologyFeedType && (!topologyFeedError || isFeedClientError)) {
+      setActiveTab('feed-configuration')
+    }
+    initialRedirectDone.current = true
+  }, [
+    topologyFeedType,
+    topologyFeedError,
+    isTopologyFeedLoading,
+    location.hash,
+  ])
 
   const [editingEndpoint, setEditingEndpoint] =
     useState<EndpointTopologyItem | null>(null)

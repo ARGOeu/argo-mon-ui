@@ -8,6 +8,9 @@ export interface SelectedTenantContextValue {
   roleInSelectedTenant: string | null
   effectiveTenantId: string | null
   tenants: Tenant[]
+  topologyFeedType: string | null
+  topologyFeedError: Error | null
+  isTopologyFeedLoading: boolean
 }
 
 export const SelectedTenantContext = createContext<

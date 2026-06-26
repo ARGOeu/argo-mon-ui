@@ -219,7 +219,7 @@ const TenantReadinessTab = ({ tenantId }: TenantReadinessTabProps) => {
         </div>
       )}
 
-      {!hasError && readiness && (
+      {!hasError && readiness && readiness.last_check && (
         <div className="max-w-[1240px] flex flex-col gap-3">
           <div>
             <h2 className="section-title">Readiness Check Results</h2>
