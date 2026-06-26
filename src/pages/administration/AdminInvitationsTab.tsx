@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useGetAdminInvitations } from '@/hooks/useInvitations'
 import { useRevokeInvitation } from '@/hooks/useTenants'
+import { useRoleFriendlyName } from '@/hooks/useRoleFriendlyName'
 import SearchInput from '@/components/SearchInput'
 import DataTable, {
   thBase,
@@ -62,6 +63,7 @@ const AdminInvitationsTab = ({ isSuperAdmin }: AdminInvitationsProps) => {
   })
 
   const revokeInvitationMutation = useRevokeInvitation()
+  const getRoleFriendlyName = useRoleFriendlyName()
 
   const handleRevokeClick = (
     tenantId: string,
@@ -215,7 +217,7 @@ const AdminInvitationsTab = ({ isSuperAdmin }: AdminInvitationsProps) => {
                       'bg-surface-strong text-muted'
                     }
                   >
-                    {invitation.role}
+                    {getRoleFriendlyName(invitation.role)}
                   </Badge>
                 </td>
                 <td className={tdBase}>

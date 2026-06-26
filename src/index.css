@@ -124,6 +124,8 @@
   .toggle-brand:checked,
   .toggle-brand[aria-checked='true'] {
     --input-color: var(--color-brand) !important;
+    background-color: #ffffff !important;
+    border-color: var(--color-brand) !important;
   }
 
   .loading-container {

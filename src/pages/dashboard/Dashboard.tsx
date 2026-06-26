@@ -21,16 +21,16 @@ import type { SelectOption } from '@/components/SelectDropdown'
 import type { GroupResultsResponse, GroupStatusResponse } from '@/types/data'
 
 const buildReportOptions = (
-  reports: Array<{ name: string; isPublic?: boolean }> | undefined,
+  reports: Array<{ name: string; public?: boolean }> | undefined,
 ): SelectOption[] => {
   if (!reports) return []
-  const hasVisibility = reports.some((r) => r.isPublic !== undefined)
+  const hasVisibility = reports.some((r) => r.public !== undefined)
   if (!hasVisibility)
     return reports.map((r) => ({ value: r.name, label: r.name }))
 
   const options: SelectOption[] = []
-  const privateReports = reports.filter((r) => r.isPublic === false)
-  const publicReports = reports.filter((r) => r.isPublic === true)
+  const privateReports = reports.filter((r) => r.public !== true)
+  const publicReports = reports.filter((r) => r.public === true)
 
   if (privateReports.length > 0) {
     options.push({ value: 'group_private', label: 'Private', disabled: true })
@@ -232,7 +232,7 @@ const MiniBars = ({ daily, dates }: { daily: number[]; dates: string[] }) => {
 export interface DashboardProps {
   tenantName: string
   tenantId?: string
-  reports: Array<{ name: string; isPublic?: boolean }> | undefined
+  reports: Array<{ name: string; public?: boolean }> | undefined
   reportsLoading: boolean
   reportsError: Error | null
   resultsData: GroupResultsResponse | undefined
@@ -446,20 +446,23 @@ const Dashboard = ({
           }
           className="items-start"
         />
-        {hasMultipleReports && (
+        {(hasMultipleReports ||
+          reports?.find((r) => r.name === selectedReport)?.public === true) && (
           <div className="flex flex-col items-stretch gap-1 sm:shrink-0">
-            <div className="flex items-center gap-2">
-              <span className="text-[15px] font-semibold text-body">
-                Select a report:
-              </span>
-              <SelectDropdown
-                value={selectedReport}
-                onChange={onReportChange}
-                options={buildReportOptions(reports)}
-                className="w-[220px]"
-              />
-            </div>
-            {reports?.find((r) => r.name === selectedReport)?.isPublic ===
+            {hasMultipleReports && (
+              <div className="flex items-center gap-2">
+                <span className="text-[15px] font-semibold text-body">
+                  Select a report:
+                </span>
+                <SelectDropdown
+                  value={selectedReport}
+                  onChange={onReportChange}
+                  options={buildReportOptions(reports)}
+                  className="w-[220px]"
+                />
+              </div>
+            )}
+            {reports?.find((r) => r.name === selectedReport)?.public ===
               true && (
               <a
                 href={`/public/tenants/${encodeURIComponent(tenantName)}/dashboard#${encodeURIComponent(selectedReport)}`}
@@ -484,7 +487,7 @@ const Dashboard = ({
           <ErrorDisplay error={error} context={errorContext} />
         </div>
       ) : noData ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-neutral-200 bg-white px-12 py-4 mt-8 text-center shadow-sm">
+        <div className="flex flex-col items-center justify-center rounded-xl border border-neutral-200 bg-white px-12 py-4 mt-6 text-center shadow-sm">
           <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-full bg-brand-subtle">
             <Info className="h-6 w-6 text-brand" />
           </div>

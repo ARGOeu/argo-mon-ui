@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGetTenantInvitations } from '@/hooks/useInvitations'
 import { useRevokeInvitation } from '@/hooks/useTenants'
+import { useRoleFriendlyName } from '@/hooks/useRoleFriendlyName'
 import { XCircleIcon } from '@heroicons/react/24/solid'
 import { toast } from 'sonner'
 import ErrorDisplay from '@/components/ErrorDisplay'
@@ -32,6 +33,7 @@ const TenantInvitations = ({
     useGetTenantInvitations(tenantId, currentPage, pageSize, !!tenantId)
 
   const revokeInvitationMutation = useRevokeInvitation()
+  const getRoleFriendlyName = useRoleFriendlyName()
 
   const handleRevokeClick = (invitationId: string, invitationEmail: string) => {
     setInvitationToRevoke({ invitationId, email: invitationEmail })
@@ -92,7 +94,7 @@ const TenantInvitations = ({
                           'bg-surface-strong text-muted'
                         }
                       >
-                        {invitation.role}
+                        {getRoleFriendlyName(invitation.role)}
                       </Badge>
                     </td>
                     <td className={tdBase}>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import { useAuth } from '@/auth/useAuth'
@@ -6,6 +6,7 @@ import {
   useGetUserInvitationById,
   useRespondToInvitation,
 } from '@/hooks/useInvitations'
+import { useRoleFriendlyName } from '@/hooks/useRoleFriendlyName'
 import Button from '@/components/Button'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
@@ -33,12 +34,20 @@ export const InvitationReview = () => {
   )
 
   const respondMutation = useRespondToInvitation()
+  const getRoleFriendlyName = useRoleFriendlyName()
+  const redirectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     if (initialized && !authenticated) {
       login(window.location.href)
     }
   }, [initialized, authenticated, login])
+
+  useEffect(() => {
+    return () => {
+      if (redirectTimerRef.current) clearTimeout(redirectTimerRef.current)
+    }
+  }, [])
 
   const handleAccept = () => {
     if (!invitationId || !invitation) return
@@ -55,7 +64,7 @@ export const InvitationReview = () => {
         onSuccess: () => {
           toast.success('Invitation accepted successfully!')
 
-          setTimeout(() => {
+          redirectTimerRef.current = setTimeout(() => {
             navigate('/my-invitations')
           }, 2000)
         },
@@ -81,7 +90,7 @@ export const InvitationReview = () => {
       {
         onSuccess: () => {
           toast.success('Invitation rejected')
-          setTimeout(() => {
+          redirectTimerRef.current = setTimeout(() => {
             navigate('/')
           }, 2000)
         },
@@ -206,7 +215,9 @@ export const InvitationReview = () => {
                   Role
                 </label>
                 <div className="text-sm text-gray-800 px-3 py-2 bg-surface-muted rounded-md border border-line">
-                  {invitation?.role}
+                  {invitation?.role
+                    ? getRoleFriendlyName(invitation.role)
+                    : null}
                 </div>
               </div>
 
@@ -240,9 +251,13 @@ export const InvitationReview = () => {
             <div className="mt-4 p-4 bg-brand-subtle border border-blue-200 rounded-lg">
               <p className="m-0 text-sm text-blue-800 leading-relaxed">
                 By accepting this invitation, you will become a{' '}
-                <strong>{invitation?.role}</strong> of the{' '}
-                <strong>{invitation?.tenant_name}</strong> tenant. You will be
-                able to
+                <strong>
+                  {invitation?.role
+                    ? getRoleFriendlyName(invitation.role)
+                    : null}
+                </strong>{' '}
+                of the <strong>{invitation?.tenant_name}</strong> tenant. You
+                will be able to
                 {invitation?.role === 'tenant_admin'
                   ? ' manage tenant settings, members, and projects.'
                   : ' view tenant information.'}

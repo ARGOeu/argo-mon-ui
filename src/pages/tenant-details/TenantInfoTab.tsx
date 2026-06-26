@@ -127,7 +127,7 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
         </div>
 
         {/* Projects */}
-        {(projectsLoading || projects.length > 0) && (
+        {!projectsLoading && projects.length > 0 && (
           <div>
             <div className="mb-1">
               <h2 className="text-md font-semibold text-foreground flex items-center gap-1.5">
@@ -135,43 +135,37 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
                 Projects
               </h2>
             </div>
-            {projectsLoading ? (
-              <div className={`${cardClass} items-center max-w-[180px]`}>
-                <LoadingSpinner size="xs" inline />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
-                {projects.map((project) => (
-                  <div key={project.id} className={cardClass}>
-                    <div className="flex flex-col gap-1">
-                      <p className="text-sm font-medium text-foreground m-0">
-                        {project.name}
+            <div className="grid grid-cols-1 md:grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-4">
+              {projects.map((project) => (
+                <div key={project.id} className={cardClass}>
+                  <div className="flex flex-col gap-1">
+                    <p className="text-sm font-medium text-foreground m-0">
+                      {project.name}
+                    </p>
+                    {project.description && (
+                      <p
+                        className="text-sm text-muted m-0 line-clamp-4"
+                        title={project.description}
+                      >
+                        {project.description}
                       </p>
-                      {project.description && (
-                        <p
-                          className="text-sm text-muted m-0 line-clamp-4"
-                          title={project.description}
-                        >
-                          {project.description}
-                        </p>
-                      )}
-                      <div className="text-xs text-muted m-0 mt-0.5">
-                        <span>
-                          {formatDate(project.start_date)} -{' '}
-                          {formatDate(project.end_date)}
+                    )}
+                    <div className="text-xs text-muted m-0 mt-0.5">
+                      <span>
+                        {formatDate(project.start_date)} -{' '}
+                        {formatDate(project.end_date)}
+                      </span>
+                      {project.sustainability_end_date && (
+                        <span className="block mt-0.5">
+                          Sustainability:{' '}
+                          {formatDate(project.sustainability_end_date)}
                         </span>
-                        {project.sustainability_end_date && (
-                          <span className="block mt-0.5">
-                            Sustainability:{' '}
-                            {formatDate(project.sustainability_end_date)}
-                          </span>
-                        )}
-                      </div>
+                      )}
                     </div>
                   </div>
-                ))}
-              </div>
-            )}
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -258,7 +252,7 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
         )}
 
         {/* Topology Feed */}
-        {(topologyFeedLoading || topologyFeedData) && (
+        {!topologyFeedLoading && topologyFeedData && (
           <div>
             <div className="mb-1">
               <h2 className="text-md font-semibold text-foreground flex items-center gap-1.5">
@@ -266,34 +260,52 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
                 Topology Feed
               </h2>
             </div>
-            {topologyFeedLoading ? (
-              <div className={`${cardClass} items-center max-w-[180px]`}>
-                <LoadingSpinner size="xs" inline />
-              </div>
-            ) : (
-              <div className={`${cardClass} w-fit`}>
-                <div className="flex flex-wrap gap-x-8 gap-y-3">
+            <div className={`${cardClass} w-fit`}>
+              <div className="flex flex-wrap gap-x-8 gap-y-3">
+                <div className={infoGroupClass}>
+                  <label className={labelClass}>Type</label>
+                  <p className={`${valueClass} capitalize`}>
+                    {topologyFeedData!.type}
+                  </p>
+                </div>
+
+                {(topologyFeedData!.type === 'CSV' ||
+                  topologyFeedData!.type === 'desy-marketplace') && (
                   <div className={infoGroupClass}>
-                    <label className={labelClass}>Type</label>
-                    <p className={`${valueClass} capitalize`}>
-                      {topologyFeedData!.type}
+                    <label className={labelClass}>Feed URL</label>
+                    <p className={valueClass}>
+                      {topologyFeedData!.feed_url ? (
+                        <a
+                          href={topologyFeedData!.feed_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={topologyFeedData!.feed_url}
+                          className={`${linkClass} inline-flex items-center gap-0.5`}
+                        >
+                          {truncateUrl(topologyFeedData!.feed_url)}
+                          <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
+                        </a>
+                      ) : (
+                        <span className={noDataClass}>Not provided</span>
+                      )}
                     </p>
                   </div>
+                )}
 
-                  {(topologyFeedData!.type === 'CSV' ||
-                    topologyFeedData!.type === 'desy-marketplace') && (
+                {topologyFeedData!.type === 'eosc-service-catalog' && (
+                  <>
                     <div className={infoGroupClass}>
-                      <label className={labelClass}>Feed URL</label>
+                      <label className={labelClass}>Service Groups URL</label>
                       <p className={valueClass}>
-                        {topologyFeedData!.feed_url ? (
+                        {topologyFeedData!.feed_service_groups ? (
                           <a
-                            href={topologyFeedData!.feed_url}
+                            href={topologyFeedData!.feed_service_groups}
                             target="_blank"
                             rel="noopener noreferrer"
-                            title={topologyFeedData!.feed_url}
+                            title={topologyFeedData!.feed_service_groups}
                             className={`${linkClass} inline-flex items-center gap-0.5`}
                           >
-                            {truncateUrl(topologyFeedData!.feed_url)}
+                            {truncateUrl(topologyFeedData!.feed_service_groups)}
                             <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
                           </a>
                         ) : (
@@ -301,90 +313,63 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
                         )}
                       </p>
                     </div>
-                  )}
-
-                  {topologyFeedData!.type === 'eosc-service-catalog' && (
-                    <>
-                      <div className={infoGroupClass}>
-                        <label className={labelClass}>Service Groups URL</label>
-                        <p className={valueClass}>
-                          {topologyFeedData!.feed_service_groups ? (
-                            <a
-                              href={topologyFeedData!.feed_service_groups}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title={topologyFeedData!.feed_service_groups}
-                              className={`${linkClass} inline-flex items-center gap-0.5`}
-                            >
-                              {truncateUrl(
-                                topologyFeedData!.feed_service_groups,
-                              )}
-                              <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
-                            </a>
-                          ) : (
-                            <span className={noDataClass}>Not provided</span>
-                          )}
-                        </p>
-                      </div>
-                      <div className={infoGroupClass}>
-                        <label className={labelClass}>
-                          Service Endpoints URL
-                        </label>
-                        <p className={valueClass}>
-                          {topologyFeedData!.feed_service_endpoints ? (
-                            <a
-                              href={topologyFeedData!.feed_service_endpoints}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title={topologyFeedData!.feed_service_endpoints}
-                              className={`${linkClass} inline-flex items-center gap-0.5`}
-                            >
-                              {truncateUrl(
-                                topologyFeedData!.feed_service_endpoints,
-                              )}
-                              <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
-                            </a>
-                          ) : (
-                            <span className={noDataClass}>Not provided</span>
-                          )}
-                        </p>
-                      </div>
-                      <div className={infoGroupClass}>
-                        <label className={labelClass}>
-                          Service Endpoint Extensions URL
-                        </label>
-                        <p className={valueClass}>
-                          {topologyFeedData!
-                            .feed_service_endpoints_extensions ? (
-                            <a
-                              href={
-                                topologyFeedData!
-                                  .feed_service_endpoints_extensions
-                              }
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              title={
-                                topologyFeedData!
-                                  .feed_service_endpoints_extensions
-                              }
-                              className={`${linkClass} inline-flex items-center gap-0.5`}
-                            >
-                              {truncateUrl(
-                                topologyFeedData!
-                                  .feed_service_endpoints_extensions,
-                              )}
-                              <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
-                            </a>
-                          ) : (
-                            <span className={noDataClass}>Not provided</span>
-                          )}
-                        </p>
-                      </div>
-                    </>
-                  )}
-                </div>
+                    <div className={infoGroupClass}>
+                      <label className={labelClass}>
+                        Service Endpoints URL
+                      </label>
+                      <p className={valueClass}>
+                        {topologyFeedData!.feed_service_endpoints ? (
+                          <a
+                            href={topologyFeedData!.feed_service_endpoints}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={topologyFeedData!.feed_service_endpoints}
+                            className={`${linkClass} inline-flex items-center gap-0.5`}
+                          >
+                            {truncateUrl(
+                              topologyFeedData!.feed_service_endpoints,
+                            )}
+                            <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
+                          </a>
+                        ) : (
+                          <span className={noDataClass}>Not provided</span>
+                        )}
+                      </p>
+                    </div>
+                    <div className={infoGroupClass}>
+                      <label className={labelClass}>
+                        Service Endpoint Extensions URL
+                      </label>
+                      <p className={valueClass}>
+                        {topologyFeedData!.feed_service_endpoints_extensions ? (
+                          <a
+                            href={
+                              topologyFeedData!
+                                .feed_service_endpoints_extensions
+                            }
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            title={
+                              topologyFeedData!
+                                .feed_service_endpoints_extensions
+                            }
+                            className={`${linkClass} inline-flex items-center gap-0.5`}
+                          >
+                            {truncateUrl(
+                              topologyFeedData!
+                                .feed_service_endpoints_extensions,
+                            )}
+                            <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
+                          </a>
+                        ) : (
+                          <span className={noDataClass}>Not provided</span>
+                        )}
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
-            )}
+            </div>
           </div>
         )}
       </div>

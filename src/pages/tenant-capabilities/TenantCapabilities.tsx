@@ -23,18 +23,11 @@ const TenantCapabilities = () => {
     error: reportsError,
   } = useGetTenantReports(tenant?.id || '', undefined, undefined, !!tenant?.id)
 
-  const { data: publicReports } = useGetTenantReports(
-    tenant?.id || '',
-    undefined,
-    true,
-    !!tenant?.id,
-  )
-
   const isNodeEnabled = !!tenant?.node
   const hasNodeReport = reports?.some((report) => !!report.node_report)
   const capabilitiesEnabled = isNodeEnabled && hasNodeReport
   const hasPublicNodeReport =
-    publicReports?.some((r) => !!r.node_report) ?? false
+    reports?.some((r) => !!r.node_report && r.public === true) ?? false
 
   return (
     <div className="page-container">

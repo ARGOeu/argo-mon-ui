@@ -3,6 +3,7 @@ import {
   useGetUserInvitations,
   useRespondToInvitation,
 } from '@/hooks/useInvitations'
+import { useRoleFriendlyName } from '@/hooks/useRoleFriendlyName'
 import { CheckCircleIcon, XCircleIcon } from '@heroicons/react/16/solid'
 import { toast } from 'sonner'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -28,6 +29,7 @@ const MyInvitations = () => {
     size: pageSize,
   })
   const respondMutation = useRespondToInvitation()
+  const getRoleFriendlyName = useRoleFriendlyName()
 
   const handleRespond = (
     invitation: {
@@ -114,7 +116,7 @@ const MyInvitations = () => {
                               'bg-surface-strong text-muted'
                             }
                           >
-                            {invitation.role}
+                            {getRoleFriendlyName(invitation.role)}
                           </Badge>
                         </td>
                         <td className={tdBase}>

@@ -29,6 +29,7 @@ export const useGetTopologyEndpoints = (
       return fetchTopologyEndpoints(tenantId, date, token)
     },
     retry: false,
+    refetchOnMount: 'always',
     enabled: enabled && !!token && !!tenantId,
   })
 }
@@ -66,6 +67,7 @@ export const useGetTopologyGroups = (
       return fetchTopologyGroups(tenantId, date, token)
     },
     retry: false,
+    refetchOnMount: 'always',
     enabled: enabled && !!token && !!tenantId,
   })
 }
