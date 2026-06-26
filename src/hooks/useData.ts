@@ -20,6 +20,7 @@ export const useGetResultsGroups = (
       return fetchResultsGroups(tenantId, token, report, item, period)
     },
     retry: false,
+    refetchOnMount: 'always',
     enabled: enabled && !!token && !!tenantId,
   })
 }
@@ -40,6 +41,7 @@ export const useGetStatusGroups = (
       return fetchStatusGroups(tenantId, report, token, item)
     },
     retry: false,
+    refetchOnMount: 'always',
     enabled: enabled && !!token && !!tenantId,
   })
 }

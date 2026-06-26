@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react'
 import type { ReactNode } from 'react'
 import { useLocation } from 'react-router'
 import { useAuth } from '@/auth/useAuth'
-import { useGetAllTenants } from '@/hooks/useTenants'
+import { useGetAllTenants, useGetTopologyFeedQuery } from '@/hooks/useTenants'
 import { SelectedTenantContext } from './SelectedTenantContext'
 
 const LAST_TENANT_KEY = 'lastActiveTenantId'
@@ -79,6 +79,12 @@ const SelectedTenantProvider = ({ children }: SelectedTenantProviderProps) => {
 
   const effectiveTenantId = activeTenantId ?? lastActiveTenantId ?? null
 
+  const {
+    data: feedData,
+    isLoading: isTopologyFeedLoading,
+    error: topologyFeedError,
+  } = useGetTopologyFeedQuery(effectiveTenantId ?? '', !!effectiveTenantId)
+
   const selectedTenant = useMemo(
     () => tenants.find((t) => t.id === effectiveTenantId),
     [tenants, effectiveTenantId],
@@ -100,6 +106,9 @@ const SelectedTenantProvider = ({ children }: SelectedTenantProviderProps) => {
         roleInSelectedTenant,
         effectiveTenantId,
         tenants,
+        topologyFeedType: feedData?.type || null,
+        topologyFeedError,
+        isTopologyFeedLoading,
       }}
     >
       {children}

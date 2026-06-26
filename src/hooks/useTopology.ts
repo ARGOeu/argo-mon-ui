@@ -96,6 +96,12 @@ export const useCreateTopologyGroupsMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ['topology-groups', tenantId],
       })
+      queryClient.invalidateQueries({
+        queryKey: ['results-groups', tenantId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['status-groups', tenantId],
+      })
     },
     onError: (error) => {
       console.error('Topology groups create error:', error)
@@ -126,6 +132,12 @@ export const useCreateTopologyEndpointMutation = () => {
     onSuccess: (_result, { tenantId }) => {
       queryClient.invalidateQueries({
         queryKey: ['topology-endpoints', tenantId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['results-groups', tenantId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['status-groups', tenantId],
       })
     },
     onError: (error) => {
