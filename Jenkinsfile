@@ -1,21 +1,21 @@
 pipeline {
     agent none
     options {
-        checkoutToSubdirectory('status-pages')
+        checkoutToSubdirectory('argo-mon-ui')
         newContainerPerStage()
     }
     environment {
-        PROJECT_DIR='status-pages'
+        PROJECT_DIR='argo-mon-ui'
     }
     stages {
-        stage ('Lint and build status-pages') {
+        stage ('Lint and build argo-mon-ui') {
             agent {
                 docker {
                     image 'node:20.19-bullseye'
                 }
             }
             steps {
-                echo 'Build cat-ui'
+                echo 'Build argo-mon-ui'
                     sh '''
                         cd $WORKSPACE/$PROJECT_DIR
                         npm install
