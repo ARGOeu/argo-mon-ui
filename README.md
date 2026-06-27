@@ -1,9 +1,11 @@
-# Status Pages UI
+# Monitoring UI
 
 This project is a React and TypeScript application built with Vite. It relies on two backend services:
 
+- argo-mon-api
 - argo-web-api
-- api-status-mon-api
+- argo-mon-ui
+
 
 ## Local Environment Setup
 
@@ -19,7 +21,7 @@ cd argo-web-api/docker
 docker-compose up --build
 ```
 
-### Step 2: Run argo-status-mon-api locally
+### Step 2: Run argo-mon-api locally
 
 Dependencies:
 
@@ -29,8 +31,8 @@ Dependencies:
 To begin issue:
 
 ```
-git clone https://github.com/argoeu/argo-mon-status-api
-cd argo-mon-status-api
+git clone https://github.com/argoeu/argo-mon-api
+cd argo-mon-api
 ```
 
 Add your GitHub credentials to your Maven settings.xml so that Maven can pull the quarkus-auth dependency from the GitHub Packages repository:
@@ -62,7 +64,7 @@ Depedencies:
 To begin issue:
 
 ```
-git clone https://github.com/argoeu/status-ui -b devel
+git clone https://github.com/argoeu/argo-mon-ui -b devel
 cd status-ui
 Copy .env.example to .env and use it as is, or modify it to suit your needs.
 npm install
