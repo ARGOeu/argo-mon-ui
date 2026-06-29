@@ -29,15 +29,17 @@ export const computeAvailabilityStats = (
   if (results.length === 0) {
     return undefined
   }
-  const values = results
+  const validValues = results
     .map((r) => parseFloat(r.availability))
-    .filter((v) => !isNaN(v))
-  if (values.length === 0) {
+    .filter((v) => !isNaN(v) && v >= 0)
+
+  if (validValues.length === 0) {
     return undefined
   }
   const avg =
-    Math.round((values.reduce((sum, v) => sum + v, 0) / values.length) * 10) /
-    10
+    Math.round(
+      (validValues.reduce((sum, v) => sum + v, 0) / validValues.length) * 10,
+    ) / 10
   return [{ name: 'Avg Avail', value: avg }]
 }
 
