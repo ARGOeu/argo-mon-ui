@@ -1,0 +1,689 @@
+import { useMemo, useRef, useState, useEffect, type ReactNode } from 'react'
+import {
+  Activity,
+  AlertOctagon,
+  AlertTriangle,
+  ArrowUpRightFromSquare,
+  Check,
+  CheckCircle2,
+  Copy,
+  Info,
+  Search,
+  Server,
+  ShieldCheck,
+  type LucideIcon,
+} from 'lucide-react'
+import PageHeader from '@/components/PageHeader'
+import LoadingSpinner from '@/components/LoadingSpinner'
+import ErrorDisplay from '@/components/ErrorDisplay'
+import SelectDropdown from '@/components/SelectDropdown'
+import type { SelectOption } from '@/components/SelectDropdown'
+import type { GroupResultsResponse, GroupStatusResponse } from '@/types/data'
+
+const buildReportOptions = (
+  reports: Array<{ name: string; public?: boolean }> | undefined,
+): SelectOption[] => {
+  if (!reports) return []
+  const hasVisibility = reports.some((r) => r.public !== undefined)
+  if (!hasVisibility)
+    return reports.map((r) => ({ value: r.name, label: r.name }))
+
+  const options: SelectOption[] = []
+  const privateReports = reports.filter((r) => r.public !== true)
+  const publicReports = reports.filter((r) => r.public === true)
+
+  if (privateReports.length > 0) {
+    options.push({ value: 'group_private', label: 'Private', disabled: true })
+    privateReports.forEach((r) =>
+      options.push({ value: r.name, label: r.name }),
+    )
+  }
+  if (publicReports.length > 0) {
+    options.push({ value: 'group_public', label: 'Public', disabled: true })
+    publicReports.forEach((r) => options.push({ value: r.name, label: r.name }))
+  }
+  return options
+}
+
+type ServiceStatus = 'healthy' | 'degraded' | 'critical'
+
+interface Service {
+  name: string
+  status: ServiceStatus
+  daily: number[]
+  dailyDates: string[]
+}
+
+type FilterId = 'all' | 'problem' | 'healthy'
+
+const mapStatusValue = (value: string): ServiceStatus => {
+  const v = value?.toUpperCase()
+  if (v === 'CRITICAL' || v === 'DOWN') return 'critical'
+  if (v === 'WARNING' || v === 'DEGRADED') return 'degraded'
+  return 'healthy'
+}
+
+const worstStatus = (values: string[]): ServiceStatus => {
+  const mapped = values.map(mapStatusValue)
+  if (mapped.includes('critical')) return 'critical'
+  if (mapped.includes('degraded')) return 'degraded'
+  return 'healthy'
+}
+
+const formatShortDay = (iso: string) =>
+  new Date(iso).toLocaleDateString(undefined, { weekday: 'short' })
+
+const formatShortDate = (iso: string) =>
+  new Date(iso).toLocaleDateString(undefined, {
+    month: 'short',
+    day: 'numeric',
+  })
+
+const uptimeTone = (pct: number) => {
+  if (pct >= 99.99) return 'bg-emerald-500'
+  if (pct >= 99.5) return 'bg-lime-500'
+  if (pct >= 98) return 'bg-amber-500'
+  return 'bg-red-500'
+}
+
+const STATUS_STYLES: Record<
+  ServiceStatus,
+  { dot: string; pill: string; text: string; label: string }
+> = {
+  healthy: {
+    dot: 'bg-emerald-500',
+    pill: 'bg-emerald-50 text-emerald-700 ring-emerald-600/20',
+    text: 'text-emerald-700',
+    label: 'Healthy',
+  },
+  degraded: {
+    dot: 'bg-amber-500',
+    pill: 'bg-amber-50 text-amber-800 ring-amber-600/20',
+    text: 'text-amber-700',
+    label: 'Degraded',
+  },
+  critical: {
+    dot: 'bg-red-500',
+    pill: 'bg-red-50 text-red-700 ring-red-600/20',
+    text: 'text-red-700',
+    label: 'Critical',
+  },
+}
+
+const BANNER_STYLES: Record<
+  ServiceStatus,
+  {
+    bg: string
+    border: string
+    icon: LucideIcon
+    headline: string
+    detail: string
+    meta: string
+  }
+> = {
+  healthy: {
+    bg: 'bg-emerald-50',
+    border: 'border-emerald-700',
+    icon: CheckCircle2,
+    headline: 'text-emerald-900',
+    detail: 'text-emerald-800/80',
+    meta: 'text-emerald-800/60',
+  },
+  degraded: {
+    bg: 'bg-amber-50',
+    border: 'border-amber-700',
+    icon: AlertTriangle,
+    headline: 'text-amber-900',
+    detail: 'text-amber-900/80',
+    meta: 'text-amber-900/60',
+  },
+  critical: {
+    bg: 'bg-red-50',
+    border: 'border-red-700',
+    icon: AlertOctagon,
+    headline: 'text-red-900',
+    detail: 'text-red-900/80',
+    meta: 'text-red-900/60',
+  },
+}
+
+const avg = (arr: number[]) =>
+  arr.length === 0 ? 0 : arr.reduce((a, b) => a + b, 0) / arr.length
+
+interface NowItemProps {
+  icon: LucideIcon
+  label: string
+  last?: boolean
+  children: ReactNode
+}
+
+const NowItem = ({ icon: Icon, label, last, children }: NowItemProps) => {
+  return (
+    <div
+      className={`flex-1 min-w-[120px] px-4 py-2 ${
+        last ? '' : 'border-r border-neutral-200'
+      }`}
+    >
+      <div className="flex items-center gap-1.5 text-[11px] text-neutral-500">
+        <Icon className="h-3 w-3" strokeWidth={2} />
+        <span>{label}</span>
+      </div>
+      <div className="mt-0.5 flex items-baseline gap-1.5 text-[15px] font-medium text-neutral-900 tabular-nums">
+        {children}
+      </div>
+    </div>
+  )
+}
+
+const SectionLabel = ({ children }: { children: ReactNode }) => {
+  return (
+    <p className="mb-2 text-[11px] font-medium uppercase tracking-[0.08em] text-neutral-400">
+      {children}
+    </p>
+  )
+}
+
+interface WeekBarProps {
+  value: number
+  day: string
+  fullDate: string
+}
+
+const WeekBar = ({ value, day, fullDate }: WeekBarProps) => {
+  const h = Math.max(8, ((value - 98) / 2) * 100)
+  return (
+    <div
+      className="flex h-full w-full flex-col items-center gap-1.5"
+      title={`${fullDate}: ${value.toFixed(2)}%`}
+    >
+      <span className="text-[10px] font-medium tabular-nums text-neutral-700">
+        {value.toFixed(2)}
+      </span>
+      <div className="flex w-full flex-1 items-end">
+        <div
+          className={`w-full rounded-t-[3px] ${uptimeTone(value)}`}
+          style={{ height: `${h}%` }}
+        />
+      </div>
+      <span className="text-[10px] text-neutral-400">{day}</span>
+    </div>
+  )
+}
+
+const MiniBars = ({ daily, dates }: { daily: number[]; dates: string[] }) => {
+  return (
+    <div
+      className="grid gap-[2px]"
+      style={{
+        gridTemplateColumns: `repeat(${Math.max(daily.length, 1)}, minmax(0, 1fr))`,
+      }}
+    >
+      {daily.map((p, i) => (
+        <div
+          key={i}
+          title={`${dates[i] ? formatShortDate(dates[i]) : ''}: ${p.toFixed(2)}%`}
+          className={`h-[18px] rounded-[2px] ${uptimeTone(p)}`}
+        />
+      ))}
+    </div>
+  )
+}
+
+export interface DashboardProps {
+  tenantName: string
+  tenantId?: string
+  reports: Array<{ name: string; public?: boolean }> | undefined
+  reportsLoading: boolean
+  reportsError: Error | null
+  resultsData: GroupResultsResponse | undefined
+  resultsLoading: boolean
+  resultsError: Error | null
+  statusData: GroupStatusResponse | undefined
+  statusLoading: boolean
+  statusError: Error | null
+  selectedReport: string
+  onReportChange: (name: string) => void
+}
+
+const Dashboard = ({
+  tenantName,
+  tenantId,
+  reports,
+  reportsLoading,
+  reportsError,
+  resultsData,
+  resultsLoading,
+  resultsError,
+  statusData,
+  statusLoading,
+  statusError,
+  selectedReport,
+  onReportChange,
+}: DashboardProps) => {
+  const [filter, setFilter] = useState<FilterId>('all')
+  const [search, setSearch] = useState('')
+  const [copied, setCopied] = useState(false)
+  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    return () => {
+      if (copyTimerRef.current) {
+        clearTimeout(copyTimerRef.current)
+      }
+    }
+  }, [])
+
+  const handleCopyTenantId = () => {
+    if (!tenantId) return
+    void navigator.clipboard?.writeText(tenantId)
+    setCopied(true)
+    copyTimerRef.current = setTimeout(() => setCopied(false), 1500)
+  }
+
+  const services = useMemo<Service[]>(() => {
+    if (!resultsData?.data) return []
+
+    const statusByName = new Map<string, string[]>()
+    statusData?.data?.forEach((g) => {
+      statusByName.set(
+        g.name,
+        g.results.map((r) => r.value),
+      )
+    })
+
+    return resultsData.data.map((g) => {
+      const sorted = [...g.results].sort((a, b) => a.date.localeCompare(b.date))
+      return {
+        name: g.name,
+        status: worstStatus(statusByName.get(g.name) ?? []),
+        daily: sorted.map((r) => Number(r.availability)),
+        dailyDates: sorted.map((r) => r.date),
+      }
+    })
+  }, [resultsData, statusData])
+
+  const counts = useMemo<Record<ServiceStatus, number>>(() => {
+    const c = { healthy: 0, degraded: 0, critical: 0 }
+    services.forEach((s) => c[s.status]++)
+    return c
+  }, [services])
+
+  const { tenantDaily, tenantDailyDates } = useMemo(() => {
+    if (services.length === 0)
+      return { tenantDaily: [], tenantDailyDates: [] as string[] }
+    const dates = services[0].dailyDates
+    const dailyAvgs = dates.map((_, i) =>
+      avg(services.map((s) => s.daily[i]).filter(Number.isFinite)),
+    )
+    return { tenantDaily: dailyAvgs, tenantDailyDates: dates }
+  }, [services])
+
+  const filtered = useMemo(
+    () =>
+      services.filter((s) => {
+        if (search && !s.name.toLowerCase().includes(search.toLowerCase()))
+          return false
+        if (filter === 'healthy') return s.status === 'healthy'
+        if (filter === 'problem') return s.status !== 'healthy'
+        return true
+      }),
+    [filter, search, services],
+  )
+
+  const weekAvg = useMemo(() => avg(tenantDaily).toFixed(2), [tenantDaily])
+  const todayAvail =
+    tenantDaily.length === 0
+      ? '—'
+      : tenantDaily[tenantDaily.length - 1].toFixed(2)
+
+  const overall = useMemo<{
+    state: ServiceStatus
+    headline: string
+    detail: string
+  }>(() => {
+    const crit = services.filter((s) => s.status === 'critical')
+    const deg = services.filter((s) => s.status === 'degraded')
+
+    if (crit.length > 0) {
+      const names = crit
+        .slice(0, 2)
+        .map((s) => s.name)
+        .join(', ')
+      return {
+        state: 'critical',
+        headline:
+          crit.length === 1
+            ? '1 service is down'
+            : `${crit.length} services are critical`,
+        detail: `Affected: ${names}${crit.length > 2 ? ` +${crit.length - 2} more` : ''}`,
+      }
+    }
+    if (deg.length > 0) {
+      const names = deg
+        .slice(0, 2)
+        .map((s) => s.name)
+        .join(', ')
+      return {
+        state: 'degraded',
+        headline:
+          deg.length === 1
+            ? '1 service is degraded'
+            : `${deg.length} services are degraded`,
+        detail: `${names}${deg.length > 2 ? ` +${deg.length - 2} more` : ''} reporting elevated errors or latency`,
+      }
+    }
+    return {
+      state: 'healthy',
+      headline: 'All systems operational',
+      detail: `${services.length} services healthy · ${weekAvg}% uptime this week`,
+    }
+  }, [services, weekAvg])
+
+  const b = BANNER_STYLES[overall.state]
+  const BannerIcon = b.icon
+  const isLoading = reportsLoading || resultsLoading || statusLoading
+  const error = reportsError || resultsError || statusError
+
+  let errorContext = 'dashboard metrics'
+  if (reportsError) errorContext = 'tenant reports'
+  else if (statusError) errorContext = 'current status'
+  else if (resultsError) errorContext = 'daily results'
+
+  const hasMultipleReports = (reports?.length ?? 0) > 1
+
+  const filterTabs: { id: FilterId; label: string; count: number | null }[] = [
+    { id: 'all', label: 'All', count: services.length },
+    { id: 'problem', label: 'Has problems', count: null },
+    { id: 'healthy', label: 'Healthy', count: null },
+  ]
+
+  const noData =
+    !reportsLoading &&
+    (!reports?.length ||
+      (!resultsData?.data?.length && !statusData?.data?.length))
+
+  return (
+    <div className="page-container">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+        <PageHeader
+          title="Dashboard"
+          subtitle={
+            tenantName ? (
+              <span className="inline-flex items-center gap-x-2 gap-y-0.5 flex-wrap">
+                <span>
+                  Overview for <strong>{tenantName}</strong>
+                  {reports?.length === 1 && selectedReport && (
+                    <>
+                      {' · '}
+                      <strong>{selectedReport}</strong> report
+                    </>
+                  )}
+                </span>
+                {tenantId && (
+                  <span className="inline-flex items-center gap-1 font-mono text-xs text-subtle">
+                    <span title={tenantId}>{tenantId}</span>
+                    <button
+                      type="button"
+                      onClick={handleCopyTenantId}
+                      className={`flex-shrink-0 rounded p-0.5 transition-colors ${
+                        copied
+                          ? 'bg-emerald-100 text-emerald-700'
+                          : 'text-subtle hover:bg-surface-strong hover:text-body'
+                      }`}
+                      aria-label={copied ? 'Copied' : 'Copy tenant ID'}
+                      title={copied ? 'Copied!' : 'Copy tenant ID'}
+                    >
+                      {copied ? (
+                        <Check className="h-3 w-3" strokeWidth={2.5} />
+                      ) : (
+                        <Copy className="h-3 w-3" strokeWidth={2} />
+                      )}
+                    </button>
+                  </span>
+                )}
+              </span>
+            ) : undefined
+          }
+          className="items-start"
+        />
+        {(hasMultipleReports ||
+          reports?.find((r) => r.name === selectedReport)?.public === true) && (
+          <div className="flex flex-col items-stretch gap-1 sm:shrink-0">
+            {hasMultipleReports && (
+              <div className="flex items-center gap-2">
+                <span className="text-[15px] font-semibold text-body">
+                  Select a report:
+                </span>
+                <SelectDropdown
+                  value={selectedReport}
+                  onChange={onReportChange}
+                  options={buildReportOptions(reports)}
+                  className="w-[220px]"
+                />
+              </div>
+            )}
+            {reports?.find((r) => r.name === selectedReport)?.public ===
+              true && (
+              <a
+                href={`/public/tenants/${encodeURIComponent(tenantName)}/dashboard#${encodeURIComponent(selectedReport)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="self-start sm:self-end inline-flex items-center gap-0.5 text-sm text-brand no-underline transition-colors hover:text-brand-strong hover:underline"
+              >
+                View public dashboard
+                <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
+              </a>
+            )}
+          </div>
+        )}
+      </div>
+
+      {isLoading && !resultsData ? (
+        <div className="loading-container">
+          <LoadingSpinner size="md" />
+        </div>
+      ) : error ? (
+        <div className="my-12">
+          <ErrorDisplay error={error} context={errorContext} />
+        </div>
+      ) : noData ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-neutral-200 bg-white px-12 py-4 mt-6 text-center shadow-sm">
+          <div className="mb-1 flex h-11 w-11 items-center justify-center rounded-full bg-brand-subtle">
+            <Info className="h-6 w-6 text-brand" />
+          </div>
+          <h3 className="mb-1 text-lg font-medium text-neutral-900">
+            No data available for the selected report
+          </h3>
+          <p className="max-w-sm text-sm text-neutral-500">
+            There is no status or result data available for the "
+            {selectedReport || 'selected'}" report yet.
+          </p>
+        </div>
+      ) : (
+        <>
+          <div
+            className={`mb-6 flex flex-wrap items-center gap-3 rounded-xl border px-5 py-2 ${b.border} ${b.bg}`}
+          >
+            <BannerIcon
+              className={`h-5 w-5 flex-shrink-0 ${b.headline}`}
+              strokeWidth={2}
+            />
+            <div className="min-w-0 flex-1">
+              <span className={`text-[14px] font-semibold ${b.headline}`}>
+                {overall.headline}
+              </span>
+              <span className={`mx-1 ${b.meta}`}>·</span>
+              <span className={`text-[13px] ${b.detail}`}>
+                {overall.detail}
+              </span>
+            </div>
+          </div>
+
+          <div className="mb-6 flex flex-wrap items-center rounded-md border border-neutral-200 bg-white px-1 py-2">
+            <NowItem icon={Activity} label="Tenant status">
+              <span
+                className={`h-2 w-2 rounded-full ${STATUS_STYLES[overall.state].dot}`}
+              />
+              <span className={STATUS_STYLES[overall.state].text}>
+                {STATUS_STYLES[overall.state].label}
+              </span>
+            </NowItem>
+            <NowItem icon={Server} label="Services">
+              <span>{services.length}</span>
+              <span className="text-[11px] font-normal text-neutral-500">
+                <span className="text-emerald-600">{counts.healthy}</span>·
+                <span className="text-amber-600">{counts.degraded}</span>·
+                <span className="text-red-600">{counts.critical}</span>
+              </span>
+            </NowItem>
+            <NowItem icon={ShieldCheck} label="Availability today" last>
+              <span>{todayAvail}</span>
+              <span className="text-[11px] font-normal text-neutral-500">
+                %
+              </span>
+            </NowItem>
+          </div>
+
+          <SectionLabel>This week</SectionLabel>
+          <section className="mb-6 rounded-xl border border-neutral-200 bg-white px-5 py-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h2 className="text-[15px] font-medium">
+                Tenant-wide availability
+              </h2>
+              <span className="text-xs text-neutral-500">
+                last {tenantDaily.length} day
+                {tenantDaily.length === 1 ? '' : 's'} · all services averaged
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-[1fr_180px] md:items-center gap-4 md:gap-6 lg:gap-12 xl:gap-24">
+              <div
+                className="grid h-[110px] items-end gap-2 sm:gap-3 md:gap-4 lg:gap-8 xl:gap-16"
+                style={{
+                  gridTemplateColumns: `repeat(${Math.max(tenantDaily.length, 1)}, minmax(40px, 120px))`,
+                }}
+              >
+                {tenantDaily.map((v, i) => (
+                  <WeekBar
+                    key={tenantDailyDates[i] ?? i}
+                    value={v}
+                    day={formatShortDay(tenantDailyDates[i])}
+                    fullDate={formatShortDate(tenantDailyDates[i])}
+                  />
+                ))}
+              </div>
+
+              <div className="md:text-right">
+                <p className="text-xs text-neutral-500">
+                  {tenantDaily.length}-day average
+                </p>
+                <p className="mt-0.5 text-[32px] font-medium leading-none tabular-nums">
+                  {weekAvg}
+                  <span className="text-base text-neutral-400">%</span>
+                </p>
+              </div>
+            </div>
+          </section>
+
+          <SectionLabel>All services</SectionLabel>
+          <section className="rounded-xl border border-neutral-200 bg-white px-5 py-4">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <h2 className="text-[15px] font-medium">Service breakdown</h2>
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search services…"
+                  className="h-8 w-56 rounded-md border border-neutral-200 bg-white pl-8 pr-3 text-sm text-neutral-700 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            <div className="mb-3 flex gap-1 border-b border-neutral-200">
+              {filterTabs.map((t) => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setFilter(t.id)}
+                  className={`-mb-px border-b-2 px-2.5 py-1.5 text-xs transition-colors ${
+                    filter === t.id
+                      ? 'border-neutral-900 text-neutral-900'
+                      : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                  }`}
+                >
+                  {t.label}
+                  {t.count !== null && (
+                    <span className="ml-1 text-neutral-400">{t.count}</span>
+                  )}
+                </button>
+              ))}
+            </div>
+
+            <table className="w-full table-fixed text-sm">
+              <thead>
+                <tr className="text-[11px] font-medium uppercase tracking-[0.04em] text-neutral-400">
+                  <th className="w-[30%] border-b border-neutral-200 px-1.5 py-2 text-left">
+                    Service
+                  </th>
+                  <th className="w-[18%] border-b border-neutral-200 px-1.5 py-2 text-left">
+                    Status
+                  </th>
+                  <th className="w-[18%] border-b border-neutral-200 px-1.5 py-2 text-left">
+                    Avail (Week)
+                  </th>
+                  <th className="w-[34%] border-b border-neutral-200 px-1.5 py-2 text-left">
+                    Per Day
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="px-1.5 py-6 text-center text-neutral-400"
+                    >
+                      No services match
+                    </td>
+                  </tr>
+                )}
+                {filtered.map((svc) => {
+                  const st = STATUS_STYLES[svc.status]
+                  return (
+                    <tr key={svc.name}>
+                      <td className="border-b border-neutral-100 px-1.5 py-2.5">
+                        <div className="flex items-center gap-2">
+                          <span className={`h-2 w-2 rounded-full ${st.dot}`} />
+                          <span className="truncate font-medium text-neutral-800">
+                            {svc.name}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="border-b border-neutral-100 px-1.5 py-2.5">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${st.pill}`}
+                        >
+                          {st.label}
+                        </span>
+                      </td>
+                      <td className="border-b border-neutral-100 px-1.5 py-2.5 tabular-nums text-neutral-700">
+                        {avg(svc.daily).toFixed(2)}%
+                      </td>
+                      <td className="border-b border-neutral-100 px-1.5 py-2.5">
+                        <MiniBars daily={svc.daily} dates={svc.dailyDates} />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </section>
+        </>
+      )}
+    </div>
+  )
+}
+
+export default Dashboard

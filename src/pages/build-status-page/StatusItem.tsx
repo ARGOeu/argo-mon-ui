@@ -1,0 +1,61 @@
+import StatusLabel from './StatusLabel'
+import { GripVertical } from 'lucide-react'
+import { StatusIcon } from './StatusIcon'
+
+interface StatusItemProps {
+  group: string
+  name: string
+  status?: string
+  type?: string
+  drag?: boolean
+  dragHandle?: string
+  alias?: string
+  textMode: string
+  iconMode: string
+  onChangeAlias: (itemName: string, newAlias: string) => void
+  readOnly?: boolean
+}
+
+export const StatusItem = (props: StatusItemProps) => {
+  const handleLocalAliasChange = (newAlias: string) => {
+    props.onChangeAlias(props.name, newAlias)
+  }
+
+  return (
+    <div
+      className={`${props.dragHandle || ''} ${!props.readOnly ? 'cursor-grab' : ''} flex flex-row items-center gap-1 border border-line rounded-lg px-3 py-2 ${!props.readOnly ? 'shadow-sm' : ''} align-middle bg-white ${!props.readOnly ? 'hover:bg-surface-muted hover:shadow' : ''} transition-all`}
+    >
+      {props.dragHandle && !props.readOnly && (
+        <GripVertical className="text-subtle h-4 w-4 flex-shrink-0" />
+      )}
+      <div className="flex-1 min-w-0 flex md:flex-row flex-col items-start sm:items-center gap-2 flex-wrap">
+        <div
+          className="flex-1 min-w-0 w-full sm:w-auto"
+          style={{ minWidth: '60px' }}
+        >
+          <StatusLabel
+            group={props.group}
+            label={props.name}
+            alias={props.alias || ''}
+            onChangeAlias={handleLocalAliasChange}
+            readOnly={props.readOnly}
+          />
+        </div>
+        <div className="flex-shrink-0">
+          {props.status && (
+            <div
+              className={props.readOnly ? '' : 'tooltip tooltip-left'}
+              data-tip={props.readOnly ? '' : props.status}
+            >
+              <StatusIcon
+                status={props.status}
+                iconMode={props.iconMode}
+                textMode={props.textMode}
+              />
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
