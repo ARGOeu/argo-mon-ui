@@ -6,7 +6,6 @@ This project is a React and TypeScript application built with Vite. It relies on
 - argo-web-api
 - argo-mon-ui
 
-
 ## Local Environment Setup
 
 Before running the project locally, ensure you have a working Docker environment set up.
