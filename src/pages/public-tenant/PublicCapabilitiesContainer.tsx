@@ -49,11 +49,11 @@ const PublicCapabilitiesContainer = () => {
   const isLoading = reportsLoading || isAvailabilityLoading || isStatusLoading
 
   const availabilityStats = computeAvailabilityStats(
-    availabilityData?.data?.[0]?.results ?? [],
+    availabilityData?.data?.flatMap((d) => d.results) ?? [],
   )
 
   const { statusStats, statusCounts } = computeStatusStats(
-    statusData?.data?.[0]?.results ?? [],
+    statusData?.data?.flatMap((d) => d.results) ?? [],
   )
 
   return (
