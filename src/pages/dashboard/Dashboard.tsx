@@ -8,7 +8,6 @@ import {
   CheckCircle2,
   Copy,
   Info,
-  Search,
   Server,
   ShieldCheck,
   type LucideIcon,
@@ -16,6 +15,7 @@ import {
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
+import SearchInput from '@/components/SearchInput'
 import SelectDropdown from '@/components/SelectDropdown'
 import type { SelectOption } from '@/components/SelectDropdown'
 import type { GroupResultsResponse, GroupStatusResponse } from '@/types/data'
@@ -74,9 +74,9 @@ const formatShortDay = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { weekday: 'short' })
 
 const formatShortDate = (iso: string) =>
-  new Date(iso).toLocaleDateString(undefined, {
-    month: 'short',
+  new Date(iso).toLocaleDateString('en-GB', {
     day: 'numeric',
+    month: 'short',
   })
 
 const uptimeTone = (pct: number) => {
@@ -147,8 +147,23 @@ const BANNER_STYLES: Record<
   },
 }
 
-const avg = (arr: number[]) =>
-  arr.length === 0 ? 0 : arr.reduce((a, b) => a + b, 0) / arr.length
+const avgValid = (arr: number[]): number | null => {
+  const valid = arr.filter((v) => v >= 0)
+  return valid.length === 0
+    ? null
+    : valid.reduce((a, b) => a + b, 0) / valid.length
+}
+
+const padStartDates = (firstDate: string, count: number): string[] => {
+  const result: string[] = []
+  const base = new Date(firstDate)
+  for (let i = count; i >= 1; i--) {
+    const d = new Date(base)
+    d.setUTCDate(d.getUTCDate() - i)
+    result.push(d.toISOString().slice(0, 10))
+  }
+  return result
+}
 
 interface NowItemProps {
   icon: LucideIcon
@@ -184,12 +199,26 @@ const SectionLabel = ({ children }: { children: ReactNode }) => {
 }
 
 interface WeekBarProps {
-  value: number
+  value: number | null
   day: string
   fullDate: string
 }
 
 const WeekBar = ({ value, day, fullDate }: WeekBarProps) => {
+  if (value === null) {
+    return (
+      <div
+        className="flex h-full w-full flex-col items-center gap-1.5"
+        title={`${fullDate}: No data`}
+      >
+        <span className="text-[10px] font-medium text-neutral-400">N/A</span>
+        <div className="flex w-full flex-1 items-end">
+          <div className="w-full rounded-t-[3px] bg-neutral-200 h-[8%]" />
+        </div>
+        <span className="text-[10px] text-neutral-400">{day}</span>
+      </div>
+    )
+  }
   const h = Math.max(8, ((value - 98) / 2) * 100)
   return (
     <div
@@ -221,13 +250,35 @@ const MiniBars = ({ daily, dates }: { daily: number[]; dates: string[] }) => {
       {daily.map((p, i) => (
         <div
           key={i}
-          title={`${dates[i] ? formatShortDate(dates[i]) : ''}: ${p.toFixed(2)}%`}
-          className={`h-[18px] rounded-[2px] ${uptimeTone(p)}`}
+          className={`tooltip tooltip-top h-[18px] rounded-[2px] cursor-pointer opacity-90 hover:opacity-100 hover:scale-y-110 transition-all ${p === -1 ? 'bg-neutral-200' : uptimeTone(p)}`}
+          data-tip={`${dates[i] ? formatShortDate(dates[i]) : ''}: ${p === -1 ? 'N/A' : `${p.toFixed(2)}%`}`}
         />
       ))}
     </div>
   )
 }
+
+interface PublicDashboardLinkProps {
+  tenantName: string
+  selectedReport: string
+  className?: string
+}
+
+const PublicDashboardLink = ({
+  tenantName,
+  selectedReport,
+  className,
+}: PublicDashboardLinkProps) => (
+  <a
+    href={`/public/tenants/${encodeURIComponent(tenantName)}/dashboard#${encodeURIComponent(selectedReport)}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    className={`self-start inline-flex items-center gap-0.5 text-sm text-brand no-underline transition-colors hover:text-brand-strong hover:underline ${className ?? ''}`}
+  >
+    View public dashboard
+    <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
+  </a>
+)
 
 export interface DashboardProps {
   tenantName: string
@@ -292,12 +343,24 @@ const Dashboard = ({
     })
 
     return resultsData.data.map((g) => {
-      const sorted = [...g.results].sort((a, b) => a.date.localeCompare(b.date))
+      const missingCount = Math.max(0, 7 - g.results.length)
+      const firstDate =
+        g.results.length > 0
+          ? g.results.reduce(
+              (min, r) => (r.date < min ? r.date : min),
+              g.results[0].date,
+            )
+          : new Date().toISOString().slice(0, 10)
+      const paddingDates =
+        missingCount > 0 ? padStartDates(firstDate, missingCount) : []
       return {
         name: g.name,
         status: worstStatus(statusByName.get(g.name) ?? []),
-        daily: sorted.map((r) => Number(r.availability)),
-        dailyDates: sorted.map((r) => r.date),
+        daily: [
+          ...paddingDates.map((): number => -1),
+          ...g.results.map((r) => Number(r.availability)),
+        ],
+        dailyDates: [...paddingDates, ...g.results.map((r) => r.date)],
       }
     })
   }, [resultsData, statusData])
@@ -309,11 +372,17 @@ const Dashboard = ({
   }, [services])
 
   const { tenantDaily, tenantDailyDates } = useMemo(() => {
-    if (services.length === 0)
-      return { tenantDaily: [], tenantDailyDates: [] as string[] }
+    if (services.length === 0) {
+      const today = new Date().toISOString().slice(0, 10)
+      const emptyDates = [...padStartDates(today, 6), today]
+      return {
+        tenantDaily: emptyDates.map((): null => null),
+        tenantDailyDates: emptyDates,
+      }
+    }
     const dates = services[0].dailyDates
-    const dailyAvgs = dates.map((_, i) =>
-      avg(services.map((s) => s.daily[i]).filter(Number.isFinite)),
+    const dailyAvgs: (number | null)[] = dates.map((_, i) =>
+      avgValid(services.map((s) => s.daily[i]).filter(Number.isFinite)),
     )
     return { tenantDaily: dailyAvgs, tenantDailyDates: dates }
   }, [services])
@@ -330,11 +399,18 @@ const Dashboard = ({
     [filter, search, services],
   )
 
-  const weekAvg = useMemo(() => avg(tenantDaily).toFixed(2), [tenantDaily])
-  const todayAvail =
-    tenantDaily.length === 0
-      ? '—'
-      : tenantDaily[tenantDaily.length - 1].toFixed(2)
+  const weekAvgValue = useMemo<number | null>(() => {
+    const valid = tenantDaily.filter((v): v is number => v !== null)
+    if (valid.length === 0) return null
+    return valid.reduce((a, b) => a + b, 0) / valid.length
+  }, [tenantDaily])
+  const weekAvg = weekAvgValue === null ? 'N/A' : weekAvgValue.toFixed(2)
+
+  const todayAvail = (() => {
+    if (tenantDaily.length === 0) return '—'
+    const last = tenantDaily[tenantDaily.length - 1]
+    return last === null ? 'N/A' : last.toFixed(2)
+  })()
 
   const overall = useMemo<{
     state: ServiceStatus
@@ -375,9 +451,9 @@ const Dashboard = ({
     return {
       state: 'healthy',
       headline: 'All systems operational',
-      detail: `${services.length} services healthy · ${weekAvg}% uptime this week`,
+      detail: `${services.length} services healthy${weekAvgValue !== null ? ` · ${weekAvg}% uptime this week` : ''}`,
     }
-  }, [services, weekAvg])
+  }, [services, weekAvg, weekAvgValue])
 
   const b = BANNER_STYLES[overall.state]
   const BannerIcon = b.icon
@@ -390,6 +466,8 @@ const Dashboard = ({
   else if (resultsError) errorContext = 'daily results'
 
   const hasMultipleReports = (reports?.length ?? 0) > 1
+  const isPublicReport =
+    reports?.find((r) => r.name === selectedReport)?.public === true
 
   const filterTabs: { id: FilterId; label: string; count: number | null }[] = [
     { id: 'all', label: 'All', count: services.length },
@@ -404,52 +482,51 @@ const Dashboard = ({
 
   return (
     <div className="page-container">
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
-        <PageHeader
-          title="Dashboard"
-          subtitle={
-            tenantName ? (
-              <span className="inline-flex items-center gap-x-2 gap-y-0.5 flex-wrap">
-                <span>
-                  Overview for <strong>{tenantName}</strong>
-                  {reports?.length === 1 && selectedReport && (
-                    <>
-                      {' · '}
-                      <strong>{selectedReport}</strong> report
-                    </>
+      <div className="flex flex-col gap-2 mb-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <PageHeader
+            title="Dashboard"
+            subtitle={
+              tenantName ? (
+                <span className="inline-flex items-center gap-x-2 gap-y-0.5 flex-wrap">
+                  <span>
+                    Overview for <strong>{tenantName}</strong>
+                    {reports?.length === 1 && selectedReport && (
+                      <>
+                        {' · '}
+                        <strong>{selectedReport}</strong> report
+                      </>
+                    )}
+                  </span>
+                  {tenantId && (
+                    <span className="inline-flex items-center gap-1 font-mono text-xs text-subtle">
+                      <span title={tenantId}>{tenantId}</span>
+                      <button
+                        type="button"
+                        onClick={handleCopyTenantId}
+                        className={`flex-shrink-0 rounded p-0.5 transition-colors ${
+                          copied
+                            ? 'bg-emerald-100 text-emerald-700'
+                            : 'text-subtle hover:bg-surface-strong hover:text-body'
+                        }`}
+                        aria-label={copied ? 'Copied' : 'Copy tenant ID'}
+                        title={copied ? 'Copied!' : 'Copy tenant ID'}
+                      >
+                        {copied ? (
+                          <Check className="h-3 w-3" strokeWidth={2.5} />
+                        ) : (
+                          <Copy className="h-3 w-3" strokeWidth={2} />
+                        )}
+                      </button>
+                    </span>
                   )}
                 </span>
-                {tenantId && (
-                  <span className="inline-flex items-center gap-1 font-mono text-xs text-subtle">
-                    <span title={tenantId}>{tenantId}</span>
-                    <button
-                      type="button"
-                      onClick={handleCopyTenantId}
-                      className={`flex-shrink-0 rounded p-0.5 transition-colors ${
-                        copied
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'text-subtle hover:bg-surface-strong hover:text-body'
-                      }`}
-                      aria-label={copied ? 'Copied' : 'Copy tenant ID'}
-                      title={copied ? 'Copied!' : 'Copy tenant ID'}
-                    >
-                      {copied ? (
-                        <Check className="h-3 w-3" strokeWidth={2.5} />
-                      ) : (
-                        <Copy className="h-3 w-3" strokeWidth={2} />
-                      )}
-                    </button>
-                  </span>
-                )}
-              </span>
-            ) : undefined
-          }
-          className="items-start"
-        />
-        {(hasMultipleReports ||
-          reports?.find((r) => r.name === selectedReport)?.public === true) && (
-          <div className="flex flex-col items-stretch gap-1 sm:shrink-0">
-            {hasMultipleReports && (
+              ) : undefined
+            }
+            className="items-start"
+          />
+          {hasMultipleReports && (
+            <div className="flex flex-col items-stretch gap-1 sm:shrink-0">
               <div className="flex items-center gap-2">
                 <span className="text-[15px] font-semibold text-body">
                   Select a report:
@@ -461,21 +538,29 @@ const Dashboard = ({
                   className="w-[220px]"
                 />
               </div>
-            )}
-            {reports?.find((r) => r.name === selectedReport)?.public ===
-              true && (
-              <a
-                href={`/public/tenants/${encodeURIComponent(tenantName)}/dashboard#${encodeURIComponent(selectedReport)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="self-start sm:self-end inline-flex items-center gap-0.5 text-sm text-brand no-underline transition-colors hover:text-brand-strong hover:underline"
-              >
-                View public dashboard
-                <ArrowUpRightFromSquare className="size-3 flex-shrink-0" />
-              </a>
-            )}
-          </div>
-        )}
+              {isPublicReport && (
+                <PublicDashboardLink
+                  tenantName={tenantName}
+                  selectedReport={selectedReport}
+                  className="sm:self-end"
+                />
+              )}
+            </div>
+          )}
+          {reports?.length === 1 && isPublicReport && (
+            <div className="flex flex-col items-end gap-1 sm:shrink-0 self-center">
+              <span className="text-[15px] font-medium text-body">
+                Selected report:{' '}
+                <strong className="text-muted">{selectedReport}</strong>
+              </span>
+              <PublicDashboardLink
+                tenantName={tenantName}
+                selectedReport={selectedReport}
+                className="sm:self-end"
+              />
+            </div>
+          )}
+        </div>
       </div>
 
       {isLoading && !resultsData ? (
@@ -538,9 +623,11 @@ const Dashboard = ({
             </NowItem>
             <NowItem icon={ShieldCheck} label="Availability today" last>
               <span>{todayAvail}</span>
-              <span className="text-[11px] font-normal text-neutral-500">
-                %
-              </span>
+              {todayAvail !== 'N/A' && todayAvail !== '—' && (
+                <span className="text-[11px] font-normal text-neutral-500">
+                  %
+                </span>
+              )}
             </NowItem>
           </div>
 
@@ -579,7 +666,9 @@ const Dashboard = ({
                 </p>
                 <p className="mt-0.5 text-[32px] font-medium leading-none tabular-nums">
                   {weekAvg}
-                  <span className="text-base text-neutral-400">%</span>
+                  {weekAvgValue !== null && (
+                    <span className="text-base text-neutral-400">%</span>
+                  )}
                 </p>
               </div>
             </div>
@@ -589,16 +678,14 @@ const Dashboard = ({
           <section className="rounded-xl border border-neutral-200 bg-white px-5 py-4">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <h2 className="text-[15px] font-medium">Service breakdown</h2>
-              <div className="relative">
-                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-neutral-400" />
-                <input
-                  type="text"
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Search services…"
-                  className="h-8 w-56 rounded-md border border-neutral-200 bg-white pl-8 pr-3 text-sm text-neutral-700 placeholder:text-neutral-400 focus:border-neutral-400 focus:outline-none"
-                />
-              </div>
+              <SearchInput
+                value={search}
+                onChange={setSearch}
+                onClear={() => setSearch('')}
+                placeholder="Search services…"
+                maxWidth="max-w-[200px]"
+                className="mb-0"
+              />
             </div>
 
             <div className="mb-3 flex gap-1 border-b border-neutral-200">
@@ -649,15 +736,18 @@ const Dashboard = ({
                     </td>
                   </tr>
                 )}
-                {filtered.map((svc) => {
-                  const st = STATUS_STYLES[svc.status]
+                {filtered.map((service) => {
+                  const st = STATUS_STYLES[service.status]
+                  const serviceWeekAvg = avgValid(
+                    service.daily.filter(Number.isFinite),
+                  )
                   return (
-                    <tr key={svc.name}>
+                    <tr key={service.name}>
                       <td className="border-b border-neutral-100 px-1.5 py-2.5">
                         <div className="flex items-center gap-2">
                           <span className={`h-2 w-2 rounded-full ${st.dot}`} />
                           <span className="truncate font-medium text-neutral-800">
-                            {svc.name}
+                            {service.name}
                           </span>
                         </div>
                       </td>
@@ -669,10 +759,15 @@ const Dashboard = ({
                         </span>
                       </td>
                       <td className="border-b border-neutral-100 px-1.5 py-2.5 tabular-nums text-neutral-700">
-                        {avg(svc.daily).toFixed(2)}%
+                        {serviceWeekAvg === null
+                          ? 'N/A'
+                          : `${serviceWeekAvg.toFixed(2)}%`}
                       </td>
                       <td className="border-b border-neutral-100 px-1.5 py-2.5">
-                        <MiniBars daily={svc.daily} dates={svc.dailyDates} />
+                        <MiniBars
+                          daily={service.daily}
+                          dates={service.dailyDates}
+                        />
                       </td>
                     </tr>
                   )
