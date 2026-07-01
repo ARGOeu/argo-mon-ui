@@ -4,6 +4,7 @@ import {
   useGetTenantByName,
 } from '@/hooks/useTenants'
 import { useRevokeRoleMutation } from '@/hooks/useResources'
+import { useRoleFriendlyName } from '@/hooks/useRoleFriendlyName'
 import { useAuth } from '@/auth/useAuth'
 import { Navigate, useParams } from 'react-router-dom'
 import { UserCircleIcon } from '@heroicons/react/16/solid'
@@ -18,7 +19,6 @@ import AssignRoleToUser from './AssignRoleToUser'
 import { squishEmail } from '@/utils/profile'
 import { roleBadgeClass } from '@/utils/badges'
 import { TENANT_MEMBERSHIP_ENTITY } from '@/utils/memberships'
-import { tenantMapper } from '@/utils/roleAssignmentMapper'
 
 const fieldValueClass = 'text-sm text-gray-800 font-medium'
 const fieldValueUnavailableClass = 'text-sm text-subtle italic'
@@ -44,6 +44,7 @@ const Profile = () => {
     error,
   } = useGetUserProfileByUsername(username || '', !!username && isSuperAdmin)
 
+  const getRoleFriendlyName = useRoleFriendlyName()
   const getTenantByNameMutation = useGetTenantByName()
   const revokeRoleMutation = useRevokeRoleMutation()
 
@@ -333,12 +334,7 @@ const Profile = () => {
                                             roleBadgeClass['tenant_viewer']
                                           }
                                         >
-                                          {role.attributes?.[
-                                            tenantMapper.preferred_role_name
-                                          ]?.[0] ??
-                                            (role.role === 'super_admin'
-                                              ? 'Super Admin'
-                                              : role.role)}
+                                          {getRoleFriendlyName(role.role)}
                                         </Badge>
                                       </div>
 
@@ -351,9 +347,7 @@ const Profile = () => {
                                             entityType,
                                             role.name,
                                             role.role,
-                                            role.attributes?.[
-                                              tenantMapper.preferred_role_name
-                                            ]?.[0] ?? role.role,
+                                            getRoleFriendlyName(role.role),
                                           )
                                         }
                                         title="Revoke this role"
@@ -400,12 +394,7 @@ const Profile = () => {
                                     roleBadgeClass['tenant_viewer']
                                   }
                                 >
-                                  {tenant.attributes?.[
-                                    tenantMapper.preferred_role_name
-                                  ]?.[0] ??
-                                    (tenant.role === 'super_admin'
-                                      ? 'Super Admin'
-                                      : tenant.role)}
+                                  {getRoleFriendlyName(tenant.role)}
                                 </Badge>
                               </div>
                             </div>

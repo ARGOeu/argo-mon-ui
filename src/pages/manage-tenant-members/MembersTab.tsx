@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { useGetTenantMembers } from '@/hooks/useTenants'
 import { useRevokeRoleMutation } from '@/hooks/useResources'
+import { useRoleFriendlyName } from '@/hooks/useRoleFriendlyName'
 import { roleBadgeClass } from '@/utils/badges'
 import { TENANT_MEMBERSHIP_ENTITY } from '@/utils/memberships'
-import { tenantMapper } from '@/utils/roleAssignmentMapper'
 import { UserMinusIcon } from '@heroicons/react/16/solid'
 import { toast } from 'sonner'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -29,6 +29,8 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
     role: string
     displayName: string
   } | null>(null)
+
+  const getRoleFriendlyName = useRoleFriendlyName()
 
   const { data: membersData, isLoading } = useGetTenantMembers(
     tenantId,
@@ -134,9 +136,7 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
                         'bg-surface-strong text-muted'
                       }
                     >
-                      {membership.attributes?.[
-                        tenantMapper.preferred_role_name
-                      ]?.[0] ?? membership.role}
+                      {getRoleFriendlyName(membership.role)}
                     </Badge>
                   </td>
                   <td className={`${tdBase} px-6`}>
@@ -148,9 +148,7 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
                           member.id,
                           member.email,
                           membership.role,
-                          membership.attributes?.[
-                            tenantMapper.preferred_role_name
-                          ]?.[0] ?? membership.role,
+                          getRoleFriendlyName(membership.role),
                         )
                       }
                       className="text-red-500 hover:bg-red-50"

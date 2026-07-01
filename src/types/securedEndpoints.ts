@@ -38,6 +38,12 @@ export type RoleEndpointAssignmentResponse = {
   code: string
 }
 
+export type ApiMessageResponse = {
+  message: string
+  code: number
+  errors?: string[]
+}
+
 export type Role = {
   id: string
   name: string

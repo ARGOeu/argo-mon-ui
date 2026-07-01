@@ -3,6 +3,7 @@ import type {
   AssignEndpointsRequest,
   RoleAssignmentsResponse,
   RoleEndpointAssignmentResponse,
+  ApiMessageResponse,
   Role,
   RolesPage,
   CreateRoleRequest,
@@ -147,6 +148,30 @@ export const fetchRoleMetadata = async (
       'Content-Type': 'application/json',
       Authorization: `Bearer ${token}`,
     },
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const updateRoleAttributes = async (
+  roleId: string,
+  attributes: Record<string, string[]>,
+  token: string,
+): Promise<ApiMessageResponse> => {
+  const response = await fetch(`${BACKEND_API}/roles/${roleId}/attributes`, {
+    method: 'PUT',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
+    },
+    body: JSON.stringify(attributes),
   })
 
   if (!response.ok) {
