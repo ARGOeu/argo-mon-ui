@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
+import { useAuth } from '@/auth/useAuth'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
@@ -40,11 +41,16 @@ const TenantDetails = () => {
     }
   }, [location.hash])
 
+  const { isSuperAdmin } = useAuth()
+
   const {
     tenant: tenantData,
     isTenantLoading,
     tenantError,
+    roleInSelectedTenant,
   } = useSelectedTenant()
+
+  const canEditTenant = isSuperAdmin || roleInSelectedTenant === 'tenant_admin'
 
   useEffect(() => {
     setLogoError(false)
@@ -191,14 +197,16 @@ const TenantDetails = () => {
               </div>
             )}
 
-            <Button
-              href={`/tenants/${tenantId}/edit`}
-              size="sm"
-              variant="primary"
-              className="whitespace-nowrap flex-shrink-0 ml-auto self-start"
-            >
-              Edit Tenant
-            </Button>
+            {canEditTenant && (
+              <Button
+                href={`/tenants/${tenantId}/edit`}
+                size="sm"
+                variant="primary"
+                className="whitespace-nowrap flex-shrink-0 ml-auto self-start"
+              >
+                Edit Tenant
+              </Button>
+            )}
           </div>
         </div>
 
