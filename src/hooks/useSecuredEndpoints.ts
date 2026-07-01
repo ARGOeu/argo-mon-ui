@@ -13,12 +13,14 @@ import {
   fetchRoles,
   createRole,
   fetchRoleMetadata,
+  updateRoleAttributes,
 } from '@/api/securedEndpoints'
 import type {
   SecuredEndpointsPage,
   AssignEndpointsRequest,
   RoleAssignmentsResponse,
   RoleEndpointAssignmentResponse,
+  ApiMessageResponse,
   Role,
   RolesPage,
   CreateRoleRequest,
@@ -149,6 +151,35 @@ export const useCreateRoleMutation = () => {
     },
     onError: (error) => {
       console.error('Create role error:', error)
+    },
+  })
+}
+
+export const useUpdateRoleAttributesMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<
+    ApiMessageResponse,
+    Error,
+    { roleId: string; attributes: Record<string, string[]> }
+  >({
+    mutationFn: ({
+      roleId,
+      attributes,
+    }: {
+      roleId: string
+      attributes: Record<string, string[]>
+    }) => {
+      if (!token) throw new Error('No authentication token available')
+      if (!roleId) throw new Error('Role ID is required')
+      return updateRoleAttributes(roleId, attributes, token)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['roles'] })
+    },
+    onError: (error) => {
+      console.error('Update role attributes error:', error)
     },
   })
 }

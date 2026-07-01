@@ -12,7 +12,7 @@ import Card from '@/components/Card'
 import TenantCardFooter from '@/pages/administration/TenantCardFooter'
 import Badge from '@/components/Badge'
 import { roleBadgeClass } from '@/utils/badges'
-import { tenantMapper } from '@/utils/roleAssignmentMapper'
+import { useRoleFriendlyName } from '@/hooks/useRoleFriendlyName'
 import { toast } from 'sonner'
 import type { UserGroup } from '@/types/profile'
 import type { Job, JobStatus } from '@/types/tenants'
@@ -42,6 +42,7 @@ const TenantManagementTab = () => {
 
   const { isSuperAdmin } = useAuth()
   const { data: userProfileData } = useGetUserProfile()
+  const getRoleFriendlyName = useRoleFriendlyName()
 
   const { data, isLoading, error } = useGetUserTenants(
     currentPage,
@@ -62,8 +63,7 @@ const TenantManagementTab = () => {
     if (!group?.role) return null
     return {
       role: group.role,
-      displayName:
-        group.attributes?.[tenantMapper.preferred_role_name]?.[0] ?? group.role,
+      displayName: getRoleFriendlyName(group.role),
     }
   }
 

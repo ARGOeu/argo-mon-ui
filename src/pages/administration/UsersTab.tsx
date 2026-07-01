@@ -11,6 +11,7 @@ import IconButton from '@/components/IconButton'
 import { squishEmail } from '@/utils/profile'
 import { TENANT_MEMBERSHIP_ENTITY } from '@/utils/memberships'
 import { tenantMapper } from '@/utils/roleAssignmentMapper'
+import { useRoleFriendlyName } from '@/hooks/useRoleFriendlyName'
 
 type SortColumn =
   | 'username'
@@ -28,16 +29,15 @@ const tenantBadgeBase =
 const TenantBadge = ({
   name,
   role,
-  preferredRoleName,
   colorClass,
 }: {
   name: string
   role: string
-  preferredRoleName?: string
   colorClass: string
 }) => {
   const textRef = useRef<HTMLSpanElement>(null)
   const [isTruncated, setIsTruncated] = useState(false)
+  const getRoleFriendlyName = useRoleFriendlyName()
 
   useEffect(() => {
     const el = textRef.current
@@ -46,7 +46,7 @@ const TenantBadge = ({
     }
   }, [name])
 
-  const displayRole = preferredRoleName ?? role
+  const displayRole = getRoleFriendlyName(role)
 
   return (
     <span
@@ -239,15 +239,10 @@ const UsersTab = () => {
                                   ]?.[0] ?? tenant.name
                                 }
                                 role={tenant.role}
-                                preferredRoleName={
-                                  tenant.attributes?.[
-                                    tenantMapper.preferred_role_name
-                                  ]?.[0]
-                                }
                                 colorClass={
                                   tenant.role === 'tenant_admin'
                                     ? 'bg-amber-100 text-amber-700'
-                                    : 'bg-brand-muted text-blue-800'
+                                    : 'bg-brand-muted text-brand-strong'
                                 }
                               />
                             ),
