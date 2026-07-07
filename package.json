@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
+    "lint:fix": "eslint --fix .",
     "prettier": "prettier --check .",
     "prettier:fix": "prettier --write .",
     "preview": "vite preview"
@@ -14,6 +15,8 @@
   "dependencies": {
     "@formkit/drag-and-drop": "^0.5.3",
     "@heroicons/react": "^2.2.0",
+    "@json2csv/transforms": "^7.0.6",
+    "@json2csv/plainjs": "^7.0.6",
     "@tailwindcss/vite": "^4.1.12",
     "@tanstack/react-query": "^5.85.5",
     "@tanstack/react-query-devtools": "^5.85.5",

@@ -1,10 +1,15 @@
 import { useState } from 'react'
 import { toast } from 'sonner'
-import { PencilSquareIcon, TrashIcon } from '@heroicons/react/16/solid'
+import {
+  ArrowDownTrayIcon,
+  PencilSquareIcon,
+  TrashIcon,
+} from '@heroicons/react/16/solid'
 import {
   useGetTopologyEndpoints,
   useCreateTopologyEndpointMutation,
 } from '@/hooks/useTopology'
+import { useSelectedTenant } from '@/contexts/selected-tenant'
 import Button from '@/components/Button'
 import { getLatestTopologyDate } from './utils/topologyDateHelpers'
 import { sortByField } from './utils/topologySortHelpers'
@@ -22,6 +27,7 @@ import Badge from '@/components/Badge'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import SelectDropdown from '@/components/SelectDropdown'
+import { buildCSV, downloadCSV, sanitizeFilename } from '@/utils/csvExport'
 import type { EndpointTopologyItem } from '@/types/topology'
 
 type SortColumn = 'service' | 'group' | 'tags.monitored'
@@ -34,6 +40,7 @@ interface TopologyEndpointsProps {
 }
 
 const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
+  const { tenant } = useSelectedTenant()
   const [monitoredFilter, setMonitoredFilter] = useState<
     'all' | 'monitored' | 'not_monitored'
   >('all')
@@ -59,6 +66,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
     showActions,
     isInternal,
     isExternal,
+    isTopologyTypeLoading,
     handleDateInputChange,
     handleDateModeChange,
     handleSortChange,
@@ -110,6 +118,16 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
     )
   }
 
+  const handleExport = () => {
+    const tenantName = tenant?.info.name ?? tenantId
+    const datePart = committedDate || latestDate
+
+    downloadCSV(
+      `${sanitizeFilename(tenantName)}${datePart ? `-${datePart}` : ''}-Topology-Endpoints.csv`,
+      buildCSV(sorted),
+    )
+  }
+
   const filtered = (endpoints ?? []).filter((e) => {
     if (monitoredFilter === 'monitored' && e.tags?.monitored !== '1') {
       return false
@@ -139,7 +157,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
 
   return (
     <>
-      <div className="flex flex-wrap xl:flex-nowrap items-center gap-3 mb-3">
+      <div className="flex flex-wrap xl:flex-nowrap items-center gap-x-1.5 gap-y-3 mb-3">
         <SearchInput
           value={searchInput}
           onChange={setSearchInput}
@@ -152,13 +170,13 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
             variant="primary"
             size="md"
             href={`/tenants/${tenantId}/topology/create`}
-            className="shrink-0 xl:order-last ms-auto xl:ms-2"
+            className="shrink-0 ms-auto xl:order-last xl:ms-1"
           >
             Add Endpoint
           </Button>
         )}
-        <div className="flex items-center gap-1.5 w-full xl:w-auto">
-          <div className="hidden xl:block h-8 w-px bg-line-strong me-1" />
+        <div className="flex items-center gap-1 w-full xl:w-auto">
+          <div className="hidden xl:block h-8 w-px bg-line-strong mx-1" />
           <SelectDropdown
             value={dateMode}
             onChange={handleDateModeChange}
@@ -169,7 +187,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
               },
               { value: 'custom', label: 'Select date' },
             ]}
-            className="w-46 shrink-0"
+            className={`${dateMode === 'latest' ? 'w-46' : 'w-36'} shrink-0`}
           />
           {dateMode === 'custom' && (
             <input
@@ -180,6 +198,14 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
               className="text-sm"
             />
           )}
+          <div className="hidden xl:block h-8 w-px bg-line-strong mx-1" />
+          <IconButton
+            icon={<ArrowDownTrayIcon className="size-5.5" />}
+            label="Export as CSV"
+            onClick={handleExport}
+            disabled={!sorted.length || isTopologyTypeLoading}
+            className={`text-body border border-line-strong hover:bg-surface-strong shrink-0 ${!isInternal ? 'tooltip-left' : ''}`}
+          />
           <SelectDropdown
             value={monitoredFilter}
             onChange={(value) => {
@@ -191,7 +217,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
               { value: 'monitored', label: 'Monitored' },
               { value: 'not_monitored', label: 'Not monitored' },
             ]}
-            className="w-40 shrink-0 ms-auto xl:ms-0 xl:order-first"
+            className="w-36 shrink-0 ms-auto xl:ms-0 xl:order-first"
           />
         </div>
       </div>
@@ -273,7 +299,7 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
           ) : (
             paginated.map((endpoint) => (
               <tr
-                key={`${endpoint.tags?.info_URL ?? endpoint.hostname}_${endpoint.service}`}
+                key={`${endpoint.tags?.info_URL ?? endpoint.hostname}_${endpoint.service}_${endpoint.group}`}
                 className="hover:bg-surface-muted transition-colors"
               >
                 <td className={tdBase}>{endpoint.service}</td>
