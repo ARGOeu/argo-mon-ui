@@ -273,8 +273,8 @@ export const fetchMembers = async (
 
   const queryString = params.toString()
   const url = queryString
-    ? `${BACKEND_API}/v1/admin/members?${queryString}`
-    : `${BACKEND_API}/v1/admin/members`
+    ? `${BACKEND_API}/members?${queryString}`
+    : `${BACKEND_API}/members`
 
   const response = await fetch(url, {
     method: 'GET',

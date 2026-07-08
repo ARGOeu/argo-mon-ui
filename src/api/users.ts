@@ -4,7 +4,7 @@ import type { UserPages } from '@/types/pages'
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
 export const registerUser = async (token: string): Promise<User> => {
-  const response = await fetch(`${BACKEND_API}/v1/users/registration`, {
+  const response = await fetch(`${BACKEND_API}/users/registration`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
