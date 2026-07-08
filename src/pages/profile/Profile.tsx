@@ -1,8 +1,5 @@
 import { useState } from 'react'
-import {
-  useGetUserProfileByUsername,
-  useGetTenantByName,
-} from '@/hooks/useTenants'
+import { useGetUserProfileByUsername } from '@/hooks/useTenants'
 import { useRevokeRoleMutation } from '@/hooks/useResources'
 import { useRoleFriendlyName } from '@/hooks/useRoleFriendlyName'
 import { useAuth } from '@/auth/useAuth'
@@ -19,6 +16,7 @@ import AssignRoleToUser from './AssignRoleToUser'
 import { squishEmail } from '@/utils/profile'
 import { roleBadgeClass } from '@/utils/badges'
 import { TENANT_MEMBERSHIP_ENTITY } from '@/utils/memberships'
+import { tenantMapper } from '@/utils/roleAssignmentMapper'
 
 const fieldValueClass = 'text-sm text-gray-800 font-medium'
 const fieldValueUnavailableClass = 'text-sm text-subtle italic'
@@ -34,6 +32,7 @@ const Profile = () => {
   const [membershipToRemove, setMembershipToRemove] = useState<{
     entityType: string
     name: string
+    resourceLabel: string
     role: string
     displayName: string
   } | null>(null)
@@ -45,7 +44,6 @@ const Profile = () => {
   } = useGetUserProfileByUsername(username || '', !!username && isSuperAdmin)
 
   const getRoleFriendlyName = useRoleFriendlyName()
-  const getTenantByNameMutation = useGetTenantByName()
   const revokeRoleMutation = useRevokeRoleMutation()
 
   if (username && !isSuperAdmin) {
@@ -59,10 +57,17 @@ const Profile = () => {
   const handleRemoveClick = (
     entityType: string,
     name: string,
+    resourceLabel: string,
     role: string,
     displayName: string,
   ) => {
-    setMembershipToRemove({ entityType, name, role, displayName })
+    setMembershipToRemove({
+      entityType,
+      name,
+      resourceLabel,
+      role,
+      displayName,
+    })
     setRemoveDialogOpen(true)
   }
 
@@ -71,44 +76,24 @@ const Profile = () => {
 
     if (!membershipToRemove || !userId) return
 
-    const revoke = (resourceId?: string) => {
-      revokeRoleMutation.mutate(
-        {
-          api_resource: membershipToRemove.entityType,
-          resource_id: resourceId,
-          role: membershipToRemove.role,
-          member_id: userId,
-        },
-        {
-          onSuccess: () => {
-            toast.success('Role revoked successfully!')
-            setRemoveDialogOpen(false)
-            setMembershipToRemove(null)
-          },
-          onError: (error) => {
-            toast.error(`Failed to revoke role: ${error.message}`)
-          },
-        },
-      )
-    }
-
-    if (membershipToRemove.entityType === TENANT_MEMBERSHIP_ENTITY) {
-      getTenantByNameMutation.mutate(membershipToRemove.name, {
-        onSuccess: (tenantData) => {
-          if (!tenantData?.content[0]) {
-            toast.error('Failed to find tenant')
-            return
-          }
-          const tenantId = tenantData.content[0].id || ''
-          revoke(tenantId)
+    revokeRoleMutation.mutate(
+      {
+        api_resource: membershipToRemove.entityType,
+        resource_id: membershipToRemove.name,
+        role: membershipToRemove.role,
+        member_id: userId,
+      },
+      {
+        onSuccess: () => {
+          toast.success('Role revoked successfully!')
+          setRemoveDialogOpen(false)
+          setMembershipToRemove(null)
         },
         onError: (error) => {
-          toast.error(`Failed to find tenant: ${error.message}`)
+          toast.error(`Failed to revoke role: ${error.message}`)
         },
-      })
-    } else {
-      revoke(membershipToRemove.name)
-    }
+      },
+    )
   }
 
   const handleRemoveCancel = () => {
@@ -182,8 +167,8 @@ const Profile = () => {
           membershipToRemove ? (
             <>
               Are you sure you want to revoke the{' '}
-              <strong>{membershipToRemove.displayName}</strong> role from{' '}
-              <strong>{membershipToRemove.name}</strong>?
+              <strong>{membershipToRemove.displayName}</strong> role in{' '}
+              <strong>{membershipToRemove.resourceLabel}</strong>?
               <br />
               <span className="text-amber-600 font-medium">
                 The user will lose access to this resource.
@@ -195,9 +180,7 @@ const Profile = () => {
         }
         confirmLabel="Revoke"
         cancelLabel="Cancel"
-        isPending={
-          getTenantByNameMutation.isPending || revokeRoleMutation.isPending
-        }
+        isPending={revokeRoleMutation.isPending}
         onConfirm={handleRemoveConfirm}
         onCancel={handleRemoveCancel}
       />
@@ -318,44 +301,51 @@ const Profile = () => {
                               </label>
                               {filteredRoles.length > 0 ? (
                                 <div className="flex flex-col gap-2.5">
-                                  {filteredRoles.map((role, index) => (
-                                    <div
-                                      key={index}
-                                      className="w-fit flex items-center justify-between px-4 py-1 bg-surface-muted border border-line rounded-lg transition-all hover:bg-surface-strong"
-                                    >
-                                      <div className="flex items-center gap-5 flex-1">
-                                        <span className="text-sm font-medium text-gray-800">
-                                          {role.name}
-                                        </span>
-                                        <Badge
-                                          size="xs"
-                                          className={
-                                            roleBadgeClass[role.role] ??
-                                            roleBadgeClass['tenant_viewer']
-                                          }
-                                        >
-                                          {getRoleFriendlyName(role.role)}
-                                        </Badge>
-                                      </div>
-
-                                      <button
-                                        aria-label="Revoke role"
-                                        className="p-1 rounded-md cursor-pointer transition-all text-red-600 hover:bg-red-50 border-none bg-transparent ml-4 tooltip"
-                                        data-tip="Revoke this role"
-                                        onClick={() =>
-                                          handleRemoveClick(
-                                            entityType,
-                                            role.name,
-                                            role.role,
-                                            getRoleFriendlyName(role.role),
-                                          )
-                                        }
-                                        title="Revoke this role"
+                                  {filteredRoles.map((role, index) => {
+                                    const resourceLabel =
+                                      role.attributes?.[
+                                        tenantMapper.tenant_name
+                                      ]?.[0] ?? role.name
+                                    return (
+                                      <div
+                                        key={index}
+                                        className="w-fit flex items-center justify-between px-4 py-1 bg-surface-muted border border-line rounded-lg transition-all hover:bg-surface-strong"
                                       >
-                                        <UserMinusIcon className="size-4" />
-                                      </button>
-                                    </div>
-                                  ))}
+                                        <div className="flex items-center gap-5 flex-1">
+                                          <span className="text-sm font-medium text-gray-800">
+                                            {resourceLabel}
+                                          </span>
+                                          <Badge
+                                            size="xs"
+                                            className={
+                                              roleBadgeClass[role.role] ??
+                                              roleBadgeClass['tenant_viewer']
+                                            }
+                                          >
+                                            {getRoleFriendlyName(role.role)}
+                                          </Badge>
+                                        </div>
+
+                                        <button
+                                          aria-label="Revoke role"
+                                          className="p-1 rounded-md cursor-pointer transition-all text-red-600 hover:bg-red-50 border-none bg-transparent ml-4 tooltip"
+                                          data-tip="Revoke this role"
+                                          onClick={() =>
+                                            handleRemoveClick(
+                                              entityType,
+                                              role.name,
+                                              resourceLabel,
+                                              role.role,
+                                              getRoleFriendlyName(role.role),
+                                            )
+                                          }
+                                          title="Revoke this role"
+                                        >
+                                          <UserMinusIcon className="size-4" />
+                                        </button>
+                                      </div>
+                                    )
+                                  })}
                                 </div>
                               ) : (
                                 <p className={fieldValueUnavailableClass}>

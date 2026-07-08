@@ -430,22 +430,6 @@ export const useRemoveMemberFromTenant = () => {
   })
 }
 
-export const useGetTenantByName = () => {
-  const { token } = useAuth()
-
-  return useMutation<TenantList | null, Error, string>({
-    mutationFn: (tenantName: string) => {
-      if (!token) {
-        throw new Error('No authentication token available')
-      }
-      return fetchUserTenants(token, 1, 1, tenantName)
-    },
-    onError: (error) => {
-      console.error('Fetch tenant by name error:', error)
-    },
-  })
-}
-
 export const useRevokeInvitation = () => {
   const queryClient = useQueryClient()
   const { token } = useAuth()
