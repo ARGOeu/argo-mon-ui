@@ -36,12 +36,11 @@ export const useTopologyListState = <TSort extends string>({
   }, [committedDate])
 
   const { tenant } = useSelectedTenant()
-  const { data: topologyFeedData } = useGetTopologyFeedQuery(
-    tenant?.id ?? '',
-    !!tenant?.id,
-  )
+  const { data: topologyFeedData, isFetching: isTopologyFeedFetching } =
+    useGetTopologyFeedQuery(tenant?.id ?? '', !!tenant?.id)
   const isInternal = topologyFeedData?.type === 'internal'
   const isExternal = topologyFeedData?.type === 'external'
+  const isTopologyTypeLoading = !tenant?.id || isTopologyFeedFetching
 
   const showActions =
     isInternal &&
@@ -91,6 +90,7 @@ export const useTopologyListState = <TSort extends string>({
     showActions,
     isInternal,
     isExternal,
+    isTopologyTypeLoading,
     handleDateInputChange,
     handleDateModeChange,
     handleSortChange,
