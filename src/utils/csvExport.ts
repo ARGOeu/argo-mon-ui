@@ -1,33 +1,45 @@
-import { Parser } from '@json2csv/plainjs'
-import { flatten } from '@json2csv/transforms'
+import { Parser, type FieldInfo } from '@json2csv/plainjs'
+
+export type CsvField<T> = FieldInfo<T, unknown>
 
 export const sanitizeFilename = (value: string): string =>
   value.replace(/[^a-zA-Z0-9]+/g, '-').replace(/^-+|-+$/g, '')
 
-const isBlankValue = (value: unknown): boolean =>
-  value === '' || (Array.isArray(value) && value.every((item) => item === ''))
+const isEmptyValue = (value: unknown): boolean =>
+  value === undefined || value === null || value === ''
 
-// Recursively turns blank strings and empty-string arrays into undefined, without deleting the key
-const clearBlankValues = (value: unknown): unknown => {
-  if (isBlankValue(value)) {
-    return undefined
+// Used to detect empty columns before parsing
+const previewFieldValue = <T>(row: T, field: CsvField<T>): unknown => {
+  if (typeof field.value !== 'string') {
+    return field.value(row, {
+      label: field.label ?? '',
+      default: field.default,
+    })
   }
-  if (Array.isArray(value)) {
-    return value
-  }
-  if (value !== null && typeof value === 'object') {
-    const cleaned: Record<string, unknown> = {}
-    for (const [key, val] of Object.entries(value as Record<string, unknown>)) {
-      cleaned[key] = clearBlankValues(val)
+
+  let current: unknown = row
+  for (const key of field.value.split('.')) {
+    if (
+      current === null ||
+      current === undefined ||
+      typeof current !== 'object'
+    ) {
+      return undefined
     }
-    return cleaned
+    current = (current as Record<string, unknown>)[key]
   }
-  return value
+  return current
 }
 
-export const buildCSV = <T extends object>(rows: T[]): string => {
-  const parser = new Parser({ transforms: [flatten({ objects: true })] })
-  return parser.parse(rows.map(clearBlankValues) as T[])
+export const buildCSV = <T extends object>(
+  rows: T[],
+  fields: CsvField<T>[],
+): string => {
+  const nonEmptyFields = fields.filter((field) =>
+    rows.some((row) => !isEmptyValue(previewFieldValue(row, field))),
+  )
+  const parser = new Parser<T, T>({ fields: nonEmptyFields })
+  return parser.parse(rows)
 }
 
 export const downloadCSV = (filename: string, csv: string): void => {
