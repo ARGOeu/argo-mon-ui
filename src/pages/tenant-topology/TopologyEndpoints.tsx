@@ -27,12 +27,23 @@ import Badge from '@/components/Badge'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import SelectDropdown from '@/components/SelectDropdown'
-import { buildCSV, downloadCSV, sanitizeFilename } from '@/utils/csvExport'
+import {
+  buildCSV,
+  downloadCSV,
+  sanitizeFilename,
+  type CsvField,
+} from '@/utils/csvExport'
 import type { EndpointTopologyItem } from '@/types/topology'
 
 type SortColumn = 'service' | 'group' | 'tags.monitored'
 
 const pageSize = 15
+
+const toBooleanFlag = (value: string | undefined): boolean | undefined => {
+  if (value === '1') return true
+  if (value === '0') return false
+  return undefined
+}
 
 interface TopologyEndpointsProps {
   tenantId: string
@@ -119,12 +130,68 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
   }
 
   const handleExport = () => {
+    const knownTagKeys = new Set([
+      'hostname',
+      'info_ID',
+      'info_URL',
+      'monitored',
+      'production',
+      'scope',
+    ])
+    const extraTagKeys = Array.from(
+      new Set(sorted.flatMap((endpoint) => Object.keys(endpoint.tags ?? {}))),
+    )
+      .filter((key) => !knownTagKeys.has(key))
+      .sort()
+
+    const fields: CsvField<EndpointTopologyItem>[] = [
+      { label: 'Date', value: 'date' },
+      { label: 'Group', value: 'group' },
+      { label: 'Type', value: 'type' },
+      { label: 'Service', value: 'service' },
+      ...(isExternal
+        ? [
+            {
+              label: 'Hostname',
+              value: (endpoint: EndpointTopologyItem) =>
+                endpoint.tags?.hostname || endpoint.hostname,
+            },
+          ]
+        : []),
+      { label: 'URL', value: 'tags.info_URL' },
+      { label: 'Service_ID', value: 'tags.info_ID' },
+      {
+        label: 'Monitored',
+        value: (endpoint: EndpointTopologyItem) =>
+          toBooleanFlag(endpoint.tags?.monitored),
+      },
+      {
+        label: 'Contacts_to_notify',
+        value: (endpoint: EndpointTopologyItem) =>
+          (endpoint.notifications?.contacts ?? [])
+            .filter((email: string) => email !== '')
+            .join('; '),
+      },
+      { label: 'Notifications.enabled', value: 'notifications.enabled' },
+      ...extraTagKeys.map(
+        (key): CsvField<EndpointTopologyItem> => ({
+          label: key,
+          value: (endpoint: EndpointTopologyItem) => endpoint.tags?.[key] ?? '',
+        }),
+      ),
+      {
+        label: 'In_production',
+        value: (endpoint: EndpointTopologyItem) =>
+          toBooleanFlag(endpoint.tags?.production),
+      },
+    ]
+
     const tenantName = tenant?.info.name ?? tenantId
     const datePart = committedDate || latestDate
 
     downloadCSV(
       `${sanitizeFilename(tenantName)}${datePart ? `-${datePart}` : ''}-Topology-Endpoints.csv`,
-      buildCSV(sorted),
+      buildCSV(sorted, fields),
     )
   }
 
@@ -165,12 +232,20 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
           placeholder="Search by service, URL or group..."
           className="!mb-0 flex-1 max-w-xs xl:max-w-none"
         />
+        <div className="hidden xl:block h-8 w-px bg-line-strong mx-1 xl:order-last" />
+        <IconButton
+          icon={<ArrowDownTrayIcon className="size-5.5" />}
+          label="Export as CSV"
+          onClick={handleExport}
+          disabled={!sorted.length || isTopologyTypeLoading}
+          className={`text-body border border-line-strong hover:bg-surface-strong shrink-0 ms-auto xl:order-last ${!isInternal ? 'tooltip-left' : ''}`}
+        />
         {isInternal && (
           <Button
             variant="primary"
             size="md"
             href={`/tenants/${tenantId}/topology/create`}
-            className="shrink-0 ms-auto xl:order-last xl:ms-1"
+            className="shrink-0 xl:order-last xl:ms-1"
           >
             Add Endpoint
           </Button>
@@ -198,14 +273,6 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
               className="text-sm"
             />
           )}
-          <div className="hidden xl:block h-8 w-px bg-line-strong mx-1" />
-          <IconButton
-            icon={<ArrowDownTrayIcon className="size-5.5" />}
-            label="Export as CSV"
-            onClick={handleExport}
-            disabled={!sorted.length || isTopologyTypeLoading}
-            className={`text-body border border-line-strong hover:bg-surface-strong shrink-0 ${!isInternal ? 'tooltip-left' : ''}`}
-          />
           <SelectDropdown
             value={monitoredFilter}
             onChange={(value) => {
