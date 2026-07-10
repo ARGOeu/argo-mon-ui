@@ -11,6 +11,7 @@ import {
   ServerStackIcon,
   CircleStackIcon,
   LockClosedIcon,
+  Cog6ToothIcon,
 } from '@heroicons/react/16/solid'
 import { ChartNetwork } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -192,6 +193,10 @@ function Sidebar({
               >
                 <LockClosedIcon className="size-4" aria-hidden />
                 Endpoints Access
+              </SidebarNavItem>
+              <SidebarNavItem to="/settings" onClick={onCloseMobileMenu}>
+                <Cog6ToothIcon className="size-4" aria-hidden />
+                Settings
               </SidebarNavItem>
             </div>
           )}
