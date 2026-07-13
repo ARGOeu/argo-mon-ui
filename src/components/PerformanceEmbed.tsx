@@ -35,7 +35,7 @@ const PerformanceEmbed = ({
 
   const iframeSrc =
     grafanaBaseUrl && tenantName
-      ? `${grafanaBaseUrl.replace(/\/+$/, '')}/${encodeURIComponent(tenantName)}`
+      ? `${grafanaBaseUrl.replace(/\/+$/, '')}/${encodeURIComponent(tenantName)}?kiosk`
       : null
 
   return (
