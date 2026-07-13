@@ -43,6 +43,25 @@ export const fetchSettingById = async (
   return response.json()
 }
 
+export const fetchPublicPerformanceSetting = async (): Promise<Setting> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/public/settings/performance`,
+    {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
 export const updateSetting = async (
   id: string,
   data: SettingUpdateRequest,

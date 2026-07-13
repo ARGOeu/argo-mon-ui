@@ -12,6 +12,7 @@ import {
   CircleStackIcon,
   LockClosedIcon,
   Cog6ToothIcon,
+  ChartBarIcon,
 } from '@heroicons/react/16/solid'
 import { ChartNetwork } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -50,6 +51,12 @@ const tenantNavItems: TenantNavItem[] = [
     label: 'Capabilities',
     icon: ShieldCheckIcon,
     requiredRoles: ['tenant_admin'],
+  },
+  {
+    path: 'performance',
+    label: 'Performance',
+    icon: ChartBarIcon,
+    requiredRoles: ['super_admin'],
   },
   {
     path: 'members',

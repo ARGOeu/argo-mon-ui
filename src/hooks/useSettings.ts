@@ -1,6 +1,11 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from '@/auth/useAuth'
-import { fetchSettings, fetchSettingById, updateSetting } from '@/api/settings'
+import {
+  fetchSettings,
+  fetchSettingById,
+  fetchPublicPerformanceSetting,
+  updateSetting,
+} from '@/api/settings'
 import type { Setting, SettingUpdateRequest } from '@/types/settings'
 
 export const useGetSettings = (enabled: boolean = true) => {
@@ -53,5 +58,15 @@ export const useUpdateSettingMutation = () => {
     onError: (error) => {
       console.error('Setting update error:', error)
     },
+  })
+}
+
+export const useGetPerformanceSettings = () => {
+  return useQuery<Setting, Error>({
+    queryKey: ['public-performance-setting'],
+    queryFn: () => {
+      return fetchPublicPerformanceSetting()
+    },
+    retry: false,
   })
 }

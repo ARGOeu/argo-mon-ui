@@ -23,6 +23,7 @@ import CreateProject from './pages/CreateProject'
 import Administration from './pages/administration'
 import EndpointsAccess from './pages/endpoints-access'
 import { Settings, PerformanceSettings } from './pages/configuration-settings'
+import TenantPerformance from './pages/TenantPerformance'
 import ManageTenantMembers from './pages/manage-tenant-members'
 import MyInvitations from './pages/MyInvitations'
 import { InvitationReview } from './pages/InvitationReview'
@@ -37,6 +38,7 @@ import {
   PublicTenantLayout,
   PublicDashboardContainer,
   PublicCapabilitiesContainer,
+  PublicPerformanceContainer,
 } from './pages/public-tenant'
 import { AuthProvider } from './auth/AuthProvider'
 import NotFound from './pages/NotFound'
@@ -80,6 +82,7 @@ function PlatformRoutes() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<PublicDashboardContainer />} />
         <Route path="capabilities" element={<PublicCapabilitiesContainer />} />
+        <Route path="performance" element={<PublicPerformanceContainer />} />
         <Route path="*" element={<NotFound />} />
       </Route>
       <Route element={<AuthLayout />}>
@@ -148,6 +151,14 @@ function PlatformRoutes() {
               <AuthProtected>
                 <TenantCapabilities />
               </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/performance"
+            element={
+              <ProtectedRoute requiredRoles={['super_admin']}>
+                <TenantPerformance />
+              </ProtectedRoute>
             }
           />
           <Route
@@ -306,6 +317,7 @@ function CustomDomainRoutes() {
         />
         <Route path="/dashboard" element={<PublicDashboardContainer />} />
         <Route path="/capabilities" element={<PublicCapabilitiesContainer />} />
+        <Route path="/performance" element={<PublicPerformanceContainer />} />
       </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>

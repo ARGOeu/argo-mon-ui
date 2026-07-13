@@ -1,7 +1,11 @@
 import { useState } from 'react'
 import { useTenantName } from '@/hooks/useTenantName'
 import { Outlet } from 'react-router-dom'
-import { CircleStackIcon, ShieldCheckIcon } from '@heroicons/react/16/solid'
+import {
+  CircleStackIcon,
+  ShieldCheckIcon,
+  ChartBarIcon,
+} from '@heroicons/react/16/solid'
 import MobileMenuToggle from '@/components/sidebar/MobileMenuToggle'
 import SidebarHeader from '@/components/sidebar/SidebarHeader'
 import SidebarNavItem from '@/components/sidebar/SidebarNavItem'
@@ -32,6 +36,10 @@ const PublicTenantLayout = () => {
   const capabilitiesPath = isPlatformDomain()
     ? `/public/tenants/${tenantName}/capabilities`
     : '/capabilities'
+
+  const performancePath = isPlatformDomain()
+    ? `/public/tenants/${tenantName}/performance`
+    : '/performance'
 
   return (
     <div className="h-screen flex overflow-hidden">
@@ -76,6 +84,14 @@ const PublicTenantLayout = () => {
           >
             <ShieldCheckIcon className="size-4" aria-hidden />
             Capabilities
+          </SidebarNavItem>
+
+          <SidebarNavItem
+            to={performancePath}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <ChartBarIcon className="size-4" aria-hidden />
+            Performance
           </SidebarNavItem>
         </nav>
       </aside>
