@@ -4,6 +4,7 @@ import {
   Outlet,
   Route,
   Routes,
+  useLocation,
 } from 'react-router-dom'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import Layout from './Layout'
@@ -21,6 +22,7 @@ import AssignProjects from './pages/AssignProjects'
 import CreateProject from './pages/CreateProject'
 import Administration from './pages/administration'
 import EndpointsAccess from './pages/endpoints-access'
+import { Settings, PerformanceSettings } from './pages/configuration-settings'
 import ManageTenantMembers from './pages/manage-tenant-members'
 import MyInvitations from './pages/MyInvitations'
 import { InvitationReview } from './pages/InvitationReview'
@@ -189,6 +191,22 @@ function PlatformRoutes() {
             }
           />
           <Route
+            path="settings"
+            element={
+              <ProtectedRoute requiredRoles={['super_admin']}>
+                <Settings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="settings/:id"
+            element={
+              <ProtectedRoute requiredRoles={['super_admin']}>
+                <PerformanceSettings />
+              </ProtectedRoute>
+            }
+          />
+          <Route
             path="my-invitations"
             element={
               <AuthProtected>
@@ -268,10 +286,24 @@ function PlatformRoutes() {
 }
 
 function CustomDomainRoutes() {
+  const location = useLocation()
+
   return (
     <Routes>
       <Route element={<PublicTenantLayout />}>
-        <Route path="/" element={<PublicDashboardContainer />} />
+        <Route
+          index
+          element={
+            <Navigate
+              to={{
+                pathname: '/dashboard',
+                search: location.search,
+                hash: location.hash,
+              }}
+              replace
+            />
+          }
+        />
         <Route path="/dashboard" element={<PublicDashboardContainer />} />
         <Route path="/capabilities" element={<PublicCapabilitiesContainer />} />
       </Route>
