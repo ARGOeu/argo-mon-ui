@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useTenantName } from '@/hooks/useTenantName'
+import { useGetPerformanceSettings } from '@/hooks/useSettings'
 import { Outlet } from 'react-router-dom'
 import {
   CircleStackIcon,
@@ -16,6 +17,7 @@ import { isPlatformDomain } from '@/utils/domains'
 const PublicTenantLayout = () => {
   const { tenantName, loading: tenantLoading } = useTenantName()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { data: performanceSetting } = useGetPerformanceSettings()
 
   if (tenantLoading) {
     return (
@@ -86,13 +88,15 @@ const PublicTenantLayout = () => {
             Capabilities
           </SidebarNavItem>
 
-          <SidebarNavItem
-            to={performancePath}
-            onClick={() => setIsMobileMenuOpen(false)}
-          >
-            <ChartBarIcon className="size-4" aria-hidden />
-            Performance
-          </SidebarNavItem>
+          {performanceSetting?.enabled && (
+            <SidebarNavItem
+              to={performancePath}
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              <ChartBarIcon className="size-4" aria-hidden />
+              Performance
+            </SidebarNavItem>
+          )}
         </nav>
       </aside>
 

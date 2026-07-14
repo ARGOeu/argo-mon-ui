@@ -1,5 +1,6 @@
 import { useEffect } from 'react'
 import { useGetUserInvitations } from '@/hooks/useInvitations'
+import { useGetPerformanceSettings } from '@/hooks/useSettings'
 import {
   RectangleStackIcon,
   UserGroupIcon,
@@ -12,9 +13,8 @@ import {
   CircleStackIcon,
   LockClosedIcon,
   Cog6ToothIcon,
-  ChartBarIcon,
 } from '@heroicons/react/16/solid'
-import { ChartNetwork } from 'lucide-react'
+import { ChartNetwork, Medal } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import TenantPicker from './TenantPicker'
 import SidebarNavItem from './SidebarNavItem'
@@ -55,7 +55,7 @@ const tenantNavItems: TenantNavItem[] = [
   {
     path: 'performance',
     label: 'Performance',
-    icon: ChartBarIcon,
+    icon: Medal,
     requiredRoles: ['super_admin'],
   },
   {
@@ -99,12 +99,19 @@ function Sidebar({
 }: SidebarProps) {
   const navigate = useNavigate()
   const { pathname } = useLocation()
+  const { data: performanceSetting } = useGetPerformanceSettings()
 
-  const isItemVisible = (item: TenantNavItem) =>
-    !item.requiredRoles ||
-    isSuperAdmin ||
-    (roleInSelectedTenant !== null &&
-      item.requiredRoles.includes(roleInSelectedTenant))
+  const isItemVisible = (item: TenantNavItem) => {
+    if (item.path === 'performance' && !performanceSetting?.enabled) {
+      return false
+    }
+    return (
+      !item.requiredRoles ||
+      isSuperAdmin ||
+      (roleInSelectedTenant !== null &&
+        item.requiredRoles.includes(roleInSelectedTenant))
+    )
+  }
 
   const visibleTenantNavItems = tenantNavItems.filter(isItemVisible)
 
