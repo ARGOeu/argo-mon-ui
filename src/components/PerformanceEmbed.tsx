@@ -43,7 +43,10 @@ const PerformanceEmbed = ({
       <PageHeader
         title="Performance"
         subtitle={
-          tenantName ? `Grafana dashboard for ${tenantName}` : undefined
+          <>
+            Dashboard for tenant{' '}
+            <strong>{tenantName ? tenantName : '...'}</strong>
+          </>
         }
         className="mb-3"
       />

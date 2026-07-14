@@ -54,6 +54,9 @@ export const useUpdateSettingMutation = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['settings'] })
       queryClient.invalidateQueries({ queryKey: ['setting', variables.id] })
+      queryClient.invalidateQueries({
+        queryKey: ['public-performance-setting'],
+      })
     },
     onError: (error) => {
       console.error('Setting update error:', error)
