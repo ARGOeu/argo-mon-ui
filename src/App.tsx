@@ -16,7 +16,10 @@ import BuildStatusPage from './pages/build-status-page'
 import TenantStatusPages from './pages/status-pages'
 import CreateTenant from './pages/create-tenant'
 import TenantReports from './pages/tenant-reports'
-import { AvailabilityReliability } from './pages/availability-reliability'
+import {
+  AvailabilityReliability,
+  AvailabilityReliabilityDaily,
+} from './pages/availability-reliability'
 import TenantCapabilities from './pages/tenant-capabilities'
 import TenantDetails from './pages/tenant-details'
 import AssignProjects from './pages/AssignProjects'
@@ -151,6 +154,22 @@ function PlatformRoutes() {
             element={
               <AuthProtected>
                 <AvailabilityReliability />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/ar-groups/report/:reportName"
+            element={
+              <AuthProtected>
+                <AvailabilityReliability />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/ar-groups/:groupName/report/:reportName/:month"
+            element={
+              <AuthProtected>
+                <AvailabilityReliabilityDaily />
               </AuthProtected>
             }
           />

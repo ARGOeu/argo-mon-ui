@@ -11,6 +11,14 @@ export type GroupAvailabilityReliability = {
   monthly: GroupMonthlyResult[]
 }
 
+export type GroupDailyResult = {
+  date: string
+  availability: number
+  reliability: number
+  unknown: number
+  downtime: number
+}
+
 export type GroupResult = {
   timestamp: string
   availability: string
@@ -20,7 +28,7 @@ export type GroupResult = {
   downtime: string
 }
 
-export type GroupEndpoints = {
+export type GroupItem = {
   name: string
   type: string
   results: GroupResult[]
@@ -29,7 +37,7 @@ export type GroupEndpoints = {
 export type GroupData = {
   name: string
   type: string
-  groups: GroupEndpoints[]
+  groups: GroupItem[]
 }
 
 export type GroupsAvailabilityReliabilityResponse = {

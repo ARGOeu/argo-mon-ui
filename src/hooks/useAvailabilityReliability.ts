@@ -1,6 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/auth/useAuth'
-import { fetchGroupsAvailabilityReliability } from '@/api/availabilityReliability'
+import {
+  fetchGroupsAvailabilityReliability,
+  fetchGroupAvailabilityReliability,
+} from '@/api/availabilityReliability'
 import type {
   GroupsAvailabilityReliabilityResponse,
   ResultGranularity,
@@ -50,6 +53,62 @@ export const useGetGroupsAvailabilityReliability = (
       !!token &&
       !!tenantId &&
       !!reportName &&
+      !!startTime &&
+      !!endTime,
+  })
+}
+
+export const useGetGroupAvailabilityReliability = (
+  tenantId: string,
+  reportName: string,
+  groupName: string,
+  granularity: ResultGranularity,
+  startTime: string,
+  endTime: string,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<GroupsAvailabilityReliabilityResponse, Error>({
+    queryKey: [
+      'availability-reliability-group-daily',
+      tenantId,
+      reportName,
+      groupName,
+      granularity,
+      startTime,
+      endTime,
+    ],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantId) {
+        throw new Error('Tenant ID is required')
+      }
+      if (!reportName) {
+        throw new Error('Report name is required')
+      }
+      if (!groupName) {
+        throw new Error('Group name is required')
+      }
+      return fetchGroupAvailabilityReliability(
+        tenantId,
+        reportName,
+        groupName,
+        granularity,
+        startTime,
+        endTime,
+        token,
+      )
+    },
+    retry: false,
+    enabled:
+      enabled &&
+      !!token &&
+      !!tenantId &&
+      !!reportName &&
+      !!groupName &&
       !!startTime &&
       !!endTime,
   })
