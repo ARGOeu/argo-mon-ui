@@ -9,6 +9,7 @@ import {
   ShieldCheckIcon,
   UsersIcon,
   DocumentChartBarIcon,
+  TableCellsIcon,
   ServerStackIcon,
   CircleStackIcon,
   LockClosedIcon,
@@ -38,6 +39,11 @@ const tenantNavItems: TenantNavItem[] = [
     icon: CircleStackIcon,
   },
   { path: 'details', label: 'Overview', icon: HomeIcon },
+  {
+    path: 'ar-groups',
+    label: 'Availability & Reliability',
+    icon: TableCellsIcon,
+  },
   {
     path: 'topology',
     label: 'Topology',
