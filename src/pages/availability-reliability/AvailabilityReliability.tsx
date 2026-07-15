@@ -2,42 +2,55 @@ import { useState, useMemo, useEffect } from 'react'
 import { useGetGroupsAvailabilityReliability } from '@/hooks/useAvailabilityReliability'
 import { useGetTenantReports } from '@/hooks/useTenants'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import PageHeader from '@/components/PageHeader'
 import SearchInput from '@/components/SearchInput'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import SelectDropdown from '@/components/SelectDropdown'
+import Pagination from '@/components/Pagination'
 import MonthlyAvailabilityTable from './MonthlyAvailabilityTable'
+
+const pageSize = 20
 
 const toW3CTimestamp = (date: Date): string =>
   date.toISOString().replace(/\.\d{3}Z$/, 'Z')
 
 const getLastThreeMonthsRange = (): { startTime: string; endTime: string } => {
   const now = new Date()
-  const start = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 2, 1, 0, 0, 0),
+  const todayUtcDate = new Date(
+    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
   )
-  return { startTime: toW3CTimestamp(start), endTime: toW3CTimestamp(now) }
+  const start = new Date(
+    Date.UTC(todayUtcDate.getUTCFullYear(), todayUtcDate.getUTCMonth() - 2, 1),
+  )
+  return {
+    startTime: toW3CTimestamp(start),
+    endTime: toW3CTimestamp(todayUtcDate),
+  }
 }
 
 const AvailabilityReliability = () => {
-  const { id } = useParams<{ id: string }>()
+  const { id, reportName } = useParams<{ id: string; reportName?: string }>()
   const tenantId = id || ''
-  const [searchParams, setSearchParams] = useSearchParams()
+  const navigate = useNavigate()
   const { tenant: tenantData } = useSelectedTenant()
 
   const [search, setSearch] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
 
   const { data: reports } = useGetTenantReports(tenantId)
 
-  const selectedReportName = searchParams.get('report') || reports?.[0]?.name
+  const selectedReportName = reportName
 
   useEffect(() => {
-    if (!searchParams.get('report') && reports?.[0]?.name) {
-      setSearchParams({ report: reports[0].name }, { replace: true })
+    if (!reportName && reports?.[0]?.name) {
+      navigate(
+        `/tenants/${tenantId}/ar-groups/report/${encodeURIComponent(reports[0].name)}`,
+        { replace: true },
+      )
     }
-  }, [reports, searchParams, setSearchParams])
+  }, [reportName, reports, tenantId, navigate])
 
   const { startTime, endTime } = useMemo(() => getLastThreeMonthsRange(), [])
 
@@ -83,8 +96,34 @@ const AvailabilityReliability = () => {
     [groups, search],
   )
 
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [search, selectedReportName])
+
+  const totalElements = filteredGroups.length
+  const totalPages = Math.max(1, Math.ceil(totalElements / pageSize))
+
+  useEffect(() => {
+    setCurrentPage((prev) => Math.min(prev, totalPages))
+  }, [totalPages])
+
+  const paginatedGroups = useMemo(
+    () =>
+      filteredGroups.slice(
+        (currentPage - 1) * pageSize,
+        currentPage * pageSize,
+      ),
+    [filteredGroups, currentPage],
+  )
+
+  const handleDrillDown = (groupName: string, month: string) => {
+    navigate(
+      `/tenants/${tenantId}/ar-groups/${encodeURIComponent(groupName)}/report/${encodeURIComponent(selectedReportName || '')}/${month}`,
+    )
+  }
+
   return (
-    <div className="page-container">
+    <div className="page-container mb-8">
       <PageHeader
         title="Availability & Reliability"
         subtitle={
@@ -98,7 +137,7 @@ const AvailabilityReliability = () => {
         className="pb-2 mb-4"
       />
 
-      <div className="flex items-start justify-between gap-4 mb-1.5 flex-wrap">
+      <div className="flex items-start justify-between gap-4 mb-1 flex-wrap">
         <SearchInput
           value={search}
           onChange={setSearch}
@@ -113,8 +152,11 @@ const AvailabilityReliability = () => {
             </span>
             <SelectDropdown
               value={selectedReportName || ''}
-              onChange={(value) =>
-                setSearchParams({ report: value }, { replace: true })
+              onChange={(report) =>
+                navigate(
+                  `/tenants/${tenantId}/ar-groups/report/${encodeURIComponent(report)}`,
+                  { replace: true },
+                )
               }
               options={reports.map((report) => ({
                 value: report.name,
@@ -136,7 +178,23 @@ const AvailabilityReliability = () => {
           context="loading availability and reliability results"
         />
       ) : (
-        <MonthlyAvailabilityTable groups={filteredGroups} months={months} />
+        <>
+          <MonthlyAvailabilityTable
+            groups={paginatedGroups}
+            months={months}
+            onDrillDown={handleDrillDown}
+          />
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            itemLabel="groups"
+            onPrev={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+            onNext={() =>
+              setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+            }
+          />
+        </>
       )}
     </div>
   )
