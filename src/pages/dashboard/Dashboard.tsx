@@ -45,7 +45,7 @@ const buildReportOptions = (
   return options
 }
 
-type ServiceStatus = 'healthy' | 'degraded' | 'critical'
+type ServiceStatus = 'healthy' | 'degraded' | 'critical' | 'missing'
 
 interface Service {
   name: string
@@ -81,7 +81,7 @@ const formatShortDate = (iso: string) =>
 
 const uptimeTone = (pct: number) => {
   if (pct >= 99.99) return 'bg-emerald-500'
-  if (pct >= 99.5) return 'bg-lime-500'
+  if (pct >= 99.5) return 'bg-teal-600'
   if (pct >= 98) return 'bg-amber-500'
   return 'bg-red-500'
 }
@@ -108,10 +108,18 @@ const STATUS_STYLES: Record<
     text: 'text-red-700',
     label: 'Critical',
   },
+  missing: {
+    dot: 'bg-gray-400',
+    pill: 'bg-gray-50 text-gray-600 ring-gray-500/20',
+    text: 'text-gray-600',
+    label: 'Missing',
+  },
 }
 
+type BannerStatus = 'healthy' | 'degraded' | 'critical'
+
 const BANNER_STYLES: Record<
-  ServiceStatus,
+  BannerStatus,
   {
     bg: string
     border: string
@@ -353,20 +361,25 @@ const Dashboard = ({
           : new Date().toISOString().slice(0, 10)
       const paddingDates =
         missingCount > 0 ? padStartDates(firstDate, missingCount) : []
+
+      const daily = [
+        ...paddingDates.map((): number => -1),
+        ...g.results.map((r) => Number(r.availability)),
+      ]
+      const weekAvg = avgValid(daily.filter(Number.isFinite))
+      const feedStatus = worstStatus(statusByName.get(g.name) ?? [])
+
       return {
         name: g.name,
-        status: worstStatus(statusByName.get(g.name) ?? []),
-        daily: [
-          ...paddingDates.map((): number => -1),
-          ...g.results.map((r) => Number(r.availability)),
-        ],
+        status: weekAvg == null ? 'missing' : feedStatus,
+        daily,
         dailyDates: [...paddingDates, ...g.results.map((r) => r.date)],
       }
     })
   }, [resultsData, statusData])
 
   const counts = useMemo<Record<ServiceStatus, number>>(() => {
-    const c = { healthy: 0, degraded: 0, critical: 0 }
+    const c = { healthy: 0, degraded: 0, critical: 0, missing: 0 }
     services.forEach((s) => c[s.status]++)
     return c
   }, [services])
@@ -413,7 +426,7 @@ const Dashboard = ({
   })()
 
   const overall = useMemo<{
-    state: ServiceStatus
+    state: BannerStatus
     headline: string
     detail: string
   }>(() => {
