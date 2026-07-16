@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useTenantName } from '@/hooks/useTenantName'
 import { useGetPerformanceSettings } from '@/hooks/useSettings'
+import { useGetPublicTenantReports } from '@/hooks/useTenants'
 import { Outlet } from 'react-router-dom'
 import {
   CircleStackIcon,
@@ -18,8 +19,10 @@ const PublicTenantLayout = () => {
   const { tenantName, loading: tenantLoading } = useTenantName()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { data: performanceSetting } = useGetPerformanceSettings()
+  const { isLoading: reportsLoading, error: reportsError } =
+    useGetPublicTenantReports(tenantName ?? '', undefined, !!tenantName)
 
-  if (tenantLoading) {
+  if (tenantLoading || (!!tenantName && reportsLoading)) {
     return (
       <div className="h-screen flex items-center justify-center text-subtle">
         Loading…
@@ -27,7 +30,7 @@ const PublicTenantLayout = () => {
     )
   }
 
-  if (!tenantName) {
+  if (!tenantName || reportsError) {
     return <NotFound />
   }
 
