@@ -12,9 +12,11 @@ export const fetchStatus = async (slug: string): Promise<PageConfig> => {
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
-    throw new Error(
+    const error = new Error(
       errorData.message || `HTTP error! status: ${response.status}`,
-    )
+    ) as Error & { status?: number }
+    error.status = response.status
+    throw error
   }
 
   return response.json()
