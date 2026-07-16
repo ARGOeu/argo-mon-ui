@@ -10,25 +10,11 @@ import ErrorDisplay from '@/components/ErrorDisplay'
 import SelectDropdown from '@/components/SelectDropdown'
 import Pagination from '@/components/Pagination'
 import MonthlyAvailabilityTable from './MonthlyAvailabilityTable'
+import { getLastThreeMonthsRange } from './utils/dateRanges'
 
 const pageSize = 20
-
-const toW3CTimestamp = (date: Date): string =>
-  date.toISOString().replace(/\.\d{3}Z$/, 'Z')
-
-const getLastThreeMonthsRange = (): { startTime: string; endTime: string } => {
-  const now = new Date()
-  const todayUtcDate = new Date(
-    Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()),
-  )
-  const start = new Date(
-    Date.UTC(todayUtcDate.getUTCFullYear(), todayUtcDate.getUTCMonth() - 2, 1),
-  )
-  return {
-    startTime: toW3CTimestamp(start),
-    endTime: toW3CTimestamp(todayUtcDate),
-  }
-}
+const noticeContainerClass = 'text-center bg-surface-muted rounded-lg my-4'
+const noticeTextClass = 'text-sm text-subtle italic py-6 px-12'
 
 const AvailabilityReliability = () => {
   const { id, reportName } = useParams<{ id: string; reportName?: string }>()
@@ -66,6 +52,9 @@ const AvailabilityReliability = () => {
     endTime,
     !!selectedReportName,
   )
+
+  const isNotFoundError =
+    (error as (Error & { status?: number }) | null)?.status === 404
 
   const groups = useMemo(() => {
     if (!groupsData) {
@@ -122,6 +111,12 @@ const AvailabilityReliability = () => {
     )
   }
 
+  const handleViewEndpoints = (groupName: string) => {
+    navigate(
+      `/tenants/${tenantId}/ar-groups/${encodeURIComponent(groupName)}/report/${encodeURIComponent(selectedReportName || '')}/endpoints`,
+    )
+  }
+
   return (
     <div className="page-container mb-8">
       <PageHeader
@@ -134,7 +129,7 @@ const AvailabilityReliability = () => {
             </strong>
           </>
         }
-        className="pb-2 mb-4"
+        className="pb-2 mb-2"
       />
 
       <div className="flex items-start justify-between gap-4 mb-1 flex-wrap">
@@ -166,11 +161,24 @@ const AvailabilityReliability = () => {
             />
           </div>
         )}
+
+        {reports && reports.length === 1 && (
+          <span className="self-center text-[15px] font-medium text-body">
+            Selected report:{' '}
+            <strong className="text-muted">{selectedReportName}</strong>
+          </span>
+        )}
       </div>
 
       {isLoading ? (
         <div className="loading-container">
           <LoadingSpinner size="md" />
+        </div>
+      ) : isNotFoundError ? (
+        <div className={noticeContainerClass}>
+          <p className={noticeTextClass}>
+            This report has no data for the selected period
+          </p>
         </div>
       ) : error ? (
         <ErrorDisplay
@@ -183,6 +191,7 @@ const AvailabilityReliability = () => {
             groups={paginatedGroups}
             months={months}
             onDrillDown={handleDrillDown}
+            onViewEndpoints={handleViewEndpoints}
           />
           <Pagination
             currentPage={currentPage}

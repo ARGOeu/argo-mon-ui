@@ -1,4 +1,4 @@
-import { availabilityTone, downtimeTone } from './availabilityBadge'
+import { availabilityTone, downtimeTone } from './utils/availabilityBadge'
 import type { GroupDailyResult } from '@/types/availabilityReliability'
 
 const thBase =

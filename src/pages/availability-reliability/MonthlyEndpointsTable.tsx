@@ -1,7 +1,7 @@
 import { ArrowUpRightIcon } from '@heroicons/react/16/solid'
 import { availabilityTone } from './utils/availabilityBadge'
 import { formatMonthLabel } from './utils/dateRanges'
-import type { GroupAvailabilityReliability } from '@/types/availabilityReliability'
+import type { EndpointMonthlyRow } from '@/types/availabilityReliability'
 
 const thBase =
   'px-4 py-2.5 text-xs font-semibold text-muted uppercase tracking-wider whitespace-nowrap'
@@ -9,28 +9,40 @@ const badgeClass =
   'inline-flex items-center justify-self-center rounded-lg px-2.5 py-1 text-xs font-semibold'
 const valueColumns = 'grid-cols-[3.5rem_3.5rem_0.25rem]'
 
-interface MonthlyAvailabilityTableProps {
-  groups: GroupAvailabilityReliability[]
+interface MonthlyEndpointsTableProps {
+  rows: EndpointMonthlyRow[]
   months: string[]
-  onDrillDown: (groupName: string, month: string) => void
-  onViewEndpoints: (groupName: string) => void
+  onDrillDown: (
+    serviceName: string,
+    endpointName: string,
+    month: string,
+  ) => void
 }
 
-const MonthlyAvailabilityTable = ({
-  groups,
+const MonthlyEndpointsTable = ({
+  rows,
   months,
   onDrillDown,
-  onViewEndpoints,
-}: MonthlyAvailabilityTableProps) => {
+}: MonthlyEndpointsTableProps) => {
+  const hasUrl = rows.some((row) => !!row.url)
+
   return (
-    <div className="bg-white border border-line rounded-lg shadow-sm">
+    <div className="bg-white border border-line rounded-lg shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse">
           <thead>
             <tr>
               <th rowSpan={2} className={`${thBase} text-left pb-2`}>
-                Group
+                Service
               </th>
+              <th rowSpan={2} className={`${thBase} text-left pb-2`}>
+                Endpoint
+              </th>
+              {hasUrl && (
+                <th rowSpan={2} className={`${thBase} text-left pb-2`}>
+                  URL
+                </th>
+              )}
               {months.map((month) => (
                 <th key={month} className={`${thBase} text-center`}>
                   {formatMonthLabel(month)}
@@ -52,41 +64,67 @@ const MonthlyAvailabilityTable = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {groups.length === 0 ? (
+            {rows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={1 + months.length}
+                  colSpan={(hasUrl ? 3 : 2) + months.length}
                   className="text-center text-subtle italic py-8 px-4 text-sm"
                 >
-                  No groups found
+                  No endpoints found
                 </td>
               </tr>
             ) : (
-              groups.map((group) => (
-                <tr key={group.name}>
-                  <td className="px-4 py-3 text-sm font-medium">
-                    <button
-                      type="button"
-                      onClick={() => onViewEndpoints(group.name)}
-                      data-tip="View endpoint results for this group"
-                      title={group.name}
-                      className="tooltip tooltip-right block max-w-[240px] truncate cursor-pointer text-body hover:text-brand hover:underline"
+              rows.map((row) => (
+                <tr key={`${row.serviceName}-${row.endpointName}`}>
+                  <td className="p-3 text-sm font-medium text-body">
+                    <span
+                      className="block max-w-[180px] truncate"
+                      title={row.serviceName}
                     >
-                      {group.name}
-                    </button>
+                      {row.serviceName}
+                    </span>
                   </td>
+                  <td className="px-2 py-3 text-sm text-body">
+                    <span
+                      className="block max-w-[200px] truncate"
+                      title={row.endpointName}
+                    >
+                      {row.endpointName}
+                    </span>
+                  </td>
+                  {hasUrl && (
+                    <td className="px-2 py-3 text-sm text-body">
+                      {row.url && (
+                        <a
+                          href={row.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          title={row.url}
+                          className="block max-w-[200px] truncate text-brand hover:underline"
+                        >
+                          {row.url}
+                        </a>
+                      )}
+                    </td>
+                  )}
                   {months.map((month) => {
-                    const monthly = group.monthly.find((m) => m.month === month)
+                    const monthly = row.monthly.find((m) => m.month === month)
                     if (!monthly) {
-                      return <td key={month} className="px-4 py-3" />
+                      return <td key={month} className="p-1" />
                     }
                     return (
-                      <td key={month} className="px-2 py-1">
+                      <td key={month} className="p-1">
                         <button
                           type="button"
-                          onClick={() => onDrillDown(group.name, month)}
+                          onClick={() =>
+                            onDrillDown(
+                              row.serviceName,
+                              row.endpointName,
+                              month,
+                            )
+                          }
                           data-tip={`View daily breakdown for ${formatMonthLabel(month)}`}
-                          className={`tooltip group grid ${valueColumns} gap-2 items-center justify-center mx-auto rounded-md border border-transparent px-2 py-1 cursor-pointer bg-transparent transition-all hover:border-line-strong hover:bg-surface-muted`}
+                          className={`tooltip group grid ${valueColumns} gap-2 items-center justify-center mx-auto rounded-md border border-transparent p-1 cursor-pointer bg-transparent transition-all hover:border-line-strong hover:bg-surface-muted`}
                         >
                           <span
                             className={`${badgeClass} ${availabilityTone(monthly.availability)}`}
@@ -113,4 +151,4 @@ const MonthlyAvailabilityTable = ({
   )
 }
 
-export default MonthlyAvailabilityTable
+export default MonthlyEndpointsTable

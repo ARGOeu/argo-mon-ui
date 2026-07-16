@@ -13,7 +13,6 @@ interface PageHeaderProps {
   subtitle?: ReactNode
   children?: ReactNode
   className?: string
-  titleClassName?: string
   navigateTo?: NavigateTo
 }
 
@@ -22,7 +21,6 @@ const PageHeader = ({
   subtitle,
   children,
   className,
-  titleClassName = 'text-[1.75rem]',
   navigateTo,
 }: PageHeaderProps) => (
   <div className={`flex justify-between items-center ${className ?? ''}`}>
@@ -37,7 +35,7 @@ const PageHeader = ({
           {navigateTo.label}
         </Link>
       )}
-      <h1 className={`${titleClassName} leading-8 font-bold text-gray-800`}>
+      <h1 className="text-[1.6rem] leading-8 font-bold text-gray-800">
         {title}
       </h1>
       {subtitle && <p className="text-base text-muted">{subtitle}</p>}

@@ -5,26 +5,10 @@ import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import DailyAvailabilityTable from './DailyAvailabilityTable'
+import { getMonthRange, formatMonthLabel } from './utils/dateRanges'
 
-const formatMonthLabel = (month: string): string => {
-  const [year, mon] = month.split('-').map(Number)
-  return new Date(year, mon - 1, 1).toLocaleDateString('en-GB', {
-    month: 'long',
-    year: 'numeric',
-  })
-}
-
-const toW3CTimestamp = (date: Date): string =>
-  date.toISOString().replace(/\.\d{3}Z$/, 'Z')
-
-const getMonthRange = (
-  month: string,
-): { startTime: string; endTime: string } => {
-  const [year, mon] = month.split('-').map(Number)
-  const start = new Date(Date.UTC(year, mon - 1, 1))
-  const end = new Date(Date.UTC(year, mon, 0, 23, 59, 59))
-  return { startTime: toW3CTimestamp(start), endTime: toW3CTimestamp(end) }
-}
+const noticeContainerClass = 'text-center bg-surface-muted rounded-lg my-4'
+const noticeTextClass = 'text-sm text-subtle italic py-6 px-12'
 
 const AvailabilityReliabilityDaily = () => {
   const { id, groupName, reportName, month } = useParams<{
@@ -54,6 +38,9 @@ const AvailabilityReliabilityDaily = () => {
     !!month,
   )
 
+  const isNotFoundError =
+    (error as (Error & { status?: number }) | null)?.status === 404
+
   const rows = useMemo(() => {
     if (!rawData) {
       return []
@@ -74,9 +61,9 @@ const AvailabilityReliabilityDaily = () => {
   return (
     <div className="page-container">
       <PageHeader
-        title={`${decodeURIComponent(groupName || '')} - ${month ? formatMonthLabel(month) : ''}`}
+        title={`${decodeURIComponent(groupName || '')} - ${month ? formatMonthLabel(month, 'long') : ''}`}
+        subtitle="Daily availability and reliability breakdown"
         className="pb-2 mb-1"
-        titleClassName="text-2xl"
         navigateTo={{
           label: 'Back to Monthly Group Results',
           to: `/tenants/${tenantId}/ar-groups/report/${encodeURIComponent(reportName || '')}`,
@@ -86,6 +73,12 @@ const AvailabilityReliabilityDaily = () => {
       {isLoading ? (
         <div className="loading-container">
           <LoadingSpinner size="md" />
+        </div>
+      ) : isNotFoundError ? (
+        <div className={noticeContainerClass}>
+          <p className={noticeTextClass}>
+            This group has no data for the selected date
+          </p>
         </div>
       ) : error ? (
         <ErrorDisplay error={error} context="daily results" />
