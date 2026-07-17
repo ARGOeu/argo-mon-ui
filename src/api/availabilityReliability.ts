@@ -1,5 +1,6 @@
 import type {
   GroupsAvailabilityReliabilityResponse,
+  EndpointsARResponse,
   ResultGranularity,
 } from '@/types/availabilityReliability'
 
@@ -25,9 +26,11 @@ export const fetchGroupsAvailabilityReliability = async (
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
-    throw new Error(
+    const error = new Error(
       errorData.message || `HTTP error! status: ${response.status}`,
-    )
+    ) as Error & { status?: number }
+    error.status = response.status
+    throw error
   }
 
   return response.json()
@@ -54,9 +57,72 @@ export const fetchGroupAvailabilityReliability = async (
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))
-    throw new Error(
+    const error = new Error(
       errorData.message || `HTTP error! status: ${response.status}`,
-    )
+    ) as Error & { status?: number }
+    error.status = response.status
+    throw error
+  }
+
+  return response.json()
+}
+
+export const fetchEndpointsAvailabilityReliability = async (
+  tenantId: string,
+  reportName: string,
+  granularity: ResultGranularity,
+  startTime: string,
+  endTime: string,
+  token: string,
+): Promise<EndpointsARResponse> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/results/${encodeURIComponent(reportName)}/endpoints?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    const error = new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    ) as Error & { status?: number }
+    error.status = response.status
+    throw error
+  }
+
+  return response.json()
+}
+
+export const fetchEndpointAvailabilityReliability = async (
+  tenantId: string,
+  reportName: string,
+  endpointName: string,
+  granularity: ResultGranularity,
+  startTime: string,
+  endTime: string,
+  token: string,
+): Promise<EndpointsARResponse> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/results/${encodeURIComponent(reportName)}/endpoints/${encodeURIComponent(endpointName)}?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    const error = new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    ) as Error & { status?: number }
+    error.status = response.status
+    throw error
   }
 
   return response.json()

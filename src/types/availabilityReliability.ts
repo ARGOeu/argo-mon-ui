@@ -43,3 +43,33 @@ export type GroupData = {
 export type GroupsAvailabilityReliabilityResponse = {
   results: GroupData[]
 }
+
+export type EndpointItem = {
+  name: string
+  type: string
+  info: Record<string, string>
+  results: GroupResult[]
+}
+
+export type ServiceTypeItem = {
+  name: string
+  type: string
+  endpoints: EndpointItem[]
+}
+
+export type EndpointsData = {
+  name: string
+  type: string
+  'service-types': ServiceTypeItem[]
+}
+
+export type EndpointsARResponse = {
+  results: EndpointsData[]
+}
+
+export type EndpointMonthlyRow = {
+  serviceName: string
+  endpointName: string
+  url?: string
+  monthly: GroupMonthlyResult[]
+}

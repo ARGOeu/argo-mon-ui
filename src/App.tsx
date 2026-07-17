@@ -19,6 +19,8 @@ import TenantReports from './pages/tenant-reports'
 import {
   AvailabilityReliability,
   AvailabilityReliabilityDaily,
+  AvailabilityReliabilityEndpoints,
+  AvailabilityReliabilityEndpointsDaily,
 } from './pages/availability-reliability'
 import TenantCapabilities from './pages/tenant-capabilities'
 import TenantDetails from './pages/tenant-details'
@@ -170,6 +172,22 @@ function PlatformRoutes() {
             element={
               <AuthProtected>
                 <AvailabilityReliabilityDaily />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/ar-groups/:groupName/report/:reportName/endpoints"
+            element={
+              <AuthProtected>
+                <AvailabilityReliabilityEndpoints />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/ar-groups/:groupName/report/:reportName/services/:serviceName/endpoints/:endpointName/:month"
+            element={
+              <AuthProtected>
+                <AvailabilityReliabilityEndpointsDaily />
               </AuthProtected>
             }
           />
