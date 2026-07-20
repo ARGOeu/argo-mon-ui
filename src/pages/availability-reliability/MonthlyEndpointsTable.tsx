@@ -24,25 +24,25 @@ const MonthlyEndpointsTable = ({
   months,
   onDrillDown,
 }: MonthlyEndpointsTableProps) => {
-  const hasUrl = rows.some((row) => !!row.url)
+  if (rows.length === 0) {
+    return (
+      <div className="bg-white border border-line rounded-lg shadow-sm">
+        <div className="text-center text-subtle italic py-8 px-4 text-sm">
+          No endpoints found
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="bg-white border border-line rounded-lg shadow-sm overflow-hidden">
+    <div className="bg-white border border-line rounded-lg shadow-sm">
       <div className="overflow-x-auto">
         <table className="min-w-full border-collapse">
           <thead>
             <tr>
               <th rowSpan={2} className={`${thBase} text-left pb-2`}>
-                Service
-              </th>
-              <th rowSpan={2} className={`${thBase} text-left pb-2`}>
                 Endpoint
               </th>
-              {hasUrl && (
-                <th rowSpan={2} className={`${thBase} text-left pb-2`}>
-                  URL
-                </th>
-              )}
               {months.map((month) => (
                 <th key={month} className={`${thBase} text-center`}>
                   {formatMonthLabel(month)}
@@ -64,86 +64,66 @@ const MonthlyEndpointsTable = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {rows.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={(hasUrl ? 3 : 2) + months.length}
-                  className="text-center text-subtle italic py-8 px-4 text-sm"
-                >
-                  No endpoints found
-                </td>
-              </tr>
-            ) : (
-              rows.map((row) => (
-                <tr key={`${row.serviceName}-${row.endpointName}`}>
-                  <td className="p-3 text-sm font-medium text-body">
-                    <span
-                      className="block max-w-[180px] truncate"
-                      title={row.serviceName}
+            {rows.map((row) => (
+              <tr key={`${row.serviceName}-${row.endpointName}`}>
+                <td className="px-4 py-3 text-sm">
+                  {row.url ? (
+                    <a
+                      href={row.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      title={row.url}
+                      className="block max-w-[200px] truncate font-medium text-brand hover:underline sm:max-w-[280px] md:max-w-[360px] lg:max-w-[420px] xl:max-w-[500px] lg:overflow-visible lg:whitespace-normal"
                     >
-                      {row.serviceName}
-                    </span>
-                  </td>
-                  <td className="px-2 py-3 text-sm text-body">
+                      {row.url}
+                    </a>
+                  ) : (
                     <span
-                      className="block max-w-[200px] truncate"
+                      className="block max-w-[200px] truncate font-medium text-body sm:max-w-[280px] md:max-w-[360px] lg:max-w-[420px] xl:max-w-[500px] lg:overflow-visible lg:whitespace-normal"
                       title={row.endpointName}
                     >
                       {row.endpointName}
                     </span>
-                  </td>
-                  {hasUrl && (
-                    <td className="px-2 py-3 text-sm text-body">
-                      {row.url && (
-                        <a
-                          href={row.url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          title={row.url}
-                          className="block max-w-[200px] truncate text-brand hover:underline"
-                        >
-                          {row.url}
-                        </a>
-                      )}
-                    </td>
                   )}
-                  {months.map((month) => {
-                    const monthly = row.monthly.find((m) => m.month === month)
-                    if (!monthly) {
-                      return <td key={month} className="p-1" />
-                    }
-                    return (
-                      <td key={month} className="p-1">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            onDrillDown(
-                              row.serviceName,
-                              row.endpointName,
-                              month,
-                            )
-                          }
-                          data-tip={`View daily breakdown for ${formatMonthLabel(month)}`}
-                          className={`tooltip group grid ${valueColumns} gap-2 items-center justify-center mx-auto rounded-md border border-transparent p-1 cursor-pointer bg-transparent transition-all hover:border-line-strong hover:bg-surface-muted`}
+                  <span
+                    className="block max-w-[200px] truncate text-xs text-muted sm:max-w-[280px] md:max-w-[360px] lg:max-w-[420px] xl:max-w-[500px] lg:overflow-visible lg:whitespace-normal mt-1"
+                    title={row.serviceName}
+                  >
+                    {row.serviceName}
+                  </span>
+                </td>
+                {months.map((month) => {
+                  const monthly = row.monthly.find((m) => m.month === month)
+                  if (!monthly) {
+                    return <td key={month} className="px-4 py-3" />
+                  }
+                  return (
+                    <td key={month} className="px-2 py-1">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          onDrillDown(row.serviceName, row.endpointName, month)
+                        }
+                        data-tip={`View daily breakdown for ${formatMonthLabel(month)}`}
+                        className={`tooltip group grid ${valueColumns} gap-2 items-center justify-center mx-auto rounded-md border border-transparent px-2 py-1 cursor-pointer bg-transparent transition-all hover:border-line-strong hover:bg-surface-muted`}
+                      >
+                        <span
+                          className={`${badgeClass} ${availabilityTone(monthly.availability)}`}
                         >
-                          <span
-                            className={`${badgeClass} ${availabilityTone(monthly.availability)}`}
-                          >
-                            {monthly.availability}
-                          </span>
-                          <span
-                            className={`${badgeClass} ${availabilityTone(monthly.reliability)}`}
-                          >
-                            {monthly.reliability}
-                          </span>
-                          <ArrowUpRightIcon className="size-4 text-subtle justify-self-center transition-colors group-hover:text-brand" />
-                        </button>
-                      </td>
-                    )
-                  })}
-                </tr>
-              ))
-            )}
+                          {monthly.availability}
+                        </span>
+                        <span
+                          className={`${badgeClass} ${availabilityTone(monthly.reliability)}`}
+                        >
+                          {monthly.reliability}
+                        </span>
+                        <ArrowUpRightIcon className="size-4 text-subtle justify-self-center transition-colors group-hover:text-brand" />
+                      </button>
+                    </td>
+                  )
+                })}
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>
