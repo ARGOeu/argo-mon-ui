@@ -36,10 +36,11 @@ const AvailabilityReliabilityEndpoints = () => {
   } = useGetEndpointsAvailabilityReliability(
     tenantId,
     reportName || '',
+    decodeURIComponent(groupName || ''),
     'monthly',
     startTime,
     endTime,
-    !!reportName,
+    !!reportName && !!groupName,
   )
 
   const isNotFoundError =
@@ -49,25 +50,21 @@ const AvailabilityReliabilityEndpoints = () => {
     if (!endpointsData) {
       return []
     }
-    const group = endpointsData.results.find(
-      (g) => g.name === decodeURIComponent(groupName || ''),
-    )
-    if (!group) {
-      return []
-    }
-    return group['service-types'].flatMap((serviceType) =>
-      serviceType.endpoints.map((endpoint) => ({
-        serviceName: serviceType.name,
-        endpointName: endpoint.name,
-        url: endpoint.info?.URL,
-        monthly: endpoint.results.map((result) => ({
-          month: result.timestamp,
-          availability: parseFloat(result.availability),
-          reliability: parseFloat(result.reliability),
+    return endpointsData.results.flatMap((group) =>
+      group['service-types'].flatMap((serviceType) =>
+        serviceType.endpoints.map((endpoint) => ({
+          serviceName: serviceType.name,
+          endpointName: endpoint.name,
+          url: endpoint.info?.URL,
+          monthly: endpoint.results.map((result) => ({
+            month: result.timestamp,
+            availability: parseFloat(result.availability),
+            reliability: parseFloat(result.reliability),
+          })),
         })),
-      })),
+      ),
     )
-  }, [endpointsData, groupName])
+  }, [endpointsData])
 
   const months = useMemo(
     () => rows[0]?.monthly.map((m) => m.month) ?? [],

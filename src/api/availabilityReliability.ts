@@ -70,13 +70,14 @@ export const fetchGroupAvailabilityReliability = async (
 export const fetchEndpointsAvailabilityReliability = async (
   tenantId: string,
   reportName: string,
+  groupName: string,
   granularity: ResultGranularity,
   startTime: string,
   endTime: string,
   token: string,
 ): Promise<EndpointsARResponse> => {
   const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/results/${encodeURIComponent(reportName)}/endpoints?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
+    `${BACKEND_API}/v1/tenants/${tenantId}/results/${encodeURIComponent(reportName)}/groups/${encodeURIComponent(groupName)}/endpoints?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
     {
       headers: {
         'Content-Type': 'application/json',
@@ -100,6 +101,7 @@ export const fetchEndpointsAvailabilityReliability = async (
 export const fetchEndpointAvailabilityReliability = async (
   tenantId: string,
   reportName: string,
+  groupName: string,
   endpointName: string,
   granularity: ResultGranularity,
   startTime: string,
@@ -107,7 +109,7 @@ export const fetchEndpointAvailabilityReliability = async (
   token: string,
 ): Promise<EndpointsARResponse> => {
   const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/results/${encodeURIComponent(reportName)}/endpoints/${encodeURIComponent(endpointName)}?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
+    `${BACKEND_API}/v1/tenants/${tenantId}/results/${encodeURIComponent(reportName)}/groups/${encodeURIComponent(groupName)}/endpoints/${encodeURIComponent(endpointName)}?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
     {
       headers: {
         'Content-Type': 'application/json',
