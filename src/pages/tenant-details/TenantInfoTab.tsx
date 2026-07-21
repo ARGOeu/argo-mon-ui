@@ -18,6 +18,7 @@ import {
 import { useSelectedTenant } from '@/contexts/selected-tenant'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
+import { TOPOLOGY_FEED_TYPE_LABELS } from '@/utils/topologyFeedTypes'
 
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleDateString('en-GB', {
@@ -264,8 +265,9 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
               <div className="flex flex-wrap gap-x-8 gap-y-3">
                 <div className={infoGroupClass}>
                   <label className={labelClass}>Type</label>
-                  <p className={`${valueClass} capitalize`}>
-                    {topologyFeedData!.type}
+                  <p className={valueClass}>
+                    {TOPOLOGY_FEED_TYPE_LABELS[topologyFeedData!.type] ??
+                      topologyFeedData!.type}
                   </p>
                 </div>
 

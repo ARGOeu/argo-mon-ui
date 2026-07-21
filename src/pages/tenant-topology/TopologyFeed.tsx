@@ -8,6 +8,7 @@ import { toast } from 'sonner'
 import SelectDropdown from '@/components/SelectDropdown'
 import Button from '@/components/Button'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { TOPOLOGY_FEED_TYPE_OPTIONS } from '@/utils/topologyFeedTypes'
 
 type TopologyFeedFormState = {
   type: string
@@ -16,14 +17,6 @@ type TopologyFeedFormState = {
   feed_service_endpoints: string
   feed_service_endpoints_extensions: string
 }
-
-const FEED_TYPE_OPTIONS = [
-  { value: 'internal', label: 'Internal' },
-  { value: 'external', label: 'External' },
-  { value: 'CSV', label: 'CSV' },
-  { value: 'desy-marketplace', label: 'Desy Marketplace' },
-  { value: 'eosc-service-catalog', label: 'EOSC Service Catalog' },
-]
 
 const NONE_OPTION = { value: '', label: 'None' }
 
@@ -174,8 +167,8 @@ const TopologyFeed = ({ tenantId }: TopologyFeedProps) => {
                 onChange={handleTypeChange}
                 options={
                   originalForm.type
-                    ? FEED_TYPE_OPTIONS
-                    : [NONE_OPTION, ...FEED_TYPE_OPTIONS]
+                    ? TOPOLOGY_FEED_TYPE_OPTIONS
+                    : [NONE_OPTION, ...TOPOLOGY_FEED_TYPE_OPTIONS]
                 }
                 placeholder="Select feed type"
               />
