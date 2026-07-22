@@ -120,6 +120,7 @@ export const useGetGroupAvailabilityReliability = (
 export const useGetEndpointsAvailabilityReliability = (
   tenantId: string,
   reportName: string,
+  groupName: string,
   granularity: ResultGranularity,
   startTime: string,
   endTime: string,
@@ -132,6 +133,7 @@ export const useGetEndpointsAvailabilityReliability = (
       'availability-reliability-endpoints',
       tenantId,
       reportName,
+      groupName,
       granularity,
       startTime,
       endTime,
@@ -146,9 +148,13 @@ export const useGetEndpointsAvailabilityReliability = (
       if (!reportName) {
         throw new Error('Report name is required')
       }
+      if (!groupName) {
+        throw new Error('Group name is required')
+      }
       return fetchEndpointsAvailabilityReliability(
         tenantId,
         reportName,
+        groupName,
         granularity,
         startTime,
         endTime,
@@ -161,6 +167,7 @@ export const useGetEndpointsAvailabilityReliability = (
       !!token &&
       !!tenantId &&
       !!reportName &&
+      !!groupName &&
       !!startTime &&
       !!endTime,
   })
@@ -169,6 +176,7 @@ export const useGetEndpointsAvailabilityReliability = (
 export const useGetEndpointAvailabilityReliability = (
   tenantId: string,
   reportName: string,
+  groupName: string,
   endpointName: string,
   granularity: ResultGranularity,
   startTime: string,
@@ -182,6 +190,7 @@ export const useGetEndpointAvailabilityReliability = (
       'availability-reliability-endpoint-daily',
       tenantId,
       reportName,
+      groupName,
       endpointName,
       granularity,
       startTime,
@@ -197,12 +206,16 @@ export const useGetEndpointAvailabilityReliability = (
       if (!reportName) {
         throw new Error('Report name is required')
       }
+      if (!groupName) {
+        throw new Error('Group name is required')
+      }
       if (!endpointName) {
         throw new Error('Endpoint name is required')
       }
       return fetchEndpointAvailabilityReliability(
         tenantId,
         reportName,
+        groupName,
         endpointName,
         granularity,
         startTime,
@@ -216,6 +229,7 @@ export const useGetEndpointAvailabilityReliability = (
       !!token &&
       !!tenantId &&
       !!reportName &&
+      !!groupName &&
       !!endpointName &&
       !!startTime &&
       !!endTime,

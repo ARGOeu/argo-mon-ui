@@ -34,11 +34,12 @@ const AvailabilityReliabilityEndpointsDaily = () => {
   } = useGetEndpointAvailabilityReliability(
     tenantId,
     reportName || '',
+    decodeURIComponent(groupName || ''),
     decodeURIComponent(endpointName || ''),
     'daily',
     startTime,
     endTime,
-    !!endpointName && !!month,
+    !!groupName && !!endpointName && !!month,
   )
 
   const isNotFoundError =
