@@ -14,6 +14,7 @@ import ProtectedRoute from './routing/ProtectedRoute'
 import Profile from './pages/profile'
 import BuildStatusPage from './pages/build-status-page'
 import TenantStatusPages from './pages/status-pages'
+import { TenantDowntimes, CreateDowntime } from './pages/tenant-downtimes'
 import CreateTenant from './pages/create-tenant'
 import TenantReports from './pages/tenant-reports'
 import {
@@ -308,6 +309,30 @@ function PlatformRoutes() {
             element={
               <AuthProtected>
                 <TenantStatusPages />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/downtimes"
+            element={
+              <AuthProtected>
+                <TenantDowntimes />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/downtimes/create"
+            element={
+              <AuthProtected>
+                <CreateDowntime />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/downtimes/:downtimeId/edit"
+            element={
+              <AuthProtected>
+                <CreateDowntime />
               </AuthProtected>
             }
           />

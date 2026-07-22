@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react'
 
 const tabBase =
-  'px-5 py-2 pb-1 text-base font-medium bg-transparent border-0 rounded-t-md border-b-2 cursor-pointer transition-all -mb-0.5 relative flex items-center gap-1'
+  'px-5 py-1 text-base font-medium bg-transparent border-0 rounded-t-md border-b-2 cursor-pointer transition-all -mb-0.5 relative flex items-center gap-1'
 const tabActive = 'text-brand border-b-brand hover:border-b-brand'
 const tabInactive =
   'text-muted border-b-transparent hover:text-body hover:bg-surface-muted hover:border-b-gray-300'
