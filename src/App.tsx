@@ -18,10 +18,10 @@ import { TenantDowntimes, CreateDowntime } from './pages/tenant-downtimes'
 import CreateTenant from './pages/create-tenant'
 import TenantReports from './pages/tenant-reports'
 import {
-  AvailabilityReliability,
-  AvailabilityReliabilityDaily,
-  AvailabilityReliabilityEndpoints,
-  AvailabilityReliabilityEndpointsDaily,
+  PrivateARContainer,
+  PrivateARDailyContainer,
+  PrivateAREndpointsContainer,
+  PrivateAREndpointsDailyContainer,
 } from './pages/availability-reliability'
 import TenantCapabilities from './pages/tenant-capabilities'
 import TenantDetails from './pages/tenant-details'
@@ -46,6 +46,10 @@ import {
   PublicDashboardContainer,
   PublicCapabilitiesContainer,
   PublicPerformanceContainer,
+  PublicARContainer,
+  PublicARDailyContainer,
+  PublicAREndpointsContainer,
+  PublicAREndpointsDailyContainer,
 } from './pages/public-tenant'
 import { AuthProvider } from './auth/AuthProvider'
 import NotFound from './pages/NotFound'
@@ -88,6 +92,23 @@ function PlatformRoutes() {
       <Route path="public/tenants/:tenantName" element={<PublicTenantLayout />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<PublicDashboardContainer />} />
+        <Route path="ar-groups" element={<PublicARContainer />} />
+        <Route
+          path="ar-groups/report/:reportName"
+          element={<PublicARContainer />}
+        />
+        <Route
+          path="ar-groups/:groupName/report/:reportName/:month"
+          element={<PublicARDailyContainer />}
+        />
+        <Route
+          path="ar-groups/:groupName/report/:reportName/endpoints"
+          element={<PublicAREndpointsContainer />}
+        />
+        <Route
+          path="ar-groups/:groupName/report/:reportName/services/:serviceName/endpoints/:endpointName/:month"
+          element={<PublicAREndpointsDailyContainer />}
+        />
         <Route path="capabilities" element={<PublicCapabilitiesContainer />} />
         <Route path="performance" element={<PublicPerformanceContainer />} />
         <Route path="*" element={<NotFound />} />
@@ -156,7 +177,7 @@ function PlatformRoutes() {
             path="tenants/:id/ar-groups"
             element={
               <AuthProtected>
-                <AvailabilityReliability />
+                <PrivateARContainer />
               </AuthProtected>
             }
           />
@@ -164,7 +185,7 @@ function PlatformRoutes() {
             path="tenants/:id/ar-groups/report/:reportName"
             element={
               <AuthProtected>
-                <AvailabilityReliability />
+                <PrivateARContainer />
               </AuthProtected>
             }
           />
@@ -172,7 +193,7 @@ function PlatformRoutes() {
             path="tenants/:id/ar-groups/:groupName/report/:reportName/:month"
             element={
               <AuthProtected>
-                <AvailabilityReliabilityDaily />
+                <PrivateARDailyContainer />
               </AuthProtected>
             }
           />
@@ -180,7 +201,7 @@ function PlatformRoutes() {
             path="tenants/:id/ar-groups/:groupName/report/:reportName/endpoints"
             element={
               <AuthProtected>
-                <AvailabilityReliabilityEndpoints />
+                <PrivateAREndpointsContainer />
               </AuthProtected>
             }
           />
@@ -188,7 +209,7 @@ function PlatformRoutes() {
             path="tenants/:id/ar-groups/:groupName/report/:reportName/services/:serviceName/endpoints/:endpointName/:month"
             element={
               <AuthProtected>
-                <AvailabilityReliabilityEndpointsDaily />
+                <PrivateAREndpointsDailyContainer />
               </AuthProtected>
             }
           />
@@ -387,6 +408,23 @@ function CustomDomainRoutes() {
           }
         />
         <Route path="/dashboard" element={<PublicDashboardContainer />} />
+        <Route path="/ar-groups" element={<PublicARContainer />} />
+        <Route
+          path="/ar-groups/report/:reportName"
+          element={<PublicARContainer />}
+        />
+        <Route
+          path="/ar-groups/:groupName/report/:reportName/:month"
+          element={<PublicARDailyContainer />}
+        />
+        <Route
+          path="/ar-groups/:groupName/report/:reportName/endpoints"
+          element={<PublicAREndpointsContainer />}
+        />
+        <Route
+          path="/ar-groups/:groupName/report/:reportName/services/:serviceName/endpoints/:endpointName/:month"
+          element={<PublicAREndpointsDailyContainer />}
+        />
         <Route path="/capabilities" element={<PublicCapabilitiesContainer />} />
         <Route path="/performance" element={<PublicPerformanceContainer />} />
       </Route>

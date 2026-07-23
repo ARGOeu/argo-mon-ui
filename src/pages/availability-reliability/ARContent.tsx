@@ -1,8 +1,4 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useGetGroupsAvailabilityReliability } from '@/hooks/useAvailabilityReliability'
-import { useGetTenantReports } from '@/hooks/useTenants'
-import { useSelectedTenant } from '@/contexts/selected-tenant'
-import { useParams, useNavigate } from 'react-router-dom'
 import PageHeader from '@/components/PageHeader'
 import SearchInput from '@/components/SearchInput'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -10,51 +6,38 @@ import ErrorDisplay from '@/components/ErrorDisplay'
 import SelectDropdown from '@/components/SelectDropdown'
 import Pagination from '@/components/Pagination'
 import MonthlyAvailabilityTable from './MonthlyAvailabilityTable'
-import { getLastThreeMonthsRange } from './utils/dateRanges'
+import { isNotFoundError } from '@/utils/isNotFoundError'
+import type { GroupsAvailabilityReliabilityResponse } from '@/types/availabilityReliability'
 
 const pageSize = 20
 const noticeContainerClass = 'text-center bg-surface-muted rounded-lg my-4'
 const noticeTextClass = 'text-sm text-subtle italic py-6 px-12'
 
-const AvailabilityReliability = () => {
-  const { id, reportName } = useParams<{ id: string; reportName?: string }>()
-  const tenantId = id || ''
-  const navigate = useNavigate()
-  const { tenant: tenantData } = useSelectedTenant()
+export interface ARContentProps {
+  tenantName: string
+  reports: Array<{ name: string }> | undefined
+  selectedReportName: string
+  onReportChange: (reportName: string) => void
+  groupsData: GroupsAvailabilityReliabilityResponse | undefined
+  isLoading: boolean
+  error: Error | null
+  onDrillDown: (groupName: string, month: string) => void
+  onViewEndpoints: (groupName: string) => void
+}
 
+const ARContent = ({
+  tenantName,
+  reports,
+  selectedReportName,
+  onReportChange,
+  groupsData,
+  isLoading,
+  error,
+  onDrillDown,
+  onViewEndpoints,
+}: ARContentProps) => {
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-
-  const { data: reports } = useGetTenantReports(tenantId)
-
-  const selectedReportName = reportName
-
-  useEffect(() => {
-    if (!reportName && reports?.[0]?.name) {
-      navigate(
-        `/tenants/${tenantId}/ar-groups/report/${encodeURIComponent(reports[0].name)}`,
-        { replace: true },
-      )
-    }
-  }, [reportName, reports, tenantId, navigate])
-
-  const { startTime, endTime } = useMemo(() => getLastThreeMonthsRange(), [])
-
-  const {
-    data: groupsData,
-    isLoading,
-    error,
-  } = useGetGroupsAvailabilityReliability(
-    tenantId,
-    selectedReportName || '',
-    'monthly',
-    startTime,
-    endTime,
-    !!selectedReportName,
-  )
-
-  const isNotFoundError =
-    (error as (Error & { status?: number }) | null)?.status === 404
 
   const groups = useMemo(() => {
     if (!groupsData) {
@@ -105,18 +88,6 @@ const AvailabilityReliability = () => {
     [filteredGroups, currentPage],
   )
 
-  const handleDrillDown = (groupName: string, month: string) => {
-    navigate(
-      `/tenants/${tenantId}/ar-groups/${encodeURIComponent(groupName)}/report/${encodeURIComponent(selectedReportName || '')}/${month}`,
-    )
-  }
-
-  const handleViewEndpoints = (groupName: string) => {
-    navigate(
-      `/tenants/${tenantId}/ar-groups/${encodeURIComponent(groupName)}/report/${encodeURIComponent(selectedReportName || '')}/endpoints`,
-    )
-  }
-
   return (
     <div className="page-container mb-8">
       <PageHeader
@@ -124,9 +95,7 @@ const AvailabilityReliability = () => {
         subtitle={
           <>
             Monthly availability and reliability results for tenant{' '}
-            <strong>
-              {tenantData?.info.name ? tenantData.info.name : '...'}
-            </strong>
+            <strong>{tenantName ? tenantName : '...'}</strong>
           </>
         }
         className="pb-2 mb-2"
@@ -147,12 +116,7 @@ const AvailabilityReliability = () => {
             </span>
             <SelectDropdown
               value={selectedReportName || ''}
-              onChange={(report) =>
-                navigate(
-                  `/tenants/${tenantId}/ar-groups/report/${encodeURIComponent(report)}`,
-                  { replace: true },
-                )
-              }
+              onChange={onReportChange}
               options={reports.map((report) => ({
                 value: report.name,
                 label: report.name,
@@ -174,7 +138,7 @@ const AvailabilityReliability = () => {
         <div className="loading-container">
           <LoadingSpinner size="md" />
         </div>
-      ) : isNotFoundError ? (
+      ) : isNotFoundError(error) ? (
         <div className={noticeContainerClass}>
           <p className={noticeTextClass}>
             This report has no data for the selected period
@@ -190,8 +154,8 @@ const AvailabilityReliability = () => {
           <MonthlyAvailabilityTable
             groups={paginatedGroups}
             months={months}
-            onDrillDown={handleDrillDown}
-            onViewEndpoints={handleViewEndpoints}
+            onDrillDown={onDrillDown}
+            onViewEndpoints={onViewEndpoints}
           />
           <Pagination
             currentPage={currentPage}
@@ -209,4 +173,4 @@ const AvailabilityReliability = () => {
   )
 }
 
-export default AvailabilityReliability
+export default ARContent

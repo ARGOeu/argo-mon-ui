@@ -1,50 +1,34 @@
 import { useMemo } from 'react'
-import { useGetEndpointAvailabilityReliability } from '@/hooks/useAvailabilityReliability'
-import { useParams } from 'react-router-dom'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import DailyAvailabilityTable from './DailyAvailabilityTable'
-import { getMonthRange, formatMonthLabel } from './utils/dateRanges'
+import { isNotFoundError } from '@/utils/isNotFoundError'
+import { formatMonthLabel } from './utils/dateRanges'
+import type { EndpointsARResponse } from '@/types/availabilityReliability'
 
 const noticeContainerClass = 'text-center bg-surface-muted rounded-lg my-4'
 const noticeTextClass = 'text-sm text-subtle italic py-6 px-12'
 
-const AvailabilityReliabilityEndpointsDaily = () => {
-  const { id, groupName, reportName, serviceName, endpointName, month } =
-    useParams<{
-      id: string
-      groupName: string
-      reportName: string
-      serviceName: string
-      endpointName: string
-      month: string
-    }>()
-  const tenantId = id || ''
+export interface AREndpointsDailyContentProps {
+  serviceName: string
+  endpointName: string
+  month: string
+  endpointData: EndpointsARResponse | undefined
+  isLoading: boolean
+  error: Error | null
+  backTo: string
+}
 
-  const { startTime, endTime } = useMemo(
-    () => (month ? getMonthRange(month) : { startTime: '', endTime: '' }),
-    [month],
-  )
-
-  const {
-    data: endpointData,
-    isLoading,
-    error,
-  } = useGetEndpointAvailabilityReliability(
-    tenantId,
-    reportName || '',
-    decodeURIComponent(groupName || ''),
-    decodeURIComponent(endpointName || ''),
-    'daily',
-    startTime,
-    endTime,
-    !!groupName && !!endpointName && !!month,
-  )
-
-  const isNotFoundError =
-    (error as (Error & { status?: number }) | null)?.status === 404
-
+const AREndpointsDailyContent = ({
+  serviceName,
+  endpointName,
+  month,
+  endpointData,
+  isLoading,
+  error,
+  backTo,
+}: AREndpointsDailyContentProps) => {
   const rows = useMemo(() => {
     if (!endpointData) {
       return []
@@ -77,7 +61,7 @@ const AvailabilityReliabilityEndpointsDaily = () => {
         className="pb-2 mb-1"
         navigateTo={{
           label: 'Back to Monthly Endpoints Results',
-          to: `/tenants/${tenantId}/ar-groups/${encodeURIComponent(groupName || '')}/report/${encodeURIComponent(reportName || '')}/endpoints`,
+          to: backTo,
         }}
       />
 
@@ -85,7 +69,7 @@ const AvailabilityReliabilityEndpointsDaily = () => {
         <div className="loading-container">
           <LoadingSpinner size="md" />
         </div>
-      ) : isNotFoundError ? (
+      ) : isNotFoundError(error) ? (
         <div className={noticeContainerClass}>
           <p className={noticeTextClass}>
             This endpoint has no data for the selected date
@@ -100,4 +84,4 @@ const AvailabilityReliabilityEndpointsDaily = () => {
   )
 }
 
-export default AvailabilityReliabilityEndpointsDaily
+export default AREndpointsDailyContent

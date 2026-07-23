@@ -10,6 +10,9 @@ import {
 } from './utils/downtimeBadges'
 import type { DowntimeResponse } from '@/types/downtimes'
 
+const stripHostnameSuffix = (hostname?: string): string =>
+  hostname?.split('_')[0] ?? ''
+
 interface DowntimeCardProps {
   downtime: DowntimeResponse
   canManage: boolean
@@ -84,7 +87,9 @@ const DowntimeCard = ({
               <ul className="mt-1 text-xs text-muted bg-surface-muted rounded-lg border border-line p-2.5 space-y-1">
                 {downtime.services.map((service) => (
                   <li key={service.id}>
-                    <span className="text-foreground">{service.hostname}</span>{' '}
+                    <span className="text-foreground">
+                      {stripHostnameSuffix(service.hostname)}
+                    </span>{' '}
                     <span className="text-subtle">· {service.service}</span>
                   </li>
                 ))}

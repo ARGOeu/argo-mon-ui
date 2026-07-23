@@ -1,46 +1,32 @@
 import { useMemo } from 'react'
-import { useGetGroupAvailabilityReliability } from '@/hooks/useAvailabilityReliability'
-import { useParams } from 'react-router-dom'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import DailyAvailabilityTable from './DailyAvailabilityTable'
-import { getMonthRange, formatMonthLabel } from './utils/dateRanges'
+import { isNotFoundError } from '@/utils/isNotFoundError'
+import { formatMonthLabel } from './utils/dateRanges'
+import type { GroupsAvailabilityReliabilityResponse } from '@/types/availabilityReliability'
 
 const noticeContainerClass = 'text-center bg-surface-muted rounded-lg my-4'
 const noticeTextClass = 'text-sm text-subtle italic py-6 px-12'
 
-const AvailabilityReliabilityDaily = () => {
-  const { id, groupName, reportName, month } = useParams<{
-    id: string
-    groupName: string
-    reportName: string
-    month: string
-  }>()
-  const tenantId = id || ''
+export interface ARDailyContentProps {
+  groupName: string
+  month: string
+  rawData: GroupsAvailabilityReliabilityResponse | undefined
+  isLoading: boolean
+  error: Error | null
+  backTo: string
+}
 
-  const { startTime, endTime } = useMemo(
-    () => (month ? getMonthRange(month) : { startTime: '', endTime: '' }),
-    [month],
-  )
-
-  const {
-    data: rawData,
-    isLoading,
-    error,
-  } = useGetGroupAvailabilityReliability(
-    tenantId,
-    reportName || '',
-    groupName || '',
-    'daily',
-    startTime,
-    endTime,
-    !!month,
-  )
-
-  const isNotFoundError =
-    (error as (Error & { status?: number }) | null)?.status === 404
-
+const ARDailyContent = ({
+  groupName,
+  month,
+  rawData,
+  isLoading,
+  error,
+  backTo,
+}: ARDailyContentProps) => {
   const rows = useMemo(() => {
     if (!rawData) {
       return []
@@ -66,7 +52,7 @@ const AvailabilityReliabilityDaily = () => {
         className="pb-2 mb-1"
         navigateTo={{
           label: 'Back to Monthly Group Results',
-          to: `/tenants/${tenantId}/ar-groups/report/${encodeURIComponent(reportName || '')}`,
+          to: backTo,
         }}
       />
 
@@ -74,7 +60,7 @@ const AvailabilityReliabilityDaily = () => {
         <div className="loading-container">
           <LoadingSpinner size="md" />
         </div>
-      ) : isNotFoundError ? (
+      ) : isNotFoundError(error) ? (
         <div className={noticeContainerClass}>
           <p className={noticeTextClass}>
             This group has no data for the selected date
@@ -89,4 +75,4 @@ const AvailabilityReliabilityDaily = () => {
   )
 }
 
-export default AvailabilityReliabilityDaily
+export default ARDailyContent

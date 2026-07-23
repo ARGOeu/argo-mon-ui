@@ -1,50 +1,44 @@
 import { useState, useMemo, useEffect } from 'react'
-import { useGetEndpointsAvailabilityReliability } from '@/hooks/useAvailabilityReliability'
-import { useSelectedTenant } from '@/contexts/selected-tenant'
-import { useParams, useNavigate } from 'react-router-dom'
 import PageHeader from '@/components/PageHeader'
 import SearchInput from '@/components/SearchInput'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Pagination from '@/components/Pagination'
 import MonthlyEndpointsTable from './MonthlyEndpointsTable'
-import { getLastThreeMonthsRange } from './utils/dateRanges'
+import { isNotFoundError } from '@/utils/isNotFoundError'
+import type { EndpointsARResponse } from '@/types/availabilityReliability'
 
 const pageSize = 20
 const noticeContainerClass = 'text-center bg-surface-muted rounded-lg my-4'
 const noticeTextClass = 'text-sm text-subtle italic py-6 px-12'
 
-const AvailabilityReliabilityEndpoints = () => {
-  const { id, groupName, reportName } = useParams<{
-    id: string
-    groupName: string
-    reportName: string
-  }>()
-  const tenantId = id || ''
-  const navigate = useNavigate()
-  const { tenant: tenantData } = useSelectedTenant()
+export interface AREndpointsContentProps {
+  tenantName: string
+  groupName: string
+  reportName: string
+  endpointsData: EndpointsARResponse | undefined
+  isLoading: boolean
+  error: Error | null
+  onDrillDown: (
+    serviceName: string,
+    endpointName: string,
+    month: string,
+  ) => void
+  backTo: string
+}
 
+const AREndpointsContent = ({
+  tenantName,
+  groupName,
+  reportName,
+  endpointsData,
+  isLoading,
+  error,
+  onDrillDown,
+  backTo,
+}: AREndpointsContentProps) => {
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
-
-  const { startTime, endTime } = useMemo(() => getLastThreeMonthsRange(), [])
-
-  const {
-    data: endpointsData,
-    isLoading,
-    error,
-  } = useGetEndpointsAvailabilityReliability(
-    tenantId,
-    reportName || '',
-    decodeURIComponent(groupName || ''),
-    'monthly',
-    startTime,
-    endTime,
-    !!reportName && !!groupName,
-  )
-
-  const isNotFoundError =
-    (error as (Error & { status?: number }) | null)?.status === 404
 
   const rows = useMemo(() => {
     if (!endpointsData) {
@@ -98,16 +92,6 @@ const AvailabilityReliabilityEndpoints = () => {
     [filteredRows, currentPage],
   )
 
-  const handleDrillDown = (
-    serviceName: string,
-    endpointName: string,
-    month: string,
-  ) => {
-    navigate(
-      `/tenants/${tenantId}/ar-groups/${encodeURIComponent(groupName || '')}/report/${encodeURIComponent(reportName || '')}/services/${encodeURIComponent(serviceName)}/endpoints/${encodeURIComponent(endpointName)}/${month}`,
-    )
-  }
-
   return (
     <div className="page-container mb-8">
       <PageHeader
@@ -115,15 +99,13 @@ const AvailabilityReliabilityEndpoints = () => {
         subtitle={
           <>
             Monthly endpoint results for tenant{' '}
-            <strong>
-              {tenantData?.info.name ? tenantData.info.name : '...'}
-            </strong>
+            <strong>{tenantName ? tenantName : '...'}</strong>
           </>
         }
         className="pb-2 mb-2"
         navigateTo={{
           label: 'Back to Monthly Group Results',
-          to: `/tenants/${tenantId}/ar-groups/report/${encodeURIComponent(reportName || '')}`,
+          to: backTo,
         }}
       />
 
@@ -148,7 +130,7 @@ const AvailabilityReliabilityEndpoints = () => {
         <div className="loading-container">
           <LoadingSpinner size="md" />
         </div>
-      ) : isNotFoundError ? (
+      ) : isNotFoundError(error) ? (
         <div className={noticeContainerClass}>
           <p className={noticeTextClass}>
             This group has no data for the selected period
@@ -164,7 +146,7 @@ const AvailabilityReliabilityEndpoints = () => {
           <MonthlyEndpointsTable
             rows={paginatedRows}
             months={months}
-            onDrillDown={handleDrillDown}
+            onDrillDown={onDrillDown}
           />
           <Pagination
             currentPage={currentPage}
@@ -182,4 +164,4 @@ const AvailabilityReliabilityEndpoints = () => {
   )
 }
 
-export default AvailabilityReliabilityEndpoints
+export default AREndpointsContent

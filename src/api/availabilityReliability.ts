@@ -7,21 +7,25 @@ import type {
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
 export const fetchGroupsAvailabilityReliability = async (
-  tenantId: string,
+  tenantIdentifier: string,
   reportName: string,
   granularity: ResultGranularity,
   startTime: string,
   endTime: string,
-  token: string,
+  token: string | undefined,
 ): Promise<GroupsAvailabilityReliabilityResponse> => {
+  const base = token
+    ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}`
+    : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}`
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/results/${encodeURIComponent(reportName)}/groups?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    },
+    `${base}/results/${encodeURIComponent(reportName)}/groups?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
+    { headers },
   )
 
   if (!response.ok) {
@@ -37,22 +41,26 @@ export const fetchGroupsAvailabilityReliability = async (
 }
 
 export const fetchGroupAvailabilityReliability = async (
-  tenantId: string,
+  tenantIdentifier: string,
   reportName: string,
   groupName: string,
   granularity: ResultGranularity,
   startTime: string,
   endTime: string,
-  token: string,
+  token: string | undefined,
 ): Promise<GroupsAvailabilityReliabilityResponse> => {
+  const base = token
+    ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}`
+    : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}`
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/results/${encodeURIComponent(reportName)}/groups/${encodeURIComponent(groupName)}?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    },
+    `${base}/results/${encodeURIComponent(reportName)}/groups/${encodeURIComponent(groupName)}?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
+    { headers },
   )
 
   if (!response.ok) {
@@ -68,22 +76,26 @@ export const fetchGroupAvailabilityReliability = async (
 }
 
 export const fetchEndpointsAvailabilityReliability = async (
-  tenantId: string,
+  tenantIdentifier: string,
   reportName: string,
   groupName: string,
   granularity: ResultGranularity,
   startTime: string,
   endTime: string,
-  token: string,
+  token: string | undefined,
 ): Promise<EndpointsARResponse> => {
+  const base = token
+    ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}`
+    : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}`
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/results/${encodeURIComponent(reportName)}/groups/${encodeURIComponent(groupName)}/endpoints?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    },
+    `${base}/results/${encodeURIComponent(reportName)}/groups/${encodeURIComponent(groupName)}/endpoints?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
+    { headers },
   )
 
   if (!response.ok) {
@@ -99,23 +111,27 @@ export const fetchEndpointsAvailabilityReliability = async (
 }
 
 export const fetchEndpointAvailabilityReliability = async (
-  tenantId: string,
+  tenantIdentifier: string,
   reportName: string,
   groupName: string,
   endpointName: string,
   granularity: ResultGranularity,
   startTime: string,
   endTime: string,
-  token: string,
+  token: string | undefined,
 ): Promise<EndpointsARResponse> => {
+  const base = token
+    ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}`
+    : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}`
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
   const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/results/${encodeURIComponent(reportName)}/groups/${encodeURIComponent(groupName)}/endpoints/${encodeURIComponent(endpointName)}?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
-    {
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-    },
+    `${base}/results/${encodeURIComponent(reportName)}/groups/${encodeURIComponent(groupName)}/endpoints/${encodeURIComponent(endpointName)}?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
+    { headers },
   )
 
   if (!response.ok) {

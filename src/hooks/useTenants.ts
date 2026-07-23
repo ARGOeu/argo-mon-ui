@@ -668,6 +668,9 @@ export const useSetTenantNodeMutation = () => {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['user-tenant', variables.id] })
       queryClient.invalidateQueries({ queryKey: ['user-tenants'] })
+      queryClient.invalidateQueries({
+        queryKey: ['tenant-reports', variables.id],
+      })
       if (variables.node) {
         queryClient.invalidateQueries({
           queryKey: ['tenant-capability-availability', variables.id],
