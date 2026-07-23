@@ -80,14 +80,6 @@ const DowntimesList = ({
     )
   }
 
-  if (!downtimes.length) {
-    return (
-      <p className="text-center text-base text-subtle italic py-8">
-        No downtimes found
-      </p>
-    )
-  }
-
   const activeUpcomingCount = buckets.active.length + buckets.upcoming.length
   const tabs = [
     {
