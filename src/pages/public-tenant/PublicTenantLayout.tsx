@@ -7,6 +7,7 @@ import {
   CircleStackIcon,
   ShieldCheckIcon,
   ChartBarIcon,
+  TableCellsIcon,
 } from '@heroicons/react/16/solid'
 import MobileMenuToggle from '@/components/sidebar/MobileMenuToggle'
 import SidebarHeader from '@/components/sidebar/SidebarHeader'
@@ -38,6 +39,10 @@ const PublicTenantLayout = () => {
     ? `/public/tenants/${tenantName}/dashboard`
     : '/dashboard'
 
+  const availabilityReliabilityPath = isPlatformDomain()
+    ? `/public/tenants/${tenantName}/ar-groups`
+    : '/ar-groups'
+
   const capabilitiesPath = isPlatformDomain()
     ? `/public/tenants/${tenantName}/capabilities`
     : '/capabilities'
@@ -67,14 +72,12 @@ const PublicTenantLayout = () => {
           <p className="px-4 pt-4 pb-1 text-[0.65rem] font-semibold tracking-widest uppercase text-subtle select-none">
             Tenant
           </p>
-
           <div className="mx-2 flex items-center gap-2.5 p-2 rounded-lg">
             <TenantAvatar name={tenantName} />
             <span className="text-sm font-semibold text-foreground truncate flex-1 min-w-0">
               {tenantName}
             </span>
           </div>
-
           <SidebarNavItem
             to={dashboardPath}
             onClick={() => setIsMobileMenuOpen(false)}
@@ -82,7 +85,13 @@ const PublicTenantLayout = () => {
             <CircleStackIcon className="size-4" aria-hidden />
             Dashboard
           </SidebarNavItem>
-
+          <SidebarNavItem
+            to={availabilityReliabilityPath}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <TableCellsIcon className="size-4" aria-hidden />
+            Availability & Reliability
+          </SidebarNavItem>
           <SidebarNavItem
             to={capabilitiesPath}
             onClick={() => setIsMobileMenuOpen(false)}
@@ -90,7 +99,6 @@ const PublicTenantLayout = () => {
             <ShieldCheckIcon className="size-4" aria-hidden />
             Capabilities
           </SidebarNavItem>
-
           {performanceSetting?.enabled && (
             <SidebarNavItem
               to={performancePath}

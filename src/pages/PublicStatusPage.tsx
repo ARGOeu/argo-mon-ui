@@ -3,6 +3,7 @@ import { useGetStatusQuery } from '@/hooks/useStatus'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import NotFound from '@/pages/NotFound'
+import { isNotFoundError } from '@/utils/isNotFoundError'
 import { ExpandableStatus } from './ExpandableStatus'
 import { Status } from './Status'
 
@@ -28,9 +29,6 @@ const PublicStatusPage = () => {
 
   const { data: statusData, isLoading, error } = useGetStatusQuery(slug || '')
 
-  const isNotFoundError =
-    (error as (Error & { status?: number }) | null)?.status === 404
-
   const errorMessage = error?.message
     ? resolveErrorMessage(error.message)
     : 'This status page could not be loaded.'
@@ -44,7 +42,7 @@ const PublicStatusPage = () => {
               <LoadingSpinner />
               <div className="text-lg text-muted">Loading status page...</div>
             </div>
-          ) : isNotFoundError ? (
+          ) : isNotFoundError(error) ? (
             <NotFound showHomeButton={false} />
           ) : statusData ? (
             statusData.theming?.option === 'theme_2' ? (

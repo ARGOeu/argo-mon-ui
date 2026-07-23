@@ -12,7 +12,7 @@ import type {
   ResultGranularity,
 } from '@/types/availabilityReliability'
 
-export const useGetGroupsAvailabilityReliability = (
+export const useGetGroupsAR = (
   tenantId: string,
   reportName: string,
   granularity: ResultGranularity,
@@ -61,7 +61,7 @@ export const useGetGroupsAvailabilityReliability = (
   })
 }
 
-export const useGetGroupAvailabilityReliability = (
+export const useGetGroupAR = (
   tenantId: string,
   reportName: string,
   groupName: string,
@@ -117,7 +117,7 @@ export const useGetGroupAvailabilityReliability = (
   })
 }
 
-export const useGetEndpointsAvailabilityReliability = (
+export const useGetEndpointsAR = (
   tenantId: string,
   reportName: string,
   groupName: string,
@@ -173,7 +173,7 @@ export const useGetEndpointsAvailabilityReliability = (
   })
 }
 
-export const useGetEndpointAvailabilityReliability = (
+export const useGetEndpointAR = (
   tenantId: string,
   reportName: string,
   groupName: string,
@@ -228,6 +228,202 @@ export const useGetEndpointAvailabilityReliability = (
       enabled &&
       !!token &&
       !!tenantId &&
+      !!reportName &&
+      !!groupName &&
+      !!endpointName &&
+      !!startTime &&
+      !!endTime,
+  })
+}
+
+export const useGetPublicGroupsAR = (
+  tenantName: string,
+  reportName: string,
+  granularity: ResultGranularity,
+  startTime: string,
+  endTime: string,
+  enabled: boolean = true,
+) => {
+  return useQuery<GroupsAvailabilityReliabilityResponse, Error>({
+    queryKey: [
+      'public-availability-reliability-groups',
+      tenantName,
+      reportName,
+      granularity,
+      startTime,
+      endTime,
+    ],
+    queryFn: () => {
+      if (!tenantName) {
+        throw new Error('Tenant name is required')
+      }
+      if (!reportName) {
+        throw new Error('Report name is required')
+      }
+      return fetchGroupsAvailabilityReliability(
+        tenantName,
+        reportName,
+        granularity,
+        startTime,
+        endTime,
+        undefined,
+      )
+    },
+    retry: false,
+    enabled:
+      enabled && !!tenantName && !!reportName && !!startTime && !!endTime,
+  })
+}
+
+export const useGetPublicGroupAR = (
+  tenantName: string,
+  reportName: string,
+  groupName: string,
+  granularity: ResultGranularity,
+  startTime: string,
+  endTime: string,
+  enabled: boolean = true,
+) => {
+  return useQuery<GroupsAvailabilityReliabilityResponse, Error>({
+    queryKey: [
+      'public-availability-reliability-group-daily',
+      tenantName,
+      reportName,
+      groupName,
+      granularity,
+      startTime,
+      endTime,
+    ],
+    queryFn: () => {
+      if (!tenantName) {
+        throw new Error('Tenant name is required')
+      }
+      if (!reportName) {
+        throw new Error('Report name is required')
+      }
+      if (!groupName) {
+        throw new Error('Group name is required')
+      }
+      return fetchGroupAvailabilityReliability(
+        tenantName,
+        reportName,
+        groupName,
+        granularity,
+        startTime,
+        endTime,
+        undefined,
+      )
+    },
+    retry: false,
+    enabled:
+      enabled &&
+      !!tenantName &&
+      !!reportName &&
+      !!groupName &&
+      !!startTime &&
+      !!endTime,
+  })
+}
+
+export const useGetPublicEndpointsAR = (
+  tenantName: string,
+  reportName: string,
+  groupName: string,
+  granularity: ResultGranularity,
+  startTime: string,
+  endTime: string,
+  enabled: boolean = true,
+) => {
+  return useQuery<EndpointsARResponse, Error>({
+    queryKey: [
+      'public-availability-reliability-endpoints',
+      tenantName,
+      reportName,
+      groupName,
+      granularity,
+      startTime,
+      endTime,
+    ],
+    queryFn: () => {
+      if (!tenantName) {
+        throw new Error('Tenant name is required')
+      }
+      if (!reportName) {
+        throw new Error('Report name is required')
+      }
+      if (!groupName) {
+        throw new Error('Group name is required')
+      }
+      return fetchEndpointsAvailabilityReliability(
+        tenantName,
+        reportName,
+        groupName,
+        granularity,
+        startTime,
+        endTime,
+        undefined,
+      )
+    },
+    retry: false,
+    enabled:
+      enabled &&
+      !!tenantName &&
+      !!reportName &&
+      !!groupName &&
+      !!startTime &&
+      !!endTime,
+  })
+}
+
+export const useGetPublicEndpointAR = (
+  tenantName: string,
+  reportName: string,
+  groupName: string,
+  endpointName: string,
+  granularity: ResultGranularity,
+  startTime: string,
+  endTime: string,
+  enabled: boolean = true,
+) => {
+  return useQuery<EndpointsARResponse, Error>({
+    queryKey: [
+      'public-availability-reliability-endpoint-daily',
+      tenantName,
+      reportName,
+      groupName,
+      endpointName,
+      granularity,
+      startTime,
+      endTime,
+    ],
+    queryFn: () => {
+      if (!tenantName) {
+        throw new Error('Tenant name is required')
+      }
+      if (!reportName) {
+        throw new Error('Report name is required')
+      }
+      if (!groupName) {
+        throw new Error('Group name is required')
+      }
+      if (!endpointName) {
+        throw new Error('Endpoint name is required')
+      }
+      return fetchEndpointAvailabilityReliability(
+        tenantName,
+        reportName,
+        groupName,
+        endpointName,
+        granularity,
+        startTime,
+        endTime,
+        undefined,
+      )
+    },
+    retry: false,
+    enabled:
+      enabled &&
+      !!tenantName &&
       !!reportName &&
       !!groupName &&
       !!endpointName &&
