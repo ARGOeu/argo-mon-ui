@@ -3,14 +3,17 @@ import { useGetTopologyEndpoints } from '@/hooks/useTopology'
 import { CheckIcon, XMarkIcon } from '@heroicons/react/16/solid'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import SearchInput from '@/components/SearchInput'
-import { getEndpointHostname } from './utils/downtimeServices'
 import type { DowntimeServiceRequest } from '@/types/downtimes'
 import type { EndpointTopologyItem } from '@/types/topology'
 
+export type SelectedEndpoint = DowntimeServiceRequest & {
+  index?: number
+}
+
 interface ServicesPickerProps {
   tenantId: string
-  selected: DowntimeServiceRequest[]
-  onChange: (services: DowntimeServiceRequest[]) => void
+  selected: SelectedEndpoint[]
+  onChange: (services: SelectedEndpoint[]) => void
 }
 
 const ServicesPicker = ({
@@ -27,8 +30,13 @@ const ServicesPicker = ({
   } = useGetTopologyEndpoints(tenantId)
 
   const isSelected = useCallback(
-    (hostname: string, service: string) =>
-      selected.some((s) => s.hostname === hostname && s.service === service),
+    (hostname: string, service: string, index?: number) =>
+      selected.some(
+        (s) =>
+          s.hostname === hostname &&
+          s.service === service &&
+          (s.index === undefined || s.index === index),
+      ),
     [selected],
   )
 
@@ -44,9 +52,8 @@ const ServicesPicker = ({
       if (!query) {
         return true
       }
-      const hostname = getEndpointHostname(endpoint)
       return (
-        hostname.toLowerCase().includes(query) ||
+        endpoint.hostname.toLowerCase().includes(query) ||
         endpoint.service.toLowerCase().includes(query) ||
         endpoint.group.toLowerCase().includes(query)
       )
@@ -75,23 +82,26 @@ const ServicesPicker = ({
     }
   }, [visibleGroups, selectedGroup])
 
-  const groupsByHostname = useMemo(() => {
+  const groupsByTagsHostnameAndService = useMemo(() => {
     const map = new Map<string, Set<string>>()
     ;(endpoints ?? []).forEach((endpoint) => {
-      const hostname = getEndpointHostname(endpoint)
-      if (!map.has(hostname)) {
-        map.set(hostname, new Set())
+      const tagsHostname = endpoint.tags?.hostname
+      if (!tagsHostname) {
+        return
       }
-      map.get(hostname)!.add(endpoint.group)
+      const key = `${tagsHostname}|${endpoint.service}`
+      if (!map.has(key)) {
+        map.set(key, new Set())
+      }
+      map.get(key)!.add(endpoint.group)
     })
     return map
   }, [endpoints])
 
   const selectedCountByGroup = useMemo(() => {
     const counts = new Map<string, number>()
-    ;(endpoints ?? []).forEach((endpoint) => {
-      const hostname = getEndpointHostname(endpoint)
-      if (isSelected(hostname, endpoint.service)) {
+    ;(endpoints ?? []).forEach((endpoint, index) => {
+      if (isSelected(endpoint.hostname, endpoint.service, index)) {
         counts.set(endpoint.group, (counts.get(endpoint.group) ?? 0) + 1)
       }
     })
@@ -99,25 +109,32 @@ const ServicesPicker = ({
   }, [endpoints, isSelected])
 
   const groupEndpoints = useMemo(() => {
-    return (endpoints ?? []).filter(
-      (endpoint) =>
-        endpoint.group === selectedGroup && endpointMatchesQuery(endpoint),
-    )
+    return (endpoints ?? [])
+      .map((endpoint, index) => ({ endpoint, index }))
+      .filter(
+        ({ endpoint }) =>
+          endpoint.group === selectedGroup && endpointMatchesQuery(endpoint),
+      )
   }, [endpoints, selectedGroup, endpointMatchesQuery])
 
-  const handleRemove = (hostname: string, service: string) => {
+  const handleRemove = (hostname: string, service: string, index?: number) => {
     onChange(
       selected.filter(
-        (s) => !(s.hostname === hostname && s.service === service),
+        (s) =>
+          !(
+            s.hostname === hostname &&
+            s.service === service &&
+            (s.index === undefined || s.index === index)
+          ),
       ),
     )
   }
 
-  const handleToggle = (hostname: string, service: string) => {
-    if (isSelected(hostname, service)) {
-      handleRemove(hostname, service)
+  const handleToggle = (hostname: string, service: string, index?: number) => {
+    if (isSelected(hostname, service, index)) {
+      handleRemove(hostname, service, index)
     } else {
-      onChange([...selected, { hostname, service }])
+      onChange([...selected, { hostname, service, index }])
     }
   }
 
@@ -125,22 +142,33 @@ const ServicesPicker = ({
     <div className="flex flex-col gap-2">
       {selected.length > 0 && (
         <div className="flex flex-wrap gap-1.5">
-          {selected.map((s, index) => (
-            <span
-              key={`${s.hostname}-${s.service}-${index}`}
-              className="inline-flex items-center gap-1 bg-brand-muted text-brand text-xs font-medium px-2 py-0.5 rounded-full"
-            >
-              {s.hostname} · {s.service}
-              <button
-                type="button"
-                onClick={() => handleRemove(s.hostname ?? '', s.service ?? '')}
-                className="text-brand/70 hover:text-brand-strong hover:bg-brand/20 rounded-full p-px transition-colors cursor-pointer"
-                aria-label={`Remove ${s.hostname} ${s.service}`}
+          {selected.map((s, chipIndex) => {
+            const matchedEndpoint =
+              s.index !== undefined ? endpoints?.[s.index] : undefined
+            const chipHostname = s.hostname || matchedEndpoint?.tags?.hostname
+            const chipLabel = `${chipHostname} · ${s.service}`
+
+            return (
+              <span
+                key={`${s.hostname}-${s.service}-${s.index ?? chipIndex}`}
+                className="inline-flex items-center gap-1 bg-brand-muted text-brand text-xs font-medium px-2 py-0.5 rounded-full"
               >
-                <XMarkIcon className="size-4" />
-              </button>
-            </span>
-          ))}
+                <span className="truncate max-w-48" title={chipLabel}>
+                  {chipLabel}
+                </span>
+                <button
+                  type="button"
+                  onClick={() =>
+                    onChange(selected.filter((_, i) => i !== chipIndex))
+                  }
+                  className="text-brand/70 hover:text-brand-strong hover:bg-brand/20 rounded-full p-px transition-colors cursor-pointer shrink-0"
+                  aria-label={`Remove ${s.hostname} ${s.service}`}
+                >
+                  <XMarkIcon className="size-4" />
+                </button>
+              </span>
+            )
+          })}
         </div>
       )}
 
@@ -166,11 +194,11 @@ const ServicesPicker = ({
         </p>
       ) : (
         <div className="flex border border-line-strong rounded-lg bg-white overflow-hidden max-h-72">
-          <div className="w-2/5 border-r border-line flex flex-col">
+          <div className="w-2/5 border-r border-line flex flex-col min-h-0">
             <p className="px-3 py-1.5 bg-surface-strong border-b border-line text-xs font-semibold text-muted tracking-wide shrink-0">
               Groups
             </p>
-            <div className="overflow-y-auto">
+            <div className="overflow-y-auto flex-1 min-h-0">
               {!visibleGroups.length ? (
                 <p className="text-sm text-subtle italic px-3 py-3">
                   No groups match search
@@ -203,11 +231,11 @@ const ServicesPicker = ({
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col min-h-0">
             <p className="px-3 py-1.5 bg-surface-strong border-b border-line text-xs font-semibold text-muted tracking-wide shrink-0">
-              Hostname & Service
+              Endpoints
             </p>
-            <div className="overflow-y-auto">
+            <div className="overflow-y-auto flex-1 min-h-0">
               {!groupEndpoints.length ? (
                 <p className="text-sm text-subtle italic px-4 py-3">
                   {searchInput
@@ -215,16 +243,28 @@ const ServicesPicker = ({
                     : 'No endpoints in this group'}
                 </p>
               ) : (
-                groupEndpoints.map((endpoint, index) => {
-                  const hostname = getEndpointHostname(endpoint)
-                  const isChecked = isSelected(hostname, endpoint.service)
-                  const otherGroups = Array.from(
-                    groupsByHostname.get(hostname) ?? [],
-                  ).filter((group) => group !== endpoint.group)
+                groupEndpoints.map(({ endpoint, index }) => {
+                  const infoUrl = endpoint.tags?.info_URL
+                  const infoId = endpoint.tags?.info_ID
+                  const tagsHostname = endpoint.tags?.hostname
+                  const isChecked = isSelected(
+                    endpoint.hostname,
+                    endpoint.service,
+                    index,
+                  )
+                  const otherGroups = tagsHostname
+                    ? Array.from(
+                        groupsByTagsHostnameAndService.get(
+                          `${tagsHostname}|${endpoint.service}`,
+                        ) ?? [],
+                      ).filter((group) => group !== endpoint.group)
+                    : []
+                  const displayName =
+                    infoUrl || tagsHostname || endpoint.hostname
 
                   return (
                     <label
-                      key={`${endpoint.group}-${hostname}-${endpoint.service}-${index}`}
+                      key={`${infoUrl ?? ''}-${endpoint.group}-${endpoint.hostname}-${endpoint.service}-${index}`}
                       className={`flex items-start gap-3 px-3 py-1.5 border-t border-line first:border-t-0 cursor-pointer transition-colors ${
                         isChecked ? 'bg-brand-subtle' : 'hover:bg-surface-muted'
                       }`}
@@ -241,7 +281,11 @@ const ServicesPicker = ({
                           className="sr-only"
                           checked={isChecked}
                           onChange={() =>
-                            handleToggle(hostname, endpoint.service)
+                            handleToggle(
+                              endpoint.hostname,
+                              endpoint.service,
+                              index,
+                            )
                           }
                         />
                         {isChecked && (
@@ -249,14 +293,14 @@ const ServicesPicker = ({
                         )}
                       </div>
                       <div className="flex flex-col min-w-0">
-                        <div className="flex items-baseline gap-2">
-                          <span className="text-sm text-foreground break-all">
-                            {hostname}
-                          </span>
-                          <span className="text-xs text-subtle">
-                            {endpoint.service}
-                          </span>
-                        </div>
+                        <span className="text-sm text-foreground break-all">
+                          {displayName}
+                        </span>
+                        <span className="text-xs text-subtle">
+                          {infoId
+                            ? `${infoId} · ${endpoint.service}`
+                            : endpoint.service}
+                        </span>
                         {isChecked && otherGroups.length > 0 && (
                           <span className="text-sm text-amber-600 mt-0.5">
                             This hostname also exists in group

@@ -13,11 +13,8 @@ import ErrorDisplay from '@/components/ErrorDisplay'
 import SelectDropdown from '@/components/SelectDropdown'
 import ServicesPicker from './ServicesPicker'
 import { useCanManageDowntimes } from './useCanManageDowntimes'
-import type {
-  DowntimeRequest,
-  DowntimeSeverity,
-  DowntimeServiceRequest,
-} from '@/types/downtimes'
+import type { DowntimeRequest, DowntimeSeverity } from '@/types/downtimes'
+import type { SelectedEndpoint } from './ServicesPicker'
 
 const sectionClass =
   'grid grid-cols-1 md:grid-cols-[300px_1fr] gap-6 md:gap-12 animate-fade-in'
@@ -79,7 +76,7 @@ const CreateDowntime = () => {
     completed_at: '',
   })
   const [validationError, setValidationError] = useState('')
-  const [services, setServices] = useState<DowntimeServiceRequest[]>([])
+  const [services, setServices] = useState<SelectedEndpoint[]>([])
 
   const {
     data: downtimeData,
@@ -138,7 +135,10 @@ const CreateDowntime = () => {
       severity: formData.severity,
       scheduled_at: fromDatetimeLocalUTCToISO(formData.scheduled_at),
       completed_at: fromDatetimeLocalUTCToISO(formData.completed_at),
-      services,
+      services: services.map(({ hostname, service }) => ({
+        hostname,
+        service,
+      })),
     }
     if (formData.message.trim()) {
       data.message = formData.message
@@ -201,7 +201,7 @@ const CreateDowntime = () => {
     services.length > 0
 
   return (
-    <div className="page-container mb-4">
+    <div className="page-container mb-8">
       {isEditMode && isDowntimeLoading ? (
         <div className="loading-container">
           <LoadingSpinner />
