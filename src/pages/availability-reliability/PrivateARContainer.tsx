@@ -37,6 +37,7 @@ const PrivateARContainer = () => {
     'monthly',
     startTime,
     endTime,
+    'private',
     !!selectedReportName,
   )
 

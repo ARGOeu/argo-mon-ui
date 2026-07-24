@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useGetPublicTenantReports } from '@/hooks/useTenants'
-import {
-  useGetPublicResultsGroups,
-  useGetPublicStatusGroups,
-} from '@/hooks/useData'
+import { useGetResultsGroups, useGetStatusGroups } from '@/hooks/useData'
 import { useTenantName } from '@/hooks/useTenantName'
 import Dashboard from '@/pages/dashboard/Dashboard'
 
@@ -33,8 +30,9 @@ const PublicDashboardContainer = () => {
     data: resultsData,
     isLoading: resultsLoading,
     error: resultsError,
-  } = useGetPublicResultsGroups(
+  } = useGetResultsGroups(
     tenantName ?? '',
+    'public',
     selectedReport,
     undefined,
     '1w',
@@ -45,8 +43,9 @@ const PublicDashboardContainer = () => {
     data: statusData,
     isLoading: statusLoading,
     error: statusError,
-  } = useGetPublicStatusGroups(
+  } = useGetStatusGroups(
     tenantName ?? '',
+    'public',
     selectedReport,
     undefined,
     !!selectedReport,

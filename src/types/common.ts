@@ -1,3 +1,5 @@
+export type AccessMode = 'public' | 'private'
+
 export type StatusGroupType = {
   name: string
   alias?: string
