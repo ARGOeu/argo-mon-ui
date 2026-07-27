@@ -1,4 +1,4 @@
-import type { StatusItemType } from '@/types/common'
+import type { AccessMode, StatusItemType } from '@/types/common'
 import type { GroupResultsResponse, GroupStatusResponse } from '@/types/data'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
@@ -31,22 +31,28 @@ export const fetchGroupsApi = async (
 
 export const fetchResultsGroups = async (
   tenantIdentifier: string,
+  report: string | undefined,
+  item: string | undefined,
+  period: string | undefined,
+  mode: AccessMode,
   token: string | undefined,
-  report?: string,
-  item?: string,
-  period?: string,
 ): Promise<GroupResultsResponse> => {
+  if (mode === 'private' && !token) {
+    throw new Error('Access token is required for private mode requests')
+  }
+
   const params = new URLSearchParams()
   if (report) params.set('report', report)
   if (period) params.set('period', period)
 
   const query = params.toString()
-  const base = token
-    ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}/results/groups`
-    : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}/results/groups`
+  const base =
+    mode === 'private'
+      ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}/results/groups`
+      : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}/results/groups`
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (token) {
+  if (mode === 'private') {
     headers['Authorization'] = `Bearer ${token}`
   }
 
@@ -68,15 +74,21 @@ export const fetchResultsGroups = async (
 export const fetchStatusGroups = async (
   tenantIdentifier: string,
   report: string,
+  item: string | undefined,
+  mode: AccessMode,
   token: string | undefined,
-  item?: string,
 ): Promise<GroupStatusResponse> => {
-  const base = token
-    ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}/status/groups`
-    : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}/status/groups`
+  if (mode === 'private' && !token) {
+    throw new Error('Access token is required for private mode requests')
+  }
+
+  const base =
+    mode === 'private'
+      ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}/status/groups`
+      : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}/status/groups`
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (token) {
+  if (mode === 'private') {
     headers['Authorization'] = `Bearer ${token}`
   }
 

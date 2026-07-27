@@ -38,6 +38,7 @@ const PrivateDashboardContainer = () => {
     error: resultsError,
   } = useGetResultsGroups(
     tenantId ?? '',
+    'private',
     selectedReport,
     undefined,
     '1w',
@@ -50,6 +51,7 @@ const PrivateDashboardContainer = () => {
     error: statusError,
   } = useGetStatusGroups(
     tenantId ?? '',
+    'private',
     selectedReport,
     undefined,
     !!selectedReport && selectedReportValid,

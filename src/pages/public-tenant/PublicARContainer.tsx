@@ -1,5 +1,5 @@
 import { useMemo, useEffect } from 'react'
-import { useGetPublicGroupsAR } from '@/hooks/useAvailabilityReliability'
+import { useGetGroupsAR } from '@/hooks/useAvailabilityReliability'
 import { useGetPublicTenantReports } from '@/hooks/useTenants'
 import { useTenantName } from '@/hooks/useTenantName'
 import { useParams, useNavigate } from 'react-router-dom'
@@ -34,12 +34,13 @@ const PublicARContainer = () => {
     data: groupsData,
     isLoading,
     error,
-  } = useGetPublicGroupsAR(
+  } = useGetGroupsAR(
     tenantName ?? '',
     selectedReportName || '',
     'monthly',
     startTime,
     endTime,
+    'public',
     !!selectedReportName,
   )
 

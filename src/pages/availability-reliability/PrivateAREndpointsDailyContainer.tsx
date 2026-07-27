@@ -33,6 +33,7 @@ const PrivateAREndpointsDailyContainer = () => {
     'daily',
     startTime,
     endTime,
+    'private',
     !!endpointName && !!groupName && !!month,
   )
 

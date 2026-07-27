@@ -1,3 +1,4 @@
+import type { AccessMode } from '@/types/common'
 import type {
   GroupsAvailabilityReliabilityResponse,
   EndpointsARResponse,
@@ -12,14 +13,20 @@ export const fetchGroupsAvailabilityReliability = async (
   granularity: ResultGranularity,
   startTime: string,
   endTime: string,
+  mode: AccessMode,
   token: string | undefined,
 ): Promise<GroupsAvailabilityReliabilityResponse> => {
-  const base = token
-    ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}`
-    : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}`
+  if (mode === 'private' && !token) {
+    throw new Error('Access token is required for private mode requests')
+  }
+
+  const base =
+    mode === 'private'
+      ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}`
+      : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}`
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (token) {
+  if (mode === 'private') {
     headers['Authorization'] = `Bearer ${token}`
   }
 
@@ -47,14 +54,20 @@ export const fetchGroupAvailabilityReliability = async (
   granularity: ResultGranularity,
   startTime: string,
   endTime: string,
+  mode: AccessMode,
   token: string | undefined,
 ): Promise<GroupsAvailabilityReliabilityResponse> => {
-  const base = token
-    ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}`
-    : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}`
+  if (mode === 'private' && !token) {
+    throw new Error('Access token is required for private mode requests')
+  }
+
+  const base =
+    mode === 'private'
+      ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}`
+      : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}`
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (token) {
+  if (mode === 'private') {
     headers['Authorization'] = `Bearer ${token}`
   }
 
@@ -82,14 +95,20 @@ export const fetchEndpointsAvailabilityReliability = async (
   granularity: ResultGranularity,
   startTime: string,
   endTime: string,
+  mode: AccessMode,
   token: string | undefined,
 ): Promise<EndpointsARResponse> => {
-  const base = token
-    ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}`
-    : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}`
+  if (mode === 'private' && !token) {
+    throw new Error('Access token is required for private mode requests')
+  }
+
+  const base =
+    mode === 'private'
+      ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}`
+      : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}`
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (token) {
+  if (mode === 'private') {
     headers['Authorization'] = `Bearer ${token}`
   }
 
@@ -118,14 +137,20 @@ export const fetchEndpointAvailabilityReliability = async (
   granularity: ResultGranularity,
   startTime: string,
   endTime: string,
+  mode: AccessMode,
   token: string | undefined,
 ): Promise<EndpointsARResponse> => {
-  const base = token
-    ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}`
-    : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}`
+  if (mode === 'private' && !token) {
+    throw new Error('Access token is required for private mode requests')
+  }
+
+  const base =
+    mode === 'private'
+      ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}`
+      : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}`
 
   const headers: Record<string, string> = { 'Content-Type': 'application/json' }
-  if (token) {
+  if (mode === 'private') {
     headers['Authorization'] = `Bearer ${token}`
   }
 

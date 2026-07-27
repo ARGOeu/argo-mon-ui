@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useGetPublicEndpointAR } from '@/hooks/useAvailabilityReliability'
+import { useGetEndpointAR } from '@/hooks/useAvailabilityReliability'
 import { useTenantName } from '@/hooks/useTenantName'
 import { useParams } from 'react-router-dom'
 import AREndpointsDailyContent from '@/pages/availability-reliability/AREndpointsDailyContent'
@@ -26,7 +26,7 @@ const PublicAREndpointsDailyContainer = () => {
     data: endpointData,
     isLoading,
     error,
-  } = useGetPublicEndpointAR(
+  } = useGetEndpointAR(
     tenantName ?? '',
     decodeURIComponent(reportName || ''),
     decodeURIComponent(groupName || ''),
@@ -34,6 +34,7 @@ const PublicAREndpointsDailyContainer = () => {
     'daily',
     startTime,
     endTime,
+    'public',
     !!endpointName && !!groupName && !!month,
   )
 

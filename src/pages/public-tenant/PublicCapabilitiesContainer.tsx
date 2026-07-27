@@ -1,9 +1,6 @@
 import { Info } from 'lucide-react'
 import { useGetPublicTenantReports } from '@/hooks/useTenants'
-import {
-  useGetPublicResultsGroups,
-  useGetPublicStatusGroups,
-} from '@/hooks/useData'
+import { useGetResultsGroups, useGetStatusGroups } from '@/hooks/useData'
 import { useTenantName } from '@/hooks/useTenantName'
 import {
   computeAvailabilityStats,
@@ -27,8 +24,9 @@ const PublicCapabilitiesContainer = () => {
     data: availabilityData,
     isLoading: isAvailabilityLoading,
     error: availabilityError,
-  } = useGetPublicResultsGroups(
+  } = useGetResultsGroups(
     tenantName ?? '',
+    'public',
     nodeReport?.name,
     undefined,
     undefined,
@@ -39,8 +37,9 @@ const PublicCapabilitiesContainer = () => {
     data: statusData,
     isLoading: isStatusLoading,
     error: statusError,
-  } = useGetPublicStatusGroups(
+  } = useGetStatusGroups(
     tenantName ?? '',
+    'public',
     nodeReport?.name ?? '',
     undefined,
     !!nodeReport,

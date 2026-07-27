@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import { useGetPublicGroupAR } from '@/hooks/useAvailabilityReliability'
+import { useGetGroupAR } from '@/hooks/useAvailabilityReliability'
 import { useTenantName } from '@/hooks/useTenantName'
 import { useParams } from 'react-router-dom'
 import ARDailyContent from '@/pages/availability-reliability/ARDailyContent'
@@ -23,13 +23,14 @@ const PublicARDailyContainer = () => {
     data: rawData,
     isLoading,
     error,
-  } = useGetPublicGroupAR(
+  } = useGetGroupAR(
     tenantName ?? '',
     reportName || '',
     groupName || '',
     'daily',
     startTime,
     endTime,
+    'public',
     !!month,
   )
 

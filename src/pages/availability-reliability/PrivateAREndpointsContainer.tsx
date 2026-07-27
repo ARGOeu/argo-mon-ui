@@ -28,6 +28,7 @@ const PrivateAREndpointsContainer = () => {
     'monthly',
     startTime,
     endTime,
+    'private',
     !!reportName && !!groupName,
   )
 

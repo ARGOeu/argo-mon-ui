@@ -29,6 +29,7 @@ const PrivateARDailyContainer = () => {
     'daily',
     startTime,
     endTime,
+    'private',
     !!month,
   )
 
