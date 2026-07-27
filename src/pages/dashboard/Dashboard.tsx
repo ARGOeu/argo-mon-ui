@@ -20,6 +20,8 @@ import SelectDropdown from '@/components/SelectDropdown'
 import type { SelectOption } from '@/components/SelectDropdown'
 import type { GroupResultsResponse, GroupStatusResponse } from '@/types/data'
 
+const WEEK_DAY_COUNT = 7
+
 const buildReportOptions = (
   reports: Array<{ name: string; public?: boolean }> | undefined,
 ): SelectOption[] => {
@@ -60,13 +62,16 @@ const mapStatusValue = (value: string): ServiceStatus => {
   const v = value?.toUpperCase()
   if (v === 'CRITICAL' || v === 'DOWN') return 'critical'
   if (v === 'WARNING' || v === 'DEGRADED') return 'degraded'
+  if (!v || v === 'UNKNOWN' || v === 'MISSING') return 'missing'
   return 'healthy'
 }
 
 const worstStatus = (values: string[]): ServiceStatus => {
+  if (values.length === 0) return 'missing'
   const mapped = values.map(mapStatusValue)
   if (mapped.includes('critical')) return 'critical'
   if (mapped.includes('degraded')) return 'degraded'
+  if (mapped.every((s) => s === 'missing')) return 'missing'
   return 'healthy'
 }
 
@@ -116,7 +121,7 @@ const STATUS_STYLES: Record<
   },
 }
 
-type BannerStatus = 'healthy' | 'degraded' | 'critical'
+type BannerStatus = 'healthy' | 'degraded' | 'critical' | 'missing'
 
 const BANNER_STYLES: Record<
   BannerStatus,
@@ -152,6 +157,14 @@ const BANNER_STYLES: Record<
     headline: 'text-red-900',
     detail: 'text-red-900/80',
     meta: 'text-red-900/60',
+  },
+  missing: {
+    bg: 'bg-gray-50',
+    border: 'border-gray-400',
+    icon: Info,
+    headline: 'text-gray-600',
+    detail: 'text-gray-600/80',
+    meta: 'text-gray-600/60',
   },
 }
 
@@ -351,7 +364,7 @@ const Dashboard = ({
     })
 
     return resultsData.data.map((g) => {
-      const missingCount = Math.max(0, 7 - g.results.length)
+      const missingCount = Math.max(0, WEEK_DAY_COUNT - g.results.length)
       const firstDate =
         g.results.length > 0
           ? g.results.reduce(
@@ -432,6 +445,7 @@ const Dashboard = ({
   }>(() => {
     const crit = services.filter((s) => s.status === 'critical')
     const deg = services.filter((s) => s.status === 'degraded')
+    const missing = services.filter((s) => s.status === 'missing')
 
     if (crit.length > 0) {
       const names = crit
@@ -459,6 +473,13 @@ const Dashboard = ({
             ? '1 service is degraded'
             : `${deg.length} services are degraded`,
         detail: `${names}${deg.length > 2 ? ` +${deg.length - 2} more` : ''} reporting elevated errors or latency`,
+      }
+    }
+    if (services.length > 0 && missing.length === services.length) {
+      return {
+        state: 'missing',
+        headline: 'Status unavailable',
+        detail: `No status data reported for ${services.length} service${services.length === 1 ? '' : 's'}`,
       }
     }
     return {
@@ -631,7 +652,8 @@ const Dashboard = ({
               <span className="text-[11px] font-normal text-neutral-500">
                 <span className="text-emerald-600">{counts.healthy}</span>·
                 <span className="text-amber-600">{counts.degraded}</span>·
-                <span className="text-red-600">{counts.critical}</span>
+                <span className="text-red-600">{counts.critical}</span>·
+                <span className="text-gray-500">{counts.missing}</span>
               </span>
             </NowItem>
             <NowItem icon={ShieldCheck} label="Availability today" last>
