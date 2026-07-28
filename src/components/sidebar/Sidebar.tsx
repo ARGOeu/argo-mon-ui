@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useGetUserInvitations } from '@/hooks/useInvitations'
 import { useGetPerformanceSettings } from '@/hooks/useSettings'
+import { SUPER_ADMIN_ROLE } from '@/auth/roles'
 import {
   RectangleStackIcon,
   UserGroupIcon,
@@ -69,7 +70,7 @@ const tenantNavItems: TenantNavItem[] = [
     path: 'performance',
     label: 'Performance',
     icon: Medal,
-    requiredRoles: ['super_admin'],
+    requiredRoles: [SUPER_ADMIN_ROLE],
   },
   {
     path: 'members',

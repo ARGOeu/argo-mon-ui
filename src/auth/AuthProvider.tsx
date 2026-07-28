@@ -1,6 +1,6 @@
-// AuthProvider.tsx
 import { AuthContext, type AuthContextType } from './context'
 import { keycloak, initKeycloak } from './keycloak'
+import { SUPER_ADMIN_GROUP, SUPER_ADMIN_ROLE } from './roles'
 import { useEffect, useRef, useState } from 'react'
 import { registerUser } from '@/api/users'
 import { fetchUserProfile } from '@/api/profile'
@@ -135,7 +135,10 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
       redirectUri: import.meta.env.VITE_REDIRECT_URI || window.location.origin,
     })
 
-  const isSuperAdmin = !!profile?.roles?.includes('super_admin')
+  const isSuperAdmin = !!profile?.groups?.some(
+    (group) =>
+      group.name === SUPER_ADMIN_GROUP && group.role === SUPER_ADMIN_ROLE,
+  )
 
   return (
     <AuthContext.Provider
