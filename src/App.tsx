@@ -52,6 +52,7 @@ import {
   PublicAREndpointsDailyContainer,
 } from './pages/public-tenant'
 import { AuthProvider } from './auth/AuthProvider'
+import { SUPER_ADMIN_ROLE } from './auth/roles'
 import NotFound from './pages/NotFound'
 import { Toaster } from 'sonner'
 import { isPlatformDomain } from './utils/domains'
@@ -128,7 +129,7 @@ function PlatformRoutes() {
           <Route
             path="tenants/create"
             element={
-              <ProtectedRoute requiredRoles={['super_admin']}>
+              <ProtectedRoute requiredRoles={[SUPER_ADMIN_ROLE]}>
                 <CreateTenant />
               </ProtectedRoute>
             }
@@ -224,7 +225,7 @@ function PlatformRoutes() {
           <Route
             path="tenants/:id/performance"
             element={
-              <ProtectedRoute requiredRoles={['super_admin']}>
+              <ProtectedRoute requiredRoles={[SUPER_ADMIN_ROLE]}>
                 <TenantPerformance />
               </ProtectedRoute>
             }
@@ -232,7 +233,7 @@ function PlatformRoutes() {
           <Route
             path="projects/create"
             element={
-              <ProtectedRoute requiredRoles={['super_admin']}>
+              <ProtectedRoute requiredRoles={[SUPER_ADMIN_ROLE]}>
                 <CreateProject />
               </ProtectedRoute>
             }
@@ -240,7 +241,7 @@ function PlatformRoutes() {
           <Route
             path="projects/edit/:id"
             element={
-              <ProtectedRoute requiredRoles={['super_admin']}>
+              <ProtectedRoute requiredRoles={[SUPER_ADMIN_ROLE]}>
                 <CreateProject />
               </ProtectedRoute>
             }
@@ -248,7 +249,7 @@ function PlatformRoutes() {
           <Route
             path="administration"
             element={
-              <ProtectedRoute requiredRoles={['super_admin']}>
+              <ProtectedRoute requiredRoles={[SUPER_ADMIN_ROLE]}>
                 <Administration />
               </ProtectedRoute>
             }
@@ -256,7 +257,7 @@ function PlatformRoutes() {
           <Route
             path="administration/users/:username"
             element={
-              <ProtectedRoute requiredRoles={['super_admin']}>
+              <ProtectedRoute requiredRoles={[SUPER_ADMIN_ROLE]}>
                 <Profile />
               </ProtectedRoute>
             }
@@ -264,7 +265,7 @@ function PlatformRoutes() {
           <Route
             path="endpoints-access"
             element={
-              <ProtectedRoute requiredRoles={['super_admin']}>
+              <ProtectedRoute requiredRoles={[SUPER_ADMIN_ROLE]}>
                 <EndpointsAccess />
               </ProtectedRoute>
             }
@@ -272,7 +273,7 @@ function PlatformRoutes() {
           <Route
             path="settings"
             element={
-              <ProtectedRoute requiredRoles={['super_admin']}>
+              <ProtectedRoute requiredRoles={[SUPER_ADMIN_ROLE]}>
                 <Settings />
               </ProtectedRoute>
             }
@@ -280,7 +281,7 @@ function PlatformRoutes() {
           <Route
             path="settings/:id"
             element={
-              <ProtectedRoute requiredRoles={['super_admin']}>
+              <ProtectedRoute requiredRoles={[SUPER_ADMIN_ROLE]}>
                 <PerformanceSettings />
               </ProtectedRoute>
             }
