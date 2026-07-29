@@ -50,12 +50,11 @@ const PrivateDashboardContainer = () => {
     data: downtimesData,
     isLoading: downtimesLoading,
     error: downtimesError,
-  } = useGetTenantDowntimes(
-    tenantId ?? '',
-    100,
-    new Date().toISOString().split('T')[0],
-    true,
-  )
+  } = useGetTenantDowntimes(tenantId ?? '', {
+    size: 100,
+    date: new Date().toISOString().split('T')[0],
+    enabled: true,
+  })
 
   const downtimes = downtimesData?.pages.flatMap((page) => page.content) ?? []
 
