@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
 import {
   useGetTenantDowntimes,
@@ -6,45 +6,106 @@ import {
 } from '@/hooks/useDowntimes'
 import { useNavigate, useParams } from 'react-router-dom'
 import { toast } from 'sonner'
-import { XMarkIcon } from '@heroicons/react/16/solid'
 import Button from '@/components/Button'
 import ConfirmDialog from '@/components/ConfirmDialog'
-import IconButton from '@/components/IconButton'
 import PageHeader from '@/components/PageHeader'
 import DowntimesList from './DowntimesList'
 import { useCanManageDowntimes } from './useCanManageDowntimes'
+import { getTodayDateString } from './utils/downtimeDateRanges'
+import type { DowntimeTab } from './utils/downtimeGrouping'
 import type { Downtime } from '@/types/downtimes'
 
-const pageSize = 20
+const pageSize = 10
 
 const TenantDowntimes = () => {
   const { id: tenantId } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const [dateFilter, setDateFilter] = useState('')
+  const [completedDateFilter, setCompletedDateFilter] = useState('')
+  const [activeTab, setActiveTab] = useState<DowntimeTab>('active-upcoming')
 
   const { tenant: tenantData } = useSelectedTenant()
   const { canManage } = useCanManageDowntimes()
 
-  const {
-    data,
-    isLoading,
-    error,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-  } = useGetTenantDowntimes(tenantId ?? '', pageSize, dateFilter || undefined)
+  const today = useMemo(() => getTodayDateString(), [])
 
-  const downtimes = data?.pages.flatMap((page) => page.content) ?? []
-  const isFullyLoaded = !isLoading && (hasNextPage === false || !!error)
+  const {
+    data: activeUpcomingData,
+    isLoading: isActiveUpcomingLoading,
+    error: activeUpcomingError,
+    fetchNextPage: fetchNextActiveUpcomingPage,
+    hasNextPage: hasNextActiveUpcomingPage,
+    isFetchingNextPage: isFetchingNextActiveUpcomingPage,
+  } = useGetTenantDowntimes(tenantId ?? '', {
+    size: pageSize,
+    startDate: today,
+    enabled: activeTab === 'active-upcoming',
+  })
+
+  const {
+    data: completedData,
+    isLoading: isCompletedLoading,
+    error: completedError,
+    fetchNextPage: fetchNextCompletedPage,
+    hasNextPage: hasNextCompletedPage,
+    isFetchingNextPage: isFetchingNextCompletedPage,
+  } = useGetTenantDowntimes(tenantId ?? '', {
+    size: pageSize,
+    date: completedDateFilter || undefined,
+    endDate: completedDateFilter ? undefined : today,
+    enabled: activeTab === 'completed',
+  })
 
   useEffect(() => {
-    if (hasNextPage && !isFetchingNextPage && !error) {
-      fetchNextPage()
+    if (activeTab !== 'active-upcoming') {
+      return
     }
-  }, [hasNextPage, isFetchingNextPage, error, fetchNextPage])
+    if (
+      hasNextActiveUpcomingPage &&
+      !isFetchingNextActiveUpcomingPage &&
+      !activeUpcomingError
+    ) {
+      fetchNextActiveUpcomingPage()
+    }
+  }, [
+    activeTab,
+    hasNextActiveUpcomingPage,
+    isFetchingNextActiveUpcomingPage,
+    activeUpcomingError,
+    fetchNextActiveUpcomingPage,
+  ])
 
-  const handleDateFilterChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setDateFilter(e.target.value)
+  const activeUpcomingDowntimes =
+    activeUpcomingData?.pages.flatMap((page) => page.content) ?? []
+  const isActiveUpcomingFullyLoaded =
+    !isActiveUpcomingLoading &&
+    (hasNextActiveUpcomingPage === false || !!activeUpcomingError)
+
+  const completedDowntimes =
+    completedData?.pages.flatMap((page) => page.content) ?? []
+  const isCompletedFullyLoaded = !isCompletedLoading
+
+  const downtimes =
+    activeTab === 'active-upcoming'
+      ? activeUpcomingDowntimes
+      : completedDowntimes
+
+  const isFullyLoaded =
+    activeTab === 'active-upcoming'
+      ? isActiveUpcomingFullyLoaded
+      : isCompletedFullyLoaded
+
+  const currentError =
+    activeTab === 'active-upcoming' ? activeUpcomingError : completedError
+
+  const hasAnyCompletedDowntimes =
+    isCompletedFullyLoaded && completedDowntimes.length > 0
+
+  const showDateSelector = !!completedDateFilter || hasAnyCompletedDowntimes
+
+  const handleCompletedDateFilterChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+  ) => {
+    setCompletedDateFilter(e.target.value)
   }
 
   const deleteMutation = useDeleteDowntimeMutation()
@@ -113,7 +174,7 @@ const TenantDowntimes = () => {
       />
 
       <PageHeader
-        className="mb-0.5"
+        className="mb-3"
         title="Downtimes"
         subtitle={
           <>
@@ -135,33 +196,20 @@ const TenantDowntimes = () => {
         )}
       </PageHeader>
 
-      <div className="flex flex-col items-end gap-1 shrink-0">
-        <label className="text-sm text-muted">Select a specific date:</label>
-        <div className="flex items-center gap-1">
-          <input
-            type="date"
-            value={dateFilter}
-            onChange={handleDateFilterChange}
-            onClick={(e) => e.currentTarget.showPicker?.()}
-            className="text-sm"
-          />
-          {dateFilter && (
-            <IconButton
-              icon={<XMarkIcon className="size-4.5" />}
-              label=""
-              onClick={() => setDateFilter('')}
-              className="text-muted hover:bg-surface-strong !p-1"
-            />
-          )}
-        </div>
-      </div>
-
       <DowntimesList
-        key={dateFilter}
         downtimes={downtimes}
         isLoading={!isFullyLoaded}
-        error={error}
+        error={currentError}
         canManage={canManage}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        hasMoreCompleted={hasNextCompletedPage === true}
+        isFetchingMoreCompleted={isFetchingNextCompletedPage}
+        onLoadMoreCompleted={fetchNextCompletedPage}
+        dateFilter={completedDateFilter}
+        onDateFilterChange={handleCompletedDateFilterChange}
+        onClearDateFilter={() => setCompletedDateFilter('')}
+        showDateSelector={showDateSelector}
         onEdit={handleEdit}
         onDeleteClick={handleDeleteClick}
       />

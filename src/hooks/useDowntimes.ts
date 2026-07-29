@@ -20,14 +20,19 @@ import type {
 
 export const useGetTenantDowntimes = (
   tenantId: string,
-  size: number = 10,
-  date?: string,
-  enabled: boolean = true,
+  options: {
+    size?: number
+    date?: string
+    startDate?: string
+    endDate?: string
+    enabled?: boolean
+  } = {},
 ) => {
+  const { size = 10, date, startDate, endDate, enabled = true } = options
   const { token } = useAuth()
 
   return useInfiniteQuery<DowntimesResponse, Error>({
-    queryKey: ['downtimes', tenantId, size, date],
+    queryKey: ['downtimes', tenantId, size, date, startDate, endDate],
     queryFn: ({ pageParam = 1 }) => {
       if (!token) {
         throw new Error('No authentication token available')
@@ -35,7 +40,15 @@ export const useGetTenantDowntimes = (
       if (!tenantId) {
         throw new Error('Tenant ID is required')
       }
-      return fetchDowntimes(tenantId, token, pageParam as number, size, date)
+      return fetchDowntimes(
+        tenantId,
+        token,
+        pageParam as number,
+        size,
+        date,
+        startDate,
+        endDate,
+      )
     },
     initialPageParam: 1,
     getNextPageParam: (lastPage) => {

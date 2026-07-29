@@ -3,6 +3,7 @@ import { useGetTopologyEndpoints } from '@/hooks/useTopology'
 import { CheckIcon, XMarkIcon } from '@heroicons/react/16/solid'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import SearchInput from '@/components/SearchInput'
+import { stripHostnameSuffix } from './utils/downtimeHostname'
 import type { DowntimeServiceRequest } from '@/types/downtimes'
 import type { EndpointTopologyItem } from '@/types/topology'
 
@@ -146,7 +147,8 @@ const ServicesPicker = ({
             const matchedEndpoint =
               s.index !== undefined ? endpoints?.[s.index] : undefined
             const chipHostname = s.hostname || matchedEndpoint?.tags?.hostname
-            const chipLabel = `${chipHostname} · ${s.service}`
+            const displayHostname = stripHostnameSuffix(chipHostname)
+            const chipLabel = `${displayHostname} · ${s.service}`
 
             return (
               <span
@@ -162,7 +164,7 @@ const ServicesPicker = ({
                     onChange(selected.filter((_, i) => i !== chipIndex))
                   }
                   className="text-brand/70 hover:text-brand-strong hover:bg-brand/20 rounded-full p-px transition-colors cursor-pointer shrink-0"
-                  aria-label={`Remove ${s.hostname} ${s.service}`}
+                  aria-label={`Remove ${displayHostname} ${s.service}`}
                 >
                   <XMarkIcon className="size-4" />
                 </button>

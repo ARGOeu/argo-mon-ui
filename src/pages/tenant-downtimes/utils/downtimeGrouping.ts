@@ -2,6 +2,8 @@ import type { Downtime } from '@/types/downtimes'
 
 export type DowntimeTimeStatus = 'active' | 'upcoming' | 'completed'
 
+export type DowntimeTab = 'active-upcoming' | 'completed'
+
 type DowntimeDateGroup = {
   dateKey: string
   dateLabel: string

@@ -13,6 +13,7 @@ import ErrorDisplay from '@/components/ErrorDisplay'
 import SelectDropdown from '@/components/SelectDropdown'
 import ServicesPicker from './ServicesPicker'
 import { useCanManageDowntimes } from './useCanManageDowntimes'
+import { padTwoDigits } from './utils/downtimeDateRanges'
 import type { DowntimeRequest, DowntimeSeverity } from '@/types/downtimes'
 import type { SelectedEndpoint } from './ServicesPicker'
 
@@ -35,8 +36,7 @@ const toDatetimeLocalUTC = (isoString?: string) => {
   if (Number.isNaN(date.getTime())) {
     return ''
   }
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}`
+  return `${date.getUTCFullYear()}-${padTwoDigits(date.getUTCMonth() + 1)}-${padTwoDigits(date.getUTCDate())}T${padTwoDigits(date.getUTCHours())}:${padTwoDigits(date.getUTCMinutes())}`
 }
 
 const fromDatetimeLocalUTCToISO = (value: string) => {

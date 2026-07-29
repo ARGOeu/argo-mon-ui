@@ -12,12 +12,20 @@ export const fetchDowntimes = async (
   page: number = 1,
   size: number = 10,
   date?: string,
+  startDate?: string,
+  endDate?: string,
 ): Promise<DowntimesResponse> => {
   const params = new URLSearchParams()
   params.set('page', String(page))
   params.set('size', String(size))
   if (date) {
     params.set('date', date)
+  }
+  if (startDate) {
+    params.set('start_date', startDate)
+  }
+  if (endDate) {
+    params.set('end_date', endDate)
   }
 
   const response = await fetch(
