@@ -8,10 +8,8 @@ import {
   downtimeSeverityBadgeClass,
   downtimeClassificationBadgeClass,
 } from './utils/downtimeBadges'
+import { stripHostnameSuffix } from './utils/downtimeHostname'
 import type { Downtime } from '@/types/downtimes'
-
-const stripHostnameSuffix = (hostname?: string): string =>
-  hostname?.split('_')[0] ?? ''
 
 interface DowntimeCardProps {
   downtime: Downtime
