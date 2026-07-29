@@ -1,7 +1,7 @@
 import type {
   DowntimeRequest,
-  DowntimeResponse,
-  Downtimes,
+  Downtime,
+  DowntimesResponse,
 } from '@/types/downtimes'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
@@ -12,7 +12,7 @@ export const fetchDowntimes = async (
   page: number = 1,
   size: number = 10,
   date?: string,
-): Promise<Downtimes> => {
+): Promise<DowntimesResponse> => {
   const params = new URLSearchParams()
   params.set('page', String(page))
   params.set('size', String(size))
@@ -45,7 +45,7 @@ export const fetchDowntime = async (
   tenantId: string,
   downtimeId: string,
   token: string,
-): Promise<DowntimeResponse> => {
+): Promise<Downtime> => {
   const response = await fetch(
     `${BACKEND_API}/v1/tenants/${tenantId}/downtimes/${downtimeId}`,
     {
@@ -71,7 +71,7 @@ export const createDowntime = async (
   tenantId: string,
   data: DowntimeRequest,
   token: string,
-): Promise<DowntimeResponse> => {
+): Promise<Downtime> => {
   const response = await fetch(
     `${BACKEND_API}/v1/tenants/${tenantId}/downtimes`,
     {
@@ -128,7 +128,7 @@ export const deleteDowntime = async (
   tenantId: string,
   downtimeId: string,
   token: string,
-): Promise<DowntimeResponse> => {
+): Promise<Downtime> => {
   const response = await fetch(
     `${BACKEND_API}/v1/tenants/${tenantId}/downtimes/${downtimeId}`,
     {

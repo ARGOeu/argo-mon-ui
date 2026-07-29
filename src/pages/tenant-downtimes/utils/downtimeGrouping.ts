@@ -1,11 +1,11 @@
-import type { DowntimeResponse } from '@/types/downtimes'
+import type { Downtime } from '@/types/downtimes'
 
 export type DowntimeTimeStatus = 'active' | 'upcoming' | 'completed'
 
 type DowntimeDateGroup = {
   dateKey: string
   dateLabel: string
-  downtimes: DowntimeResponse[]
+  downtimes: Downtime[]
 }
 
 export const sectionLabels: Record<DowntimeTimeStatus, string> = {
@@ -33,7 +33,7 @@ export const formatDateTimeUTC = (dateString?: string): string => {
 }
 
 const getDowntimeTimeStatus = (
-  downtime: DowntimeResponse,
+  downtime: Downtime,
   now: number = Date.now(),
 ): DowntimeTimeStatus => {
   const scheduledAt = new Date(downtime.scheduled_at).getTime()
@@ -51,10 +51,10 @@ const getDowntimeTimeStatus = (
 }
 
 export const groupDowntimesByTimeStatus = (
-  downtimes: DowntimeResponse[],
-): Record<DowntimeTimeStatus, DowntimeResponse[]> => {
+  downtimes: Downtime[],
+): Record<DowntimeTimeStatus, Downtime[]> => {
   const now = Date.now()
-  const buckets: Record<DowntimeTimeStatus, DowntimeResponse[]> = {
+  const buckets: Record<DowntimeTimeStatus, Downtime[]> = {
     active: [],
     upcoming: [],
     completed: [],
@@ -82,9 +82,7 @@ const getDateLabel = (isoString: string) =>
     timeZone: 'UTC',
   })
 
-export const groupByDate = (
-  downtimes: DowntimeResponse[],
-): DowntimeDateGroup[] => {
+export const groupByDate = (downtimes: Downtime[]): DowntimeDateGroup[] => {
   const groupsByKey: Record<string, DowntimeDateGroup> = {}
 
   downtimes.forEach((downtime) => {

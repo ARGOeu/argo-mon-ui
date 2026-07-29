@@ -9,15 +9,15 @@ import {
   sectionLabels,
 } from './utils/downtimeGrouping'
 import type { DowntimeTimeStatus } from './utils/downtimeGrouping'
-import type { DowntimeResponse } from '@/types/downtimes'
+import type { Downtime } from '@/types/downtimes'
 
 interface DowntimesListProps {
-  downtimes: DowntimeResponse[]
+  downtimes: Downtime[]
   isLoading: boolean
   error: Error | null
   canManage: boolean
-  onEdit: (downtime: DowntimeResponse) => void
-  onDeleteClick: (downtime: DowntimeResponse) => void
+  onEdit: (downtime: Downtime) => void
+  onDeleteClick: (downtime: Downtime) => void
 }
 
 const sectionDotClass: Record<DowntimeTimeStatus, string> = {
@@ -91,7 +91,7 @@ const DowntimesList = ({
 
   const sections: {
     status: DowntimeTimeStatus
-    items: DowntimeResponse[]
+    items: Downtime[]
     totalCount: number
   }[] =
     activeTab === 'active-upcoming'

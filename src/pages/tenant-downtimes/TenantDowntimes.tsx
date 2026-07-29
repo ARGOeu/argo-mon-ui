@@ -13,7 +13,7 @@ import IconButton from '@/components/IconButton'
 import PageHeader from '@/components/PageHeader'
 import DowntimesList from './DowntimesList'
 import { useCanManageDowntimes } from './useCanManageDowntimes'
-import type { DowntimeResponse } from '@/types/downtimes'
+import type { Downtime } from '@/types/downtimes'
 
 const pageSize = 20
 
@@ -49,14 +49,15 @@ const TenantDowntimes = () => {
 
   const deleteMutation = useDeleteDowntimeMutation()
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [downtimeToDelete, setDowntimeToDelete] =
-    useState<DowntimeResponse | null>(null)
+  const [downtimeToDelete, setDowntimeToDelete] = useState<Downtime | null>(
+    null,
+  )
 
-  const handleEdit = (downtime: DowntimeResponse) => {
+  const handleEdit = (downtime: Downtime) => {
     navigate(`/tenants/${tenantId}/downtimes/${downtime.id}/edit`)
   }
 
-  const handleDeleteClick = (downtime: DowntimeResponse) => {
+  const handleDeleteClick = (downtime: Downtime) => {
     setDowntimeToDelete(downtime)
     setDeleteDialogOpen(true)
   }
