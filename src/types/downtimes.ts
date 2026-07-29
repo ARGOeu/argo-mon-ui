@@ -22,7 +22,7 @@ export type DowntimeRequest = {
   services: DowntimeServiceRequest[]
 }
 
-export type DowntimeResponse = {
+export type Downtime = {
   id: string
   name: string
   severity: DowntimeSeverity
@@ -37,8 +37,8 @@ export type DowntimeResponse = {
   updated_at: string
 }
 
-export type Downtimes = {
-  content: DowntimeResponse[]
+export type DowntimesResponse = {
+  content: Downtime[]
   size_of_page: number
   number_of_page: number
   total_elements: number

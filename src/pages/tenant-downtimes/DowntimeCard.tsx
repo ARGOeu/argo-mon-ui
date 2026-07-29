@@ -8,16 +8,16 @@ import {
   downtimeSeverityBadgeClass,
   downtimeClassificationBadgeClass,
 } from './utils/downtimeBadges'
-import type { DowntimeResponse } from '@/types/downtimes'
+import type { Downtime } from '@/types/downtimes'
 
 const stripHostnameSuffix = (hostname?: string): string =>
   hostname?.split('_')[0] ?? ''
 
 interface DowntimeCardProps {
-  downtime: DowntimeResponse
+  downtime: Downtime
   canManage: boolean
-  onEdit: (downtime: DowntimeResponse) => void
-  onDeleteClick: (downtime: DowntimeResponse) => void
+  onEdit: (downtime: Downtime) => void
+  onDeleteClick: (downtime: Downtime) => void
 }
 
 const DowntimeCard = ({

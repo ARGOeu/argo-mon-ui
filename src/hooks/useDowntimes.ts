@@ -14,8 +14,8 @@ import {
 } from '@/api/downtimes'
 import type {
   DowntimeRequest,
-  DowntimeResponse,
-  Downtimes,
+  Downtime,
+  DowntimesResponse,
 } from '@/types/downtimes'
 
 export const useGetTenantDowntimes = (
@@ -26,7 +26,7 @@ export const useGetTenantDowntimes = (
 ) => {
   const { token } = useAuth()
 
-  return useInfiniteQuery<Downtimes, Error>({
+  return useInfiniteQuery<DowntimesResponse, Error>({
     queryKey: ['downtimes', tenantId, size, date],
     queryFn: ({ pageParam = 1 }) => {
       if (!token) {
@@ -56,7 +56,7 @@ export const useGetDowntime = (
 ) => {
   const { token } = useAuth()
 
-  return useQuery<DowntimeResponse, Error>({
+  return useQuery<Downtime, Error>({
     queryKey: ['downtime', tenantId, downtimeId],
     queryFn: () => {
       if (!token) {
@@ -80,7 +80,7 @@ export const useCreateDowntimeMutation = () => {
   const { token } = useAuth()
 
   return useMutation<
-    DowntimeResponse,
+    Downtime,
     Error,
     { tenantId: string; data: DowntimeRequest }
   >({
@@ -153,34 +153,32 @@ export const useDeleteDowntimeMutation = () => {
   const queryClient = useQueryClient()
   const { token } = useAuth()
 
-  return useMutation<
-    DowntimeResponse,
-    Error,
-    { tenantId: string; downtimeId: string }
-  >({
-    mutationFn: ({
-      tenantId,
-      downtimeId,
-    }: {
-      tenantId: string
-      downtimeId: string
-    }) => {
-      if (!token) {
-        throw new Error('No authentication token available')
-      }
-      if (!tenantId) {
-        throw new Error('Tenant ID is required')
-      }
-      if (!downtimeId) {
-        throw new Error('Downtime ID is required')
-      }
-      return deleteDowntime(tenantId, downtimeId, token)
+  return useMutation<Downtime, Error, { tenantId: string; downtimeId: string }>(
+    {
+      mutationFn: ({
+        tenantId,
+        downtimeId,
+      }: {
+        tenantId: string
+        downtimeId: string
+      }) => {
+        if (!token) {
+          throw new Error('No authentication token available')
+        }
+        if (!tenantId) {
+          throw new Error('Tenant ID is required')
+        }
+        if (!downtimeId) {
+          throw new Error('Downtime ID is required')
+        }
+        return deleteDowntime(tenantId, downtimeId, token)
+      },
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ['downtimes'] })
+      },
+      onError: (error) => {
+        console.error('Downtime delete error:', error)
+      },
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['downtimes'] })
-    },
-    onError: (error) => {
-      console.error('Downtime delete error:', error)
-    },
-  })
+  )
 }
