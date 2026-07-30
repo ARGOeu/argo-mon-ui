@@ -22,6 +22,7 @@ import {
   revokeInvitation,
   fetchTenantReports,
   fetchPublicTenantReports,
+  fetchPublicTenantInfo,
   fetchTenantReportById,
   fetchSetReportPublic,
   fetchSetReportPrivate,
@@ -46,6 +47,7 @@ import type {
   PaginatedMembersResponse,
   ReportListItem,
   PublicReportItem,
+  PublicTenantInfo,
   ReportDetail,
   MetricProfileResponse,
   TenantReadinessResponse,
@@ -486,6 +488,21 @@ export const useGetPublicTenantReports = (
     queryFn: () => {
       if (!tenantName) throw new Error('Tenant name is required')
       return fetchPublicTenantReports(tenantName, node)
+    },
+    retry: false,
+    enabled: enabled && !!tenantName,
+  })
+}
+
+export const useGetPublicTenantInfo = (
+  tenantName: string,
+  enabled: boolean = true,
+) => {
+  return useQuery<PublicTenantInfo, Error>({
+    queryKey: ['public-tenant-info', tenantName],
+    queryFn: () => {
+      if (!tenantName) throw new Error('Tenant name is required')
+      return fetchPublicTenantInfo(tenantName)
     },
     retry: false,
     enabled: enabled && !!tenantName,

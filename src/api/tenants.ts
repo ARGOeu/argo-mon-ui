@@ -6,6 +6,7 @@ import type {
   PaginatedMembersResponse,
   ReportListItem,
   PublicReportItem,
+  PublicTenantInfo,
   ReportDetail,
   MetricProfileResponse,
   TenantReadinessResponse,
@@ -410,6 +411,26 @@ export const fetchPublicTenantReports = async (
 
   const response = await fetch(
     `${BACKEND_API}/v1/public/tenants/${tenantName}/reports/public${params}`,
+    {
+      headers: { 'Content-Type': 'application/json' },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchPublicTenantInfo = async (
+  tenantName: string,
+): Promise<PublicTenantInfo> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/public/tenants/${tenantName}/info`,
     {
       headers: { 'Content-Type': 'application/json' },
     },
