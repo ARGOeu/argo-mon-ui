@@ -406,7 +406,7 @@ export interface DashboardProps {
   reports: Array<{ name: string; public?: boolean }> | undefined
   reportsLoading: boolean
   reportsError: Error | null
-  downtimesData?: Downtime[] 
+  downtimesData?: Downtime[]
   downtimesLoading?: boolean
   downtimesError?: Error | null
   resultsData: GroupResultsResponse | undefined
