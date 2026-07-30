@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { useTenantName } from '@/hooks/useTenantName'
 import { useGetPerformanceSettings } from '@/hooks/useSettings'
-import { useGetPublicTenantReports } from '@/hooks/useTenants'
+import {
+  useGetPublicTenantReports,
+  useGetPublicTenantInfo,
+} from '@/hooks/useTenants'
 import { Outlet } from 'react-router-dom'
 import {
   CircleStackIcon,
@@ -22,6 +25,10 @@ const PublicTenantLayout = () => {
   const { data: performanceSetting } = useGetPerformanceSettings()
   const { isLoading: reportsLoading, error: reportsError } =
     useGetPublicTenantReports(tenantName ?? '', undefined, !!tenantName)
+  const { data: tenantInfo } = useGetPublicTenantInfo(
+    tenantName ?? '',
+    !!tenantName,
+  )
 
   if (tenantLoading || (!!tenantName && reportsLoading)) {
     return (
@@ -73,7 +80,7 @@ const PublicTenantLayout = () => {
             Tenant
           </p>
           <div className="mx-2 flex items-center gap-2.5 p-2 rounded-lg">
-            <TenantAvatar name={tenantName} />
+            <TenantAvatar name={tenantName} image={tenantInfo?.logo} />
             <span className="text-sm font-semibold text-foreground truncate flex-1 min-w-0">
               {tenantName}
             </span>

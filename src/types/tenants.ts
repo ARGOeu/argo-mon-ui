@@ -139,6 +139,8 @@ export type ReportListItem = {
 
 export type PublicReportItem = { id: string; name: string; node?: boolean }
 
+export type PublicTenantInfo = { logo: string }
+
 export type ReportProfile = {
   id: string
   name: string
