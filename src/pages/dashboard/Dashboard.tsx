@@ -748,25 +748,28 @@ const Dashboard = ({
             </div>
           </div>
           {/* Display downtimes banner if downtimes exist for today */}
-          {!downtimesError && !downtimesLoading && downtimesData && (
-            <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border px-5 py-2 bg-gray-50 text-gray-600 ring-gray-500/20">
-              <WrenchScrewdriverIcon className="w-4 h-4" />
-              <div className="min-w-0 flex-1">
-                <span className="text-[14px] font-semibold">
-                  {`${downtimesData.length} downtimes today`}
-                </span>
-                <DowntimeTypeSection group="active" items={activeDowntimes} />
-                <DowntimeTypeSection
-                  group="upcoming"
-                  items={upcomingDowntimes}
-                />
-                <DowntimeTypeSection
-                  group="completed"
-                  items={completedDowntimes}
-                />
+          {!downtimesError &&
+            !downtimesLoading &&
+            downtimesData &&
+            downtimesData.length > 0 && (
+              <div className="mt-2 flex flex-wrap items-center gap-3 rounded-xl border px-5 py-2 bg-gray-50 text-gray-600 ring-gray-500/20">
+                <WrenchScrewdriverIcon className="w-4 h-4" />
+                <div className="min-w-0 flex-1">
+                  <span className="text-[14px] font-semibold">
+                    {`${downtimesData.length} downtimes today`}
+                  </span>
+                  <DowntimeTypeSection group="active" items={activeDowntimes} />
+                  <DowntimeTypeSection
+                    group="upcoming"
+                    items={upcomingDowntimes}
+                  />
+                  <DowntimeTypeSection
+                    group="completed"
+                    items={completedDowntimes}
+                  />
+                </div>
               </div>
-            </div>
-          )}
+            )}
           <div className="mt-2 mb-6 flex flex-wrap items-center rounded-md border border-neutral-200 bg-white px-1 py-2">
             <NowItem icon={Activity} label="Tenant status">
               <span
