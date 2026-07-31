@@ -1,10 +1,13 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import { useParams } from 'react-router-dom'
 import { useGetTenantReports } from '@/hooks/useTenants'
 import { useGetResultsGroups, useGetStatusGroups } from '@/hooks/useData'
-import { useSelectedTenant } from '@/contexts/selected-tenant/useSelectedTenant'
-import { useParams } from 'react-router-dom'
-import Dashboard from './Dashboard'
 import { useGetTenantDowntimes } from '@/hooks/useDowntimes'
+import { useSelectedTenant } from '@/contexts/selected-tenant/useSelectedTenant'
+import Dashboard from './Dashboard'
+import { useGetResultsEndpoints } from '@/hooks/results'
+
+const toUtcDate = (d: Date) => d.toISOString().split('T')[0]
 
 const PrivateDashboardContainer = () => {
   const { id: tenantId } = useParams<{ id: string }>()
@@ -33,6 +36,18 @@ const PrivateDashboardContainer = () => {
   const selectedReportValid =
     reports?.some((r) => r.name === selectedReport) ?? false
 
+  const today = toUtcDate(new Date())
+
+  const { startTime, endTime } = useMemo(() => {
+    const now = new Date(`${today}T00:00:00Z`)
+    const start = new Date(now)
+    start.setUTCDate(start.getUTCDate() - 7)
+    return {
+      startTime: `${toUtcDate(start)}T00:00:00Z`,
+      endTime: `${today}T23:59:59Z`,
+    }
+  }, [today])
+
   const {
     data: resultsData,
     isLoading: resultsLoading,
@@ -47,12 +62,26 @@ const PrivateDashboardContainer = () => {
   )
 
   const {
+    data: endpointsData,
+    isLoading: endpointsLoading,
+    error: endpointsError,
+  } = useGetResultsEndpoints(
+    tenantId ?? '',
+    'private',
+    selectedReport,
+    startTime,
+    endTime,
+    'daily',
+    !!selectedReport && selectedReportValid,
+  )
+
+  const {
     data: downtimesData,
     isLoading: downtimesLoading,
     error: downtimesError,
   } = useGetTenantDowntimes(tenantId ?? '', {
     size: 100,
-    date: new Date().toISOString().split('T')[0],
+    date: today,
     enabled: true,
   })
 
@@ -91,6 +120,9 @@ const PrivateDashboardContainer = () => {
       resultsData={resultsData}
       resultsLoading={resultsLoading}
       resultsError={resultsError ?? null}
+      endpointsData={endpointsData}
+      endpointsLoading={endpointsLoading}
+      endpointsError={endpointsError ?? null}
       statusData={statusData}
       statusLoading={statusLoading}
       statusError={statusError ?? null}

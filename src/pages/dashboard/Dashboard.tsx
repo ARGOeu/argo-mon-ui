@@ -1,4 +1,11 @@
-import { useMemo, useRef, useState, useEffect, type ReactNode } from 'react'
+import {
+  useMemo,
+  useRef,
+  useState,
+  useEffect,
+  Fragment,
+  type ReactNode,
+} from 'react'
 import {
   Activity,
   AlertOctagon,
@@ -6,6 +13,8 @@ import {
   ArrowUpRightFromSquare,
   Check,
   CheckCircle2,
+  ChevronDown,
+  ChevronRight,
   Copy,
   HardDriveIcon,
   Info,
@@ -23,6 +32,7 @@ import type { GroupResultsResponse, GroupStatusResponse } from '@/types/data'
 import type { Downtime } from '@/types/downtimes'
 import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
 import { categorizeDowntimes, fmtDowntimeDailyRange } from '@/utils/downtimes'
+import type { EndpointResultsResponse } from '@/types/results'
 
 const WEEK_DAY_COUNT = 7
 
@@ -148,11 +158,27 @@ type DowntimeGroup = 'active' | 'upcoming' | 'completed'
 
 type ServiceStatus = 'healthy' | 'degraded' | 'critical' | 'missing'
 
+interface EndpointSource {
+  key: string
+  name: string
+  service: string
+  byDate: Map<string, number>
+}
+
+interface EndpointRow {
+  key: string
+  name: string
+  service: string
+  status: ServiceStatus
+  daily: number[]
+}
+
 interface Service {
   name: string
   status: ServiceStatus
   daily: number[]
   dailyDates: string[]
+  endpoints: EndpointRow[]
 }
 
 type FilterId = 'all' | 'problem' | 'healthy'
@@ -174,6 +200,16 @@ const worstStatus = (values: string[]): ServiceStatus => {
   return 'healthy'
 }
 
+// Derives endpoint status from today's availability until a
+// dedicated per-endpoint status call is wired up.
+const endpointStatusFromToday = (value: number | undefined): ServiceStatus => {
+  if (value === undefined || !Number.isFinite(value) || value < 0)
+    return 'missing'
+  if (value >= 100) return 'healthy'
+  if (value >= 85) return 'degraded'
+  return 'critical'
+}
+
 const formatShortDay = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { weekday: 'short' })
 
@@ -183,6 +219,7 @@ const formatShortDate = (iso: string) =>
     month: 'short',
   })
 
+// TODO: This will be replaced by an efficient backend call
 const uptimeTone = (pct: number) => {
   if (pct >= 99.99) return 'bg-emerald-500'
   if (pct >= 99.5) return 'bg-teal-600'
@@ -412,6 +449,9 @@ export interface DashboardProps {
   resultsData: GroupResultsResponse | undefined
   resultsLoading: boolean
   resultsError: Error | null
+  endpointsData?: EndpointResultsResponse
+  endpointsLoading?: boolean
+  endpointsError?: Error | null
   statusData: GroupStatusResponse | undefined
   statusLoading: boolean
   statusError: Error | null
@@ -431,6 +471,9 @@ const Dashboard = ({
   resultsData,
   resultsLoading,
   resultsError,
+  endpointsData,
+  endpointsLoading,
+  endpointsError,
   statusData,
   statusLoading,
   statusError,
@@ -440,6 +483,7 @@ const Dashboard = ({
   const [filter, setFilter] = useState<FilterId>('all')
   const [search, setSearch] = useState('')
   const [copied, setCopied] = useState(false)
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
@@ -456,6 +500,45 @@ const Dashboard = ({
     setCopied(true)
     copyTimerRef.current = setTimeout(() => setCopied(false), 1500)
   }
+
+  const toggleGroup = (name: string) =>
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev)
+      if (next.has(name)) next.delete(name)
+      else next.add(name)
+      return next
+    })
+
+  const endpointsByGroup = useMemo(() => {
+    const map = new Map<string, EndpointSource[]>()
+
+    endpointsData?.results?.forEach((group) => {
+      const rows: EndpointSource[] = []
+
+      group['service-types']?.forEach((st) => {
+        st.endpoints?.forEach((ep) => {
+          const byDate = new Map<string, number>()
+          ep.results?.forEach((r) => {
+            const value = Number(r.availability)
+            byDate.set(
+              r.timestamp.slice(0, 10),
+              Number.isFinite(value) ? value : -1,
+            )
+          })
+          rows.push({
+            key: `${group.name}|${st.name}|${ep.name}`,
+            name: ep.name,
+            service: st.name,
+            byDate,
+          })
+        })
+      })
+
+      if (rows.length > 0) map.set(group.name, rows)
+    })
+
+    return map
+  }, [endpointsData])
 
   const services = useMemo<Service[]>(() => {
     if (!resultsData?.data) return []
@@ -484,17 +567,35 @@ const Dashboard = ({
         ...paddingDates.map((): number => -1),
         ...g.results.map((r) => Number(r.availability)),
       ]
+      const dailyDates = [
+        ...paddingDates,
+        ...g.results.map((r) => r.date.slice(0, 10)),
+      ]
       const weekAvg = avgValid(daily.filter(Number.isFinite))
       const feedStatus = worstStatus(statusByName.get(g.name) ?? [])
+
+      const endpoints: EndpointRow[] = (endpointsByGroup.get(g.name) ?? []).map(
+        (ep) => {
+          const epDaily = dailyDates.map((d) => ep.byDate.get(d) ?? -1)
+          return {
+            key: ep.key,
+            name: ep.name,
+            service: ep.service,
+            status: endpointStatusFromToday(epDaily[epDaily.length - 1]),
+            daily: epDaily,
+          }
+        },
+      )
 
       return {
         name: g.name,
         status: weekAvg == null ? 'missing' : feedStatus,
         daily,
-        dailyDates: [...paddingDates, ...g.results.map((r) => r.date)],
+        dailyDates,
+        endpoints,
       }
     })
-  }, [resultsData, statusData])
+  }, [resultsData, statusData, endpointsByGroup])
 
   const counts = useMemo<Record<ServiceStatus, number>>(() => {
     const c = { healthy: 0, degraded: 0, critical: 0, missing: 0 }
@@ -518,17 +619,24 @@ const Dashboard = ({
     return { tenantDaily: dailyAvgs, tenantDailyDates: dates }
   }, [services])
 
-  const filtered = useMemo(
-    () =>
-      services.filter((s) => {
-        if (search && !s.name.toLowerCase().includes(search.toLowerCase()))
-          return false
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    return services
+      .filter((s) => {
         if (filter === 'healthy') return s.status === 'healthy'
         if (filter === 'problem') return s.status !== 'healthy'
         return true
-      }),
-    [filter, search, services],
-  )
+      })
+      .map((s) => {
+        if (!q) return s
+        if (s.name.toLowerCase().includes(q)) return s
+        const matches = s.endpoints.filter((e) =>
+          e.name.toLowerCase().includes(q),
+        )
+        return matches.length > 0 ? { ...s, endpoints: matches } : null
+      })
+      .filter((s): s is Service => s !== null)
+  }, [filter, search, services])
 
   const weekAvgValue = useMemo<number | null>(() => {
     const valid = tenantDaily.filter((v): v is number => v !== null)
@@ -844,7 +952,19 @@ const Dashboard = ({
           <SectionLabel>All services</SectionLabel>
           <section className="rounded-xl border border-neutral-200 bg-white px-5 py-4">
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
-              <h2 className="text-[15px] font-medium">Service breakdown</h2>
+              <div className="flex items-baseline gap-2">
+                <h2 className="text-[15px] font-medium">Service breakdown</h2>
+                {endpointsError && (
+                  <span className="text-[11px] text-amber-700">
+                    endpoint details unavailable
+                  </span>
+                )}
+                {endpointsLoading && !endpointsError && (
+                  <span className="text-[11px] text-neutral-400">
+                    loading endpoints…
+                  </span>
+                )}
+              </div>
               <SearchInput
                 value={search}
                 onChange={setSearch}
@@ -908,35 +1028,124 @@ const Dashboard = ({
                   const serviceWeekAvg = avgValid(
                     service.daily.filter(Number.isFinite),
                   )
+                  const hasEndpoints = service.endpoints.length > 0
+                  const isCollapsed = collapsedGroups.has(service.name)
+
                   return (
-                    <tr key={service.name}>
-                      <td className="border-b border-neutral-100 px-1.5 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <span className={`h-2 w-2 rounded-full ${st.dot}`} />
-                          <span className="truncate font-medium text-neutral-800">
-                            {service.name}
+                    <Fragment key={service.name}>
+                      <tr>
+                        <td className="border-b border-neutral-100 px-1.5 py-2.5">
+                          <div className="flex min-w-0 items-center gap-1.5">
+                            {hasEndpoints ? (
+                              <button
+                                type="button"
+                                onClick={() => toggleGroup(service.name)}
+                                aria-expanded={!isCollapsed}
+                                aria-label={
+                                  isCollapsed
+                                    ? `Show endpoints for ${service.name}`
+                                    : `Hide endpoints for ${service.name}`
+                                }
+                                className="flex-shrink-0 rounded p-0.5 text-neutral-400 transition-colors hover:bg-neutral-100 hover:text-neutral-700"
+                              >
+                                {isCollapsed ? (
+                                  <ChevronRight
+                                    className="h-3.5 w-3.5"
+                                    strokeWidth={2}
+                                  />
+                                ) : (
+                                  <ChevronDown
+                                    className="h-3.5 w-3.5"
+                                    strokeWidth={2}
+                                  />
+                                )}
+                              </button>
+                            ) : (
+                              <span className="w-[18px] flex-shrink-0" />
+                            )}
+                            <span
+                              className={`h-2 w-2 flex-shrink-0 rounded-full ${st.dot}`}
+                            />
+                            <span className="truncate font-medium text-neutral-800">
+                              {service.name}
+                            </span>
+                            {hasEndpoints && (
+                              <span className="flex-shrink-0 text-[11px] text-neutral-400">
+                                {service.endpoints.length}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="border-b border-neutral-100 px-1.5 py-2.5">
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${st.pill}`}
+                          >
+                            {st.label}
                           </span>
-                        </div>
-                      </td>
-                      <td className="border-b border-neutral-100 px-1.5 py-2.5">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${st.pill}`}
-                        >
-                          {st.label}
-                        </span>
-                      </td>
-                      <td className="border-b border-neutral-100 px-1.5 py-2.5 tabular-nums text-neutral-700">
-                        {serviceWeekAvg === null
-                          ? 'N/A'
-                          : `${serviceWeekAvg.toFixed(2)}%`}
-                      </td>
-                      <td className="border-b border-neutral-100 px-1.5 py-2.5">
-                        <MiniBars
-                          daily={service.daily}
-                          dates={service.dailyDates}
-                        />
-                      </td>
-                    </tr>
+                        </td>
+                        <td className="border-b border-neutral-100 px-1.5 py-2.5 tabular-nums text-neutral-700">
+                          {serviceWeekAvg === null
+                            ? 'N/A'
+                            : `${serviceWeekAvg.toFixed(2)}%`}
+                        </td>
+                        <td className="border-b border-neutral-100 px-1.5 py-2.5">
+                          <MiniBars
+                            daily={service.daily}
+                            dates={service.dailyDates}
+                          />
+                        </td>
+                      </tr>
+
+                      {!isCollapsed &&
+                        service.endpoints.map((ep) => {
+                          const epAvg = avgValid(
+                            ep.daily.filter(Number.isFinite),
+                          )
+                          const epSt = STATUS_STYLES[ep.status]
+                          return (
+                            <tr key={ep.key} className="bg-neutral-50/50">
+                              <td className="border-b border-neutral-100 py-2.5 pl-8 pr-1.5">
+                                <div className="flex min-w-0 items-center gap-2">
+                                  <HardDriveIcon
+                                    className="h-3.5 w-3.5 flex-shrink-0 text-neutral-400"
+                                    strokeWidth={2}
+                                  />
+                                  <span
+                                    className={`h-2 w-2 flex-shrink-0 rounded-full ${epSt.dot}`}
+                                  />
+                                  <span
+                                    className="truncate text-neutral-700"
+                                    title={`${ep.name} (${ep.service})`}
+                                  >
+                                    {ep.name}
+                                  </span>
+                                  <span className="flex-shrink-0 text-[11px] text-neutral-400">
+                                    {ep.service}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="border-b border-neutral-100 px-1.5 py-2.5">
+                                <span
+                                  className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${epSt.pill}`}
+                                >
+                                  {epSt.label}
+                                </span>
+                              </td>
+                              <td className="border-b border-neutral-100 px-1.5 py-2.5 tabular-nums text-neutral-700">
+                                {epAvg === null
+                                  ? 'N/A'
+                                  : `${epAvg.toFixed(2)}%`}
+                              </td>
+                              <td className="border-b border-neutral-100 px-1.5 py-2.5">
+                                <MiniBars
+                                  daily={ep.daily}
+                                  dates={service.dailyDates}
+                                />
+                              </td>
+                            </tr>
+                          )
+                        })}
+                    </Fragment>
                   )
                 })}
               </tbody>
