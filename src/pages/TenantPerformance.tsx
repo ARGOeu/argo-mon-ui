@@ -20,6 +20,7 @@ const TenantPerformance = () => {
       performanceSetting={setting}
       isSettingsLoading={settingsLoading}
       settingsError={settingsError}
+      isTenantPerformanceEnabled={tenant?.performance ?? false}
     />
   )
 }
