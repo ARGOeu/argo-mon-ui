@@ -83,6 +83,7 @@ export type Tenant = {
   updated_by?: string
   status?: TenantStatus
   node?: boolean
+  performance?: boolean
   ['group-status']?: 'UNKNOWN' | 'NOT_FOUND' | 'EXISTS'
   error?: string
 }
@@ -139,7 +140,7 @@ export type ReportListItem = {
 
 export type PublicReportItem = { id: string; name: string; node?: boolean }
 
-export type PublicTenantInfo = { logo: string }
+export type PublicTenantInfo = { logo: string; performance?: boolean }
 
 export type ReportProfile = {
   id: string

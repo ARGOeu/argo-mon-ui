@@ -14,6 +14,7 @@ interface PerformanceEmbedProps {
   performanceSetting: Setting | undefined
   isSettingsLoading: boolean
   settingsError: Error | null
+  isTenantPerformanceEnabled?: boolean
 }
 
 const PerformanceEmbed = ({
@@ -23,6 +24,7 @@ const PerformanceEmbed = ({
   performanceSetting,
   isSettingsLoading,
   settingsError,
+  isTenantPerformanceEnabled = true,
 }: PerformanceEmbedProps) => {
   const isLoading = isTenantLoading || isSettingsLoading
   const error = tenantError || settingsError
@@ -72,6 +74,12 @@ const PerformanceEmbed = ({
         <div className={noticeContainerClass}>
           <p className={noticeTextClass}>
             Performance monitoring setting is currently disabled
+          </p>
+        </div>
+      ) : !isTenantPerformanceEnabled ? (
+        <div className={noticeContainerClass}>
+          <p className={noticeTextClass}>
+            Performance monitoring is not enabled for this tenant
           </p>
         </div>
       ) : (

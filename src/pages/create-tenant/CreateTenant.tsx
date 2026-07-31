@@ -38,6 +38,7 @@ const CreateTenant = () => {
     poem_url: '',
     internalLists: [{ email: '', type: '' }],
   })
+  const [performance, setPerformance] = useState(false)
   const [imageUrl, setImageUrl] = useState('')
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'info' | 'contact' | 'metadata'>(
@@ -82,6 +83,8 @@ const CreateTenant = () => {
           setImageUrl(tenantData.info.image)
         }
       }
+
+      setPerformance(tenantData.performance ?? false)
 
       if (tenantData.contacts && tenantData.contacts.length > 0) {
         setContacts(
@@ -195,6 +198,7 @@ const CreateTenant = () => {
             info: submitData,
             contacts: contactsData,
             metadata: metadataObj,
+            performance,
           },
         },
         {
@@ -215,7 +219,12 @@ const CreateTenant = () => {
       )
     } else {
       createMutation.mutate(
-        { info: submitData, contacts: contactsData, metadata: metadataObj },
+        {
+          info: submitData,
+          contacts: contactsData,
+          metadata: metadataObj,
+          performance,
+        },
         {
           onSuccess: (createdTenant) => {
             toast.success('Tenant created successfully!')
@@ -366,6 +375,8 @@ const CreateTenant = () => {
                 onValidationChange={setHasMetadataValidationError}
                 isEditMode={isEditMode}
                 tenantId={tenantId}
+                performance={performance}
+                onPerformanceChange={setPerformance}
               />
             </div>
           </form>

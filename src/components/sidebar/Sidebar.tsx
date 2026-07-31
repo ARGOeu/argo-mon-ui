@@ -115,8 +115,15 @@ function Sidebar({
   const { pathname } = useLocation()
   const { data: performanceSetting } = useGetPerformanceSettings()
 
+  const selectedTenant = userTenants.find(
+    (tenant) => tenant.id === effectiveTenantId,
+  )
+
   const isItemVisible = (item: TenantNavItem) => {
-    if (item.path === 'performance' && !performanceSetting?.enabled) {
+    if (
+      item.path === 'performance' &&
+      (!performanceSetting?.enabled || !selectedTenant?.performance)
+    ) {
       return false
     }
     return (

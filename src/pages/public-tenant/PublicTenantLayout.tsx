@@ -106,7 +106,7 @@ const PublicTenantLayout = () => {
             <ShieldCheckIcon className="size-4" aria-hidden />
             Capabilities
           </SidebarNavItem>
-          {performanceSetting?.enabled && (
+          {performanceSetting?.enabled && tenantInfo?.performance && (
             <SidebarNavItem
               to={performancePath}
               onClick={() => setIsMobileMenuOpen(false)}
