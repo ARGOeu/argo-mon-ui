@@ -15,6 +15,8 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronRight,
+  ChevronsDownUp,
+  ChevronsUpDown,
   Copy,
   HardDriveIcon,
   Info,
@@ -33,6 +35,7 @@ import type { Downtime } from '@/types/downtimes'
 import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
 import { categorizeDowntimes, fmtDowntimeDailyRange } from '@/utils/downtimes'
 import type { EndpointResultsResponse } from '@/types/results'
+import { stripUuidSuffix } from '@/utils/uuid'
 
 const WEEK_DAY_COUNT = 7
 
@@ -355,6 +358,21 @@ const SectionLabel = ({ children }: { children: ReactNode }) => {
   )
 }
 
+// Loading bar identifies that we have resources (endpoints) that are currently loading
+const LoadingBar = ({ active }: { active: boolean }) => (
+  <div
+    className="mb-1.5 h-[3px] w-full overflow-hidden rounded-full"
+    aria-hidden={!active}
+  >
+    {active && (
+      <progress
+        className="progress progress-primary h-[3px] w-full"
+        aria-label="Loading endpoints"
+      />
+    )}
+  </div>
+)
+
 interface WeekBarProps {
   value: number | null
   day: string
@@ -638,6 +656,25 @@ const Dashboard = ({
       .filter((s): s is Service => s !== null)
   }, [filter, search, services])
 
+  // groups that have endpoints and can be collapsed/extended
+  const collapsibleGroups = useMemo(
+    () => filtered.filter((s) => s.endpoints.length > 0).map((s) => s.name),
+    [filtered],
+  )
+
+  const allCollapsed =
+    collapsibleGroups.length > 0 &&
+    collapsibleGroups.every((n) => collapsedGroups.has(n))
+
+  const toggleAllGroups = () =>
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev)
+      collapsibleGroups.forEach((n) =>
+        allCollapsed ? next.delete(n) : next.add(n),
+      )
+      return next
+    })
+
   const weekAvgValue = useMemo<number | null>(() => {
     const valid = tenantDaily.filter((v): v is number => v !== null)
     if (valid.length === 0) return null
@@ -706,6 +743,10 @@ const Dashboard = ({
   const BannerIcon = b.icon
   const isLoading = reportsLoading || resultsLoading || statusLoading
   const error = reportsError || resultsError || statusError
+
+  // check if endpoints are loading to display the loading bar
+  const showEndpointsLoading =
+    Boolean(endpointsLoading) && !endpointsError && services.length > 0
 
   let errorContext = 'dashboard metrics'
   if (reportsError) errorContext = 'tenant reports'
@@ -954,14 +995,24 @@ const Dashboard = ({
             <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
               <div className="flex items-baseline gap-2">
                 <h2 className="text-[15px] font-medium">Service breakdown</h2>
+                <span>
+                  <button
+                    type="button"
+                    onClick={toggleAllGroups}
+                    disabled={collapsibleGroups.length === 0}
+                    className="mb-1 inline-flex items-center gap-1 rounded px-2 py-1 text-xs text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 disabled:pointer-events-none disabled:opacity-40"
+                  >
+                    {allCollapsed ? (
+                      <ChevronsUpDown className="h-3.5 w-3.5" strokeWidth={2} />
+                    ) : (
+                      <ChevronsDownUp className="h-3.5 w-3.5" strokeWidth={2} />
+                    )}
+                    {allCollapsed ? 'Expand all' : 'Collapse all'}
+                  </button>
+                </span>
                 {endpointsError && (
                   <span className="text-[11px] text-amber-700">
                     endpoint details unavailable
-                  </span>
-                )}
-                {endpointsLoading && !endpointsError && (
-                  <span className="text-[11px] text-neutral-400">
-                    loading endpoints…
                   </span>
                 )}
               </div>
@@ -975,25 +1026,29 @@ const Dashboard = ({
               />
             </div>
 
-            <div className="mb-3 flex gap-1 border-b border-neutral-200">
-              {filterTabs.map((t) => (
-                <button
-                  key={t.id}
-                  type="button"
-                  onClick={() => setFilter(t.id)}
-                  className={`-mb-px border-b-2 px-2.5 py-1.5 text-xs transition-colors ${
-                    filter === t.id
-                      ? 'border-neutral-900 text-neutral-900'
-                      : 'border-transparent text-neutral-500 hover:text-neutral-900'
-                  }`}
-                >
-                  {t.label}
-                  {t.count !== null && (
-                    <span className="ml-1 text-neutral-400">{t.count}</span>
-                  )}
-                </button>
-              ))}
+            <div className="mb-3 flex items-center justify-between border-b border-neutral-200">
+              <div className="flex gap-1">
+                {filterTabs.map((t) => (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => setFilter(t.id)}
+                    className={`-mb-px border-b-2 px-2.5 py-1.5 text-xs transition-colors ${
+                      filter === t.id
+                        ? 'border-neutral-900 text-neutral-900'
+                        : 'border-transparent text-neutral-500 hover:text-neutral-900'
+                    }`}
+                  >
+                    {t.label}
+                    {t.count !== null && (
+                      <span className="ml-1 text-neutral-400">{t.count}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
             </div>
+
+            <LoadingBar active={showEndpointsLoading} />
 
             <table className="w-full table-fixed text-sm">
               <thead>
@@ -1117,7 +1172,7 @@ const Dashboard = ({
                                     className="truncate text-neutral-700"
                                     title={`${ep.name} (${ep.service})`}
                                   >
-                                    {ep.name}
+                                    {stripUuidSuffix(ep.name)}
                                   </span>
                                   <span className="flex-shrink-0 text-[11px] text-neutral-400">
                                     {ep.service}
