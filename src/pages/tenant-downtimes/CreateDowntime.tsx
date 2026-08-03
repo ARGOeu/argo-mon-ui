@@ -46,6 +46,13 @@ const fromDatetimeLocalUTCToISO = (value: string) => {
   return `${value}:00Z`
 }
 
+const ONE_HOUR_MS = 60 * 60 * 1000
+
+const getDefaultScheduledAt = () => toDatetimeLocalUTC(new Date().toISOString())
+
+const getDefaultCompletedAt = () =>
+  toDatetimeLocalUTC(new Date(Date.now() + ONE_HOUR_MS).toISOString())
+
 const CreateDowntime = () => {
   const { id: tenantId, downtimeId } = useParams<{
     id: string
@@ -68,13 +75,13 @@ const CreateDowntime = () => {
     message: string
     scheduled_at: string
     completed_at: string
-  }>({
+  }>(() => ({
     name: '',
     severity: 'Outage',
     message: '',
-    scheduled_at: '',
-    completed_at: '',
-  })
+    scheduled_at: isEditMode ? '' : getDefaultScheduledAt(),
+    completed_at: isEditMode ? '' : getDefaultCompletedAt(),
+  }))
   const [validationError, setValidationError] = useState('')
   const [services, setServices] = useState<SelectedEndpoint[]>([])
 

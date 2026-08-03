@@ -106,10 +106,10 @@ const DowntimesList = ({
     </div>
   )
 
-  const renderSectionBody = (items: Downtime[]) =>
+  const renderSectionBody = (items: Downtime[], isCompletedSection: boolean) =>
     items.length === 0 ? (
       <p className="text-sm text-subtle italic py-3 text-center">
-        No completed downtimes for this date
+        No downtimes for this date
       </p>
     ) : (
       groupByDate(items).map((group) => (
@@ -122,7 +122,7 @@ const DowntimesList = ({
               <DowntimeCard
                 key={downtime.id}
                 downtime={downtime}
-                canManage={canManage}
+                canManage={canManage && !isCompletedSection}
                 onEdit={onEdit}
                 onDeleteClick={onDeleteClick}
               />
@@ -174,7 +174,7 @@ const DowntimesList = ({
               ) : error ? (
                 <ErrorDisplay error={error} context="downtimes" />
               ) : (
-                renderSectionBody(downtimesByStatus.completed)
+                renderSectionBody(downtimesByStatus.completed, true)
               )}
             </div>
 
@@ -210,7 +210,7 @@ const DowntimesList = ({
               </div>
 
               <div className="flex flex-col gap-3">
-                {renderSectionBody(section.items)}
+                {renderSectionBody(section.items, false)}
               </div>
             </div>
           ))}
