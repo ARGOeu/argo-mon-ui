@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useLocation } from 'react-router-dom'
 import { useGetPublicTenantReports } from '@/hooks/useTenants'
 import { useGetResultsGroups, useGetStatusGroups } from '@/hooks/useData'
 import { useTenantName } from '@/hooks/useTenantName'
 import Dashboard from '@/pages/dashboard/Dashboard'
+import { useGetResultsEndpoints } from '@/hooks/results'
+
+const toUtcDate = (d: Date) => d.toISOString().split('T')[0]
 
 const PublicDashboardContainer = () => {
   const { tenantName } = useTenantName()
@@ -15,6 +18,18 @@ const PublicDashboardContainer = () => {
     isLoading: reportsLoading,
     error: reportsError,
   } = useGetPublicTenantReports(tenantName ?? '')
+
+  const today = toUtcDate(new Date())
+
+  const { startTime, endTime } = useMemo(() => {
+    const now = new Date(`${today}T00:00:00Z`)
+    const start = new Date(now)
+    start.setUTCDate(start.getUTCDate() - 7)
+    return {
+      startTime: `${toUtcDate(start)}T00:00:00Z`,
+      endTime: `${today}T23:59:59Z`,
+    }
+  }, [today])
 
   useEffect(() => {
     if (!reports || reports.length === 0) return
@@ -36,6 +51,20 @@ const PublicDashboardContainer = () => {
     selectedReport,
     undefined,
     '1w',
+    !!selectedReport,
+  )
+
+  const {
+    data: endpointsData,
+    isLoading: endpointsLoading,
+    error: endpointsError,
+  } = useGetResultsEndpoints(
+    tenantName ?? '',
+    'public',
+    selectedReport,
+    startTime,
+    endTime,
+    'daily',
     !!selectedReport,
   )
 
@@ -63,6 +92,9 @@ const PublicDashboardContainer = () => {
       statusData={statusData}
       statusLoading={statusLoading}
       statusError={statusError ?? null}
+      endpointsData={endpointsData}
+      endpointsLoading={endpointsLoading}
+      endpointsError={endpointsError ?? null}
       selectedReport={selectedReport}
       onReportChange={setSelectedReport}
     />
