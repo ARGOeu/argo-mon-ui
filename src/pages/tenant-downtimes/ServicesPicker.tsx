@@ -305,7 +305,7 @@ const ServicesPicker = ({
                         </span>
                         {isChecked && otherGroups.length > 0 && (
                           <span className="text-sm text-amber-600 mt-0.5">
-                            This hostname also exists in group
+                            This endpoint also exists in group
                             {otherGroups.length > 1 ? 's' : ''}:{' '}
                             {otherGroups
                               .map((group) => `"${group}"`)
