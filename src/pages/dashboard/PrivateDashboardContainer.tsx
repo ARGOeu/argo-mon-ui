@@ -79,7 +79,7 @@ const PrivateDashboardContainer = () => {
     data: downtimesData,
     isLoading: downtimesLoading,
     error: downtimesError,
-  } = useGetTenantDowntimes(tenantId ?? '', {
+  } = useGetTenantDowntimes(tenantId ?? '', 'private', {
     size: 100,
     date: today,
     enabled: true,

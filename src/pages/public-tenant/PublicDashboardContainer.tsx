@@ -5,6 +5,7 @@ import { useGetResultsGroups, useGetStatusGroups } from '@/hooks/useData'
 import { useTenantName } from '@/hooks/useTenantName'
 import Dashboard from '@/pages/dashboard/Dashboard'
 import { useGetResultsEndpoints } from '@/hooks/results'
+import { useGetTenantDowntimes } from '@/hooks/useDowntimes'
 
 const toUtcDate = (d: Date) => d.toISOString().split('T')[0]
 
@@ -55,6 +56,18 @@ const PublicDashboardContainer = () => {
   )
 
   const {
+    data: downtimesData,
+    isLoading: downtimesLoading,
+    error: downtimesError,
+  } = useGetTenantDowntimes(tenantName ?? '', 'public', {
+    size: 100,
+    date: today,
+    enabled: true,
+  })
+
+  const downtimes = downtimesData?.pages.flatMap((page) => page.content) ?? []
+
+  const {
     data: endpointsData,
     isLoading: endpointsLoading,
     error: endpointsError,
@@ -86,6 +99,9 @@ const PublicDashboardContainer = () => {
       reports={reports}
       reportsLoading={reportsLoading}
       reportsError={reportsError ?? null}
+      downtimesData={downtimes}
+      downtimesLoading={downtimesLoading}
+      downtimesError={downtimesError}
       resultsData={resultsData}
       resultsLoading={resultsLoading}
       resultsError={resultsError ?? null}

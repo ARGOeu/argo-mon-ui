@@ -1,3 +1,4 @@
+import type { AccessMode } from '@/types/common'
 import type {
   DowntimeRequest,
   Downtime,
@@ -7,10 +8,11 @@ import type {
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
 export const fetchDowntimes = async (
-  tenantId: string,
+  tenantIdentifier: string,
   token: string,
   page: number = 1,
   size: number = 10,
+  mode: AccessMode,
   date?: string,
   startDate?: string,
   endDate?: string,
@@ -28,16 +30,18 @@ export const fetchDowntimes = async (
     params.set('end_date', endDate)
   }
 
-  const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/downtimes?${params.toString()}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+  const url =
+    mode === 'public'
+      ? `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}/downtimes?${params.toString()}`
+      : `${BACKEND_API}/v1/tenants/${tenantIdentifier}/downtimes?${params.toString()}`
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
     },
-  )
+  })
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))

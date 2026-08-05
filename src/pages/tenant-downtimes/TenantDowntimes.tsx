@@ -35,7 +35,7 @@ const TenantDowntimes = () => {
     fetchNextPage: fetchNextActiveUpcomingPage,
     hasNextPage: hasNextActiveUpcomingPage,
     isFetchingNextPage: isFetchingNextActiveUpcomingPage,
-  } = useGetTenantDowntimes(tenantId ?? '', {
+  } = useGetTenantDowntimes(tenantId ?? '', 'private', {
     size: pageSize,
     startDate: today,
     enabled: activeTab === 'active-upcoming',
@@ -48,7 +48,7 @@ const TenantDowntimes = () => {
     fetchNextPage: fetchNextCompletedPage,
     hasNextPage: hasNextCompletedPage,
     isFetchingNextPage: isFetchingNextCompletedPage,
-  } = useGetTenantDowntimes(tenantId ?? '', {
+  } = useGetTenantDowntimes(tenantId ?? '', 'private', {
     size: pageSize,
     date: completedDateFilter || undefined,
     endDate: completedDateFilter ? undefined : today,
