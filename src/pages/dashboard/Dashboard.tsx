@@ -35,7 +35,7 @@ import type { Downtime } from '@/types/downtimes'
 import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
 import { categorizeDowntimes, fmtDowntimeDailyRange } from '@/utils/downtimes'
 import type { EndpointResultsResponse } from '@/types/results'
-import { stripUuidSuffix } from '@/utils/uuid'
+import { stripIdSuffix } from '@/utils/cleanup'
 
 const WEEK_DAY_COUNT = 7
 
@@ -360,10 +360,7 @@ const SectionLabel = ({ children }: { children: ReactNode }) => {
 
 // Loading bar identifies that we have resources (endpoints) that are currently loading
 const LoadingBar = ({ active }: { active: boolean }) => (
-  <div
-    className="mb-1.5 h-[3px] w-full overflow-hidden rounded-full"
-    aria-hidden={!active}
-  >
+  <div aria-hidden={active} className="flex w-full">
     {active && (
       <progress
         className="progress progress-primary h-[3px] w-full"
@@ -1026,7 +1023,7 @@ const Dashboard = ({
               />
             </div>
 
-            <div className="mb-3 flex items-center justify-between border-b border-neutral-200">
+            <div className="mb-1 flex items-center justify-between border-b border-neutral-200">
               <div className="flex gap-1">
                 {filterTabs.map((t) => (
                   <button
@@ -1048,9 +1045,7 @@ const Dashboard = ({
               </div>
             </div>
 
-            <LoadingBar active={showEndpointsLoading} />
-
-            <table className="w-full table-fixed text-sm">
+            <table className="mt-3 w-full table-fixed text-sm">
               <thead>
                 <tr className="text-[11px] font-medium uppercase tracking-[0.04em] text-neutral-400">
                   <th className="w-[30%] border-b border-neutral-200 px-1.5 py-2 text-left">
@@ -1066,7 +1061,16 @@ const Dashboard = ({
                     Per Day
                   </th>
                 </tr>
+                {showEndpointsLoading && (
+                  <tr>
+                    <th colSpan={4}>
+                      {' '}
+                      <LoadingBar active={showEndpointsLoading} />
+                    </th>
+                  </tr>
+                )}
               </thead>
+
               <tbody>
                 {filtered.length === 0 && (
                   <tr>
@@ -1172,7 +1176,7 @@ const Dashboard = ({
                                     className="truncate text-neutral-700"
                                     title={`${ep.name} (${ep.service})`}
                                   >
-                                    {stripUuidSuffix(ep.name)}
+                                    {stripIdSuffix(ep.name)}
                                   </span>
                                   <span className="flex-shrink-0 text-[11px] text-neutral-400">
                                     {ep.service}
