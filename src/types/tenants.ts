@@ -84,6 +84,7 @@ export type Tenant = {
   status?: TenantStatus
   node?: boolean
   performance?: boolean
+  public_downtime?: boolean
   ['group-status']?: 'UNKNOWN' | 'NOT_FOUND' | 'EXISTS'
   error?: string
 }
