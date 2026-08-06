@@ -120,7 +120,7 @@ function DowntimePill({
           {(item.services ?? []).map((s2, i) => (
             <li key={`${s2.hostname}-${s2.service}-${i}`}>
               <HardDriveIcon size={16} className="inline me-2 text-10" />
-              {s2.hostname}({s2.service})
+              {stripIdSuffix(s2.hostname)}({s2.service})
             </li>
           ))}
         </ul>
