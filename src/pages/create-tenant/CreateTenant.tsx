@@ -39,6 +39,7 @@ const CreateTenant = () => {
     internalLists: [{ email: '', type: '' }],
   })
   const [performance, setPerformance] = useState(false)
+  const [publicDowntime, setPublicDowntime] = useState(false)
   const [imageUrl, setImageUrl] = useState('')
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'info' | 'contact' | 'metadata'>(
@@ -85,6 +86,7 @@ const CreateTenant = () => {
       }
 
       setPerformance(tenantData.performance ?? false)
+      setPublicDowntime(tenantData.public_downtime ?? false)
 
       if (tenantData.contacts && tenantData.contacts.length > 0) {
         setContacts(
@@ -199,6 +201,7 @@ const CreateTenant = () => {
             contacts: contactsData,
             metadata: metadataObj,
             performance,
+            public_downtime: publicDowntime,
           },
         },
         {
@@ -375,6 +378,8 @@ const CreateTenant = () => {
                 onValidationChange={setHasMetadataValidationError}
                 isEditMode={isEditMode}
                 tenantId={tenantId}
+                publicDowntime={publicDowntime}
+                onPublicDowntimeChange={setPublicDowntime}
                 performance={performance}
                 onPerformanceChange={setPerformance}
               />

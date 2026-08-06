@@ -35,7 +35,9 @@ interface InfrastructureMetadataProps {
   isEditMode?: boolean
   tenantId?: string
   performance: boolean
+  publicDowntime: boolean
   onPerformanceChange: (value: boolean) => void
+  onPublicDowntimeChange: (value: boolean) => void
 }
 
 const InfrastructureMetadata = ({
@@ -45,6 +47,8 @@ const InfrastructureMetadata = ({
   isEditMode,
   tenantId,
   performance,
+  publicDowntime,
+  onPublicDowntimeChange,
   onPerformanceChange,
 }: InfrastructureMetadataProps) => {
   const [errors, setErrors] = useState(() => ({
@@ -330,6 +334,35 @@ const InfrastructureMetadata = ({
                 className="toggle toggle-sm toggle-brand"
                 checked={performance}
                 onChange={(e) => onPerformanceChange(e.target.checked)}
+                aria-label="Enable or disable performance data"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className={sectionClass}>
+        <div className="pt-2 pl-2">
+          <h2 className="section-title">Public Downtimes</h2>
+          <p className="section-description">Public downtimes configuration</p>
+        </div>
+
+        <div className={sectionContentClass}>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex-1">
+              <span className="text-sm text-muted">
+                Enable or disable public downtimes for this tenant
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-medium text-body">
+                {publicDowntime ? 'Enabled' : 'Disabled'}
+              </span>
+              <input
+                type="checkbox"
+                className="toggle toggle-sm toggle-brand"
+                checked={publicDowntime}
+                onChange={(e) => onPublicDowntimeChange(e.target.checked)}
                 aria-label="Enable or disable performance data"
               />
             </div>
