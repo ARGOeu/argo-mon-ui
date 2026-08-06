@@ -17,9 +17,11 @@ import type {
   Downtime,
   DowntimesResponse,
 } from '@/types/downtimes'
+import type { AccessMode } from '@/types/common'
 
 export const useGetTenantDowntimes = (
   tenantId: string,
+  mode: AccessMode,
   options: {
     size?: number
     date?: string
@@ -32,9 +34,9 @@ export const useGetTenantDowntimes = (
   const { token } = useAuth()
 
   return useInfiniteQuery<DowntimesResponse, Error>({
-    queryKey: ['downtimes', tenantId, size, date, startDate, endDate],
+    queryKey: ['downtimes', tenantId, mode, size, date, startDate, endDate],
     queryFn: ({ pageParam = 1 }) => {
-      if (!token) {
+      if (mode == 'private' && !token) {
         throw new Error('No authentication token available')
       }
       if (!tenantId) {
@@ -42,9 +44,10 @@ export const useGetTenantDowntimes = (
       }
       return fetchDowntimes(
         tenantId,
-        token,
+        token || '',
         pageParam as number,
         size,
+        mode,
         date,
         startDate,
         endDate,
@@ -58,7 +61,7 @@ export const useGetTenantDowntimes = (
       return undefined
     },
     retry: false,
-    enabled: enabled && !!token && !!tenantId,
+    enabled: enabled && !!tenantId,
   })
 }
 
