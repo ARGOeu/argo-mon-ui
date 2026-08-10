@@ -18,6 +18,7 @@ import SidebarNavItem from '@/components/sidebar/SidebarNavItem'
 import TenantAvatar from '@/components/sidebar/TenantAvatar'
 import NotFound from '@/pages/NotFound'
 import { isPlatformDomain } from '@/utils/domains'
+import { Bars3Icon } from '@heroicons/react/24/outline'
 
 const PublicTenantLayout = () => {
   const { tenantName, loading: tenantLoading } = useTenantName()
@@ -49,6 +50,10 @@ const PublicTenantLayout = () => {
   const availabilityReliabilityPath = isPlatformDomain()
     ? `/public/tenants/${tenantName}/ar-groups`
     : '/ar-groups'
+
+  const statusPath = isPlatformDomain()
+    ? `/public/tenants/${tenantName}/status`
+    : '/status'
 
   const capabilitiesPath = isPlatformDomain()
     ? `/public/tenants/${tenantName}/capabilities`
@@ -98,6 +103,13 @@ const PublicTenantLayout = () => {
           >
             <TableCellsIcon className="size-4" aria-hidden />
             Availability & Reliability
+          </SidebarNavItem>
+          <SidebarNavItem
+            to={statusPath}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <Bars3Icon className="size-4" aria-hidden />
+            Status
           </SidebarNavItem>
           <SidebarNavItem
             to={capabilitiesPath}

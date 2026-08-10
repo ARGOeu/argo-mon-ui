@@ -56,6 +56,8 @@ import { SUPER_ADMIN_ROLE } from './auth/roles'
 import NotFound from './pages/NotFound'
 import { Toaster } from 'sonner'
 import { isPlatformDomain } from './utils/domains'
+import PrivateStatusView from './pages/status/PrivateStatusView'
+import PublicStatusView from './pages/public-tenant/PublicStatusView'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -93,6 +95,7 @@ function PlatformRoutes() {
       <Route path="public/tenants/:tenantName" element={<PublicTenantLayout />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<PublicDashboardContainer />} />
+        <Route path="status" element={<PublicStatusView />} />
         <Route path="ar-groups" element={<PublicARContainer />} />
         <Route
           path="ar-groups/report/:reportName"
@@ -163,6 +166,14 @@ function PlatformRoutes() {
             element={
               <AuthProtected>
                 <PrivateDashboardContainer />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/status"
+            element={
+              <AuthProtected>
+                <PrivateStatusView />
               </AuthProtected>
             }
           />

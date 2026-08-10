@@ -1,0 +1,175 @@
+import type { StatusPoint, StatusValue } from '@/types/statusTimeline'
+
+export const STATUS_STYLES: Record<
+  StatusValue,
+  { bar: string; dot: string; label: string }
+> = {
+  OK: { bar: 'bg-emerald-500', dot: 'bg-emerald-500', label: 'OK' },
+  WARNING: { bar: 'bg-amber-500', dot: 'bg-amber-500', label: 'Warning' },
+  CRITICAL: { bar: 'bg-red-500', dot: 'bg-red-500', label: 'Critical' },
+  DOWNTIME: {
+    bar: 'bg-sky-400 bg-[repeating-linear-gradient(45deg,transparent,transparent_3px,rgba(255,255,255,.45)_3px,rgba(255,255,255,.45)_6px)]',
+    dot: 'bg-sky-400',
+    label: 'Downtime',
+  },
+  UNKNOWN: { bar: 'bg-neutral-400', dot: 'bg-neutral-400', label: 'Unknown' },
+  MISSING: { bar: 'bg-neutral-200', dot: 'bg-neutral-200', label: 'No data' },
+}
+
+// type of time range to display statuses
+export type StatusRangeId = 'today' | '3d' | '7d'
+
+export const STATUS_RANGES: { id: StatusRangeId; label: string }[] = [
+  { id: 'today', label: 'Today' },
+  { id: '3d', label: 'Last 3 days' },
+  { id: '7d', label: 'Last 7 days' },
+]
+
+// start and end time is in epoch ms
+export interface StatusSegment {
+  key: string
+  value: StatusValue
+  start: number
+  end: number
+  leftPct: number
+  widthPct: number
+}
+
+export const buildSegments = (
+  statuses: StatusPoint[] | undefined,
+  windowStart: number,
+  windowEnd: number,
+  dataEnd: number = windowEnd,
+): StatusSegment[] => {
+  const span = windowEnd - windowStart
+  if (span <= 0) return []
+
+  const end = Math.min(dataEnd, windowEnd)
+  if (end <= windowStart) return []
+
+  const toSegment = (
+    s: { start: number; end: number; value: StatusValue },
+    i: number,
+  ): StatusSegment => ({
+    key: `${i}-${s.start}`,
+    value: s.value,
+    start: s.start,
+    end: s.end,
+    leftPct: ((s.start - windowStart) / span) * 100,
+    widthPct: ((s.end - s.start) / span) * 100,
+  })
+
+  const points = (statuses ?? [])
+    .map((s) => ({ t: Date.parse(s.timestamp), value: s.value }))
+    .filter((p) => Number.isFinite(p.t))
+    .sort((a, b) => a.t - b.t)
+
+  if (points.length === 0) {
+    return [toSegment({ start: windowStart, end, value: 'MISSING' }, 0)]
+  }
+
+  // merge identical values
+  const merged: { t: number; value: StatusValue }[] = []
+
+  points.forEach((p) => {
+    const prev = merged[merged.length - 1]
+    if (prev && prev.value === p.value) return
+    merged.push(p)
+  })
+
+  const raw: { start: number; end: number; value: StatusValue }[] = []
+  if (merged[0].t > windowStart) {
+    raw.push({
+      start: windowStart,
+      end: Math.min(merged[0].t, end),
+      value: 'MISSING',
+    })
+  }
+  merged.forEach((p, i) => {
+    const start = Math.max(p.t, windowStart)
+    const rawEnd = i < merged.length - 1 ? merged[i + 1].t : end
+    const segEnd = Math.min(rawEnd, end)
+    if (segEnd > start) raw.push({ start, end: segEnd, value: p.value })
+  })
+
+  return raw.map(toSegment)
+}
+
+export interface StatusDivision {
+  time: number
+  pct: number
+  label: string
+  major: boolean
+}
+
+const MINUTE = 60_000
+const DAY = 24 * 60 * MINUTE
+const DIVISION_STEPS = [
+  5 * MINUTE,
+  15 * MINUTE,
+  30 * MINUTE,
+  60 * MINUTE,
+  2 * 60 * MINUTE,
+  3 * 60 * MINUTE,
+  6 * 60 * MINUTE,
+  12 * 60 * MINUTE,
+  DAY,
+  2 * DAY,
+  7 * DAY,
+]
+
+const padTwoDigits = (n: number) => String(n).padStart(2, '0')
+
+export const fmtUtcClock = (ms: number) => {
+  const d = new Date(ms)
+  return `${padTwoDigits(d.getUTCHours())}:${padTwoDigits(d.getUTCMinutes())}`
+}
+
+export const fmtUtcDay = (ms: number) =>
+  new Date(ms).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    timeZone: 'UTC',
+  })
+
+export const fmtUtcStamp = (ms: number) =>
+  `${fmtUtcDay(ms)} ${fmtUtcClock(ms)}Z`
+
+export const fmtDuration = (ms: number) => {
+  const totalMinutes = Math.round(ms / MINUTE)
+  if (totalMinutes < 1) return '<1m'
+  const days = Math.floor(totalMinutes / 1440)
+  const hours = Math.floor((totalMinutes % 1440) / 60)
+  const minutes = totalMinutes % 60
+  const parts: string[] = []
+  if (days) parts.push(`${days}d`)
+  if (hours) parts.push(`${hours}h`)
+  if (minutes && !days) parts.push(`${minutes}m`)
+  return parts.join(' ') || '<1m'
+}
+
+// builds divisions for the x-axis time ruler
+export const buildStatusDivisions = (
+  windowStart: number,
+  windowEnd: number,
+  target = 8,
+): StatusDivision[] => {
+  const span = windowEnd - windowStart
+  if (span <= 0) return []
+
+  const ideal = span / target
+  const step = DIVISION_STEPS.find((s) => s >= ideal) ?? DIVISION_STEPS.at(-1)!
+  const first = Math.ceil(windowStart / step) * step
+
+  const statusDivisions: StatusDivision[] = []
+  for (let t = first; t <= windowEnd; t += step) {
+    const isMidnight = t % DAY === 0
+    statusDivisions.push({
+      time: t,
+      pct: ((t - windowStart) / span) * 100,
+      label: step >= DAY || isMidnight ? fmtUtcDay(t) : fmtUtcClock(t),
+      major: step >= DAY || isMidnight,
+    })
+  }
+  return statusDivisions
+}
