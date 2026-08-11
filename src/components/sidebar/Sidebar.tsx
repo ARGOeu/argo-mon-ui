@@ -25,6 +25,7 @@ import SidebarHeader from './SidebarHeader'
 import SidebarFooter from './SidebarFooter'
 import type { Tenant } from '@/types/tenants'
 import type { AuthContextType } from '@/auth/context'
+import { Bars3Icon } from '@heroicons/react/24/outline'
 
 interface TenantNavItem {
   path: string
@@ -45,6 +46,11 @@ const tenantNavItems: TenantNavItem[] = [
     path: 'ar-groups',
     label: 'Availability & Reliability',
     icon: TableCellsIcon,
+  },
+  {
+    path: 'status',
+    label: 'Status',
+    icon: Bars3Icon,
   },
   {
     path: 'topology',
