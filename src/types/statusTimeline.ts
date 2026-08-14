@@ -1,8 +1,3 @@
-export interface StatusPoint {
-  timestamp: string
-  value: StatusValue
-}
-
 export type StatusValue =
   | 'OK'
   | 'WARNING'
@@ -11,12 +6,52 @@ export type StatusValue =
   | 'UNKNOWN'
   | 'MISSING'
 
-export interface StatusTimelineGroup {
+export interface StatusEntry {
+  timestamp: string
+  value: StatusValue
+}
+
+/** A metric is always a leaf. */
+export interface StatusMetric {
+  name: string
+  statuses?: StatusEntry[]
+}
+
+export interface StatusEndpoint {
+  name: string
+  info?: Record<string, string>
+  statuses?: StatusEntry[]
+  metrics?: StatusMetric[]
+}
+
+export interface StatusServiceType {
+  name: string
+  type?: string
+  statuses?: StatusEntry[]
+  endpoints?: StatusEndpoint[]
+}
+
+export interface StatusGroup {
   name: string
   type: string
-  statuses: StatusPoint[]
+  statuses?: StatusEntry[]
+  'service-types'?: StatusServiceType[]
 }
 
 export interface StatusTimelineResponse {
-  groups: StatusTimelineGroup[]
+  groups: StatusGroup[]
+}
+
+export type StatusLevel = 'group' | 'service-type' | 'endpoint' | 'metric'
+
+export interface StatusPath {
+  group?: string
+  serviceType?: string
+  endpoint?: string
+}
+
+export interface StatusNode {
+  name: string
+  type?: string
+  statuses: StatusEntry[]
 }

@@ -1,20 +1,19 @@
 import { useMemo, useRef, useState, type MouseEvent } from 'react'
-import { Info, X } from 'lucide-react'
+import { CalendarDays, ChevronLeft, ChevronRight, Info, X } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import SearchInput from '@/components/SearchInput'
 import SelectDropdown from '@/components/SelectDropdown'
 import type { SelectOption } from '@/components/SelectDropdown'
-import type {
-  StatusTimelineResponse,
-  StatusValue,
-} from '@/types/statusTimeline'
+import type { StatusEntry, StatusValue } from '@/types/statusTimeline'
+import { stripIdSuffix } from '@/utils/cleanup'
 import {
   buildSegments,
   buildStatusDivisions,
   fmtDuration,
   fmtUtcStamp,
+  STATUS_RANGE_DAYS,
   STATUS_RANGES,
   STATUS_STYLES,
   type StatusRangeId,
@@ -32,29 +31,59 @@ const LEGEND_ORDER: StatusValue[] = [
   'MISSING',
 ]
 
+/** Indexed by depth: 0 groups, 1 service types, 2 endpoints, 3 metrics. */
+const LEVEL_LABEL = ['Group', 'Service type', 'Endpoint', 'Metric']
+
+/** Each level steps in by this much inside the fixed-width name column. */
+const INDENT = 14
+
+// Foundational piece of the view - This represents one row with a single status timeline
+export type StatusRow =
+  | {
+      kind: 'node'
+      key: string
+      name: string
+      type?: string
+      depth: number
+      statuses: StatusEntry[]
+      expandable: boolean
+      expanded: boolean
+    }
+  | {
+      kind: 'message'
+      key: string
+      depth: number
+      state: 'loading' | 'error' | 'empty'
+      message?: string
+    }
+
 const buildReportOptions = (
   reports: Array<{ name: string; public?: boolean }> | undefined,
 ): SelectOption[] =>
   (reports ?? []).map((r) => ({ value: r.name, label: r.name }))
 
-// Keeps the first and last tick labels inside the track instead of bleeding out.
+// arrange tick labels correctly
 const tickLabelStyle = (pct: number) => {
   if (pct < 3) return { left: 0, transform: 'none' }
   if (pct > 97) return { left: '100%', transform: 'translateX(-100%)' }
   return { left: `${pct}%`, transform: 'translateX(-50%)' }
 }
 
-interface StatusTimeline {
-  name: string
-  type: string
-  segments: StatusSegment[]
-  current: StatusSegment | undefined
-}
+type NodeRow = Extract<StatusRow, { kind: 'node' }>
+type MessageRow = Extract<StatusRow, { kind: 'message' }>
 
-// Rows are a fixed height so the tooltip can be placed from a row index alone,
-// without measuring each row.
+type TimelineRow =
+  | (NodeRow & {
+      label: string
+      segments: StatusSegment[]
+      current: StatusSegment | undefined
+    })
+  | MessageRow
+
+// Each timeline has a fixed row-height defined here
 const ROW_HEIGHT = 44
 
+// This is a status segment part of a timeline
 const SegmentBar = ({ segment }: { segment: StatusSegment }) => (
   <div
     className={`absolute inset-y-0 ${STATUS_STYLES[segment.value].bar}`}
@@ -66,6 +95,7 @@ const SegmentBar = ({ segment }: { segment: StatusSegment }) => (
   />
 )
 
+// This is a tooltip that accompanies each status segment so that user can get more info when hovering over it
 const SegmentTooltip = ({
   segment,
   pct,
@@ -103,18 +133,107 @@ const SegmentTooltip = ({
   )
 }
 
+const MESSAGE_TEXT: Record<MessageRow['state'], string> = {
+  loading: 'Loading…',
+  error: 'Could not load this level',
+  empty: 'Nothing below this level',
+}
+
+const MessageRowContent = ({ row }: { row: MessageRow }) => (
+  <div
+    className="flex cursor-default items-center gap-2 text-xs text-neutral-400"
+    style={{ paddingLeft: row.depth * INDENT + 20 }}
+  >
+    {row.state === 'loading' && <LoadingSpinner size="sm" />}
+    <span className={row.state === 'error' ? 'text-red-600' : undefined}>
+      {row.state === 'error' && row.message
+        ? row.message
+        : MESSAGE_TEXT[row.state]}
+    </span>
+  </div>
+)
+
+// Date picker where user can define from - to timestamps and change the view
+const EditableStamp = ({
+  label,
+  value,
+  max,
+  onChange,
+  title,
+  ariaLabel,
+}: {
+  label: string
+  value: string
+  max: string
+  onChange: (date: string) => void
+  title: string
+  ariaLabel: string
+}) => {
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  const openPicker = () => {
+    const input = inputRef.current
+    if (!input) return
+    // Where showPicker() isn't supported, focusing at least allows typing.
+    if (typeof input.showPicker === 'function') {
+      input.showPicker()
+      return
+    }
+    input.focus()
+  }
+
+  return (
+    <span className="relative inline-flex">
+      <button
+        type="button"
+        onClick={openPicker}
+        className="inline-flex cursor-pointer items-center gap-1 rounded font-medium text-neutral-700 underline decoration-dotted underline-offset-2 transition-colors hover:text-neutral-900"
+        title={title}
+        aria-label={ariaLabel}
+      >
+        {label}
+        <CalendarDays className="h-3 w-3" />
+      </button>
+      <input
+        ref={inputRef}
+        type="date"
+        value={value}
+        max={max}
+        onChange={(e) => onChange(e.target.value)}
+        className="pointer-events-none absolute inset-0 h-full w-full opacity-0"
+        tabIndex={-1}
+        aria-hidden
+      />
+    </span>
+  )
+}
+
 export interface StatusViewProps {
   tenantName: string
   reports: Array<{ name: string; public?: boolean }> | undefined
   reportsLoading: boolean
   reportsError: Error | null
-  statusData: StatusTimelineResponse | undefined
+  /** Groups, plus the children of whatever is open, already flattened. */
+  rows: StatusRow[]
   statusLoading: boolean
   statusError: Error | null
+  /** Opening a row closes whatever else was open at that depth. */
+  onToggle: (depth: number, name: string) => void
   selectedReport: string
   onReportChange: (name: string) => void
   range: StatusRangeId
   onRangeChange: (range: StatusRangeId) => void
+  /** Both ends of the window as YYYY-MM-DD; the length between them is fixed. */
+  startDate: string
+  endDate: string
+  /** How far each picker may go — the start's cap leaves room for the length. */
+  maxStartDate: string
+  maxEndDate: string
+  isCurrentWindow: boolean
+  onStartDateChange: (date: string) => void
+  onEndDateChange: (date: string) => void
+  onShiftWindow: (direction: -1 | 1) => void
+  onJumpToNow: () => void
   startTime: string
   endTime: string
   nowTime?: string
@@ -125,13 +244,23 @@ const StatusView = ({
   reports,
   reportsLoading,
   reportsError,
-  statusData,
+  rows: statusRows,
   statusLoading,
   statusError,
+  onToggle,
   selectedReport,
   onReportChange,
   range,
   onRangeChange,
+  startDate,
+  endDate,
+  maxStartDate,
+  maxEndDate,
+  isCurrentWindow,
+  onStartDateChange,
+  onEndDateChange,
+  onShiftWindow,
+  onJumpToNow,
   startTime,
   endTime,
   nowTime,
@@ -146,6 +275,10 @@ const StatusView = ({
 
   const [mountNow] = useState(() => Date.now())
 
+  // One arrow press moves the window by its own length.
+  const stepDays = STATUS_RANGE_DAYS[range]
+  const stepLabel = `${stepDays} day${stepDays > 1 ? 's' : ''}`
+
   const windowStart = Date.parse(startTime)
   const windowEnd = Date.parse(endTime)
   const span = windowEnd - windowStart
@@ -159,8 +292,7 @@ const StatusView = ({
       ? ((nowMs - windowStart) / span) * 100
       : null
 
-  // Null when the pinned moment falls outside the current window — the state
-  // is kept, so switching back to a wider range brings the marker back.
+  // when a user pins a marker keep its position
   const pinnedPct =
     pinnedTime !== null && pinnedTime >= windowStart && pinnedTime <= windowEnd
       ? ((pinnedTime - windowStart) / span) * 100
@@ -171,27 +303,57 @@ const StatusView = ({
     [windowStart, windowEnd],
   )
 
-  const rows = useMemo<StatusTimeline[]>(() => {
-    return (statusData?.groups ?? []).map((g) => {
+  const rows = useMemo<TimelineRow[]>(() => {
+    return statusRows.map((row) => {
+      if (row.kind !== 'node') return row
       const segments = buildSegments(
-        g.statuses,
+        row.statuses,
         windowStart,
         windowEnd,
         dataEnd,
       )
       return {
-        name: g.name,
-        type: g.type,
+        ...row,
+        // if endpoint please remove suffixes from name
+        label: row.depth === 2 ? stripIdSuffix(row.name) : row.name,
         segments,
         current: segments[segments.length - 1],
       }
     })
-  }, [statusData, windowStart, windowEnd, dataEnd])
+  }, [statusRows, windowStart, windowEnd, dataEnd])
 
+  // keep the matched items from the filter
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     if (!q) return rows
-    return rows.filter((r) => r.name.toLowerCase().includes(q))
+
+    const keep = new Array<boolean>(rows.length).fill(false)
+    const ancestors: number[] = []
+    let matchDepth: number | null = null
+
+    rows.forEach((row, i) => {
+      if (matchDepth !== null && row.depth <= matchDepth) matchDepth = null
+
+      if (matchDepth !== null) {
+        keep[i] = true
+        if (row.kind === 'node') ancestors[row.depth] = i
+        return
+      }
+
+      if (row.kind === 'message') {
+        keep[i] = row.depth > 0 && keep[ancestors[row.depth - 1]]
+        return
+      }
+
+      ancestors[row.depth] = i
+      if (row.label.toLowerCase().includes(q)) {
+        keep[i] = true
+        for (let d = 0; d < row.depth; d++) keep[ancestors[d]] = true
+        matchDepth = row.depth
+      }
+    })
+
+    return rows.filter((_, i) => keep[i])
   }, [rows, search])
 
   const pctFromEvent = (e: MouseEvent<HTMLDivElement>): number | null => {
@@ -226,10 +388,15 @@ const StatusView = ({
       ? null
       : hoverTime - pinnedTime
 
+  const hoveredTimeline = hoveredRow === null ? undefined : filtered[hoveredRow]
+
   const activeSegment =
-    hoverTime === null || hoveredRow === null || hoverTime > dataEnd
+    hoverTime === null ||
+    hoverTime > dataEnd ||
+    hoveredTimeline === undefined ||
+    hoveredTimeline.kind !== 'node'
       ? undefined
-      : filtered[hoveredRow]?.segments.find(
+      : hoveredTimeline.segments.find(
           (s) => hoverTime >= s.start && hoverTime <= s.end,
         )
 
@@ -273,7 +440,7 @@ const StatusView = ({
         )}
       </div>
 
-      {isLoading && !statusData ? (
+      {isLoading && rows.length === 0 ? (
         <div className="loading-container">
           <LoadingSpinner size="md" />
         </div>
@@ -284,21 +451,79 @@ const StatusView = ({
       ) : (
         <section className="rounded-xl border border-neutral-200 bg-white px-5 py-4">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex gap-1">
-              {STATUS_RANGES.map((r) => (
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <p className="flex flex-wrap items-center gap-1 text-[11px] tabular-nums text-neutral-500">
+                <EditableStamp
+                  label={fmtUtcStamp(windowStart)}
+                  value={startDate}
+                  max={maxStartDate}
+                  onChange={onStartDateChange}
+                  title="Pick the first day of the window"
+                  ariaLabel={`Window starts ${startDate}. Pick another date.`}
+                />
+                <span aria-hidden>→</span>
+                <EditableStamp
+                  label={fmtUtcStamp(windowEnd)}
+                  value={endDate}
+                  max={maxEndDate}
+                  onChange={onEndDateChange}
+                  title="Pick the last day of the window"
+                  ariaLabel={`Window ends ${endDate}. Pick another date.`}
+                />
+                <span className="text-neutral-400">· UTC</span>
+              </p>
+
+              <div className="flex gap-0.5">
+                {STATUS_RANGES.map((r) => (
+                  <button
+                    key={r}
+                    type="button"
+                    onClick={() => onRangeChange(r)}
+                    className={`cursor-pointer rounded px-1.5 py-0.5 text-[11px] tabular-nums transition-colors ${
+                      range === r
+                        ? 'bg-neutral-900 text-white'
+                        : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900'
+                    }`}
+                    title={
+                      isCurrentWindow ? `Last ${r}` : `${r} ending ${endDate}`
+                    }
+                  >
+                    {r}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex items-center gap-0.5">
                 <button
-                  key={r.id}
                   type="button"
-                  onClick={() => onRangeChange(r.id)}
-                  className={`rounded px-2.5 py-1.5 text-xs transition-colors ${
-                    range === r.id
-                      ? 'bg-neutral-900 text-white'
-                      : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900'
-                  }`}
+                  onClick={() => onShiftWindow(-1)}
+                  className="cursor-pointer rounded p-1 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+                  aria-label={`Back ${stepLabel}`}
+                  title={`Back ${stepLabel}`}
                 >
-                  {r.label}
+                  <ChevronLeft className="h-4 w-4" />
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => onShiftWindow(1)}
+                  disabled={isCurrentWindow}
+                  className="cursor-pointer rounded p-1 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900 disabled:pointer-events-none disabled:opacity-30"
+                  aria-label={`Forward ${stepLabel}`}
+                  title={`Forward ${stepLabel}`}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+                {!isCurrentWindow && (
+                  <button
+                    type="button"
+                    onClick={onJumpToNow}
+                    className="ml-1 cursor-pointer rounded border border-neutral-200 px-2 py-0.5 text-[11px] text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900"
+                    title="Back to the window ending today"
+                  >
+                    Now
+                  </button>
+                )}
+              </div>
             </div>
             <SearchInput
               value={search}
@@ -322,10 +547,6 @@ const StatusView = ({
                 {STATUS_STYLES[tone].label}
               </span>
             ))}
-            <span className="ml-auto text-[11px] text-neutral-400">
-              {fmtUtcStamp(windowStart)} → {fmtUtcStamp(windowEnd)} · times in
-              UTC
-            </span>
           </div>
 
           {noData ? (
@@ -397,7 +618,7 @@ const StatusView = ({
                             e.stopPropagation()
                             setPinnedTime(null)
                           }}
-                          className="rounded-sm p-px transition-colors hover:bg-white/30"
+                          className="cursor-pointer rounded-sm p-px transition-colors hover:bg-white/30"
                           aria-label="Clear marker"
                           title="Clear marker"
                         >
@@ -432,37 +653,101 @@ const StatusView = ({
                 )}
                 {filtered.map((row, index) => (
                   <div
-                    key={row.name}
-                    className={`${GRID} items-center border-b border-neutral-100`}
+                    key={row.key}
+                    className={`${GRID} items-center border-b border-neutral-100 ${
+                      row.depth > 0 ? 'bg-neutral-50/60' : ''
+                    }`}
                     style={{ height: ROW_HEIGHT }}
                     onMouseEnter={() => setHoveredRow(index)}
                   >
-                    <div className="flex min-w-0 items-center gap-2">
-                      <span
-                        className={`h-2 w-2 flex-shrink-0 rounded-full ${
-                          STATUS_STYLES[row.current?.value ?? 'MISSING'].dot
-                        }`}
-                      />
-                      <span
-                        className="truncate text-sm font-medium text-neutral-800"
-                        title={`${row.name} (${row.type})`}
-                      >
-                        {row.name}
-                      </span>
-                    </div>
+                    {row.kind === 'message' ? (
+                      <>
+                        <MessageRowContent row={row} />
+                        <div />
+                      </>
+                    ) : (
+                      <>
+                        {row.expandable ? (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              onToggle(row.depth, row.name)
+                            }}
+                            style={{ paddingLeft: row.depth * INDENT }}
+                            className="group flex h-full min-w-0 cursor-pointer items-center gap-1.5 text-left"
+                            aria-expanded={row.expanded}
+                            aria-label={
+                              row.expanded
+                                ? `Collapse ${row.label}`
+                                : `Expand ${row.label}`
+                            }
+                            title={`${LEVEL_LABEL[row.depth]}: ${row.label}${
+                              row.type ? ` (${row.type})` : ''
+                            }`}
+                          >
+                            <ChevronRight
+                              className={`h-3.5 w-3.5 flex-shrink-0 text-neutral-400 transition-transform group-hover:text-neutral-700 ${
+                                row.expanded ? 'rotate-90' : ''
+                              }`}
+                            />
+                            <span
+                              className={`h-2 w-2 flex-shrink-0 rounded-full ${
+                                STATUS_STYLES[row.current?.value ?? 'MISSING']
+                                  .dot
+                              }`}
+                            />
+                            <span
+                              className={`truncate transition-colors group-hover:text-brand ${
+                                row.depth === 0
+                                  ? 'text-sm font-medium text-neutral-800'
+                                  : 'text-[13px] text-neutral-600'
+                              }`}
+                            >
+                              {row.label}
+                            </span>
+                          </button>
+                        ) : (
+                          <div
+                            className="flex min-w-0 cursor-default items-center gap-1.5"
+                            style={{ paddingLeft: row.depth * INDENT }}
+                          >
+                            <span className="w-[14px] flex-shrink-0" />
+                            <span
+                              className={`h-2 w-2 flex-shrink-0 rounded-full ${
+                                STATUS_STYLES[row.current?.value ?? 'MISSING']
+                                  .dot
+                              }`}
+                            />
+                            <span
+                              className={`truncate ${
+                                row.depth === 0
+                                  ? 'text-sm font-medium text-neutral-800'
+                                  : 'text-[13px] text-neutral-600'
+                              }`}
+                              title={`${LEVEL_LABEL[row.depth]}: ${row.label}${
+                                row.type ? ` (${row.type})` : ''
+                              }`}
+                            >
+                              {row.label}
+                            </span>
+                          </div>
+                        )}
 
-                    <div className="relative h-7 overflow-hidden rounded-[3px] bg-neutral-100 ring-1 ring-inset ring-neutral-200">
-                      {ticks.map((t) => (
-                        <div
-                          key={t.time}
-                          className="absolute inset-y-0 z-10 w-px bg-white/40"
-                          style={{ left: `${t.pct}%` }}
-                        />
-                      ))}
-                      {row.segments.map((s) => (
-                        <SegmentBar key={s.key} segment={s} />
-                      ))}
-                    </div>
+                        <div className="relative h-7 overflow-hidden rounded-[3px] bg-neutral-100 ring-1 ring-inset ring-neutral-200">
+                          {ticks.map((t) => (
+                            <div
+                              key={t.time}
+                              className="absolute inset-y-0 z-10 w-px bg-white/40"
+                              style={{ left: `${t.pct}%` }}
+                            />
+                          ))}
+                          {row.segments.map((s) => (
+                            <SegmentBar key={s.key} segment={s} />
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
                 ))}
 
@@ -470,12 +755,10 @@ const StatusView = ({
                   <div />
                   <div ref={trackRef} className="relative">
                     {nowPct !== null && (
-                      <>
-                        <div
-                          className="absolute inset-y-0 right-0 border-l border-neutral-900 bg-white/70 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(23,23,23,0.07)_4px,rgba(23,23,23,0.07)_8px)]"
-                          style={{ left: `${nowPct}%` }}
-                        />
-                      </>
+                      <div
+                        className="absolute inset-y-0 right-0 border-l border-neutral-900 bg-white/70 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(23,23,23,0.07)_4px,rgba(23,23,23,0.07)_8px)]"
+                        style={{ left: `${nowPct}%` }}
+                      />
                     )}
                     {pinnedPct !== null && (
                       <div

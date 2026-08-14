@@ -1,4 +1,4 @@
-import type { StatusPoint, StatusValue } from '@/types/statusTimeline'
+import type { StatusEntry, StatusValue } from '@/types/statusTimeline'
 
 export const STATUS_STYLES: Record<
   StatusValue,
@@ -16,16 +16,18 @@ export const STATUS_STYLES: Record<
   MISSING: { bar: 'bg-neutral-200', dot: 'bg-neutral-200', label: 'No data' },
 }
 
-// type of time range to display statuses
-export type StatusRangeId = 'today' | '3d' | '7d'
+// Predifined periods to view status timelines
+export const STATUS_RANGE_DAYS = {
+  '1d': 1,
+  '3d': 3,
+  '7d': 7,
+} as const
 
-export const STATUS_RANGES: { id: StatusRangeId; label: string }[] = [
-  { id: 'today', label: 'Today' },
-  { id: '3d', label: 'Last 3 days' },
-  { id: '7d', label: 'Last 7 days' },
-]
+export type StatusRangeId = keyof typeof STATUS_RANGE_DAYS
 
-// start and end time is in epoch ms
+export const STATUS_RANGES = Object.keys(STATUS_RANGE_DAYS) as StatusRangeId[]
+
+// Individual segment - part of a status timeline
 export interface StatusSegment {
   key: string
   value: StatusValue
@@ -36,7 +38,7 @@ export interface StatusSegment {
 }
 
 export const buildSegments = (
-  statuses: StatusPoint[] | undefined,
+  statuses: StatusEntry[] | undefined,
   windowStart: number,
   windowEnd: number,
   dataEnd: number = windowEnd,
