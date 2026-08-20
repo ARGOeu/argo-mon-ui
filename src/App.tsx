@@ -58,6 +58,8 @@ import { Toaster } from 'sonner'
 import { isPlatformDomain } from './utils/domains'
 import PrivateStatusView from './pages/status/PrivateStatusView'
 import PublicStatusView from './pages/public-tenant/PublicStatusView'
+import PrivateGroupsDashboard from './pages/dashboard/PrivateGroupDashboard'
+import PublicGroupDashboard from './pages/public-tenant/PublicGroupDashboard'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -95,6 +97,10 @@ function PlatformRoutes() {
       <Route path="public/tenants/:tenantName" element={<PublicTenantLayout />}>
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<PublicDashboardContainer />} />
+        <Route
+          path="dashboard/groups/:groupName"
+          element={<PublicGroupDashboard />}
+        />
         <Route path="status" element={<PublicStatusView />} />
         <Route path="ar-groups" element={<PublicARContainer />} />
         <Route
@@ -166,6 +172,14 @@ function PlatformRoutes() {
             element={
               <AuthProtected>
                 <PrivateDashboardContainer />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/dashboard/groups/:groupName"
+            element={
+              <AuthProtected>
+                <PrivateGroupsDashboard />
               </AuthProtected>
             }
           />

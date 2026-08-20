@@ -1,18 +1,19 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useLocation } from 'react-router-dom'
+import { useCallback, useEffect, useMemo } from 'react'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useGetPublicTenantReports } from '@/hooks/useTenants'
 import { useGetResultsGroups, useGetStatusGroups } from '@/hooks/useData'
 import { useTenantName } from '@/hooks/useTenantName'
 import Dashboard from '@/pages/dashboard/Dashboard'
 import { useGetResultsEndpoints } from '@/hooks/results'
 import { useGetTenantDowntimes } from '@/hooks/useDowntimes'
+import { useGetStatusTimelineAllEndpoints } from '@/hooks/useStatusTimeline'
 
 const toUtcDate = (d: Date) => d.toISOString().split('T')[0]
 
 const PublicDashboardContainer = () => {
   const { tenantName } = useTenantName()
-  const { hash } = useLocation()
-  const [selectedReport, setSelectedReport] = useState('')
+  const { hash, pathname, search } = useLocation()
+  const navigate = useNavigate()
 
   const {
     data: reports,
@@ -20,27 +21,57 @@ const PublicDashboardContainer = () => {
     error: reportsError,
   } = useGetPublicTenantReports(tenantName ?? '')
 
+  const hashReport = hash ? decodeURIComponent(hash.slice(1)) : ''
+
+  const selectedReport = reports?.some((r) => r.name === hashReport)
+    ? hashReport
+    : ''
+
+  const setSelectedReport = useCallback(
+    (name: string) => {
+      navigate(`${pathname}${search}#${encodeURIComponent(name)}`, {
+        replace: true,
+      })
+    },
+    [navigate, pathname, search],
+  )
+
+  useEffect(() => {
+    if (!reports || reports.length === 0) return
+    if (reports.some((r) => r.name === hashReport)) return
+
+    setSelectedReport(reports[0].name)
+  }, [reports, hashReport, setSelectedReport])
+
   const today = toUtcDate(new Date())
 
   const { startTime, endTime } = useMemo(() => {
     const now = new Date(`${today}T00:00:00Z`)
     const start = new Date(now)
+
     start.setUTCDate(start.getUTCDate() - 7)
+
     return {
       startTime: `${toUtcDate(start)}T00:00:00Z`,
       endTime: `${today}T23:59:59Z`,
     }
   }, [today])
 
-  useEffect(() => {
-    if (!reports || reports.length === 0) return
-    const hashReport = hash ? decodeURIComponent(hash.slice(1)) : ''
-    const target =
-      hashReport && reports.some((r) => r.name === hashReport)
-        ? hashReport
-        : reports[0].name
-    setSelectedReport(target)
-  }, [reports, hash])
+  const endpointStatusStartTime = `${today}T00:00:00Z`
+  const endpointStatusEndTime = `${today}T23:59:59Z`
+
+  const {
+    data: endpointStatusData,
+    isLoading: endpointStatusLoading,
+    error: endpointStatusError,
+  } = useGetStatusTimelineAllEndpoints(
+    tenantName ?? '',
+    'public',
+    selectedReport,
+    endpointStatusStartTime,
+    endpointStatusEndTime,
+    !!selectedReport,
+  )
 
   const {
     data: resultsData,
@@ -93,6 +124,18 @@ const PublicDashboardContainer = () => {
     !!selectedReport,
   )
 
+  const openGroup = (groupName: string, endpointName?: string) => {
+    const query = endpointName
+      ? `?endpoint=${encodeURIComponent(endpointName)}`
+      : ''
+
+    navigate(
+      `/public/tenants/${encodeURIComponent(tenantName ?? '')}` +
+        `/dashboard/groups/${encodeURIComponent(groupName)}${query}` +
+        `#${encodeURIComponent(selectedReport)}`,
+    )
+  }
+
   return (
     <Dashboard
       tenantName={tenantName ?? ''}
@@ -111,8 +154,13 @@ const PublicDashboardContainer = () => {
       endpointsData={endpointsData}
       endpointsLoading={endpointsLoading}
       endpointsError={endpointsError ?? null}
+      endpointStatusData={endpointStatusData}
+      endpointStatusLoading={endpointStatusLoading}
+      endpointStatusError={endpointStatusError ?? null}
       selectedReport={selectedReport}
       onReportChange={setSelectedReport}
+      onGroupSelect={(name) => openGroup(name)}
+      onEndpointSelect={(group, endpoint) => openGroup(group, endpoint)}
     />
   )
 }
