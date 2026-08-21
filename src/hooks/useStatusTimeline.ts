@@ -4,7 +4,10 @@ import { useAuth } from '@/auth/useAuth'
 import type { StatusNode } from '@/types/statusTimeline'
 import type { AccessMode } from '@/types/common'
 import {
+  fetchStatusTimelineAllEndpoints,
   fetchStatusTimelineEndpoints,
+  fetchStatusTimelineGroup,
+  fetchStatusTimelineGroupEndpoints,
   fetchStatusTimelineGroups,
   fetchStatusTimelineMetrics,
   fetchStatusTimelineServiceTypes,
@@ -211,5 +214,169 @@ export const useGetStatusTimelineMetrics = (
       !!group &&
       !!serviceType &&
       !!endpoint,
+  })
+}
+
+export const useGetStatusTimelineGroup = (
+  tenantIdentifier: string,
+  mode: AccessMode,
+  report: string | undefined,
+  group: string | undefined,
+  startTime: string,
+  endTime: string,
+  enabled: boolean = true,
+  refetchInterval?: number,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<StatusNode[], Error>({
+    queryKey: [
+      'status-timeline-group',
+      mode,
+      tenantIdentifier,
+      report,
+      group,
+      startTime,
+      endTime,
+    ],
+
+    queryFn: () => {
+      if (mode === 'private' && !token) {
+        throw new Error('No authentication token available')
+      }
+
+      if (!tenantIdentifier) {
+        throw new Error('Tenant identifier is required')
+      }
+
+      return fetchStatusTimelineGroup(
+        tenantIdentifier,
+        report,
+        group,
+        startTime,
+        endTime,
+        mode,
+        mode === 'private' ? token : undefined,
+      )
+    },
+
+    retry: false,
+    refetchOnMount: 'always',
+    refetchInterval,
+
+    enabled:
+      enabled &&
+      (mode === 'private' ? !!token : true) &&
+      !!tenantIdentifier &&
+      !!report &&
+      !!group,
+  })
+}
+
+export const useGetStatusTimelineGroupEndpoints = (
+  tenantIdentifier: string,
+  mode: AccessMode,
+  report: string | undefined,
+  group: string | undefined,
+  startTime: string,
+  endTime: string,
+  enabled: boolean = true,
+  refetchInterval?: number,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<StatusNode[], Error>({
+    queryKey: [
+      'status-timeline-group-endpoints',
+      mode,
+      tenantIdentifier,
+      report,
+      group,
+      startTime,
+      endTime,
+    ],
+
+    queryFn: () => {
+      if (mode === 'private' && !token) {
+        throw new Error('No authentication token available')
+      }
+
+      if (!tenantIdentifier) {
+        throw new Error('Tenant identifier is required')
+      }
+
+      return fetchStatusTimelineGroupEndpoints(
+        tenantIdentifier,
+        report,
+        group,
+        startTime,
+        endTime,
+        mode,
+        mode === 'private' ? token : undefined,
+      )
+    },
+
+    retry: false,
+    refetchOnMount: 'always',
+    refetchInterval,
+
+    enabled:
+      enabled &&
+      (mode === 'private' ? !!token : true) &&
+      !!tenantIdentifier &&
+      !!report &&
+      !!group,
+  })
+}
+
+export const useGetStatusTimelineAllEndpoints = (
+  tenantIdentifier: string,
+  mode: AccessMode,
+  report: string | undefined,
+  startTime: string,
+  endTime: string,
+  enabled: boolean = true,
+  refetchInterval?: number,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<StatusNode[], Error>({
+    queryKey: [
+      'status-timeline-all-endpoints',
+      mode,
+      tenantIdentifier,
+      report,
+      startTime,
+      endTime,
+    ],
+
+    queryFn: () => {
+      if (mode === 'private' && !token) {
+        throw new Error('No authentication token available')
+      }
+
+      if (!tenantIdentifier) {
+        throw new Error('Tenant identifier is required')
+      }
+
+      return fetchStatusTimelineAllEndpoints(
+        tenantIdentifier,
+        report,
+        startTime,
+        endTime,
+        mode,
+        mode === 'private' ? token : undefined,
+      )
+    },
+
+    retry: false,
+    refetchOnMount: 'always',
+    refetchInterval,
+
+    enabled:
+      enabled &&
+      (mode === 'private' ? !!token : true) &&
+      !!tenantIdentifier &&
+      !!report,
   })
 }

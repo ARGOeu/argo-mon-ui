@@ -1,7 +1,17 @@
-import { fetchResultsGroups, fetchStatusGroups } from '@/api/data'
+import {
+  fetchResultsGroupDetails,
+  fetchResultsGroupEndpoints,
+  fetchResultsGroups,
+  fetchStatusGroups,
+} from '@/api/data'
 import { useAuth } from '@/auth/useAuth'
 import type { AccessMode } from '@/types/common'
-import type { GroupResultsResponse, GroupStatusResponse } from '@/types/data'
+import type {
+  GroupDetailResponse,
+  GroupEndpointsResponse,
+  GroupResultsResponse,
+  GroupStatusResponse,
+} from '@/types/data'
 import { useQuery } from '@tanstack/react-query'
 
 export const useGetResultsGroups = (
@@ -65,5 +75,105 @@ export const useGetStatusGroups = (
     refetchOnMount: 'always',
     enabled:
       enabled && (mode === 'private' ? !!token : true) && !!tenantIdentifier,
+  })
+}
+
+export const useGetResultsGroupDetails = (
+  tenantIdentifier: string,
+  mode: AccessMode,
+  report: string,
+  groupName: string,
+  startTime: string,
+  endTime: string,
+  granularity: string = 'daily',
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<GroupDetailResponse, Error>({
+    queryKey: [
+      'results-group-details',
+      mode,
+      tenantIdentifier,
+      report,
+      groupName,
+      startTime,
+      endTime,
+      granularity,
+    ],
+    queryFn: () => {
+      if (mode === 'private' && !token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantIdentifier) throw new Error('Tenant identifier is required')
+      return fetchResultsGroupDetails(
+        tenantIdentifier,
+        report,
+        groupName,
+        startTime,
+        endTime,
+        granularity,
+        mode,
+        mode === 'private' ? token : undefined,
+      )
+    },
+    retry: false,
+    refetchOnMount: 'always',
+    enabled:
+      enabled &&
+      (mode === 'private' ? !!token : true) &&
+      !!tenantIdentifier &&
+      !!report &&
+      !!groupName,
+  })
+}
+
+export const useGetResultsGroupEndpoints = (
+  tenantIdentifier: string,
+  mode: AccessMode,
+  report: string,
+  groupName: string,
+  startTime: string,
+  endTime: string,
+  granularity: string = 'daily',
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<GroupEndpointsResponse, Error>({
+    queryKey: [
+      'results-group-endpoints',
+      mode,
+      tenantIdentifier,
+      report,
+      groupName,
+      startTime,
+      endTime,
+      granularity,
+    ],
+    queryFn: () => {
+      if (mode === 'private' && !token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantIdentifier) throw new Error('Tenant identifier is required')
+      return fetchResultsGroupEndpoints(
+        tenantIdentifier,
+        report,
+        groupName,
+        startTime,
+        endTime,
+        granularity,
+        mode,
+        mode === 'private' ? token : undefined,
+      )
+    },
+    retry: false,
+    refetchOnMount: 'always',
+    enabled:
+      enabled &&
+      (mode === 'private' ? !!token : true) &&
+      !!tenantIdentifier &&
+      !!report &&
+      !!groupName,
   })
 }

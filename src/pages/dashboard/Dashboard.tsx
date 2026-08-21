@@ -35,6 +35,7 @@ import type { Downtime } from '@/types/downtimes'
 import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
 import { categorizeDowntimes, fmtDowntimeDailyRange } from '@/utils/downtimes'
 import type { EndpointResultsResponse } from '@/types/results'
+import type { StatusNode } from '@/types/statusTimeline'
 import { stripIdSuffix } from '@/utils/cleanup'
 
 const WEEK_DAY_COUNT = 7
@@ -203,16 +204,6 @@ const worstStatus = (values: string[]): ServiceStatus => {
   return 'healthy'
 }
 
-// Derives endpoint status from today's availability until a
-// dedicated per-endpoint status call is wired up.
-const endpointStatusFromToday = (value: number | undefined): ServiceStatus => {
-  if (value === undefined || !Number.isFinite(value) || value < 0)
-    return 'missing'
-  if (value >= 100) return 'healthy'
-  if (value >= 85) return 'degraded'
-  return 'critical'
-}
-
 const formatShortDay = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { weekday: 'short' })
 
@@ -314,15 +305,23 @@ const avgValid = (arr: number[]): number | null => {
     : valid.reduce((a, b) => a + b, 0) / valid.length
 }
 
-const padStartDates = (firstDate: string, count: number): string[] => {
-  const result: string[] = []
-  const base = new Date(firstDate)
-  for (let i = count; i >= 1; i--) {
-    const d = new Date(base)
+const lastNDates = (endIso: string, count: number): string[] => {
+  const end = new Date(`${endIso}T00:00:00Z`)
+  const out: string[] = []
+  for (let i = count - 1; i >= 0; i--) {
+    const d = new Date(end)
     d.setUTCDate(d.getUTCDate() - i)
-    result.push(d.toISOString().slice(0, 10))
+    out.push(d.toISOString().slice(0, 10))
   }
-  return result
+  return out
+}
+
+// Create a full week display with the last of the week being today
+const buildWeekAxis = (reported: Set<string>): string[] => {
+  const today = new Date().toISOString().slice(0, 10)
+  return [
+    ...new Set([...lastNDates(today, WEEK_DAY_COUNT), ...reported]),
+  ].sort()
 }
 
 interface NowItemProps {
@@ -467,11 +466,16 @@ export interface DashboardProps {
   endpointsData?: EndpointResultsResponse
   endpointsLoading?: boolean
   endpointsError?: Error | null
+  endpointStatusData?: StatusNode[]
+  endpointStatusLoading?: boolean
+  endpointStatusError?: Error | null
   statusData: GroupStatusResponse | undefined
   statusLoading: boolean
   statusError: Error | null
   selectedReport: string
   onReportChange: (name: string) => void
+  onGroupSelect?: (groupName: string) => void
+  onEndpointSelect?: (groupName: string, endpointName: string) => void
 }
 
 const Dashboard = ({
@@ -489,11 +493,16 @@ const Dashboard = ({
   endpointsData,
   endpointsLoading,
   endpointsError,
+  endpointStatusData,
+  endpointStatusLoading,
+  endpointStatusError,
   statusData,
   statusLoading,
   statusError,
   selectedReport,
   onReportChange,
+  onGroupSelect,
+  onEndpointSelect,
 }: DashboardProps) => {
   const [filter, setFilter] = useState<FilterId>('all')
   const [search, setSearch] = useState('')
@@ -555,6 +564,33 @@ const Dashboard = ({
     return map
   }, [endpointsData])
 
+  const endpointStatusesByName = useMemo(() => {
+    const map = new Map<string, ServiceStatus>()
+
+    endpointStatusData?.forEach((endpoint) => {
+      const latestStatus = endpoint.statuses
+        ?.filter((status) => Boolean(status.timestamp) && Boolean(status.value))
+        .reduce<(typeof endpoint.statuses)[number] | undefined>(
+          (latest, current) => {
+            if (!latest) return current
+
+            return new Date(current.timestamp).getTime() >
+              new Date(latest.timestamp).getTime()
+              ? current
+              : latest
+          },
+          undefined,
+        )
+
+      map.set(
+        endpoint.name,
+        latestStatus ? mapStatusValue(latestStatus.value) : 'missing',
+      )
+    })
+
+    return map
+  }, [endpointStatusData])
+
   const services = useMemo<Service[]>(() => {
     if (!resultsData?.data) return []
 
@@ -566,26 +602,20 @@ const Dashboard = ({
       )
     })
 
-    return resultsData.data.map((g) => {
-      const missingCount = Math.max(0, WEEK_DAY_COUNT - g.results.length)
-      const firstDate =
-        g.results.length > 0
-          ? g.results.reduce(
-              (min, r) => (r.date < min ? r.date : min),
-              g.results[0].date,
-            )
-          : new Date().toISOString().slice(0, 10)
-      const paddingDates =
-        missingCount > 0 ? padStartDates(firstDate, missingCount) : []
+    const reported = new Set<string>()
+    resultsData.data.forEach((g) =>
+      g.results.forEach((r) => reported.add(r.date.slice(0, 10))),
+    )
+    const dailyDates = buildWeekAxis(reported)
 
-      const daily = [
-        ...paddingDates.map((): number => -1),
-        ...g.results.map((r) => Number(r.availability)),
-      ]
-      const dailyDates = [
-        ...paddingDates,
-        ...g.results.map((r) => r.date.slice(0, 10)),
-      ]
+    return resultsData.data.map((g) => {
+      const byDate = new Map<string, number>()
+      g.results.forEach((r) => {
+        const value = Number(r.availability)
+        byDate.set(r.date.slice(0, 10), Number.isFinite(value) ? value : -1)
+      })
+
+      const daily = dailyDates.map((d) => byDate.get(d) ?? -1)
       const weekAvg = avgValid(daily.filter(Number.isFinite))
       const feedStatus = worstStatus(statusByName.get(g.name) ?? [])
 
@@ -596,7 +626,7 @@ const Dashboard = ({
             key: ep.key,
             name: ep.name,
             service: ep.service,
-            status: endpointStatusFromToday(epDaily[epDaily.length - 1]),
+            status: endpointStatusesByName.get(ep.name) ?? 'missing',
             daily: epDaily,
           }
         },
@@ -610,7 +640,7 @@ const Dashboard = ({
         endpoints,
       }
     })
-  }, [resultsData, statusData, endpointsByGroup])
+  }, [resultsData, statusData, endpointsByGroup, endpointStatusesByName])
 
   const counts = useMemo<Record<ServiceStatus, number>>(() => {
     const c = { healthy: 0, degraded: 0, critical: 0, missing: 0 }
@@ -620,8 +650,7 @@ const Dashboard = ({
 
   const { tenantDaily, tenantDailyDates } = useMemo(() => {
     if (services.length === 0) {
-      const today = new Date().toISOString().slice(0, 10)
-      const emptyDates = [...padStartDates(today, 6), today]
+      const emptyDates = buildWeekAxis(new Set())
       return {
         tenantDaily: emptyDates.map((): null => null),
         tenantDailyDates: emptyDates,
@@ -743,7 +772,10 @@ const Dashboard = ({
 
   // check if endpoints are loading to display the loading bar
   const showEndpointsLoading =
-    Boolean(endpointsLoading) && !endpointsError && services.length > 0
+    Boolean(endpointsLoading || endpointStatusLoading) &&
+    !endpointsError &&
+    !endpointStatusError &&
+    services.length > 0
 
   let errorContext = 'dashboard metrics'
   if (reportsError) errorContext = 'tenant reports'
@@ -1007,7 +1039,7 @@ const Dashboard = ({
                     {allCollapsed ? 'Expand all' : 'Collapse all'}
                   </button>
                 </span>
-                {endpointsError && (
+                {(endpointsError || endpointStatusError) && (
                   <span className="text-[11px] text-amber-700">
                     endpoint details unavailable
                   </span>
@@ -1125,9 +1157,20 @@ const Dashboard = ({
                             <span
                               className={`h-2 w-2 flex-shrink-0 rounded-full ${st.dot}`}
                             />
-                            <span className="truncate font-medium text-neutral-800">
-                              {service.name}
-                            </span>
+                            {onGroupSelect ? (
+                              <button
+                                type="button"
+                                onClick={() => onGroupSelect(service.name)}
+                                title={`Open ${service.name}`}
+                                className="min-w-0 truncate rounded text-left font-medium text-neutral-800 transition-colors hover:text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 cursor-pointer"
+                              >
+                                {service.name}
+                              </button>
+                            ) : (
+                              <span className="truncate font-medium text-neutral-800">
+                                {service.name}
+                              </span>
+                            )}
                             {hasEndpoints && (
                               <span className="flex-shrink-0 text-[11px] text-neutral-400">
                                 {service.endpoints.length}
@@ -1172,12 +1215,25 @@ const Dashboard = ({
                                   <span
                                     className={`h-2 w-2 flex-shrink-0 rounded-full ${epSt.dot}`}
                                   />
-                                  <span
-                                    className="truncate text-neutral-700"
-                                    title={`${ep.name} (${ep.service})`}
-                                  >
-                                    {stripIdSuffix(ep.name)}
-                                  </span>
+                                  {onEndpointSelect ? (
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        onEndpointSelect(service.name, ep.name)
+                                      }
+                                      title={`Open ${ep.name} (${ep.service}) in ${service.name}`}
+                                      className="min-w-0 truncate rounded text-left text-neutral-700 transition-colors hover:text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 cursor-pointer"
+                                    >
+                                      {stripIdSuffix(ep.name)}
+                                    </button>
+                                  ) : (
+                                    <span
+                                      className="truncate text-neutral-700"
+                                      title={`${ep.name} (${ep.service})`}
+                                    >
+                                      {stripIdSuffix(ep.name)}
+                                    </span>
+                                  )}
                                   <span className="flex-shrink-0 text-[11px] text-neutral-400">
                                     {ep.service}
                                   </span>
