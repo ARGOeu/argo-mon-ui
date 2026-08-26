@@ -1,6 +1,49 @@
-import type { Incident, IncidentRequest } from '@/types/incidents'
+import type {
+  Incident,
+  IncidentRequest,
+  IncidentsResponse,
+} from '@/types/incidents'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
+
+export const fetchIncidents = async (
+  tenantId: string,
+  token: string,
+  page: number = 1,
+  size: number = 10,
+  date?: string,
+  search?: string,
+): Promise<IncidentsResponse> => {
+  const params = new URLSearchParams()
+  params.set('page', String(page))
+  params.set('size', String(size))
+  if (date) {
+    params.set('date', date)
+  }
+  if (search) {
+    params.set('search', search)
+  }
+
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/incidents?${params.toString()}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
 
 export const createIncident = async (
   tenantId: string,
