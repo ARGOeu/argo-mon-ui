@@ -1,3 +1,4 @@
+import type { SelectOption } from '@/components/SelectDropdown'
 import type { IncidentStatus } from '@/types/incidents'
 
 export const incidentStatusLabel: Record<IncidentStatus, string> = {
@@ -8,6 +9,10 @@ export const incidentStatusLabel: Record<IncidentStatus, string> = {
   RESOLVED: 'Resolved',
   CLOSED: 'Closed',
 }
+
+export const incidentStatusOptions: SelectOption[] = (
+  Object.keys(incidentStatusLabel) as IncidentStatus[]
+).map((status) => ({ value: status, label: incidentStatusLabel[status] }))
 
 export const incidentStatusBadgeClass: Record<IncidentStatus, string> = {
   NEW: 'bg-red-100 text-red-700',
