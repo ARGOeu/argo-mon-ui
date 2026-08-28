@@ -216,7 +216,6 @@ const formatShortDate = (iso: string) =>
 // TODO: This will be replaced by an efficient backend call
 const uptimeTone = (pct: number) => {
   if (pct >= 99.99) return 'bg-emerald-500'
-  if (pct >= 99.5) return 'bg-teal-600'
   if (pct >= 98) return 'bg-amber-500'
   return 'bg-red-500'
 }
