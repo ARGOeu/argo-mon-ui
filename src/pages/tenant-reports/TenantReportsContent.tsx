@@ -206,32 +206,34 @@ const TenantReportsTab = ({ tenantId }: TenantReportsTabProps) => {
                     )}
                   </p>
                 </div>
-                {canManageVisibility && selectedReport && (
-                  <div className="flex flex-col items-end gap-0.5 shrink-0">
-                    <span className="text-sm font-medium text-muted">
-                      Set report visibility:
-                    </span>
-                    <Button
-                      variant={
-                        selectedReport.public === true
-                          ? 'outline-secondary'
-                          : 'outline-primary'
-                      }
-                      size="sm"
-                      onClick={() => handleVisibilityClick(selectedReport)}
-                      disabled={pendingReportId === selectedReport.id}
-                    >
-                      {selectedReport.public === true ? (
-                        <LockClosedIcon className="size-4" />
-                      ) : (
-                        <GlobeAltIcon className="size-4" />
-                      )}
-                      {selectedReport.public === true
-                        ? 'Make private'
-                        : 'Make public'}
-                    </Button>
-                  </div>
-                )}
+                {canManageVisibility &&
+                  selectedReport &&
+                  !reportDetail.disabled && (
+                    <div className="flex flex-col items-end gap-0.5 shrink-0">
+                      <span className="text-sm font-medium text-muted">
+                        Set report visibility:
+                      </span>
+                      <Button
+                        variant={
+                          selectedReport.public === true
+                            ? 'outline-secondary'
+                            : 'outline-primary'
+                        }
+                        size="sm"
+                        onClick={() => handleVisibilityClick(selectedReport)}
+                        disabled={pendingReportId === selectedReport.id}
+                      >
+                        {selectedReport.public === true ? (
+                          <LockClosedIcon className="size-4" />
+                        ) : (
+                          <GlobeAltIcon className="size-4" />
+                        )}
+                        {selectedReport.public === true
+                          ? 'Make private'
+                          : 'Make public'}
+                      </Button>
+                    </div>
+                  )}
               </div>
               <div className="flex flex-wrap gap-y-2 gap-x-4 items-center">
                 <div className="flex items-center gap-1.5">
