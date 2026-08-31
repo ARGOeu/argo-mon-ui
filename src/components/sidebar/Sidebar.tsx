@@ -16,6 +16,7 @@ import {
   LockClosedIcon,
   Cog6ToothIcon,
   WrenchScrewdriverIcon,
+  ExclamationTriangleIcon,
 } from '@heroicons/react/16/solid'
 import { ChartNetwork, Medal } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -59,6 +60,11 @@ const tenantNavItems: TenantNavItem[] = [
     requiredRoles: ['tenant_admin'],
   },
   { path: 'status-pages', label: 'Status Pages', icon: RectangleStackIcon },
+  {
+    path: 'incidents',
+    label: 'Incidents',
+    icon: ExclamationTriangleIcon,
+  },
   {
     path: 'downtimes',
     label: 'Downtimes',
