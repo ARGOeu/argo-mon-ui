@@ -1,13 +1,20 @@
 import {
   useInfiniteQuery,
   useMutation,
+  useQuery,
   useQueryClient,
 } from '@tanstack/react-query'
 import { useAuth } from '@/auth/useAuth'
-import { createIncident, fetchIncidents } from '@/api/incidents'
+import {
+  createIncident,
+  fetchIncident,
+  fetchIncidents,
+  updateIncidentStatus,
+} from '@/api/incidents'
 import type {
   Incident,
   IncidentRequest,
+  IncidentStatusUpdateRequest,
   IncidentsResponse,
 } from '@/types/incidents'
 
@@ -83,5 +90,72 @@ export const useCreateIncidentMutation = () => {
     onError: (error) => {
       console.error('Incident create error:', error)
     },
+  })
+}
+
+export const useUpdateIncidentStatusMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<
+    Incident,
+    Error,
+    { tenantId: string; incidentId: string; data: IncidentStatusUpdateRequest }
+  >({
+    mutationFn: ({
+      tenantId,
+      incidentId,
+      data,
+    }: {
+      tenantId: string
+      incidentId: string
+      data: IncidentStatusUpdateRequest
+    }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantId) {
+        throw new Error('Tenant ID is required')
+      }
+      if (!incidentId) {
+        throw new Error('Incident ID is required')
+      }
+      return updateIncidentStatus(tenantId, incidentId, data, token)
+    },
+    onSuccess: (_, { tenantId, incidentId }) => {
+      queryClient.invalidateQueries({ queryKey: ['incidents'] })
+      queryClient.invalidateQueries({
+        queryKey: ['incident', tenantId, incidentId],
+      })
+    },
+    onError: (error) => {
+      console.error('Incident status update error:', error)
+    },
+  })
+}
+
+export const useGetIncident = (
+  tenantId: string,
+  incidentId: string,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<Incident, Error>({
+    queryKey: ['incident', tenantId, incidentId],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantId) {
+        throw new Error('Tenant ID is required')
+      }
+      if (!incidentId) {
+        throw new Error('Incident ID is required')
+      }
+      return fetchIncident(tenantId, incidentId, token)
+    },
+    retry: false,
+    enabled: enabled && !!token && !!tenantId && !!incidentId,
   })
 }

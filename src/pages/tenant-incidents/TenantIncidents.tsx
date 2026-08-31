@@ -105,9 +105,13 @@ const TenantIncidents = () => {
         </p>
       ) : (
         <>
-          <div className="flex flex-col gap-8 mt-4 [@media(max-height:700px)]:gap-4">
+          <div className="flex flex-col mt-3 gap-3 [@media(max-height:700px)]:gap-1">
             {incidents.map((incident) => (
-              <IncidentCard key={incident.id} incident={incident} />
+              <IncidentCard
+                key={incident.id}
+                incident={incident}
+                tenantId={tenantId ?? ''}
+              />
             ))}
           </div>
 

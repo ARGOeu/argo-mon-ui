@@ -2,6 +2,7 @@ import type {
   Incident,
   IncidentRequest,
   IncidentsResponse,
+  IncidentStatusUpdateRequest,
 } from '@/types/incidents'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
@@ -69,6 +70,62 @@ export const createIncident = async (
     ) as Error & { errors?: string[] }
     error.errors = errorData.errors || []
     throw error
+  }
+
+  return response.json()
+}
+
+export const updateIncidentStatus = async (
+  tenantId: string,
+  incidentId: string,
+  data: IncidentStatusUpdateRequest,
+  token: string,
+): Promise<Incident> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/incidents/${incidentId}/status`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    const error = new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    ) as Error & { errors?: string[] }
+    error.errors = errorData.errors || []
+    throw error
+  }
+
+  return response.json()
+}
+
+export const fetchIncident = async (
+  tenantId: string,
+  incidentId: string,
+  token: string,
+): Promise<Incident> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/incidents/${incidentId}`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
   }
 
   return response.json()

@@ -29,7 +29,7 @@ export type Incident = {
   created_at: string
   updated_by?: string
   updated_at?: string
-  comments: IncidentComment[]
+  comments?: IncidentComment[]
 }
 
 export type IncidentsResponse = {
@@ -44,4 +44,8 @@ export type IncidentRequest = {
   title: string
   description: string
   services: IncidentService[]
+}
+
+export type IncidentStatusUpdateRequest = {
+  status: IncidentStatus
 }
