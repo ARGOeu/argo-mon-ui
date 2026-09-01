@@ -3,8 +3,10 @@ import ErrorDisplay from '@/components/ErrorDisplay'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import PageHeader from '@/components/PageHeader'
 import { useGetIncident } from '@/hooks/useIncidents'
-import IncidentDetailsPanel from './IncidentDetailsPanel'
-import IncidentSummary from './IncidentSummary'
+import IncidentAffectedServices from './IncidentAffectedServices'
+import IncidentHeader from './IncidentHeader'
+import IncidentHistory from './IncidentHistory'
+import IncidentStatusForm from './IncidentStatusForm'
 import { useCanManageIncidents } from './useCanManageIncidents'
 
 const IncidentDetail = () => {
@@ -21,7 +23,7 @@ const IncidentDetail = () => {
   } = useGetIncident(tenantId ?? '', incidentId ?? '')
 
   return (
-    <div className="page-container mb-8">
+    <div className="page-container mb-12">
       <PageHeader
         title="Incident Details"
         subtitle={
@@ -49,13 +51,21 @@ const IncidentDetail = () => {
           Incident not found
         </p>
       ) : (
-        <div className="flex flex-col gap-3 mt-4">
-          <IncidentSummary incident={incident} />
-          <IncidentDetailsPanel
-            incident={incident}
-            tenantId={tenantId ?? ''}
-            canManage={canManage}
-          />
+        <div className="flex flex-col md:flex-row gap-x-4 2xl:gap-x-32 2xl:pe-32 mt-3">
+          <div className="flex-1 flex flex-col gap-4">
+            <IncidentHeader incident={incident} />
+            {canManage && (
+              <IncidentStatusForm
+                incident={incident}
+                tenantId={tenantId ?? ''}
+              />
+            )}
+            <IncidentHistory
+              tenantId={tenantId ?? ''}
+              incidentId={incident.id}
+            />
+          </div>
+          <IncidentAffectedServices incident={incident} />
         </div>
       )}
     </div>

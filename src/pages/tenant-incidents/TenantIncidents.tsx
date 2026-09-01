@@ -40,6 +40,8 @@ const TenantIncidents = () => {
   })
 
   const incidents = incidentsData?.pages.flatMap((page) => page.content) ?? []
+  const showEmptyState = !isLoading && !error && incidents.length === 0
+  const showSearchInput = !showEmptyState || !!searchQuery
 
   const sentinelRef = useRef<HTMLDivElement>(null)
 
@@ -86,12 +88,14 @@ const TenantIncidents = () => {
         )}
       </PageHeader>
 
-      <SearchInput
-        value={searchInput}
-        onChange={setSearchInput}
-        onClear={() => setSearchInput('')}
-        placeholder="Search by incident title or service name"
-      />
+      {showSearchInput && (
+        <SearchInput
+          value={searchInput}
+          onChange={setSearchInput}
+          onClear={() => setSearchInput('')}
+          placeholder="Search by incident title or service name"
+        />
+      )}
 
       {isLoading ? (
         <div className="loading-container">
@@ -99,7 +103,7 @@ const TenantIncidents = () => {
         </div>
       ) : error ? (
         <ErrorDisplay error={error} context="incidents" />
-      ) : !incidents.length ? (
+      ) : showEmptyState ? (
         <p className="text-center text-base text-subtle italic py-8">
           No incidents found
         </p>

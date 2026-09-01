@@ -1,5 +1,6 @@
 import type {
   Incident,
+  IncidentActivity,
   IncidentRequest,
   IncidentsResponse,
   IncidentStatusUpdateRequest,
@@ -100,6 +101,32 @@ export const updateIncidentStatus = async (
     ) as Error & { errors?: string[] }
     error.errors = errorData.errors || []
     throw error
+  }
+
+  return response.json()
+}
+
+export const fetchIncidentActivity = async (
+  tenantId: string,
+  incidentId: string,
+  token: string,
+): Promise<IncidentActivity[]> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/incidents/${incidentId}/activity`,
+    {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
   }
 
   return response.json()
