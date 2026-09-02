@@ -1,3 +1,4 @@
+import { ChatBubbleLeftIcon } from '@heroicons/react/16/solid'
 import Badge from '@/components/Badge'
 import {
   incidentStatusBadgeClass,
@@ -34,6 +35,7 @@ const IncidentSummary = ({
     ? incident.services.slice(0, maxVisibleServices)
     : incident.services
   const hiddenServicesCount = incident.services.length - visibleServices.length
+  const commentCount = incident.comments?.length ?? 0
 
   const createdSeconds = incident.created_at
     ? roundToSecond(incident.created_at)
@@ -91,7 +93,7 @@ const IncidentSummary = ({
       </div>
 
       <div className="bg-surface-muted rounded-lg px-3 py-2">
-        <div className="grid grid-cols-[1fr_auto] items-start gap-x-12 lg:gap-x-60">
+        <div className="grid grid-cols-[1fr_auto] gap-x-12 lg:gap-x-60">
           <div className="min-w-0">
             <p className="text-foreground font-medium break-words">
               {incident.title}
@@ -103,9 +105,7 @@ const IncidentSummary = ({
 
             {incident.status_description && (
               <p className="text-sm text-body line-clamp-4 mt-1.5">
-                <span className="text-xs font-medium text-muted">
-                  Latest update:
-                </span>{' '}
+                <span className="text-sm text-muted">Latest update:</span>{' '}
                 {incident.status_description}
               </p>
             )}
@@ -127,22 +127,31 @@ const IncidentSummary = ({
             </p>
           </div>
 
-          <div className="flex flex-col items-end shrink-0">
-            {hiddenServicesCount > 0 ? (
-              <div className="tooltip tooltip-left flex flex-col items-end">
-                <div className="tooltip-content !text-left">
-                  <ul className="flex flex-col gap-0.5">
-                    {incident.services.map((service) => (
-                      <li key={service.id} className="max-w-48 truncate">
-                        {service.name}
-                      </li>
-                    ))}
-                  </ul>
+          <div className="flex flex-col items-end justify-between shrink-0">
+            <div className="flex flex-col items-end">
+              {hiddenServicesCount > 0 ? (
+                <div className="tooltip tooltip-left flex flex-col items-end">
+                  <div className="tooltip-content !text-left">
+                    <ul className="flex flex-col gap-0.5">
+                      {incident.services.map((service) => (
+                        <li key={service.id} className="max-w-48 truncate">
+                          {service.name}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  {servicesContent}
                 </div>
-                {servicesContent}
+              ) : (
+                servicesContent
+              )}
+            </div>
+
+            {commentCount > 0 && (
+              <div className="flex items-center gap-1 mt-4 text-muted">
+                <ChatBubbleLeftIcon className="size-4" />
+                <span className="text-sm font-medium">{commentCount}</span>
               </div>
-            ) : (
-              servicesContent
             )}
           </div>
         </div>

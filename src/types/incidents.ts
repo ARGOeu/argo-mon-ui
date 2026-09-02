@@ -18,6 +18,10 @@ export type IncidentComment = {
   created_at: string
 }
 
+export type IncidentCommentRequest = {
+  comment: string
+}
+
 export type Incident = {
   id: string
   incident_number: string
