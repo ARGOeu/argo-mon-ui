@@ -8,11 +8,13 @@ import { useAuth } from '@/auth/useAuth'
 import {
   createIncident,
   fetchIncident,
+  fetchIncidentActivity,
   fetchIncidents,
   updateIncidentStatus,
 } from '@/api/incidents'
 import type {
   Incident,
+  IncidentActivity,
   IncidentRequest,
   IncidentStatusUpdateRequest,
   IncidentsResponse,
@@ -127,10 +129,39 @@ export const useUpdateIncidentStatusMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ['incident', tenantId, incidentId],
       })
+      queryClient.invalidateQueries({
+        queryKey: ['incident-activity', tenantId, incidentId],
+      })
     },
     onError: (error) => {
       console.error('Incident status update error:', error)
     },
+  })
+}
+
+export const useGetIncidentActivity = (
+  tenantId: string,
+  incidentId: string,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<IncidentActivity[], Error>({
+    queryKey: ['incident-activity', tenantId, incidentId],
+    queryFn: () => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantId) {
+        throw new Error('Tenant ID is required')
+      }
+      if (!incidentId) {
+        throw new Error('Incident ID is required')
+      }
+      return fetchIncidentActivity(tenantId, incidentId, token)
+    },
+    retry: false,
+    enabled: enabled && !!token && !!tenantId && !!incidentId,
   })
 }
 

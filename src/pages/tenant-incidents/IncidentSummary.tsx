@@ -7,7 +7,6 @@ import type { Incident } from '@/types/incidents'
 
 const formatDateTime = (isoString: string) =>
   new Date(isoString).toLocaleString('en-GB', {
-    weekday: 'short',
     year: 'numeric',
     month: 'short',
     day: 'numeric',
@@ -53,8 +52,8 @@ const IncidentSummary = ({
 
   const servicesContent = (
     <>
-      <span className="text-xs text-muted mb-1">
-        Affected service group{incident.services.length > 1 ? 's' : ''}:
+      <span className="text-sm text-foreground font-medium mb-1">
+        Affected service group{incident.services.length > 1 ? 's' : ''}
       </span>
       <div className="flex flex-col items-end gap-1">
         {visibleServices.map((service) => (
@@ -78,17 +77,7 @@ const IncidentSummary = ({
     <div>
       <div className="flex flex-wrap items-center gap-3 mb-1">
         <p className="text-base font-semibold text-foreground transition-colors group-hover:text-brand">
-          {formatDateTime(incident.created_at)}
-          {hasBeenUpdated && (
-            <>
-              {' '}
-              <span className="transition-colors group-hover:text-brand">
-                ·
-              </span>{' '}
-              Updated at: {formatDateTime(incident.updated_at as string)}
-            </>
-          )}{' '}
-          (UTC)
+          {formatDateTime(incident.created_at)} (UTC)
         </p>
         <Badge
           size="md"
@@ -102,27 +91,38 @@ const IncidentSummary = ({
       </div>
 
       <div className="bg-surface-muted rounded-lg px-3 py-2">
-        <div className="grid grid-cols-[1fr_auto] items-start gap-3">
+        <div className="grid grid-cols-[1fr_auto] items-start gap-x-12 lg:gap-x-60">
           <div className="min-w-0">
             <p className="text-foreground font-medium break-words">
               {incident.title}
             </p>
 
-            <p className="text-sm text-body mt-0.5">{incident.description}</p>
+            <p className="text-sm text-body line-clamp-3 mt-0.5">
+              {incident.description}
+            </p>
 
-            <p className="text-xs text-muted mt-1.5">
+            {incident.status_description && (
+              <p className="text-sm text-body line-clamp-4 mt-1.5">
+                <span className="text-xs font-medium text-muted">
+                  Latest update:
+                </span>{' '}
+                {incident.status_description}
+              </p>
+            )}
+
+            <p className="text-sm text-muted mt-1.5">
               Created by{' '}
               <span className="text-foreground">{incident.created_by}</span>
               {hasBeenUpdated && (
                 <>
                   {' '}
                   <span className="text-subtle">·</span> Updated by{' '}
-                  <span className="text-foreground">{incident.updated_by}</span>
+                  <span className="text-foreground">{incident.updated_by}</span>{' '}
+                  on {formatDateTime(incident.updated_at as string)} (UTC)
                 </>
               )}
             </p>
-
-            <p className="text-xs text-subtle mt-1">
+            <p className="text-xs text-subtle mt-2">
               {incident.incident_number}
             </p>
           </div>

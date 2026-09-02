@@ -29,6 +29,7 @@ export type Incident = {
   created_at: string
   updated_by?: string
   updated_at?: string
+  status_description?: string
   comments?: IncidentComment[]
 }
 
@@ -48,4 +49,14 @@ export type IncidentRequest = {
 
 export type IncidentStatusUpdateRequest = {
   status: IncidentStatus
+  status_description?: string
+}
+
+export type IncidentActivity = {
+  id: string
+  previous_status: IncidentStatus
+  new_status: IncidentStatus
+  changed_by: string
+  created_at: string
+  status_description?: string
 }
