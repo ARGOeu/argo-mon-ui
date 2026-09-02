@@ -1,6 +1,8 @@
 import type {
   Incident,
   IncidentActivity,
+  IncidentComment,
+  IncidentCommentRequest,
   IncidentRequest,
   IncidentsResponse,
   IncidentStatusUpdateRequest,
@@ -86,6 +88,36 @@ export const updateIncidentStatus = async (
     `${BACKEND_API}/v1/tenants/${tenantId}/incidents/${incidentId}/status`,
     {
       method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    const error = new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    ) as Error & { errors?: string[] }
+    error.errors = errorData.errors || []
+    throw error
+  }
+
+  return response.json()
+}
+
+export const createIncidentComment = async (
+  tenantId: string,
+  incidentId: string,
+  data: IncidentCommentRequest,
+  token: string,
+): Promise<IncidentComment> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/incidents/${incidentId}/comments`,
+    {
+      method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,

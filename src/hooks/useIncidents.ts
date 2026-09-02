@@ -7,6 +7,7 @@ import {
 import { useAuth } from '@/auth/useAuth'
 import {
   createIncident,
+  createIncidentComment,
   fetchIncident,
   fetchIncidentActivity,
   fetchIncidents,
@@ -15,6 +16,8 @@ import {
 import type {
   Incident,
   IncidentActivity,
+  IncidentComment,
+  IncidentCommentRequest,
   IncidentRequest,
   IncidentStatusUpdateRequest,
   IncidentsResponse,
@@ -135,6 +138,47 @@ export const useUpdateIncidentStatusMutation = () => {
     },
     onError: (error) => {
       console.error('Incident status update error:', error)
+    },
+  })
+}
+
+export const useAddIncidentCommentMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<
+    IncidentComment,
+    Error,
+    { tenantId: string; incidentId: string; data: IncidentCommentRequest }
+  >({
+    mutationFn: ({
+      tenantId,
+      incidentId,
+      data,
+    }: {
+      tenantId: string
+      incidentId: string
+      data: IncidentCommentRequest
+    }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantId) {
+        throw new Error('Tenant ID is required')
+      }
+      if (!incidentId) {
+        throw new Error('Incident ID is required')
+      }
+      return createIncidentComment(tenantId, incidentId, data, token)
+    },
+    onSuccess: (_, { tenantId, incidentId }) => {
+      queryClient.invalidateQueries({ queryKey: ['incidents'] })
+      queryClient.invalidateQueries({
+        queryKey: ['incident', tenantId, incidentId],
+      })
+    },
+    onError: (error) => {
+      console.error('Incident comment create error:', error)
     },
   })
 }

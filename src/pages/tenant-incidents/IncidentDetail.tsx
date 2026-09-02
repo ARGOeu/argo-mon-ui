@@ -4,6 +4,7 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import PageHeader from '@/components/PageHeader'
 import { useGetIncident } from '@/hooks/useIncidents'
 import IncidentAffectedServices from './IncidentAffectedServices'
+import IncidentComments from './IncidentComments'
 import IncidentHeader from './IncidentHeader'
 import IncidentHistory from './IncidentHistory'
 import IncidentStatusForm from './IncidentStatusForm'
@@ -52,7 +53,7 @@ const IncidentDetail = () => {
         </p>
       ) : (
         <div className="flex flex-col md:flex-row gap-x-4 2xl:gap-x-32 2xl:pe-32 mt-3">
-          <div className="flex-1 flex flex-col gap-4">
+          <div className="flex-1 flex flex-col gap-3">
             <IncidentHeader incident={incident} />
             {canManage && (
               <IncidentStatusForm
@@ -63,6 +64,12 @@ const IncidentDetail = () => {
             <IncidentHistory
               tenantId={tenantId ?? ''}
               incidentId={incident.id}
+            />
+            <IncidentComments
+              tenantId={tenantId ?? ''}
+              incidentId={incident.id}
+              comments={incident.comments ?? []}
+              canManage={canManage}
             />
           </div>
           <IncidentAffectedServices incident={incident} />

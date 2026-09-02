@@ -30,10 +30,6 @@ const IncidentStatusForm = ({
   const updateStatusMutation = useUpdateIncidentStatusMutation()
 
   const handleUpdateStatus = () => {
-    if (selectedStatus === incident.status) {
-      return
-    }
-
     updateStatusMutation.mutate(
       {
         tenantId,
@@ -119,10 +115,7 @@ const IncidentStatusForm = ({
             variant="primary"
             size="sm"
             onClick={handleUpdateStatus}
-            disabled={
-              selectedStatus === incident.status ||
-              updateStatusMutation.isPending
-            }
+            disabled={updateStatusMutation.isPending}
           >
             {updateStatusMutation.isPending ? 'Saving...' : 'Save'}
           </Button>
