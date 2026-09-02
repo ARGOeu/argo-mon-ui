@@ -12,12 +12,14 @@ import {
   buildSegments,
   buildStatusDivisions,
   fmtDuration,
-  fmtUtcStamp,
+  fmtStamp,
+  localOffsetLabel,
   STATUS_RANGE_DAYS,
   STATUS_RANGES,
   STATUS_STYLES,
   type StatusRangeId,
   type StatusSegment,
+  type TimeZoneMode,
 } from '@/utils/statusTimeline'
 
 const GRID = 'grid grid-cols-[120px_1fr] sm:grid-cols-[220px_1fr] gap-x-3'
@@ -31,10 +33,10 @@ const LEGEND_ORDER: StatusValue[] = [
   'MISSING',
 ]
 
-/** Indexed by depth: 0 groups, 1 service types, 2 endpoints, 3 metrics. */
+// Prepare labels for the available levels from top to bottom: group to metric
 const LEVEL_LABEL = ['Group', 'Service type', 'Endpoint', 'Metric']
 
-/** Each level steps in by this much inside the fixed-width name column. */
+// Indent value for each level
 const INDENT = 14
 
 // Foundational piece of the view - This represents one row with a single status timeline
@@ -100,10 +102,12 @@ const SegmentTooltip = ({
   segment,
   pct,
   rowIndex,
+  tz,
 }: {
   segment: StatusSegment
   pct: number
   rowIndex: number
+  tz: TimeZoneMode
 }) => {
   const below = rowIndex === 0
   const tone = STATUS_STYLES[segment.value]
@@ -124,7 +128,7 @@ const SegmentTooltip = ({
         {tone.label}
       </div>
       <div className="mt-0.5 tabular-nums text-white/75">
-        {fmtUtcStamp(segment.start)} → {fmtUtcStamp(segment.end)}
+        {fmtStamp(segment.start, tz)} → {fmtStamp(segment.end, tz)}
       </div>
       <div className="tabular-nums text-white/50">
         {fmtDuration(segment.end - segment.start)}
@@ -174,7 +178,6 @@ const EditableStamp = ({
   const openPicker = () => {
     const input = inputRef.current
     if (!input) return
-    // Where showPicker() isn't supported, focusing at least allows typing.
     if (typeof input.showPicker === 'function') {
       input.showPicker()
       return
@@ -213,20 +216,18 @@ export interface StatusViewProps {
   reports: Array<{ name: string; public?: boolean }> | undefined
   reportsLoading: boolean
   reportsError: Error | null
-  /** Groups, plus the children of whatever is open, already flattened. */
   rows: StatusRow[]
   statusLoading: boolean
   statusError: Error | null
-  /** Opening a row closes whatever else was open at that depth. */
   onToggle: (depth: number, name: string) => void
   selectedReport: string
   onReportChange: (name: string) => void
   range: StatusRangeId
   onRangeChange: (range: StatusRangeId) => void
-  /** Both ends of the window as YYYY-MM-DD; the length between them is fixed. */
+  tz: TimeZoneMode
+  onTzChange: (tz: TimeZoneMode) => void
   startDate: string
   endDate: string
-  /** How far each picker may go — the start's cap leaves room for the length. */
   maxStartDate: string
   maxEndDate: string
   isCurrentWindow: boolean
@@ -252,6 +253,8 @@ const StatusView = ({
   onReportChange,
   range,
   onRangeChange,
+  tz,
+  onTzChange,
   startDate,
   endDate,
   maxStartDate,
@@ -299,8 +302,8 @@ const StatusView = ({
       : null
 
   const ticks = useMemo(
-    () => buildStatusDivisions(windowStart, windowEnd),
-    [windowStart, windowEnd],
+    () => buildStatusDivisions(windowStart, windowEnd, tz),
+    [windowStart, windowEnd, tz],
   )
 
   const rows = useMemo<TimelineRow[]>(() => {
@@ -321,6 +324,14 @@ const StatusView = ({
       }
     })
   }, [statusRows, windowStart, windowEnd, dataEnd])
+
+  // We might have data from the backend but are actually data that are inside
+  // the time window that we want to display? If not filter them out and if
+  // visible data is empty show the relevant message that no data exists
+  const hasVisibleStatusData = rows.some(
+    (row) =>
+      row.kind === 'node' && row.segments.some((s) => s.value !== 'MISSING'),
+  )
 
   // keep the matched items from the filter
   const filtered = useMemo(() => {
@@ -409,7 +420,10 @@ const StatusView = ({
   const error = reportsError || statusError
   const errorContext = reportsError ? 'tenant reports' : 'status timeline'
   const hasMultipleReports = (reports?.length ?? 0) > 1
-  const noData = !isLoading && !error && rows.length === 0
+
+  // no data means no available data for the visible timeline period ondisplay (backend might have send us data outside that period)
+  const noData =
+    !isLoading && !error && (rows.length === 0 || !hasVisibleStatusData)
 
   return (
     <div className="page-container">
@@ -454,23 +468,29 @@ const StatusView = ({
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <p className="flex flex-wrap items-center gap-1 text-[11px] tabular-nums text-neutral-500">
                 <EditableStamp
-                  label={fmtUtcStamp(windowStart)}
+                  label={fmtStamp(windowStart, tz)}
                   value={startDate}
                   max={maxStartDate}
                   onChange={onStartDateChange}
-                  title="Pick the first day of the window"
+                  title={`Pick the first day of the window (${
+                    tz === 'utc' ? 'UTC' : localOffsetLabel()
+                  })`}
                   ariaLabel={`Window starts ${startDate}. Pick another date.`}
                 />
                 <span aria-hidden>→</span>
                 <EditableStamp
-                  label={fmtUtcStamp(windowEnd)}
+                  label={fmtStamp(windowEnd, tz)}
                   value={endDate}
                   max={maxEndDate}
                   onChange={onEndDateChange}
-                  title="Pick the last day of the window"
+                  title={`Pick the last day of the window (${
+                    tz === 'utc' ? 'UTC' : localOffsetLabel()
+                  })`}
                   ariaLabel={`Window ends ${endDate}. Pick another date.`}
                 />
-                <span className="text-neutral-400">· UTC</span>
+                <span className="text-neutral-400">
+                  · {tz === 'utc' ? 'UTC' : localOffsetLabel()}
+                </span>
               </p>
 
               <div className="flex gap-0.5">
@@ -489,6 +509,33 @@ const StatusView = ({
                     }
                   >
                     {r}
+                  </button>
+                ))}
+              </div>
+
+              <div
+                className="flex gap-0.5 rounded border border-neutral-200 p-0.5"
+                role="group"
+                aria-label="Timezone display"
+              >
+                {(['utc', 'local'] as const).map((t) => (
+                  <button
+                    key={t}
+                    type="button"
+                    onClick={() => onTzChange(t)}
+                    className={`cursor-pointer rounded px-1.5 py-0.5 text-[11px] font-medium uppercase tabular-nums transition-colors ${
+                      tz === t
+                        ? 'bg-neutral-900 text-white'
+                        : 'text-neutral-500 hover:bg-neutral-100 hover:text-neutral-900'
+                    }`}
+                    title={
+                      t === 'utc'
+                        ? 'Show and pick dates in UTC'
+                        : `Show and pick dates in your local timezone (${localOffsetLabel()})`
+                    }
+                    aria-pressed={tz === t}
+                  >
+                    {t === 'utc' ? 'UTC' : 'Local'}
                   </button>
                 ))}
               </div>
@@ -569,7 +616,6 @@ const StatusView = ({
               onMouseLeave={clearHover}
               onClick={handlePin}
             >
-              {/* Stick x-time-axis ruler on the top of the window */}
               <div className="sticky top-0 z-20 -mx-5 border-b border-neutral-200 bg-white px-5 pb-1 pt-2">
                 <div className={GRID}>
                   <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-neutral-400">
@@ -611,7 +657,7 @@ const StatusView = ({
                         className="absolute top-4 z-20 inline-flex items-center gap-1 whitespace-nowrap rounded bg-sky-600 py-0.5 pl-1.5 pr-1 text-[10px] tabular-nums text-white"
                         style={tickLabelStyle(pinnedPct)}
                       >
-                        {fmtUtcStamp(pinnedTime)}
+                        {fmtStamp(pinnedTime, tz)}
                         <button
                           type="button"
                           onClick={(e) => {
@@ -631,7 +677,7 @@ const StatusView = ({
                         className="pointer-events-none absolute top-4 z-10 whitespace-nowrap rounded bg-neutral-900 px-1.5 py-0.5 text-[10px] tabular-nums text-white"
                         style={tickLabelStyle(hoverPct ?? 0)}
                       >
-                        {fmtUtcStamp(hoverTime)}
+                        {fmtStamp(hoverTime, tz)}
                         {delta !== null && Math.abs(delta) > 0 && (
                           <span className="ml-1.5 text-sky-300">
                             {delta < 0 ? '−' : '+'}
@@ -644,7 +690,6 @@ const StatusView = ({
                 </div>
               </div>
 
-              {/* Rows */}
               <div className="relative">
                 {filtered.length === 0 && (
                   <p className="py-6 text-center text-neutral-400">
@@ -779,6 +824,7 @@ const StatusView = ({
                           segment={activeSegment}
                           pct={hoverPct}
                           rowIndex={hoveredRow}
+                          tz={tz}
                         />
                       )}
                   </div>

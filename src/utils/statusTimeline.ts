@@ -27,6 +27,9 @@ export type StatusRangeId = keyof typeof STATUS_RANGE_DAYS
 
 export const STATUS_RANGES = Object.keys(STATUS_RANGE_DAYS) as StatusRangeId[]
 
+// Use timezone mode to distinquish between UTC and local
+export type TimeZoneMode = 'utc' | 'local'
+
 // Individual segment - part of a status timeline
 export interface StatusSegment {
   key: string
@@ -37,6 +40,7 @@ export interface StatusSegment {
   widthPct: number
 }
 
+// Method that builds a visual segment - part of a status timeline
 export const buildSegments = (
   statuses: StatusEntry[] | undefined,
   windowStart: number,
@@ -122,20 +126,40 @@ const DIVISION_STEPS = [
 
 const padTwoDigits = (n: number) => String(n).padStart(2, '0')
 
-export const fmtUtcClock = (ms: number) => {
+const getParts = (ms: number, tz: TimeZoneMode) => {
   const d = new Date(ms)
-  return `${padTwoDigits(d.getUTCHours())}:${padTwoDigits(d.getUTCMinutes())}`
+  return tz === 'utc'
+    ? { hours: d.getUTCHours(), minutes: d.getUTCMinutes() }
+    : { hours: d.getHours(), minutes: d.getMinutes() }
 }
 
-export const fmtUtcDay = (ms: number) =>
+export const fmtClock = (ms: number, tz: TimeZoneMode) => {
+  const { hours, minutes } = getParts(ms, tz)
+  return `${padTwoDigits(hours)}:${padTwoDigits(minutes)}`
+}
+
+export const fmtDay = (ms: number, tz: TimeZoneMode) =>
   new Date(ms).toLocaleDateString('en-GB', {
     day: 'numeric',
     month: 'short',
-    timeZone: 'UTC',
+    ...(tz === 'utc' ? { timeZone: 'UTC' } : {}),
   })
 
-export const fmtUtcStamp = (ms: number) =>
-  `${fmtUtcDay(ms)} ${fmtUtcClock(ms)}Z`
+export const fmtStamp = (ms: number, tz: TimeZoneMode) =>
+  tz === 'utc'
+    ? `${fmtDay(ms, tz)} ${fmtClock(ms, tz)}Z`
+    : `${fmtDay(ms, tz)} ${fmtClock(ms, tz)}`
+
+// Create a UTC+number label when user selects local time
+export const localOffsetLabel = (ms: number = Date.now()) => {
+  const offsetMin = -new Date(ms).getTimezoneOffset()
+  if (offsetMin === 0) return 'UTC'
+  const sign = offsetMin > 0 ? '+' : '-'
+  const abs = Math.abs(offsetMin)
+  const h = Math.floor(abs / 60)
+  const m = abs % 60
+  return `UTC${sign}${h}${m ? `:${padTwoDigits(m)}` : ''}`
+}
 
 export const fmtDuration = (ms: number) => {
   const totalMinutes = Math.round(ms / MINUTE)
@@ -150,10 +174,31 @@ export const fmtDuration = (ms: number) => {
   return parts.join(' ') || '<1m'
 }
 
-// builds divisions for the x-axis time ruler
+// Start of day based on timezone
+const startOfDay = (ms: number, tz: TimeZoneMode) => {
+  const d = new Date(ms)
+  if (tz === 'utc') d.setUTCHours(0, 0, 0, 0)
+  else d.setHours(0, 0, 0, 0)
+  return d.getTime()
+}
+
+const addCalendarDays = (ms: number, days: number, tz: TimeZoneMode) => {
+  const d = new Date(ms)
+  if (tz === 'utc') d.setUTCDate(d.getUTCDate() + days)
+  else d.setDate(d.getDate() + days)
+  return d.getTime()
+}
+
+const isMidnight = (ms: number, tz: TimeZoneMode) => {
+  const { hours, minutes } = getParts(ms, tz)
+  return hours === 0 && minutes === 0
+}
+
+// Create divisions - markers on time axis
 export const buildStatusDivisions = (
   windowStart: number,
   windowEnd: number,
+  tz: TimeZoneMode = 'utc',
   target = 8,
 ): StatusDivision[] => {
   const span = windowEnd - windowStart
@@ -161,16 +206,33 @@ export const buildStatusDivisions = (
 
   const ideal = span / target
   const step = DIVISION_STEPS.find((s) => s >= ideal) ?? DIVISION_STEPS.at(-1)!
-  const first = Math.ceil(windowStart / step) * step
 
   const statusDivisions: StatusDivision[] = []
+
+  if (step >= DAY) {
+    const dayStep = step / DAY
+    let t = startOfDay(windowStart, tz)
+    if (t < windowStart) t = addCalendarDays(t, dayStep, tz)
+    for (; t <= windowEnd; t = addCalendarDays(t, dayStep, tz)) {
+      statusDivisions.push({
+        time: t,
+        pct: ((t - windowStart) / span) * 100,
+        label: fmtDay(t, tz),
+        major: true,
+      })
+    }
+    return statusDivisions
+  }
+
+  const dayStart = startOfDay(windowStart, tz)
+  const first = dayStart + Math.ceil((windowStart - dayStart) / step) * step
   for (let t = first; t <= windowEnd; t += step) {
-    const isMidnight = t % DAY === 0
+    const midnight = isMidnight(t, tz)
     statusDivisions.push({
       time: t,
       pct: ((t - windowStart) / span) * 100,
-      label: step >= DAY || isMidnight ? fmtUtcDay(t) : fmtUtcClock(t),
-      major: step >= DAY || isMidnight,
+      label: midnight ? fmtDay(t, tz) : fmtClock(t, tz),
+      major: midnight,
     })
   }
   return statusDivisions

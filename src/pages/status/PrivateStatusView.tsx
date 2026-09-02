@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { useGetTenantReports } from '@/hooks/useTenants'
 import {
@@ -9,16 +9,65 @@ import {
 } from '@/hooks/useStatusTimeline'
 import { useSelectedTenant } from '@/contexts/selected-tenant/useSelectedTenant'
 import type { StatusNode, StatusPath } from '@/types/statusTimeline'
-import { STATUS_RANGE_DAYS, type StatusRangeId } from '@/utils/statusTimeline'
+import {
+  STATUS_RANGE_DAYS,
+  type StatusRangeId,
+  type TimeZoneMode,
+} from '@/utils/statusTimeline'
 import StatusView, { type StatusRow } from './StatusView'
 
-const toUtcDate = (d: Date) => d.toISOString().split('T')[0]
+// convert date to YYYY-MM-DD string - take into account the timezone
+const toDateStr = (d: Date, tz: TimeZoneMode) => {
+  if (tz === 'utc') return d.toISOString().split('T')[0]
+  const y = d.getFullYear()
+  const m = String(d.getMonth() + 1).padStart(2, '0')
+  const day = String(d.getDate()).padStart(2, '0')
+  return `${y}-${m}-${day}`
+}
 
-// Add days to a date string (YYYY-MM-DD format) always in UTC
-const shiftDate = (date: string, days: number) => {
-  const d = new Date(`${date}T00:00:00Z`)
-  d.setUTCDate(d.getUTCDate() + days)
-  return toUtcDate(d)
+// Shift a date string based on timezone
+const shiftDate = (date: string, days: number, tz: TimeZoneMode) => {
+  const [y, m, d] = date.split('-').map(Number)
+  const dt =
+    tz === 'utc' ? new Date(Date.UTC(y, m - 1, d)) : new Date(y, m - 1, d)
+  if (tz === 'utc') dt.setUTCDate(dt.getUTCDate() + days)
+  else dt.setDate(dt.getDate() + days)
+  return toDateStr(dt, tz)
+}
+
+// Create a date boundary for backend calls based on the timezone mode
+const dayBoundaryToIso = (
+  date: string,
+  tz: TimeZoneMode,
+  edge: 'start' | 'end',
+): string => {
+  const [y, m, d] = date.split('-').map(Number)
+  if (tz === 'utc') {
+    return edge === 'start' ? `${date}T00:00:00.000Z` : `${date}T23:59:59.999Z`
+  }
+  const dt =
+    edge === 'start'
+      ? new Date(y, m - 1, d, 0, 0, 0, 0)
+      : new Date(y, m - 1, d, 23, 59, 59, 999)
+  return dt.toISOString()
+}
+
+// get 00:00 UTC of the same day
+const floorToUtcMidnight = (iso: string): string => {
+  const d = new Date(iso)
+  d.setUTCHours(0, 0, 0, 0)
+  return d.toISOString()
+}
+
+// get 00:00 UTC of the next day
+const ceilToUtcMidnight = (iso: string): string => {
+  const d = new Date(iso)
+  const atMidnight = new Date(d)
+  atMidnight.setUTCHours(0, 0, 0, 0)
+  if (atMidnight.getTime() !== d.getTime()) {
+    atMidnight.setUTCDate(atMidnight.getUTCDate() + 1)
+  }
+  return atMidnight.toISOString()
 }
 
 const PrivateStatusView = () => {
@@ -26,12 +75,13 @@ const PrivateStatusView = () => {
   const { tenant } = useSelectedTenant()
   const tenantName = tenant?.info?.name ?? ''
 
-  const today = toUtcDate(new Date())
-
   const [selectedReport, setSelectedReport] = useState('')
   const [range, setRange] = useState<StatusRangeId>('1d')
+  const [tz, setTz] = useState<TimeZoneMode>('local')
 
-  // this is the reference date for the time-window we observe the timeline under. This is the date where the timeline ends in
+  // Today date reference based on timezone mode
+  const today = toDateStr(new Date(), tz)
+
   const [anchorDate, setAnchorDate] = useState(today)
 
   // when the user drills down to an item and opens a path, all other items are closed
@@ -59,29 +109,47 @@ const PrivateStatusView = () => {
     setPath({})
   }, [tenantId, selectedReport])
 
+  // keep today reference
+  const todayRef = useRef(today)
+  todayRef.current = today
+
+  useEffect(() => {
+    setAnchorDate((prev) =>
+      prev >= todayRef.current ? todayRef.current : prev,
+    )
+  }, [tz])
+
   const selectedReportValid =
     reports?.some((r) => r.name === selectedReport) ?? false
 
   const stepDays = STATUS_RANGE_DAYS[range]
   const isCurrentWindow = anchorDate >= today
 
-  // The start is derived from the reference (anchor date) which is actually the end date. We also know the stepDays (period)
-  // and we use it to calculate the start date
-  const startDate = shiftDate(anchorDate, -(stepDays - 1))
-  const maxStartDate = shiftDate(today, -(stepDays - 1))
+  const startDate = shiftDate(anchorDate, -(stepDays - 1), tz)
+  const maxStartDate = shiftDate(today, -(stepDays - 1), tz)
 
+  // This is the actual time window for which status timelines are displayd in page view
   const { startTime, endTime } = useMemo(
     () => ({
-      startTime: `${startDate}T00:00:00Z`,
-      endTime: `${anchorDate}T23:59:59Z`,
+      startTime: dayBoundaryToIso(startDate, tz, 'start'),
+      endTime: dayBoundaryToIso(anchorDate, tz, 'end'),
     }),
-    [startDate, anchorDate],
+    [startDate, anchorDate, tz],
+  )
+
+  // The actuall request to the backend with a larger window in days due to the utc - localtime differences
+  const { queryStartTime, queryEndTime } = useMemo(
+    () => ({
+      queryStartTime: floorToUtcMidnight(startTime),
+      queryEndTime: ceilToUtcMidnight(endTime),
+    }),
+    [startTime, endTime],
   )
 
   // We always stop at today - there is no period after now
   const shiftWindow = (direction: -1 | 1) =>
     setAnchorDate((prev) => {
-      const next = shiftDate(prev, direction * stepDays)
+      const next = shiftDate(prev, direction * stepDays, tz)
       return next > today ? today : next
     })
 
@@ -92,7 +160,7 @@ const PrivateStatusView = () => {
 
   const handleStartDateChange = (date: string) => {
     if (!date) return
-    const end = shiftDate(date, stepDays - 1)
+    const end = shiftDate(date, stepDays - 1, tz)
     setAnchorDate(end > today ? today : end)
   }
 
@@ -105,8 +173,8 @@ const PrivateStatusView = () => {
     tenantId ?? '',
     'private',
     selectedReport,
-    startTime,
-    endTime,
+    queryStartTime,
+    queryEndTime,
     ready,
   )
 
@@ -115,8 +183,8 @@ const PrivateStatusView = () => {
     'private',
     selectedReport,
     path.group,
-    startTime,
-    endTime,
+    queryStartTime,
+    queryEndTime,
     ready && !!path.group,
   )
 
@@ -126,8 +194,8 @@ const PrivateStatusView = () => {
     selectedReport,
     path.group,
     path.serviceType,
-    startTime,
-    endTime,
+    queryStartTime,
+    queryEndTime,
     ready && !!path.group && !!path.serviceType,
   )
 
@@ -138,8 +206,8 @@ const PrivateStatusView = () => {
     path.group,
     path.serviceType,
     path.endpoint,
-    startTime,
-    endTime,
+    queryStartTime,
+    queryEndTime,
     ready && !!path.group && !!path.serviceType && !!path.endpoint,
   )
 
@@ -287,6 +355,8 @@ const PrivateStatusView = () => {
       onReportChange={setSelectedReport}
       range={range}
       onRangeChange={setRange}
+      tz={tz}
+      onTzChange={setTz}
       startDate={startDate}
       endDate={anchorDate}
       maxStartDate={maxStartDate}
