@@ -78,7 +78,7 @@ const IncidentSummary = ({
   return (
     <div>
       <div className="flex flex-wrap items-center gap-3 mb-1">
-        <p className="text-base font-semibold text-foreground transition-colors group-hover:text-brand">
+        <p className="text-base font-medium text-foreground transition-colors group-hover:text-brand">
           {formatDateTime(incident.created_at)} (UTC)
         </p>
         <Badge
@@ -117,13 +117,19 @@ const IncidentSummary = ({
                 <>
                   {' '}
                   <span className="text-subtle">·</span> Updated by{' '}
-                  <span className="text-foreground">{incident.updated_by}</span>{' '}
-                  on {formatDateTime(incident.updated_at as string)} (UTC)
+                  <span className="text-foreground">{incident.updated_by}</span>
                 </>
               )}
             </p>
             <p className="text-xs text-subtle mt-2">
               {incident.incident_number}
+              {hasBeenUpdated && (
+                <>
+                  {' '}
+                  <span className="text-subtle">·</span> Updated{' '}
+                  {formatDateTime(incident.updated_at as string)} (UTC)
+                </>
+              )}
             </p>
           </div>
 

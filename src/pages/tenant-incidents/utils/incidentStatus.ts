@@ -12,7 +12,9 @@ export const incidentStatusLabel: Record<IncidentStatus, string> = {
 
 export const incidentStatusOptions: SelectOption[] = (
   Object.keys(incidentStatusLabel) as IncidentStatus[]
-).map((status) => ({ value: status, label: incidentStatusLabel[status] }))
+)
+  .filter((status) => status !== 'NEW')
+  .map((status) => ({ value: status, label: incidentStatusLabel[status] }))
 
 export const incidentStatusBadgeClass: Record<IncidentStatus, string> = {
   NEW: 'bg-red-100 text-red-700',
