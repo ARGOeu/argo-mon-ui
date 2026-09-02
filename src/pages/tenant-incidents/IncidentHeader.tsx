@@ -24,10 +24,7 @@ interface IncidentHeaderProps {
 const IncidentHeader = ({ incident }: IncidentHeaderProps) => (
   <div>
     <div className="flex flex-wrap items-center gap-3">
-      <p className="text-xl font-semibold">
-        {incident.created_at ? formatDateTime(incident.created_at) : '...'}{' '}
-        (UTC)
-      </p>
+      <h2 className="text-xl font-semibold break-words">{incident.title}</h2>
       <Badge
         className={
           incidentStatusBadgeClass[incident.status] ??
@@ -38,15 +35,16 @@ const IncidentHeader = ({ incident }: IncidentHeaderProps) => (
       </Badge>
     </div>
 
-    <h2 className="text-xl text-foreground mt-1 break-words">
-      {incident.title}
-    </h2>
+    <p className="text-sm text-muted mt-1">
+      Created{' '}
+      {incident.created_at ? formatDateTime(incident.created_at) : '...'} (UTC)
+    </p>
 
     {incident.description && (
       <ClampedText
         text={incident.description}
         lines={5}
-        className="text-base text-body mt-1"
+        className="text-sm text-body mt-1.5"
       />
     )}
   </div>
