@@ -1,4 +1,11 @@
-import { useMemo, useRef, useState, type MouseEvent } from 'react'
+import {
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type MouseEvent,
+  type PointerEvent,
+} from 'react'
 import { CalendarDays, ChevronLeft, ChevronRight, Info, X } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -33,13 +40,10 @@ const LEGEND_ORDER: StatusValue[] = [
   'MISSING',
 ]
 
-// Prepare labels for the available levels from top to bottom: group to metric
 const LEVEL_LABEL = ['Group', 'Service type', 'Endpoint', 'Metric']
 
-// Indent value for each level
 const INDENT = 14
 
-// Foundational piece of the view - This represents one row with a single status timeline
 export type StatusRow =
   | {
       kind: 'node'
@@ -64,7 +68,6 @@ const buildReportOptions = (
 ): SelectOption[] =>
   (reports ?? []).map((r) => ({ value: r.name, label: r.name }))
 
-// arrange tick labels correctly
 const tickLabelStyle = (pct: number) => {
   if (pct < 3) return { left: 0, transform: 'none' }
   if (pct > 97) return { left: '100%', transform: 'translateX(-100%)' }
@@ -82,10 +85,10 @@ type TimelineRow =
     })
   | MessageRow
 
-// Each timeline has a fixed row-height defined here
 const ROW_HEIGHT = 44
 
-// This is a status segment part of a timeline
+const MIN_ZOOM_SPAN_MS = 5 * 60 * 1000
+
 const SegmentBar = ({ segment }: { segment: StatusSegment }) => (
   <div
     className={`absolute inset-y-0 ${STATUS_STYLES[segment.value].bar}`}
@@ -97,7 +100,6 @@ const SegmentBar = ({ segment }: { segment: StatusSegment }) => (
   />
 )
 
-// This is a tooltip that accompanies each status segment so that user can get more info when hovering over it
 const SegmentTooltip = ({
   segment,
   pct,
@@ -157,7 +159,6 @@ const MessageRowContent = ({ row }: { row: MessageRow }) => (
   </div>
 )
 
-// Date picker where user can define from - to timestamps and change the view
 const EditableStamp = ({
   label,
   value,
@@ -208,6 +209,111 @@ const EditableStamp = ({
         aria-hidden
       />
     </span>
+  )
+}
+
+const HorizontalScrollbar = ({
+  baseStart,
+  baseEnd,
+  windowStart,
+  windowEnd,
+  onPan,
+}: {
+  baseStart: number
+  baseEnd: number
+  windowStart: number
+  windowEnd: number
+  onPan: (start: number, end: number) => void
+}) => {
+  const trackRef = useRef<HTMLDivElement | null>(null)
+  const dragRef = useRef<{
+    startX: number
+    startWindow: { start: number; end: number }
+  } | null>(null)
+
+  const baseSpan = baseEnd - baseStart
+  const span = windowEnd - windowStart
+  const leftPct = ((windowStart - baseStart) / baseSpan) * 100
+  const widthPct = (span / baseSpan) * 100
+
+  const handleThumbPointerDown = (e: PointerEvent<HTMLDivElement>) => {
+    e.stopPropagation()
+    e.currentTarget.setPointerCapture(e.pointerId)
+    dragRef.current = {
+      startX: e.clientX,
+      startWindow: { start: windowStart, end: windowEnd },
+    }
+  }
+
+  const handleThumbPointerMove = (e: PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current
+    if (!drag) return
+    const rect = trackRef.current?.getBoundingClientRect()
+    if (!rect || rect.width === 0) return
+
+    const dx = e.clientX - drag.startX
+    const spanMs = drag.startWindow.end - drag.startWindow.start
+    const shiftMs = (dx / rect.width) * baseSpan
+
+    let newStart = drag.startWindow.start + shiftMs
+    let newEnd = drag.startWindow.end + shiftMs
+    if (newStart < baseStart) {
+      newStart = baseStart
+      newEnd = newStart + spanMs
+    }
+    if (newEnd > baseEnd) {
+      newEnd = baseEnd
+      newStart = newEnd - spanMs
+    }
+    onPan(newStart, newEnd)
+  }
+
+  const handleThumbPointerUp = (e: PointerEvent<HTMLDivElement>) => {
+    dragRef.current = null
+    e.currentTarget.releasePointerCapture(e.pointerId)
+  }
+
+  const handleTrackClick = (e: MouseEvent<HTMLDivElement>) => {
+    const rect = trackRef.current?.getBoundingClientRect()
+    if (!rect || rect.width === 0) return
+    const clickTime =
+      baseStart + ((e.clientX - rect.left) / rect.width) * baseSpan
+
+    let newStart = clickTime - span / 2
+    let newEnd = newStart + span
+    if (newStart < baseStart) {
+      newStart = baseStart
+      newEnd = newStart + span
+    }
+    if (newEnd > baseEnd) {
+      newEnd = baseEnd
+      newStart = newEnd - span
+    }
+    onPan(newStart, newEnd)
+  }
+
+  return (
+    <div
+      ref={trackRef}
+      onClick={handleTrackClick}
+      className="relative h-2.5 cursor-pointer rounded-full bg-neutral-100"
+      role="scrollbar"
+      aria-orientation="horizontal"
+      aria-controls="status-timeline-track"
+      aria-valuemin={0}
+      aria-valuemax={100}
+      aria-valuenow={Math.round(leftPct)}
+      title="Drag to pan"
+    >
+      <div
+        onPointerDown={handleThumbPointerDown}
+        onPointerMove={handleThumbPointerMove}
+        onPointerUp={handleThumbPointerUp}
+        onPointerCancel={handleThumbPointerUp}
+        className="absolute inset-y-0 cursor-grab touch-none rounded-full bg-neutral-400 transition-colors hover:bg-neutral-500 active:cursor-grabbing"
+        style={{ left: `${leftPct}%`, width: `${Math.max(widthPct, 4)}%` }}
+      />
+    </div>
   )
 }
 
@@ -274,16 +380,26 @@ const StatusView = ({
 
   const [pinnedTime, setPinnedTime] = useState<number | null>(null)
 
+  const [scrubEl, setScrubEl] = useState<HTMLDivElement | null>(null)
   const trackRef = useRef<HTMLDivElement | null>(null)
 
   const [mountNow] = useState(() => Date.now())
 
-  // One arrow press moves the window by its own length.
   const stepDays = STATUS_RANGE_DAYS[range]
   const stepLabel = `${stepDays} day${stepDays > 1 ? 's' : ''}`
 
-  const windowStart = Date.parse(startTime)
-  const windowEnd = Date.parse(endTime)
+  const baseStart = Date.parse(startTime)
+  const baseEnd = Date.parse(endTime)
+  const baseSpan = baseEnd - baseStart
+
+  const [zoom, setZoom] = useState<{ start: number; end: number } | null>(null)
+
+  useEffect(() => {
+    setZoom(null)
+  }, [startTime, endTime])
+
+  const windowStart = zoom?.start ?? baseStart
+  const windowEnd = zoom?.end ?? baseEnd
   const span = windowEnd - windowStart
 
   const nowMs = nowTime ? Date.parse(nowTime) : mountNow
@@ -295,7 +411,6 @@ const StatusView = ({
       ? ((nowMs - windowStart) / span) * 100
       : null
 
-  // when a user pins a marker keep its position
   const pinnedPct =
     pinnedTime !== null && pinnedTime >= windowStart && pinnedTime <= windowEnd
       ? ((pinnedTime - windowStart) / span) * 100
@@ -317,7 +432,6 @@ const StatusView = ({
       )
       return {
         ...row,
-        // if endpoint please remove suffixes from name
         label: row.depth === 2 ? stripIdSuffix(row.name) : row.name,
         segments,
         current: segments[segments.length - 1],
@@ -325,15 +439,11 @@ const StatusView = ({
     })
   }, [statusRows, windowStart, windowEnd, dataEnd])
 
-  // We might have data from the backend but are actually data that are inside
-  // the time window that we want to display? If not filter them out and if
-  // visible data is empty show the relevant message that no data exists
   const hasVisibleStatusData = rows.some(
     (row) =>
       row.kind === 'node' && row.segments.some((s) => s.value !== 'MISSING'),
   )
 
-  // keep the matched items from the filter
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
     if (!q) return rows
@@ -367,13 +477,16 @@ const StatusView = ({
     return rows.filter((_, i) => keep[i])
   }, [rows, search])
 
-  const pctFromEvent = (e: MouseEvent<HTMLDivElement>): number | null => {
+  const pctFromClientX = (clientX: number): number | null => {
     const rect = trackRef.current?.getBoundingClientRect()
     if (!rect || rect.width === 0) return null
-    const x = e.clientX - rect.left
+    const x = clientX - rect.left
     if (x < 0 || x > rect.width) return null
     return (x / rect.width) * 100
   }
+
+  const pctFromEvent = (e: MouseEvent<HTMLDivElement>): number | null =>
+    pctFromClientX(e.clientX)
 
   const handleScrub = (e: MouseEvent<HTMLDivElement>) => {
     setHoverPct(pctFromEvent(e))
@@ -390,10 +503,101 @@ const StatusView = ({
     setPinnedTime(windowStart + (span * pct) / 100)
   }
 
+  const zoomStateRef = useRef({
+    windowStart,
+    windowEnd,
+    span,
+    baseStart,
+    baseEnd,
+    baseSpan,
+  })
+  zoomStateRef.current = {
+    windowStart,
+    windowEnd,
+    span,
+    baseStart,
+    baseEnd,
+    baseSpan,
+  }
+
+  // keep window inside the available data range
+  const clampPan = (
+    start: number,
+    end: number,
+    spanMs: number,
+    bs: number,
+    be: number,
+  ) => {
+    let s = start
+    let e = end
+    if (s < bs) {
+      s = bs
+      e = s + spanMs
+    }
+    if (e > be) {
+      e = be
+      s = e - spanMs
+    }
+    return { start: s, end: e }
+  }
+
+  // set zoom window in state
+  const applyWindow = (
+    start: number,
+    end: number,
+    spanMs: number,
+    bSpan: number,
+  ) => {
+    if (spanMs >= bSpan - 1000) {
+      setZoom(null)
+    } else {
+      setZoom({ start, end })
+    }
+  }
+
+  // Attach the mouse wheel listener for zooming
+  useEffect(() => {
+    const el = scrubEl
+    if (!el) return
+
+    const onWheel = (e: WheelEvent) => {
+      const pct = pctFromClientX(e.clientX)
+      if (pct === null) return
+
+      if (!e.ctrlKey && !e.metaKey) return
+
+      e.preventDefault()
+
+      const {
+        windowStart: ws,
+        span: sp,
+        baseStart: bs,
+        baseEnd: be,
+        baseSpan: bSpan,
+      } = zoomStateRef.current
+
+      const anchorTime = ws + (sp * pct) / 100
+      const zoomFactor = Math.exp(-e.deltaY * 0.0015)
+      let newSpan = sp / zoomFactor
+      newSpan = Math.min(Math.max(newSpan, MIN_ZOOM_SPAN_MS), bSpan)
+
+      let newStart = anchorTime - (anchorTime - ws) * (newSpan / sp)
+      let newEnd = newStart + newSpan
+
+      const clamped = clampPan(newStart, newEnd, newSpan, bs, be)
+      newStart = clamped.start
+      newEnd = clamped.end
+
+      applyWindow(newStart, newEnd, newSpan, bSpan)
+    }
+
+    el.addEventListener('wheel', onWheel, { passive: false })
+    return () => el.removeEventListener('wheel', onWheel)
+  }, [scrubEl])
+
   const hoverTime =
     hoverPct === null ? null : windowStart + (span * hoverPct) / 100
 
-  // if the marker is visible
   const delta =
     hoverTime === null || pinnedTime === null || pinnedPct === null
       ? null
@@ -421,9 +625,11 @@ const StatusView = ({
   const errorContext = reportsError ? 'tenant reports' : 'status timeline'
   const hasMultipleReports = (reports?.length ?? 0) > 1
 
-  // no data means no available data for the visible timeline period ondisplay (backend might have send us data outside that period)
   const noData =
-    !isLoading && !error && (rows.length === 0 || !hasVisibleStatusData)
+    !zoom &&
+    !isLoading &&
+    !error &&
+    (rows.length === 0 || !hasVisibleStatusData)
 
   return (
     <div className="page-container">
@@ -582,18 +788,37 @@ const StatusView = ({
             />
           </div>
 
-          <div className="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1">
-            {LEGEND_ORDER.map((tone) => (
-              <span
-                key={tone}
-                className="inline-flex items-center gap-1.5 text-[11px] text-neutral-500"
-              >
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+              {LEGEND_ORDER.map((tone) => (
                 <span
-                  className={`h-2.5 w-2.5 rounded-[2px] ${STATUS_STYLES[tone].dot}`}
-                />
-                {STATUS_STYLES[tone].label}
-              </span>
-            ))}
+                  key={tone}
+                  className="inline-flex items-center gap-1.5 text-[11px] text-neutral-500"
+                >
+                  <span
+                    className={`h-2.5 w-2.5 rounded-[2px] ${STATUS_STYLES[tone].dot}`}
+                  />
+                  {STATUS_STYLES[tone].label}
+                </span>
+              ))}
+            </div>
+            <div>
+              {zoom && (
+                <button
+                  type="button"
+                  onClick={() => setZoom(null)}
+                  className="ml-1 cursor-pointer bg-amber-300 rounded me-2 border border-amber-500 px-2 py-0.5 text-[11px] text-neutral-600 transition-colors hover:bg-amber-100 hover:text-neutral-900"
+                  title="Reset zoom"
+                >
+                  Reset zoom
+                </button>
+              )}
+              {!noData && (
+                <span className="text-[11px] text-neutral-400">
+                  Ctrl/Cmd + scroll to zoom
+                </span>
+              )}
+            </div>
           </div>
 
           {noData ? (
@@ -611,10 +836,12 @@ const StatusView = ({
             </div>
           ) : (
             <div
+              ref={setScrubEl}
               className="relative cursor-crosshair"
               onMouseMove={handleScrub}
               onMouseLeave={clearHover}
               onClick={handlePin}
+              title="Ctrl/Cmd+scroll to zoom"
             >
               <div className="sticky top-0 z-20 -mx-5 border-b border-neutral-200 bg-white px-5 pb-1 pt-2">
                 <div className={GRID}>
@@ -688,6 +915,18 @@ const StatusView = ({
                     )}
                   </div>
                 </div>
+                {zoom && (
+                  <div className={`${GRID} pt-1.5`}>
+                    <div />
+                    <HorizontalScrollbar
+                      baseStart={baseStart}
+                      baseEnd={baseEnd}
+                      windowStart={windowStart}
+                      windowEnd={windowEnd}
+                      onPan={(start, end) => setZoom({ start, end })}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="relative">
