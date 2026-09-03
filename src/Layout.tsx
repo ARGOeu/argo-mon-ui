@@ -54,7 +54,7 @@ function LayoutContent() {
               <ErrorDisplay error={new Error(tenant.error)} context="tenant" />
             </div>
           ) : (
-            <Outlet />
+            <Outlet key={isTenantScopedRoute ? effectiveTenantId : undefined} />
           )}
         </div>
       </main>

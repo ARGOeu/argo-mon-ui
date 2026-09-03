@@ -150,9 +150,18 @@ function Sidebar({
 
   const firstTenantSubPath = visibleTenantNavItems[0]?.path ?? 'dashboard'
 
+  // Section to keep when switching tenants
+  const currentSectionMatch = pathname.match(/^\/tenants\/[^/]+\/([^/]+)/)?.[1]
+  const currentTenantSection =
+    tenantNavItems.find((item) => item.path === currentSectionMatch)?.path ??
+    firstTenantSubPath
+
   useEffect(() => {
     if (!effectiveTenantId || userTenants.length === 0 || !profile) return
-    if (pathname.replace(/\/$/, '') === `/tenants/${effectiveTenantId}`) {
+    if (
+      pathname === '/' ||
+      pathname.replace(/\/$/, '') === `/tenants/${effectiveTenantId}`
+    ) {
       navigate(`/tenants/${effectiveTenantId}/${firstTenantSubPath}`, {
         replace: true,
       })
@@ -190,6 +199,7 @@ function Sidebar({
             <TenantPicker
               tenants={userTenants}
               activeTenantId={effectiveTenantId}
+              currentSection={currentTenantSection}
               onSelect={onCloseMobileMenu}
             />
 

@@ -74,18 +74,18 @@ const TopologyFeed = ({ tenantId }: TopologyFeedProps) => {
   const updateMutation = useUpdateTopologyFeedMutation()
 
   useEffect(() => {
-    if (feedData) {
-      const loaded: TopologyFeedFormState = {
-        type: feedData.type || '',
-        feed_url: feedData.feed_url || '',
-        feed_service_groups: feedData.feed_service_groups || '',
-        feed_service_endpoints: feedData.feed_service_endpoints || '',
-        feed_service_endpoints_extensions:
-          feedData.feed_service_endpoints_extensions || '',
-      }
-      setForm(loaded)
-      setOriginalForm(loaded)
-    }
+    const loaded: TopologyFeedFormState = feedData
+      ? {
+          type: feedData.type || '',
+          feed_url: feedData.feed_url || '',
+          feed_service_groups: feedData.feed_service_groups || '',
+          feed_service_endpoints: feedData.feed_service_endpoints || '',
+          feed_service_endpoints_extensions:
+            feedData.feed_service_endpoints_extensions || '',
+        }
+      : emptyForm
+    setForm(loaded)
+    setOriginalForm(loaded)
   }, [feedData])
 
   const isDirty = JSON.stringify(form) !== JSON.stringify(originalForm)
