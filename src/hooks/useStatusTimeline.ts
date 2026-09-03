@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from '@/auth/useAuth'
 
-import type { StatusNode } from '@/types/statusTimeline'
+import type { StatusNode, StatusResultDetails } from '@/types/statusTimeline'
 import type { AccessMode } from '@/types/common'
 import {
   fetchStatusTimelineAllEndpoints,
@@ -9,9 +9,67 @@ import {
   fetchStatusTimelineGroup,
   fetchStatusTimelineGroupEndpoints,
   fetchStatusTimelineGroups,
+  fetchStatusTimelineMetricDetails,
   fetchStatusTimelineMetrics,
   fetchStatusTimelineServiceTypes,
 } from '@/api/statusTimeline'
+
+export const useGetStatusTimelineMetricDetails = (
+  tenantIdentifier: string,
+  mode: AccessMode,
+  report: string | undefined,
+  group: string | undefined,
+  serviceType: string | undefined,
+  endpoint: string | undefined,
+  metric: string | undefined,
+  timestamp: string | undefined,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<StatusResultDetails, Error>({
+    queryKey: [
+      'status-timeline-metric-details',
+      mode,
+      tenantIdentifier,
+      report,
+      group,
+      serviceType,
+      endpoint,
+      metric,
+      timestamp,
+    ],
+    queryFn: () => {
+      if (mode === 'private' && !token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantIdentifier) throw new Error('Tenant identifier is required')
+      return fetchStatusTimelineMetricDetails(
+        tenantIdentifier,
+        report,
+        group,
+        serviceType,
+        endpoint,
+        metric,
+        timestamp,
+        mode,
+        mode === 'private' ? token : undefined,
+      )
+    },
+    retry: false,
+    staleTime: Infinity, // a past reading's details never change
+    enabled:
+      enabled &&
+      (mode === 'private' ? !!token : true) &&
+      !!tenantIdentifier &&
+      !!report &&
+      !!group &&
+      !!serviceType &&
+      !!endpoint &&
+      !!metric &&
+      !!timestamp,
+  })
+}
 
 export const useGetStatusTimelineGroups = (
   tenantIdentifier: string,

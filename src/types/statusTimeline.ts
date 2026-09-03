@@ -1,3 +1,15 @@
+export interface StatusResultDetails {
+  timestamp: string
+  group: string
+  hostname: string
+  service_type: string
+  metric: string
+  status: StatusValue
+  summary: string
+  message: string
+  info?: Record<string, string>
+}
+
 export type StatusValue =
   | 'OK'
   | 'WARNING'

@@ -6,14 +6,26 @@ import {
   type MouseEvent,
   type PointerEvent,
 } from 'react'
-import { CalendarDays, ChevronLeft, ChevronRight, Info, X } from 'lucide-react'
+import {
+  CalendarDays,
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Copy,
+  Info,
+  X,
+} from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import SearchInput from '@/components/SearchInput'
 import SelectDropdown from '@/components/SelectDropdown'
 import type { SelectOption } from '@/components/SelectDropdown'
-import type { StatusEntry, StatusValue } from '@/types/statusTimeline'
+import type {
+  StatusEntry,
+  StatusResultDetails,
+  StatusValue,
+} from '@/types/statusTimeline'
 import { stripIdSuffix } from '@/utils/cleanup'
 import {
   buildSegments,
@@ -43,6 +55,8 @@ const LEGEND_ORDER: StatusValue[] = [
 const LEVEL_LABEL = ['Group', 'Service type', 'Endpoint', 'Metric']
 
 const INDENT = 14
+
+const METRIC_DEPTH = 3
 
 export type StatusRow =
   | {
@@ -86,8 +100,78 @@ type TimelineRow =
   | MessageRow
 
 const ROW_HEIGHT = 44
+const POINT_SIZE = 8
+// minimum pixel spacing threshold to cluster many points together if the metric results are to frequent
+const BUCKET_PX = 6
 
 const MIN_ZOOM_SPAN_MS = 5 * 60 * 1000
+
+// Attach severity weights to the status so that the most important metric result points are more prominent in the timeline
+const SEVERITY: Record<StatusValue, number> = {
+  CRITICAL: 5,
+  DOWNTIME: 4,
+  WARNING: 3,
+  UNKNOWN: 2,
+  OK: 1,
+  MISSING: 0,
+}
+
+// A single raw observation at the Metric level, with its own position on the axis
+interface MetricPoint {
+  key: string
+  entry: StatusEntry
+  t: number
+  pct: number
+}
+
+// One or more MetricPoints that landed close enough together on screen to
+// render as a single marker.
+interface MetricBucket {
+  key: string
+  pct: number
+  worst: StatusValue
+  points: MetricPoint[]
+}
+
+interface SelectedPoint {
+  rowKey: string
+  point: MetricPoint
+}
+
+// cluster frequent points together in buckets
+const bucketPoints = (
+  points: MetricPoint[],
+  trackWidthPx: number,
+): MetricBucket[] => {
+  if (trackWidthPx <= 0 || points.length === 0) return []
+
+  const bucketPct = (BUCKET_PX / trackWidthPx) * 100
+  const sorted = [...points].sort((a, b) => a.pct - b.pct)
+
+  const buckets: MetricBucket[] = []
+  for (const p of sorted) {
+    const last = buckets[buckets.length - 1]
+    if (last && p.pct - last.pct < bucketPct) {
+      last.points.push(p)
+      if (SEVERITY[p.entry.value] > SEVERITY[last.worst]) {
+        last.worst = p.entry.value
+      }
+    } else {
+      buckets.push({
+        key: p.key,
+        pct: p.pct,
+        worst: p.entry.value,
+        points: [p],
+      })
+    }
+  }
+
+  // place bucket representation point at the mean distance of the points clustered
+  return buckets.map((b) => ({
+    ...b,
+    pct: b.points.reduce((sum, p) => sum + p.pct, 0) / b.points.length,
+  }))
+}
 
 const SegmentBar = ({ segment }: { segment: StatusSegment }) => (
   <div
@@ -136,6 +220,195 @@ const SegmentTooltip = ({
         {fmtDuration(segment.end - segment.start)}
       </div>
     </div>
+  )
+}
+
+// This is the pop up panel that displays the metric details when the user clicks at a metric point
+const SelectedPointPanel = ({
+  point,
+  rowIndex,
+  tz,
+  onClose,
+  details,
+  detailsLoading,
+  detailsError,
+}: {
+  point: MetricPoint
+  rowIndex: number
+  tz: TimeZoneMode
+  onClose: () => void
+  details?: StatusResultDetails
+  detailsLoading?: boolean
+  detailsError?: Error | null
+}) => {
+  const below = rowIndex === 0
+  const tone = STATUS_STYLES[point.entry.value]
+  const pct = point.pct
+
+  const [copied, setCopied] = useState(false)
+
+  const copyText = [details?.summary, details?.message]
+    .filter(Boolean)
+    .join('\n')
+
+  const handleCopy = async (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
+    if (!copyText) return
+    try {
+      await navigator.clipboard.writeText(copyText)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    } catch {
+      console.log('clipboard error during copy')
+    }
+  }
+
+  return (
+    <div
+      className="pointer-events-auto absolute z-30 whitespace-nowrap rounded-md bg-neutral-900 px-2.5 py-1.5 text-[11px] leading-snug text-white shadow-lg ring-1 ring-sky-500"
+      style={{
+        top: rowIndex * ROW_HEIGHT + (below ? ROW_HEIGHT - 4 : 4),
+        transform: `translate(${
+          pct < 12 ? '0' : pct > 88 ? '-100%' : '-50%'
+        }, ${below ? '0' : '-100%'})`,
+        left: `${pct < 12 ? 0 : pct > 88 ? 100 : pct}%`,
+      }}
+    >
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5 font-semibold">
+          <span className={`h-2 w-2 rounded-[2px] ${tone.dot}`} />
+          {tone.label}
+        </div>
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation()
+            onClose()
+          }}
+          className="cursor-pointer rounded-sm p-px text-white/60 transition-colors hover:bg-white/20 hover:text-white"
+          aria-label="Close"
+          title="Close"
+        >
+          <X className="h-2.5 w-2.5" strokeWidth={3} />
+        </button>
+      </div>
+      <div className="mt-0.5 tabular-nums text-white/75">
+        {fmtStamp(point.t, tz)}
+      </div>
+
+      {detailsLoading && (
+        <div className="mt-1 text-white/50">Loading details…</div>
+      )}
+      {!detailsLoading && detailsError && (
+        <div className="mt-1 text-red-300">Couldn't load details</div>
+      )}
+      {!detailsLoading &&
+        !detailsError &&
+        (details?.summary || details?.message) && (
+          <div className="mt-1 max-w-[260px]">
+            <div className="max-h-24 overflow-y-auto overflow-x-hidden whitespace-normal break-words text-white/80">
+              {details?.summary && (
+                <p className="font-medium text-white">{details.summary}</p>
+              )}
+              {details?.message && (
+                <p
+                  className={
+                    details?.summary ? 'mt-0.5 text-white/60' : 'text-white/60'
+                  }
+                >
+                  {details.message}
+                </p>
+              )}
+            </div>
+            <div className="mt-1 flex justify-end">
+              <button
+                type="button"
+                onClick={handleCopy}
+                className="flex cursor-pointer items-center gap-1 rounded-sm px-1 py-0.5 text-white/50 transition-colors hover:bg-white/20 hover:text-white"
+                aria-label={copied ? 'Copied' : 'Copy details'}
+                title={copied ? 'Copied' : 'Copy details'}
+              >
+                {copied ? (
+                  <Check className="h-3 w-3" strokeWidth={2.5} />
+                ) : (
+                  <Copy className="h-3 w-3" strokeWidth={2.5} />
+                )}
+                {copied ? 'Copied' : 'Copy'}
+              </button>
+            </div>
+          </div>
+        )}
+    </div>
+  )
+}
+
+// Visual markers that represent metric points or cluster of metric points
+const MetricPoints = ({
+  points,
+  trackWidth,
+  selectedKey,
+  onSelect,
+  onZoomToCluster,
+}: {
+  points: MetricPoint[]
+  trackWidth: number
+  selectedKey: string | null
+  onSelect: (point: MetricPoint) => void
+  onZoomToCluster: (start: number, end: number) => void
+}) => {
+  const buckets = useMemo(
+    () => bucketPoints(points, trackWidth),
+    [points, trackWidth],
+  )
+
+  return (
+    <>
+      {buckets.map((bucket) => {
+        const isCluster = bucket.points.length > 1
+        const isSelected = !isCluster && bucket.points[0].key === selectedKey
+        const tone = STATUS_STYLES[bucket.worst]
+
+        return (
+          <button
+            key={bucket.key}
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              if (isCluster) {
+                const times = bucket.points.map((p) => p.t)
+                onZoomToCluster(Math.min(...times), Math.max(...times))
+              } else {
+                onSelect(bucket.points[0])
+              }
+            }}
+            className={`absolute top-1/2 z-10 -translate-x-1/2 -translate-y-1/2 cursor-pointer rounded-full ring-2 ring-white transition-transform hover:scale-125 ${
+              tone.dot
+            } ${isSelected ? 'scale-[1.4] ring-sky-500' : ''}`}
+            style={{
+              left: `${bucket.pct}%`,
+              height: isCluster ? POINT_SIZE + 4 : POINT_SIZE,
+              width: isCluster ? POINT_SIZE + 4 : POINT_SIZE,
+            }}
+            title={
+              isCluster
+                ? `${bucket.points.length} readings · worst: ${tone.label} · click to zoom in`
+                : tone.label
+            }
+            aria-label={
+              isCluster
+                ? `${bucket.points.length} status points, worst ${tone.label}. Click to zoom in.`
+                : `${tone.label} status point`
+            }
+          >
+            {isCluster && (
+              <span className="absolute -right-1 -top-1 flex h-3.5 min-w-3.5 items-center justify-center rounded-full bg-neutral-900 px-[3px] text-[8px] font-semibold leading-none text-white">
+                {bucket.points.length}
+              </span>
+            )}
+          </button>
+        )
+      })}
+    </>
   )
 }
 
@@ -317,6 +590,14 @@ const HorizontalScrollbar = ({
   )
 }
 
+// Selection reported upward when a metric point is clicked, so the
+// container can fetch that point's details (it already owns tenant/report
+// /group/service-type/endpoint context via `path`).
+export interface PointSelection {
+  metric: string
+  timestamp: string
+}
+
 export interface StatusViewProps {
   tenantName: string
   reports: Array<{ name: string; public?: boolean }> | undefined
@@ -344,6 +625,11 @@ export interface StatusViewProps {
   startTime: string
   endTime: string
   nowTime?: string
+  // Metric point details - fetched by the container once a point is picked
+  onPointSelectionChange: (selection: PointSelection | null) => void
+  pointDetails?: StatusResultDetails
+  pointDetailsLoading?: boolean
+  pointDetailsError?: Error | null
 }
 
 const StatusView = ({
@@ -373,15 +659,38 @@ const StatusView = ({
   startTime,
   endTime,
   nowTime,
+  onPointSelectionChange,
+  pointDetails,
+  pointDetailsLoading,
+  pointDetailsError,
 }: StatusViewProps) => {
   const [search, setSearch] = useState('')
   const [hoverPct, setHoverPct] = useState<number | null>(null)
   const [hoveredRow, setHoveredRow] = useState<number | null>(null)
 
   const [pinnedTime, setPinnedTime] = useState<number | null>(null)
+  const [selectedPoint, setSelectedPoint] = useState<SelectedPoint | null>(null)
 
   const [scrubEl, setScrubEl] = useState<HTMLDivElement | null>(null)
   const trackRef = useRef<HTMLDivElement | null>(null)
+
+  const [trackEl, setTrackEl] = useState<HTMLDivElement | null>(null)
+  const setTrackRefs = (el: HTMLDivElement | null) => {
+    trackRef.current = el
+    setTrackEl(el)
+  }
+
+  const [trackWidth, setTrackWidth] = useState(0)
+
+  useEffect(() => {
+    if (!trackEl) return
+    setTrackWidth(trackEl.getBoundingClientRect().width)
+    const ro = new ResizeObserver(([entry]) => {
+      setTrackWidth(entry.contentRect.width)
+    })
+    ro.observe(trackEl)
+    return () => ro.disconnect()
+  }, [trackEl])
 
   const [mountNow] = useState(() => Date.now())
 
@@ -397,6 +706,10 @@ const StatusView = ({
   useEffect(() => {
     setZoom(null)
   }, [startTime, endTime])
+
+  useEffect(() => {
+    setSelectedPoint(null)
+  }, [startTime, endTime, selectedReport])
 
   const windowStart = zoom?.start ?? baseStart
   const windowEnd = zoom?.end ?? baseEnd
@@ -477,16 +790,67 @@ const StatusView = ({
     return rows.filter((_, i) => keep[i])
   }, [rows, search])
 
-  const pctFromClientX = (clientX: number): number | null => {
+  const metricPointsByRow = useMemo(() => {
+    const map = new Map<string, MetricPoint[]>()
+    if (span <= 0) return map
+
+    for (const row of filtered) {
+      if (row.kind !== 'node' || row.depth !== METRIC_DEPTH) continue
+      const points = (row.statuses ?? [])
+        .map((entry, i) => {
+          const t = Date.parse(entry.timestamp)
+          return Number.isFinite(t)
+            ? {
+                key: `${row.key}\u0000${i}-${entry.timestamp}`,
+                entry,
+                t,
+                pct: ((t - windowStart) / span) * 100,
+              }
+            : null
+        })
+        .filter(
+          (p): p is MetricPoint =>
+            p !== null && p.t >= windowStart && p.t <= windowEnd,
+        )
+      map.set(row.key, points)
+    }
+    return map
+  }, [filtered, windowStart, windowEnd, span])
+
+  // Report metric point selection to the parent element to allow it to get the details
+  useEffect(() => {
+    if (!selectedPoint) {
+      onPointSelectionChange(null)
+      return
+    }
+    const row = filtered.find((r) => r.key === selectedPoint.rowKey)
+    if (!row || row.kind !== 'node') {
+      onPointSelectionChange(null)
+      return
+    }
+    onPointSelectionChange({
+      metric: row.name,
+      timestamp: selectedPoint.point.entry.timestamp,
+    })
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedPoint])
+
+  const pctFromClientX = (clientX: number, clientY?: number): number | null => {
     const rect = trackRef.current?.getBoundingClientRect()
     if (!rect || rect.width === 0) return null
+    if (
+      clientY !== undefined &&
+      (clientY < rect.top || clientY > rect.bottom)
+    ) {
+      return null
+    }
     const x = clientX - rect.left
     if (x < 0 || x > rect.width) return null
     return (x / rect.width) * 100
   }
 
   const pctFromEvent = (e: MouseEvent<HTMLDivElement>): number | null =>
-    pctFromClientX(e.clientX)
+    pctFromClientX(e.clientX, e.clientY)
 
   const handleScrub = (e: MouseEvent<HTMLDivElement>) => {
     setHoverPct(pctFromEvent(e))
@@ -609,11 +973,17 @@ const StatusView = ({
     hoverTime === null ||
     hoverTime > dataEnd ||
     hoveredTimeline === undefined ||
-    hoveredTimeline.kind !== 'node'
+    hoveredTimeline.kind !== 'node' ||
+    hoveredTimeline.depth === METRIC_DEPTH
       ? undefined
       : hoveredTimeline.segments.find(
           (s) => hoverTime >= s.start && hoverTime <= s.end,
         )
+
+  const selectedRowIndex =
+    selectedPoint === null
+      ? -1
+      : filtered.findIndex((r) => r.key === selectedPoint.rowKey)
 
   const clearHover = () => {
     setHoverPct(null)
@@ -835,14 +1205,7 @@ const StatusView = ({
               </p>
             </div>
           ) : (
-            <div
-              ref={setScrubEl}
-              className="relative cursor-crosshair"
-              onMouseMove={handleScrub}
-              onMouseLeave={clearHover}
-              onClick={handlePin}
-              title="Ctrl/Cmd+scroll to zoom"
-            >
+            <div ref={setScrubEl} className="relative">
               <div className="sticky top-0 z-20 -mx-5 border-b border-neutral-200 bg-white px-5 pb-1 pt-2">
                 <div className={GRID}>
                   <span className="text-[11px] font-medium uppercase tracking-[0.04em] text-neutral-400">
@@ -929,115 +1292,176 @@ const StatusView = ({
                 )}
               </div>
 
-              <div className="relative">
+              <div
+                className="relative cursor-crosshair"
+                onMouseMove={handleScrub}
+                onMouseLeave={clearHover}
+                onClick={handlePin}
+                title="Ctrl/Cmd+scroll to zoom"
+              >
                 {filtered.length === 0 && (
                   <p className="py-6 text-center text-neutral-400">
                     No groups match
                   </p>
                 )}
-                {filtered.map((row, index) => (
-                  <div
-                    key={row.key}
-                    className={`${GRID} items-center border-b border-neutral-100 ${
-                      row.depth > 0 ? 'bg-neutral-50/60' : ''
-                    }`}
-                    style={{ height: ROW_HEIGHT }}
-                    onMouseEnter={() => setHoveredRow(index)}
-                  >
-                    {row.kind === 'message' ? (
-                      <>
-                        <MessageRowContent row={row} />
-                        <div />
-                      </>
-                    ) : (
-                      <>
-                        {row.expandable ? (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              onToggle(row.depth, row.name)
-                            }}
-                            style={{ paddingLeft: row.depth * INDENT }}
-                            className="group flex h-full min-w-0 cursor-pointer items-center gap-1.5 text-left"
-                            aria-expanded={row.expanded}
-                            aria-label={
-                              row.expanded
-                                ? `Collapse ${row.label}`
-                                : `Expand ${row.label}`
-                            }
-                            title={`${LEVEL_LABEL[row.depth]}: ${row.label}${
-                              row.type ? ` (${row.type})` : ''
-                            }`}
-                          >
-                            <ChevronRight
-                              className={`h-3.5 w-3.5 flex-shrink-0 text-neutral-400 transition-transform group-hover:text-neutral-700 ${
-                                row.expanded ? 'rotate-90' : ''
-                              }`}
-                            />
-                            <span
-                              className={`h-2 w-2 flex-shrink-0 rounded-full ${
-                                STATUS_STYLES[row.current?.value ?? 'MISSING']
-                                  .dot
-                              }`}
-                            />
-                            <span
-                              className={`truncate transition-colors group-hover:text-brand ${
-                                row.depth === 0
-                                  ? 'text-sm font-medium text-neutral-800'
-                                  : 'text-[13px] text-neutral-600'
-                              }`}
-                            >
-                              {row.label}
-                            </span>
-                          </button>
-                        ) : (
-                          <div
-                            className="flex min-w-0 cursor-default items-center gap-1.5"
-                            style={{ paddingLeft: row.depth * INDENT }}
-                          >
-                            <span className="w-[14px] flex-shrink-0" />
-                            <span
-                              className={`h-2 w-2 flex-shrink-0 rounded-full ${
-                                STATUS_STYLES[row.current?.value ?? 'MISSING']
-                                  .dot
-                              }`}
-                            />
-                            <span
-                              className={`truncate ${
-                                row.depth === 0
-                                  ? 'text-sm font-medium text-neutral-800'
-                                  : 'text-[13px] text-neutral-600'
-                              }`}
+                {filtered.map((row, index) => {
+                  const isMetric =
+                    row.kind === 'node' && row.depth === METRIC_DEPTH
+                  const rowPoints = isMetric
+                    ? (metricPointsByRow.get(row.key) ?? [])
+                    : undefined
+
+                  return (
+                    <div
+                      key={row.key}
+                      className={`${GRID} items-center border-b border-neutral-100 ${
+                        row.depth > 0 ? 'bg-neutral-50/60' : ''
+                      }`}
+                      style={{ height: ROW_HEIGHT }}
+                      onMouseEnter={() => setHoveredRow(index)}
+                    >
+                      {row.kind === 'message' ? (
+                        <>
+                          <MessageRowContent row={row} />
+                          <div />
+                        </>
+                      ) : (
+                        <>
+                          {row.expandable ? (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                onToggle(row.depth, row.name)
+                              }}
+                              style={{ paddingLeft: row.depth * INDENT }}
+                              className="group flex h-full min-w-0 cursor-pointer items-center gap-1.5 text-left"
+                              aria-expanded={row.expanded}
+                              aria-label={
+                                row.expanded
+                                  ? `Collapse ${row.label}`
+                                  : `Expand ${row.label}`
+                              }
                               title={`${LEVEL_LABEL[row.depth]}: ${row.label}${
                                 row.type ? ` (${row.type})` : ''
                               }`}
                             >
-                              {row.label}
-                            </span>
-                          </div>
-                        )}
-
-                        <div className="relative h-7 overflow-hidden rounded-[3px] bg-neutral-100 ring-1 ring-inset ring-neutral-200">
-                          {ticks.map((t) => (
+                              <ChevronRight
+                                className={`h-3.5 w-3.5 flex-shrink-0 text-neutral-400 transition-transform group-hover:text-neutral-700 ${
+                                  row.expanded ? 'rotate-90' : ''
+                                }`}
+                              />
+                              <span
+                                className={`h-2 w-2 flex-shrink-0 rounded-full ${
+                                  STATUS_STYLES[row.current?.value ?? 'MISSING']
+                                    .dot
+                                }`}
+                              />
+                              <span
+                                className={`truncate transition-colors group-hover:text-brand ${
+                                  row.depth === 0
+                                    ? 'text-sm font-medium text-neutral-800'
+                                    : 'text-[13px] text-neutral-600'
+                                }`}
+                              >
+                                {row.label}
+                              </span>
+                            </button>
+                          ) : (
                             <div
-                              key={t.time}
-                              className="absolute inset-y-0 z-10 w-px bg-white/40"
-                              style={{ left: `${t.pct}%` }}
-                            />
-                          ))}
-                          {row.segments.map((s) => (
-                            <SegmentBar key={s.key} segment={s} />
-                          ))}
-                        </div>
-                      </>
-                    )}
-                  </div>
-                ))}
+                              className="flex min-w-0 cursor-default items-center gap-1.5"
+                              style={{ paddingLeft: row.depth * INDENT }}
+                            >
+                              <span className="w-[14px] flex-shrink-0" />
+                              <span
+                                className={`h-2 w-2 flex-shrink-0 rounded-full ${
+                                  STATUS_STYLES[row.current?.value ?? 'MISSING']
+                                    .dot
+                                }`}
+                              />
+                              <span
+                                className={`truncate ${
+                                  row.depth === 0
+                                    ? 'text-sm font-medium text-neutral-800'
+                                    : 'text-[13px] text-neutral-600'
+                                }`}
+                                title={`${LEVEL_LABEL[row.depth]}: ${row.label}${
+                                  row.type ? ` (${row.type})` : ''
+                                }`}
+                              >
+                                {row.label}
+                              </span>
+                            </div>
+                          )}
+
+                          <div className="relative h-7 overflow-visible rounded-[3px] bg-neutral-100 ring-1 ring-inset ring-neutral-200">
+                            {ticks.map((t) => (
+                              <div
+                                key={t.time}
+                                className="absolute inset-y-0 z-10 w-px bg-white/40"
+                                style={{ left: `${t.pct}%` }}
+                              />
+                            ))}
+                            {isMetric ? (
+                              <>
+                                {/* faint continuity bar so gaps/coverage are still visible at a glance */}
+                                {row.segments.map((s) => (
+                                  <div
+                                    key={s.key}
+                                    className={`absolute inset-y-0 opacity-25 ${STATUS_STYLES[s.value].bar}`}
+                                    style={{
+                                      left: `${s.leftPct}%`,
+                                      width: `${s.widthPct}%`,
+                                      minWidth: '2px',
+                                    }}
+                                  />
+                                ))}
+                                <MetricPoints
+                                  points={rowPoints ?? []}
+                                  trackWidth={trackWidth}
+                                  selectedKey={
+                                    selectedPoint?.rowKey === row.key
+                                      ? selectedPoint.point.key
+                                      : null
+                                  }
+                                  onSelect={(point) =>
+                                    setSelectedPoint((prev) =>
+                                      prev?.point.key === point.key
+                                        ? null
+                                        : { rowKey: row.key, point },
+                                    )
+                                  }
+                                  onZoomToCluster={(start, end) => {
+                                    setSelectedPoint(null)
+                                    const clusterSpan = end - start
+                                    const pad = Math.max(
+                                      clusterSpan * 2,
+                                      MIN_ZOOM_SPAN_MS / 2,
+                                    )
+                                    const newStart = Math.max(
+                                      start - pad,
+                                      baseStart,
+                                    )
+                                    const newEnd = Math.min(end + pad, baseEnd)
+                                    setZoom({ start: newStart, end: newEnd })
+                                  }}
+                                />
+                              </>
+                            ) : (
+                              row.segments.map((s) => (
+                                <SegmentBar key={s.key} segment={s} />
+                              ))
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  )
+                })}
 
                 <div className={`${GRID} pointer-events-none absolute inset-0`}>
                   <div />
-                  <div ref={trackRef} className="relative">
+                  <div ref={setTrackRefs} className="relative">
                     {nowPct !== null && (
                       <div
                         className="absolute inset-y-0 right-0 border-l border-neutral-900 bg-white/70 bg-[repeating-linear-gradient(45deg,transparent,transparent_4px,rgba(23,23,23,0.07)_4px,rgba(23,23,23,0.07)_8px)]"
@@ -1066,6 +1490,17 @@ const StatusView = ({
                           tz={tz}
                         />
                       )}
+                    {selectedPoint && selectedRowIndex !== -1 && (
+                      <SelectedPointPanel
+                        point={selectedPoint.point}
+                        rowIndex={selectedRowIndex}
+                        tz={tz}
+                        onClose={() => setSelectedPoint(null)}
+                        details={pointDetails}
+                        detailsLoading={pointDetailsLoading}
+                        detailsError={pointDetailsError}
+                      />
+                    )}
                   </div>
                 </div>
               </div>
