@@ -152,7 +152,10 @@ function Sidebar({
 
   useEffect(() => {
     if (!effectiveTenantId || userTenants.length === 0 || !profile) return
-    if (pathname.replace(/\/$/, '') === `/tenants/${effectiveTenantId}`) {
+    if (
+      pathname === '/' ||
+      pathname.replace(/\/$/, '') === `/tenants/${effectiveTenantId}`
+    ) {
       navigate(`/tenants/${effectiveTenantId}/${firstTenantSubPath}`, {
         replace: true,
       })
