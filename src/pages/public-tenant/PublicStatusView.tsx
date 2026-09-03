@@ -4,6 +4,7 @@ import { useGetPublicTenantReports } from '@/hooks/useTenants'
 import {
   useGetStatusTimelineEndpoints,
   useGetStatusTimelineGroups,
+  useGetStatusTimelineMetricDetails,
   useGetStatusTimelineMetrics,
   useGetStatusTimelineServiceTypes,
 } from '@/hooks/useStatusTimeline'
@@ -13,7 +14,10 @@ import {
   type StatusRangeId,
   type TimeZoneMode,
 } from '@/utils/statusTimeline'
-import StatusView, { type StatusRow } from '../status/StatusView'
+import StatusView, {
+  type PointSelection,
+  type StatusRow,
+} from '../status/StatusView'
 import { useTenantName } from '@/hooks/useTenantName'
 
 // convert date to YYYY-MM-DD string - take into account the timezone
@@ -86,6 +90,11 @@ const PublicStatusView = () => {
 
   // when the user drills down to an item and opens a path, all other items are closed
   const [path, setPath] = useState<StatusPath>({})
+
+  // this is the selected status result point at a specific timestamp where the user wants to see details about
+  const [pointSelection, setPointSelection] = useState<PointSelection | null>(
+    null,
+  )
 
   const {
     data: reports,
@@ -211,6 +220,23 @@ const PublicStatusView = () => {
     queryStartTime,
     queryEndTime,
     ready && !!path.group && !!path.serviceType && !!path.endpoint,
+  )
+
+  // get metric result details about the status metric point that the user has selected
+  const pointDetails = useGetStatusTimelineMetricDetails(
+    tenantName ?? '',
+    'public',
+    selectedReport,
+    path.group,
+    path.serviceType,
+    path.endpoint,
+    pointSelection?.metric,
+    pointSelection?.timestamp,
+    ready &&
+      !!path.group &&
+      !!path.serviceType &&
+      !!path.endpoint &&
+      !!pointSelection,
   )
 
   const rows = useMemo<StatusRow[]>(() => {
@@ -370,6 +396,10 @@ const PublicStatusView = () => {
       onJumpToNow={() => setAnchorDate(today)}
       startTime={startTime}
       endTime={endTime}
+      onPointSelectionChange={setPointSelection}
+      pointDetails={pointDetails.data}
+      pointDetailsLoading={pointDetails.isPending}
+      pointDetailsError={pointDetails.error ?? null}
     />
   )
 }

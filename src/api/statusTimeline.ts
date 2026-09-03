@@ -1,7 +1,69 @@
 import type { AccessMode } from '@/types/common'
-import type { StatusNode, StatusTimelineResponse } from '@/types/statusTimeline'
+import type {
+  StatusNode,
+  StatusResultDetails,
+  StatusTimelineResponse,
+} from '@/types/statusTimeline'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
+
+// fetch status details
+
+export const fetchStatusTimelineMetricDetails = async (
+  tenantIdentifier: string,
+  report: string | undefined,
+  group: string | undefined,
+  serviceType: string | undefined,
+  endpoint: string | undefined,
+  metric: string | undefined,
+  timestamp: string | undefined,
+  mode: AccessMode,
+  token: string | undefined,
+): Promise<StatusResultDetails> => {
+  if (mode === 'private' && !token) {
+    throw new Error('Access token is required for private mode requests')
+  }
+  if (!tenantIdentifier) throw new Error('Tenant identifier is required')
+  if (!report)
+    throw new Error('A report name is required for status timeline requests')
+  if (!group) throw new Error('A group name is required')
+  if (!serviceType) throw new Error('A service type name is required')
+  if (!endpoint) throw new Error('An endpoint name is required')
+  if (!metric) throw new Error('A metric name is required')
+  if (!timestamp) throw new Error('A timestamp is required')
+
+  const params = new URLSearchParams()
+  params.set('timestamp', timestamp)
+
+  const root =
+    mode === 'private'
+      ? `${BACKEND_API}/v1/tenants`
+      : `${BACKEND_API}/v1/public/tenants`
+
+  const url = `${root}/${encodeURIComponent(tenantIdentifier)}/status/${encodeURIComponent(
+    report,
+  )}/groups/${encodeURIComponent(group)}/service-types/${encodeURIComponent(
+    serviceType,
+  )}/endpoints/${encodeURIComponent(endpoint)}/metrics/${encodeURIComponent(
+    metric,
+  )}/details?${params.toString()}`
+
+  const headers: Record<string, string> = { Accept: 'application/json' }
+  if (mode === 'private') {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const response = await fetch(url, { headers })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
 
 // fetch status timelines for top level groups
 export const fetchStatusTimelineGroups = async (
