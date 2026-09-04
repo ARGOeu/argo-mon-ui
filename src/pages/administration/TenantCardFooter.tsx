@@ -63,7 +63,7 @@ const TenantCardFooter = ({
       <IconButton
         label="Capabilities"
         icon={<Square3Stack3DIcon className={actionIconClass} />}
-        href={`/tenants/${tenantId}/capabilities`}
+        href={`/tenants/${tenantId}/details#capabilities`}
         className="text-amber-600 hover:bg-amber-50"
       />
     )}
@@ -72,7 +72,7 @@ const TenantCardFooter = ({
       <IconButton
         label="Manage Members"
         icon={<UserGroupIcon className={actionIconClass} />}
-        href={`/tenants/${tenantId}/members`}
+        href={`/tenants/${tenantId}/details#members`}
         className="text-violet-700 hover:bg-violet-100"
       />
     )}

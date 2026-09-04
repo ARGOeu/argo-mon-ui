@@ -11,6 +11,28 @@ import Badge from '@/components/Badge'
 import TenantInfoTab from './TenantInfoTab'
 import TenantStatusTab from './TenantStatusTab'
 import TenantReadinessTab from './TenantReadinessTab'
+import TenantCapabilitiesTab from './TenantCapabilitiesTab'
+import TenantMembersTab from './TenantMembersTab'
+import TenantReportsTab from './TenantReportsTab'
+
+type TenantDetailsTab =
+  | 'info'
+  | 'status'
+  | 'readiness'
+  | 'reports'
+  | 'capabilities'
+  | 'members'
+
+const hashRoutedTabs: {
+  id: TenantDetailsTab
+  adminOnly?: boolean
+}[] = [
+  { id: 'reports' },
+  { id: 'capabilities', adminOnly: true },
+  { id: 'status' },
+  { id: 'readiness' },
+  { id: 'members', adminOnly: true },
+]
 
 const formatDate = (dateString: string) =>
   new Date(dateString).toLocaleDateString('en-GB', {
@@ -22,24 +44,11 @@ const formatDate = (dateString: string) =>
 const TenantDetails = () => {
   const { id: tenantId } = useParams<{ id: string }>()
   const location = useLocation()
-  const [activeTab, setActiveTab] = useState<'info' | 'status' | 'readiness'>(
-    'info',
-  )
+  const [activeTab, setActiveTab] = useState<TenantDetailsTab>('info')
   const [logoError, setLogoError] = useState(false)
   const [logoLoaded, setLogoLoaded] = useState(false)
   const [copied, setCopied] = useState(false)
   const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    const hash = location?.hash
-    if (hash?.startsWith('#status')) {
-      setActiveTab('status')
-    } else if (hash?.startsWith('#readiness')) {
-      setActiveTab('readiness')
-    } else {
-      setActiveTab('info')
-    }
-  }, [location.hash])
 
   const { isSuperAdmin } = useAuth()
 
@@ -51,6 +60,15 @@ const TenantDetails = () => {
   } = useSelectedTenant()
 
   const canEditTenant = isSuperAdmin || roleInSelectedTenant === 'tenant_admin'
+
+  useEffect(() => {
+    const matchedTab = hashRoutedTabs.find(
+      (tab) =>
+        location.hash.startsWith(`#${tab.id}`) &&
+        (!tab.adminOnly || canEditTenant),
+    )
+    setActiveTab(matchedTab?.id ?? 'info')
+  }, [location.hash, canEditTenant])
 
   useEffect(() => {
     setLogoError(false)
@@ -213,12 +231,19 @@ const TenantDetails = () => {
         <Tabs
           tabs={[
             { id: 'info', label: 'Info' },
+            { id: 'reports', label: 'Conf reports' },
+            ...(canEditTenant
+              ? [{ id: 'capabilities', label: 'Capabilities' }]
+              : []),
             { id: 'status', label: 'Status' },
             { id: 'readiness', label: 'Readiness' },
+            ...(canEditTenant
+              ? [{ id: 'members', label: 'Manage Members' }]
+              : []),
           ]}
           activeTab={activeTab}
           onChange={(id) => {
-            setActiveTab(id as 'info' | 'status' | 'readiness')
+            setActiveTab(id as TenantDetailsTab)
             window.location.hash = id
           }}
           className="mt-3"
@@ -232,6 +257,15 @@ const TenantDetails = () => {
         )}
         {activeTab === 'readiness' && (
           <TenantReadinessTab tenantId={tenantId || ''} />
+        )}
+        {activeTab === 'reports' && (
+          <TenantReportsTab tenantId={tenantId || ''} />
+        )}
+        {activeTab === 'capabilities' && canEditTenant && (
+          <TenantCapabilitiesTab tenantId={tenantId || ''} />
+        )}
+        {activeTab === 'members' && canEditTenant && (
+          <TenantMembersTab tenantId={tenantId || ''} />
         )}
       </div>
     </div>

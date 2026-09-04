@@ -7,9 +7,6 @@ import {
   UserGroupIcon,
   EnvelopeIcon,
   HomeIcon,
-  ShieldCheckIcon,
-  UsersIcon,
-  DocumentChartBarIcon,
   TableCellsIcon,
   ServerStackIcon,
   CircleStackIcon,
@@ -71,24 +68,11 @@ const tenantNavItems: TenantNavItem[] = [
     icon: WrenchScrewdriverIcon,
     requiredRoles: ['tenant_admin'],
   },
-  { path: 'reports', label: 'Reports', icon: DocumentChartBarIcon },
-  {
-    path: 'capabilities',
-    label: 'Capabilities',
-    icon: ShieldCheckIcon,
-    requiredRoles: ['tenant_admin'],
-  },
   {
     path: 'performance',
     label: 'Performance',
     icon: Medal,
     requiredRoles: [SUPER_ADMIN_ROLE],
-  },
-  {
-    path: 'members',
-    label: 'Members',
-    icon: UsersIcon,
-    requiredRoles: ['tenant_admin'],
   },
 ]
 

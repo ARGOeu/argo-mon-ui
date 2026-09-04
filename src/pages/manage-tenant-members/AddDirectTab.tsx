@@ -171,17 +171,14 @@ const AddDirectTab = ({ tenantId }: AddDirectTabProps) => {
 
   return (
     <div className="animate-fade-in">
-      <form onSubmit={handleSubmit} className="max-w-xl">
-        <div className="bg-surface-muted border border-line rounded-lg px-6 py-4">
-          <h2 className="text-lg font-semibold text-gray-800">
-            Add a Member Directly
-          </h2>
-          <p className="text-sm text-muted mb-4 leading-relaxed">
+      <form onSubmit={handleSubmit} className="max-w-3xl">
+        <div className="bg-surface-muted rounded-lg">
+          <p className="text-sm text-muted mb-2 leading-relaxed">
             Add a new member directly to this tenant without sending an
             invitation. Search for a registered user by email or name.
           </p>
 
-          <div className="max-w-[400px] flex flex-col gap-3 mb-5">
+          <div className="max-w-[400px] flex flex-col gap-2 mb-4">
             {!selectedUser ? (
               <div className="flex flex-col">
                 <label className="text-sm font-medium text-body mb-0.5">

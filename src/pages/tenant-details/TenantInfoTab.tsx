@@ -377,7 +377,7 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
       </div>
 
       {/* Right column — Contacts */}
-      <div className={`${cardClass} self-start`}>
+      <div className={`${cardClass} self-start mt-4 md:mt-0`}>
         <div className="flex flex-col gap-0.5">
           <p className={labelClass}>Organisation</p>
           {tenantData.info.email ? (
