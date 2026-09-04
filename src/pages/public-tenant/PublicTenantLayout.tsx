@@ -78,7 +78,10 @@ const PublicTenantLayout = () => {
             : '-translate-x-full md:translate-x-0'
         }`}
       >
-        <SidebarHeader onCloseMobileMenu={() => setIsMobileMenuOpen(false)} />
+        <SidebarHeader
+          onCloseMobileMenu={() => setIsMobileMenuOpen(false)}
+          logoTo={dashboardPath}
+        />
 
         <nav className="flex flex-col overflow-y-auto min-h-0">
           <p className="px-4 pt-4 pb-1 text-[0.65rem] font-semibold tracking-widest uppercase text-subtle select-none">
