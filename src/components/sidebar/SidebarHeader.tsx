@@ -3,14 +3,16 @@ import { XMarkIcon } from '@heroicons/react/16/solid'
 
 interface SidebarHeaderProps {
   onCloseMobileMenu: () => void
+  logoTo?: string
 }
 
 export default function SidebarHeader({
   onCloseMobileMenu,
+  logoTo = '/',
 }: SidebarHeaderProps) {
   return (
     <div className="px-1 md:px-3 border-b border-line flex items-center justify-between gap-1">
-      <Link to="/" className="flex items-center gap-2 py-1">
+      <Link to={logoTo} className="flex items-center gap-2 py-1">
         <img
           src="/ARGO_LOGO_COLOR_ENG_TITLE.png"
           alt="tenant logo"
