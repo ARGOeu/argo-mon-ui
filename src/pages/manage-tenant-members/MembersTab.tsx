@@ -96,95 +96,85 @@ const MembersTab = ({ tenantId, tenantName }: MembersTabProps) => {
 
   return (
     <>
-      <div className="animate-fade-in mb-10">
-        <h2 className="text-lg font-semibold text-gray-800 mb-2.5">
-          Tenant Members
-        </h2>
-
-        <DataTable tableClassName="min-w-[700px]">
-          <thead className="bg-surface-strong border-b border-line">
+      <DataTable tableClassName="min-w-[700px]">
+        <thead className="bg-surface-strong border-b border-line">
+          <tr>
+            <th className={thBase}>First Name</th>
+            <th className={thBase}>Last Name</th>
+            <th className={thBase}>Email</th>
+            <th className={thBase}>Role</th>
+            <th className={thBase}>Actions</th>
+          </tr>
+        </thead>
+        <tbody className="divide-y divide-gray-100">
+          {isLoading ? (
             <tr>
-              <th className={thBase}>First Name</th>
-              <th className={thBase}>Last Name</th>
-              <th className={thBase}>Email</th>
-              <th className={thBase}>Role</th>
-              <th className={thBase}>Actions</th>
+              <td colSpan={5}>
+                <div className="flex items-center justify-center py-6">
+                  <LoadingSpinner />
+                </div>
+              </td>
             </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {isLoading ? (
-              <tr>
-                <td colSpan={5}>
-                  <div className="flex items-center justify-center py-6">
-                    <LoadingSpinner />
-                  </div>
+          ) : membershipRows.length > 0 ? (
+            membershipRows.map(({ member, membership, index }) => (
+              <tr
+                key={`${member.id}-${membership.role}-${index}`}
+                className="hover:bg-surface-muted"
+              >
+                <td className={tdBase}>{member.firstName || '-'}</td>
+                <td className={tdBase}>{member.lastName || '-'}</td>
+                <td className={tdBase}>{member.email}</td>
+                <td className={tdBase}>
+                  <Badge
+                    className={
+                      roleBadgeClass[membership.role] ??
+                      'bg-surface-strong text-muted'
+                    }
+                  >
+                    {getRoleFriendlyName(membership.role)}
+                  </Badge>
+                </td>
+                <td className={`${tdBase} px-6`}>
+                  <IconButton
+                    icon={<UserMinusIcon className="size-5" />}
+                    label="Remove member"
+                    onClick={() =>
+                      handleRemoveClick(
+                        member.id,
+                        member.email,
+                        membership.role,
+                        getRoleFriendlyName(membership.role),
+                      )
+                    }
+                    className="text-red-500 hover:bg-red-50"
+                  />
                 </td>
               </tr>
-            ) : membershipRows.length > 0 ? (
-              membershipRows.map(({ member, membership, index }) => (
-                <tr
-                  key={`${member.id}-${membership.role}-${index}`}
-                  className="hover:bg-surface-muted"
-                >
-                  <td className={tdBase}>{member.firstName || '-'}</td>
-                  <td className={tdBase}>{member.lastName || '-'}</td>
-                  <td className={tdBase}>{member.email}</td>
-                  <td className={tdBase}>
-                    <Badge
-                      className={
-                        roleBadgeClass[membership.role] ??
-                        'bg-surface-strong text-muted'
-                      }
-                    >
-                      {getRoleFriendlyName(membership.role)}
-                    </Badge>
-                  </td>
-                  <td className={`${tdBase} px-6`}>
-                    <IconButton
-                      icon={<UserMinusIcon className="size-5" />}
-                      label="Remove member"
-                      onClick={() =>
-                        handleRemoveClick(
-                          member.id,
-                          member.email,
-                          membership.role,
-                          getRoleFriendlyName(membership.role),
-                        )
-                      }
-                      className="text-red-500 hover:bg-red-50"
-                    />
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td
-                  colSpan={5}
-                  className="text-center !text-subtle italic !p-8"
-                >
-                  No members found for this tenant
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </DataTable>
+            ))
+          ) : (
+            <tr>
+              <td colSpan={5} className="text-center !text-subtle italic !p-8">
+                No members found for this tenant
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </DataTable>
 
-        {membershipRows.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={membersData?.total_pages ?? 0}
-            totalElements={membersData?.total_elements ?? 0}
-            itemLabel="members"
-            className="py-1 my-4"
-            onPrev={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-            onNext={() =>
-              setCurrentPage((prev) =>
-                Math.min(membersData?.total_pages ?? 1, prev + 1),
-              )
-            }
-          />
-        )}
-      </div>
+      {membershipRows.length > 0 && (
+        <Pagination
+          currentPage={currentPage}
+          totalPages={membersData?.total_pages ?? 0}
+          totalElements={membersData?.total_elements ?? 0}
+          itemLabel="members"
+          onPrev={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+          onNext={() =>
+            setCurrentPage((prev) =>
+              Math.min(membersData?.total_pages ?? 1, prev + 1),
+            )
+          }
+        />
+      )}
 
       <ConfirmDialog
         isOpen={removeDialogOpen}
