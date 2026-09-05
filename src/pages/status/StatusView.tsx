@@ -101,8 +101,7 @@ type TimelineRow =
 
 const ROW_HEIGHT = 44
 const POINT_SIZE = 8
-// minimum pixel spacing threshold to cluster many points together if the metric results are to frequent
-const BUCKET_PX = 6
+const BUCKET_PX = POINT_SIZE * 2
 
 const MIN_ZOOM_SPAN_MS = 5 * 60 * 1000
 
@@ -153,6 +152,8 @@ const bucketPoints = (
     const last = buckets[buckets.length - 1]
     if (last && p.pct - last.pct < bucketPct) {
       last.points.push(p)
+      last.pct =
+        last.points.reduce((sum, pt) => sum + pt.pct, 0) / last.points.length
       if (SEVERITY[p.entry.value] > SEVERITY[last.worst]) {
         last.worst = p.entry.value
       }
@@ -166,11 +167,7 @@ const bucketPoints = (
     }
   }
 
-  // place bucket representation point at the mean distance of the points clustered
-  return buckets.map((b) => ({
-    ...b,
-    pct: b.points.reduce((sum, p) => sum + p.pct, 0) / b.points.length,
-  }))
+  return buckets
 }
 
 const SegmentBar = ({ segment }: { segment: StatusSegment }) => (
@@ -796,7 +793,9 @@ const StatusView = ({
 
     for (const row of filtered) {
       if (row.kind !== 'node' || row.depth !== METRIC_DEPTH) continue
+      // filter out missing points - they don't have metric results
       const points = (row.statuses ?? [])
+        .filter((entry) => entry.value !== 'MISSING')
         .map((entry, i) => {
           const t = Date.parse(entry.timestamp)
           return Number.isFinite(t)
