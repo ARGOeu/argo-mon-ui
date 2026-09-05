@@ -27,14 +27,7 @@ const IncidentDetail = () => {
     <div className="page-container mb-12">
       <PageHeader
         title="Incident Details"
-        subtitle={
-          <>
-            View and manage the details of incident
-            <strong className="break-all">
-              {incident?.title ? ` ${incident.title}` : '...'}
-            </strong>
-          </>
-        }
+        subtitle="View and manage the details of incident"
         navigateTo={{
           label: 'Back to Incidents',
           to: `/tenants/${tenantId}/incidents`,
@@ -53,8 +46,12 @@ const IncidentDetail = () => {
         </p>
       ) : (
         <div className="flex flex-col md:flex-row gap-x-4 2xl:gap-x-32 2xl:pe-32 mt-3">
-          <div className="flex-1 flex flex-col gap-3">
-            <IncidentHeader incident={incident} />
+          <div className="flex-1 min-w-0 flex flex-col gap-3">
+            <IncidentHeader
+              incident={incident}
+              tenantId={tenantId ?? ''}
+              canManage={canManage}
+            />
             {canManage && (
               <IncidentStatusForm
                 incident={incident}
@@ -64,6 +61,7 @@ const IncidentDetail = () => {
             <IncidentHistory
               tenantId={tenantId ?? ''}
               incidentId={incident.id}
+              canManage={canManage}
             />
             <IncidentComments
               tenantId={tenantId ?? ''}

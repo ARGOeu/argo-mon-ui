@@ -92,11 +92,11 @@ const IncidentStatusForm = ({
         </div>
 
         <div className="flex flex-col">
-          <label className={labelClass}>Description</label>
+          <label className={labelClass}>Message</label>
           <textarea
             value={statusDescription}
             onChange={(e) => setStatusDescription(e.target.value)}
-            placeholder="Describe what changed with this status update"
+            placeholder="Add a message about this status update"
             rows={2}
             className="resize-y"
           />

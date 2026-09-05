@@ -1,11 +1,13 @@
 import type {
   Incident,
   IncidentActivity,
+  IncidentActivityUpdateRequest,
   IncidentComment,
   IncidentCommentRequest,
   IncidentRequest,
   IncidentsResponse,
   IncidentStatusUpdateRequest,
+  IncidentUpdateRequest,
 } from '@/types/incidents'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
@@ -78,6 +80,36 @@ export const createIncident = async (
   return response.json()
 }
 
+export const updateIncident = async (
+  tenantId: string,
+  incidentId: string,
+  data: IncidentUpdateRequest,
+  token: string,
+): Promise<Incident> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/incidents/${incidentId}`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    const error = new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    ) as Error & { errors?: string[] }
+    error.errors = errorData.errors || []
+    throw error
+  }
+
+  return response.json()
+}
+
 export const updateIncidentStatus = async (
   tenantId: string,
   incidentId: string,
@@ -86,6 +118,37 @@ export const updateIncidentStatus = async (
 ): Promise<Incident> => {
   const response = await fetch(
     `${BACKEND_API}/v1/tenants/${tenantId}/incidents/${incidentId}/status`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    const error = new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    ) as Error & { errors?: string[] }
+    error.errors = errorData.errors || []
+    throw error
+  }
+
+  return response.json()
+}
+
+export const updateIncidentStatusDescription = async (
+  tenantId: string,
+  incidentId: string,
+  statusId: string,
+  data: IncidentActivityUpdateRequest,
+  token: string,
+): Promise<Incident> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/incidents/${incidentId}/activity/${statusId}`,
     {
       method: 'PATCH',
       headers: {

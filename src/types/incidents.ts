@@ -64,3 +64,11 @@ export type IncidentActivity = {
   created_at: string
   status_description?: string
 }
+
+export type IncidentActivityUpdateRequest = {
+  status_description: string
+}
+
+export type IncidentUpdateRequest = {
+  description: string
+}
