@@ -157,7 +157,7 @@ const TenantReadinessTab = ({ tenantId }: TenantReadinessTabProps) => {
   }
 
   return (
-    <div className="max-w-[1240px] flex flex-col gap-2 mx-auto mb-6">
+    <div className="max-w-[1240px] flex flex-col gap-2 mb-6">
       <div className="flex items-center">
         <div className="flex flex-col gap-2 mb-2">
           <div className="flex flex-col gap-1 max-w-full">

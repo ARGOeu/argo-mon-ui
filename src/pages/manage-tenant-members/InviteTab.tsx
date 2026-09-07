@@ -90,10 +90,10 @@ const InviteTab = ({ tenantId }: InviteTabProps) => {
   return (
     <div className="animate-fade-in">
       <form onSubmit={handleSubmit} className="max-w-4xl">
-        <div className="bg-surface-muted rounded-lg">
-          <p className="text-sm text-muted mb-2 leading-relaxed">
+        <div className="bg-surface-muted border border-line rounded-lg px-4 py-3">
+          <p className="text-[15px] text-muted mb-2 leading-relaxed">
             Send an invitation to a new member to join this tenant. They will
-            receive an email with instructions to accept the invitation.
+            receive an email with instructions to accept the invitation
           </p>
 
           <div className="max-w-[400px] flex flex-col gap-2 mb-4">

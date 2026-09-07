@@ -28,7 +28,7 @@ const TenantCardFooter = ({
     <IconButton
       label="View Tenant Details"
       icon={<Bars3Icon className={actionIconClass} />}
-      href={`/tenants/${tenantId}/details`}
+      href={`/tenants/${tenantId}/summary`}
       className="text-indigo-500 hover:bg-indigo-100"
     />
 
@@ -63,7 +63,7 @@ const TenantCardFooter = ({
       <IconButton
         label="Capabilities"
         icon={<Square3Stack3DIcon className={actionIconClass} />}
-        href={`/tenants/${tenantId}/details#capabilities`}
+        href={`/tenants/${tenantId}/capabilities`}
         className="text-amber-600 hover:bg-amber-50"
       />
     )}
@@ -72,7 +72,7 @@ const TenantCardFooter = ({
       <IconButton
         label="Manage Members"
         icon={<UserGroupIcon className={actionIconClass} />}
-        href={`/tenants/${tenantId}/details#members`}
+        href={`/tenants/${tenantId}/members`}
         className="text-violet-700 hover:bg-violet-100"
       />
     )}

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Outlet, useMatch } from 'react-router'
+import { Outlet, useLocation, useMatch } from 'react-router'
 import { useAuth } from './auth/useAuth'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
 import { SelectedTenantProvider } from '@/contexts/selected-tenant'
@@ -13,17 +13,15 @@ function LayoutContent() {
   const { effectiveTenantId, tenants, roleInSelectedTenant, tenant } =
     useSelectedTenant()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { pathname } = useLocation()
   const tenantScopeMatch = useMatch('/tenants/:tenantKey/*')
   const isTenantScopedRoute =
     !!tenant &&
     (tenantScopeMatch?.params.tenantKey === tenant.id ||
       tenantScopeMatch?.params.tenantKey === tenant.info.name)
 
-  const tenantDetailsMatch = useMatch('/tenants/:tenantKey/details')
   const isActiveTenantDetailsRoute =
-    !!tenant &&
-    (tenantDetailsMatch?.params.tenantKey === tenant.id ||
-      tenantDetailsMatch?.params.tenantKey === tenant.info.name)
+    isTenantScopedRoute && pathname.endsWith('/summary')
 
   return (
     <div className="h-screen flex overflow-hidden">
