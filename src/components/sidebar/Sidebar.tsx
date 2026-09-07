@@ -5,6 +5,9 @@ import { SUPER_ADMIN_ROLE } from '@/auth/roles'
 import {
   RectangleStackIcon,
   UserGroupIcon,
+  UsersIcon,
+  ShieldCheckIcon,
+  DocumentChartBarIcon,
   EnvelopeIcon,
   HomeIcon,
   TableCellsIcon,
@@ -14,11 +17,13 @@ import {
   Cog6ToothIcon,
   WrenchScrewdriverIcon,
   ExclamationTriangleIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/16/solid'
 import { ChartNetwork, Medal } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import TenantPicker from './TenantPicker'
 import SidebarNavItem from './SidebarNavItem'
+import SidebarNavGroup from './SidebarNavGroup'
 import SidebarHeader from './SidebarHeader'
 import SidebarFooter from './SidebarFooter'
 import type { Tenant } from '@/types/tenants'
@@ -31,6 +36,7 @@ interface TenantNavItem {
   icon: React.ComponentType<React.SVGProps<SVGSVGElement>>
   requiredRoles?: string[]
   exactPathMatch?: boolean
+  children?: TenantNavItem[]
 }
 
 const tenantNavItems: TenantNavItem[] = [
@@ -39,7 +45,31 @@ const tenantNavItems: TenantNavItem[] = [
     label: 'Dashboard',
     icon: CircleStackIcon,
   },
-  { path: 'details', label: 'Overview', icon: HomeIcon },
+  {
+    path: 'summary',
+    label: 'Overview',
+    icon: HomeIcon,
+    children: [
+      {
+        path: 'summary',
+        label: 'Summary',
+        icon: DocumentTextIcon,
+      },
+      { path: 'reports', label: 'Conf reports', icon: DocumentChartBarIcon },
+      {
+        path: 'capabilities',
+        label: 'Capabilities',
+        icon: ShieldCheckIcon,
+        requiredRoles: ['tenant_admin'],
+      },
+      {
+        path: 'members',
+        label: 'Members',
+        icon: UsersIcon,
+        requiredRoles: ['tenant_admin'],
+      },
+    ],
+  },
   {
     path: 'ar-groups',
     label: 'Availability & Reliability',
@@ -134,10 +164,14 @@ function Sidebar({
 
   const firstTenantSubPath = visibleTenantNavItems[0]?.path ?? 'dashboard'
 
-  // Section to keep when switching tenants
+  // Section to keep when switching tenants (included sub-categories)
+  const flatNavItems = tenantNavItems.flatMap((item) => [
+    item,
+    ...(item.children ?? []),
+  ])
   const currentSectionMatch = pathname.match(/^\/tenants\/[^/]+\/([^/]+)/)?.[1]
   const currentTenantSection =
-    tenantNavItems.find((item) => item.path === currentSectionMatch)?.path ??
+    flatNavItems.find((item) => item.path === currentSectionMatch)?.path ??
     firstTenantSubPath
 
   useEffect(() => {
@@ -189,17 +223,35 @@ function Sidebar({
 
             {effectiveTenantId && userTenants.length > 0 && (
               <div>
-                {visibleTenantNavItems.map((item) => (
-                  <SidebarNavItem
-                    key={item.path}
-                    to={`/tenants/${effectiveTenantId}/${item.path}`}
-                    exactPathMatch={item.exactPathMatch}
-                    onClick={onCloseMobileMenu}
-                  >
-                    <item.icon className="size-4" aria-hidden />
-                    {item.label}
-                  </SidebarNavItem>
-                ))}
+                {visibleTenantNavItems.map((item) => {
+                  const visibleChildren = item.children?.filter(isItemVisible)
+
+                  return visibleChildren && visibleChildren.length > 0 ? (
+                    <SidebarNavGroup
+                      key={item.path}
+                      to={`/tenants/${effectiveTenantId}/${item.path}`}
+                      label={item.label}
+                      icon={item.icon}
+                      items={visibleChildren.map((child) => ({
+                        to: `/tenants/${effectiveTenantId}/${child.path}`,
+                        label: child.label,
+                        icon: child.icon,
+                        exactPathMatch: child.exactPathMatch,
+                      }))}
+                      onNavigate={onCloseMobileMenu}
+                    />
+                  ) : (
+                    <SidebarNavItem
+                      key={item.path}
+                      to={`/tenants/${effectiveTenantId}/${item.path}`}
+                      exactPathMatch={item.exactPathMatch}
+                      onClick={onCloseMobileMenu}
+                    >
+                      <item.icon className="size-4" aria-hidden />
+                      {item.label}
+                    </SidebarNavItem>
+                  )
+                })}
               </div>
             )}
           </div>

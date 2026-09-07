@@ -21,12 +21,14 @@ import {
   IncidentDetail,
 } from './pages/tenant-incidents'
 import CreateTenant from './pages/create-tenant'
+import TenantReports from './pages/tenant-reports'
 import {
   PrivateARContainer,
   PrivateARDailyContainer,
   PrivateAREndpointsContainer,
   PrivateAREndpointsDailyContainer,
 } from './pages/availability-reliability'
+import TenantCapabilities from './pages/tenant-capabilities'
 import TenantDetails from './pages/tenant-details'
 import AssignProjects from './pages/AssignProjects'
 import CreateProject from './pages/CreateProject'
@@ -34,6 +36,7 @@ import Administration from './pages/administration'
 import EndpointsAccess from './pages/endpoints-access'
 import { Settings, PerformanceSettings } from './pages/configuration-settings'
 import TenantPerformance from './pages/TenantPerformance'
+import ManageTenantMembers from './pages/manage-tenant-members'
 import MyInvitations from './pages/MyInvitations'
 import { InvitationReview } from './pages/InvitationReview'
 import PublicStatusPage from './pages/PublicStatusPage'
@@ -130,7 +133,7 @@ function PlatformRoutes() {
         <Route element={<Layout />}>
           <Route index element={<Home />} />
           <Route
-            path="tenants/:id/details"
+            path="tenants/:id/summary"
             element={
               <AuthProtected>
                 <TenantDetails />
@@ -162,6 +165,14 @@ function PlatformRoutes() {
             }
           />
           <Route
+            path="tenants/:id/members"
+            element={
+              <AuthProtected>
+                <ManageTenantMembers />
+              </AuthProtected>
+            }
+          />
+          <Route
             path="tenants/:id/dashboard"
             element={
               <AuthProtected>
@@ -182,6 +193,14 @@ function PlatformRoutes() {
             element={
               <AuthProtected>
                 <PrivateStatusView />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/reports"
+            element={
+              <AuthProtected>
+                <TenantReports />
               </AuthProtected>
             }
           />
@@ -222,6 +241,14 @@ function PlatformRoutes() {
             element={
               <AuthProtected>
                 <PrivateAREndpointsDailyContainer />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/capabilities"
+            element={
+              <AuthProtected>
+                <TenantCapabilities />
               </AuthProtected>
             }
           />
