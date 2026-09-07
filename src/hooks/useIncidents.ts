@@ -11,16 +11,20 @@ import {
   fetchIncident,
   fetchIncidentActivity,
   fetchIncidents,
+  updateIncident,
   updateIncidentStatus,
+  updateIncidentStatusDescription,
 } from '@/api/incidents'
 import type {
   Incident,
   IncidentActivity,
+  IncidentActivityUpdateRequest,
   IncidentComment,
   IncidentCommentRequest,
   IncidentRequest,
   IncidentStatusUpdateRequest,
   IncidentsResponse,
+  IncidentUpdateRequest,
 } from '@/types/incidents'
 
 export const useGetTenantIncidents = (
@@ -98,6 +102,47 @@ export const useCreateIncidentMutation = () => {
   })
 }
 
+export const useUpdateIncidentMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<
+    Incident,
+    Error,
+    { tenantId: string; incidentId: string; data: IncidentUpdateRequest }
+  >({
+    mutationFn: ({
+      tenantId,
+      incidentId,
+      data,
+    }: {
+      tenantId: string
+      incidentId: string
+      data: IncidentUpdateRequest
+    }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantId) {
+        throw new Error('Tenant ID is required')
+      }
+      if (!incidentId) {
+        throw new Error('Incident ID is required')
+      }
+      return updateIncident(tenantId, incidentId, data, token)
+    },
+    onSuccess: (_, { tenantId, incidentId }) => {
+      queryClient.invalidateQueries({ queryKey: ['incidents'] })
+      queryClient.invalidateQueries({
+        queryKey: ['incident', tenantId, incidentId],
+      })
+    },
+    onError: (error) => {
+      console.error('Incident update error:', error)
+    },
+  })
+}
+
 export const useUpdateIncidentStatusMutation = () => {
   const queryClient = useQueryClient()
   const { token } = useAuth()
@@ -138,6 +183,66 @@ export const useUpdateIncidentStatusMutation = () => {
     },
     onError: (error) => {
       console.error('Incident status update error:', error)
+    },
+  })
+}
+
+export const useUpdateIncidentStatusDescriptionMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<
+    Incident,
+    Error,
+    {
+      tenantId: string
+      incidentId: string
+      statusId: string
+      data: IncidentActivityUpdateRequest
+    }
+  >({
+    mutationFn: ({
+      tenantId,
+      incidentId,
+      statusId,
+      data,
+    }: {
+      tenantId: string
+      incidentId: string
+      statusId: string
+      data: IncidentActivityUpdateRequest
+    }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantId) {
+        throw new Error('Tenant ID is required')
+      }
+      if (!incidentId) {
+        throw new Error('Incident ID is required')
+      }
+      if (!statusId) {
+        throw new Error('Status ID is required')
+      }
+      return updateIncidentStatusDescription(
+        tenantId,
+        incidentId,
+        statusId,
+        data,
+        token,
+      )
+    },
+    onSuccess: (_, { tenantId, incidentId }) => {
+      queryClient.invalidateQueries({ queryKey: ['incidents'] })
+      queryClient.invalidateQueries({
+        queryKey: ['incident', tenantId, incidentId],
+      })
+      queryClient.invalidateQueries({
+        queryKey: ['incident-activity', tenantId, incidentId],
+      })
+    },
+    onError: (error) => {
+      console.error('Incident status description update error:', error)
     },
   })
 }

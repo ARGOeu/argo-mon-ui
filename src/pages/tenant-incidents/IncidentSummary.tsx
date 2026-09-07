@@ -1,24 +1,11 @@
 import { ChatBubbleLeftIcon } from '@heroicons/react/16/solid'
 import Badge from '@/components/Badge'
+import { formatDateTime, roundToSecond } from './utils/incidentDate'
 import {
   incidentStatusBadgeClass,
   incidentStatusLabel,
 } from './utils/incidentStatus'
 import type { Incident } from '@/types/incidents'
-
-const formatDateTime = (isoString: string) =>
-  new Date(isoString).toLocaleString('en-GB', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'UTC',
-  })
-
-// Ignores sub-second differences when comparing timestamps.
-const roundToSecond = (isoString: string) =>
-  Math.floor(new Date(isoString).getTime() / 1000)
 
 const maxVisibleServices = 5
 
@@ -79,7 +66,7 @@ const IncidentSummary = ({
     <div>
       <div className="flex flex-wrap items-center gap-3 mb-1">
         <p className="text-base font-medium text-foreground transition-colors group-hover:text-brand">
-          {formatDateTime(incident.created_at)} (UTC)
+          {incident.title}
         </p>
         <Badge
           size="md"
@@ -95,8 +82,8 @@ const IncidentSummary = ({
       <div className="bg-surface-muted rounded-lg px-3 py-2">
         <div className="grid grid-cols-[1fr_auto] gap-x-12 lg:gap-x-60">
           <div className="min-w-0">
-            <p className="text-foreground font-medium break-words">
-              {incident.title}
+            <p className="text-sm text-foreground font-medium break-words">
+              {formatDateTime(incident.created_at)} (UTC)
             </p>
 
             <p className="text-sm text-body line-clamp-3 mt-0.5">
@@ -110,7 +97,7 @@ const IncidentSummary = ({
               </p>
             )}
 
-            <p className="text-sm text-muted mt-1.5">
+            <p className="text-sm text-muted break-words max-w-md mt-1.5">
               Created by{' '}
               <span className="text-foreground">{incident.created_by}</span>
               {hasBeenUpdated && (
@@ -126,7 +113,7 @@ const IncidentSummary = ({
               {hasBeenUpdated && (
                 <>
                   {' '}
-                  <span className="text-subtle">·</span> Updated{' '}
+                  <span className="text-subtle">·</span> Last updated on{' '}
                   {formatDateTime(incident.updated_at as string)} (UTC)
                 </>
               )}
