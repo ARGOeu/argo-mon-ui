@@ -125,7 +125,7 @@ function PlatformRoutes() {
           path="ar-groups/:groupName/report/:reportName/services/:serviceName/endpoints/:endpointName/:month"
           element={<PublicAREndpointsDailyContainer />}
         />
-        <Route path="capabilities" element={<PublicCapabilityContainer />} />
+        <Route path="capability" element={<PublicCapabilityContainer />} />
         <Route path="performance" element={<PublicPerformanceContainer />} />
         <Route path="*" element={<NotFound />} />
       </Route>

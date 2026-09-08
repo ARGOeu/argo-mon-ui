@@ -61,9 +61,9 @@ const TenantCardFooter = ({
 
     {(isSuperAdmin || isAdmin) && (
       <IconButton
-        label="Capabilities"
+        label="Capability"
         icon={<Square3Stack3DIcon className={actionIconClass} />}
-        href={`/tenants/${tenantId}/capabilities`}
+        href={`/tenants/${tenantId}/capability`}
         className="text-amber-600 hover:bg-amber-50"
       />
     )}
