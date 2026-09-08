@@ -36,6 +36,7 @@ const today = new Date().toISOString().split('T')[0]
 interface FormData {
   service: string
   url: string
+  friendlyName: string
   tags: string[]
   group: string
   monitored: boolean
@@ -89,6 +90,7 @@ const CreateTopologyEndpoint = ({
       return {
         service: editingEndpoint.service,
         url: editingEndpoint.tags?.info_URL ?? editingEndpoint.hostname,
+        friendlyName: editingEndpoint.tags?.info_fname ?? '',
         tags: labelsTag
           ? labelsTag
               .split(',')
@@ -104,6 +106,7 @@ const CreateTopologyEndpoint = ({
               key !== 'labels' &&
               key !== 'info_ID' &&
               key !== 'info_URL' &&
+              key !== 'info_fname' &&
               key !== 'hostname',
           )
           .map(([key, value]) => ({ id: crypto.randomUUID(), key, value })),
@@ -119,6 +122,7 @@ const CreateTopologyEndpoint = ({
     return {
       service: '',
       url: '',
+      friendlyName: '',
       tags: [],
       group: '',
       monitored: true,
@@ -270,6 +274,7 @@ const CreateTopologyEndpoint = ({
       tags: {
         monitored: formData.monitored ? '1' : '0',
         info_URL: trimmedUrl,
+        info_fname: formData.friendlyName.trim(),
         hostname: extractedHostname,
         ...(formData.tags.length > 0
           ? { labels: formData.tags.join(',') }
@@ -465,6 +470,23 @@ const CreateTopologyEndpoint = ({
             )}
           </div>
 
+          {/* Friendly name */}
+          <div className="flex flex-col">
+            <label className={labelClass}>Friendly Name</label>
+            <input
+              type="text"
+              name="friendlyName"
+              value={formData.friendlyName}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  friendlyName: e.target.value,
+                }))
+              }
+              placeholder="Enter a friendly name for this endpoint"
+            />
+          </div>
+
           {/* Labels */}
           <div className="flex flex-col">
             <label className={labelClass}>Labels</label>
@@ -573,6 +595,10 @@ const CreateTopologyEndpoint = ({
               {
                 key: 'info_URL',
                 message: '"info_URL" cannot be used as a key',
+              },
+              {
+                key: 'info_fname',
+                message: '"info_fname" cannot be used as a key',
               },
               {
                 key: 'hostname',
