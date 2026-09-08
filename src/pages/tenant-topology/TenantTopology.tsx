@@ -9,6 +9,7 @@ import TopologyDocumentation from './TopologyDocumentation'
 import TopologyFeed from './TopologyFeed'
 import CreateTopologyEndpoint from './CreateTopologyEndpoint'
 import CreateTopologyGroup from './CreateTopologyGroup'
+import ViewTopologyEndpoint from './ViewTopologyEndpoint'
 import type { EndpointTopologyItem, GroupTopologyItem } from '@/types/topology'
 
 const tabs = [
@@ -80,6 +81,18 @@ const TenantTopology = () => {
   const [editingGroup, setEditingGroup] = useState<GroupTopologyItem | null>(
     null,
   )
+  const [viewingEndpoint, setViewingEndpoint] =
+    useState<EndpointTopologyItem | null>(null)
+
+  if (viewingEndpoint) {
+    return (
+      <ViewTopologyEndpoint
+        tenantId={tenantId}
+        endpoint={viewingEndpoint}
+        onClose={() => setViewingEndpoint(null)}
+      />
+    )
+  }
 
   if (editingEndpoint) {
     return (
@@ -131,7 +144,11 @@ const TenantTopology = () => {
       />
 
       {activeTab === 'endpoints' && (
-        <TopologyEndpoints tenantId={tenantId} onEdit={setEditingEndpoint} />
+        <TopologyEndpoints
+          tenantId={tenantId}
+          onEdit={setEditingEndpoint}
+          onView={setViewingEndpoint}
+        />
       )}
 
       {activeTab === 'groups' && (

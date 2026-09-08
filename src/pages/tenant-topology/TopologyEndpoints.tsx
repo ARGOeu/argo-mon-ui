@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import {
   ArrowDownTrayIcon,
+  Bars3Icon,
   PencilSquareIcon,
   TrashIcon,
 } from '@heroicons/react/16/solid'
@@ -48,9 +49,14 @@ const toBooleanFlag = (value: string | undefined): boolean | undefined => {
 interface TopologyEndpointsProps {
   tenantId: string
   onEdit: (endpoint: EndpointTopologyItem) => void
+  onView: (endpoint: EndpointTopologyItem) => void
 }
 
-const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
+const TopologyEndpoints = ({
+  tenantId,
+  onEdit,
+  onView,
+}: TopologyEndpointsProps) => {
   const { tenant } = useSelectedTenant()
   const [monitoredFilter, setMonitoredFilter] = useState<
     'all' | 'monitored' | 'not_monitored'
@@ -301,8 +307,10 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
                 Service
               </SortableColumnHeader>
             </th>
-            {isExternal && <th className={thBase}>Hostname</th>}
-            <th className={thBase}>URL</th>
+            {isExternal && (
+              <th className={`${thBase} min-w-[140px]`}>Hostname</th>
+            )}
+            <th className={`${thBase} min-w-[180px]`}>URL</th>
             <th className={`${thBase} w-[22%]`}>
               <SortableColumnHeader
                 isActive={sortColumn === 'group'}
@@ -402,6 +410,12 @@ const TopologyEndpoints = ({ tenantId, onEdit }: TopologyEndpointsProps) => {
                 {showActions && (
                   <td className={`${tdBase} whitespace-nowrap`}>
                     <div className="flex items-center gap-1">
+                      <IconButton
+                        icon={<Bars3Icon className="size-4 md:size-5" />}
+                        label="View"
+                        onClick={() => onView(endpoint)}
+                        className="text-muted hover:bg-surface-strong !p-1"
+                      />
                       <IconButton
                         icon={<PencilSquareIcon className="size-4 md:size-5" />}
                         label="Edit"
