@@ -32,8 +32,10 @@ import {
   notifyAms,
   setTenantNode,
   setNodeReport,
-  fetchTenantCapabilityAvailability,
-  fetchTenantCapabilityStatus,
+  fetchNodeMetrics,
+  fetchNodeServiceMetrics,
+  fetchPublicNodeMetrics,
+  fetchPublicNodeServiceMetrics,
   fetchGetTopologyFeed,
   fetchUpdateTopologyFeed,
 } from '@/api/tenants'
@@ -52,11 +54,8 @@ import type {
   MetricProfileResponse,
   TenantReadinessResponse,
   TopologyFeed,
-  CapabilityAvailabilityResponse,
-  CapabilityAvailabilityParams,
-  CapabilityStatusResponse,
-  CapabilityStatusParams,
 } from '@/types/tenants'
+import type { MetricsResponse, MetricsQueryParams } from '@/types/capability'
 import type { ProjectList } from '@/types/projects'
 
 export const useCreateTenantMutation = () => {
@@ -689,12 +688,8 @@ export const useSetTenantNodeMutation = () => {
         queryKey: ['tenant-reports', variables.id],
       })
       if (variables.node) {
-        queryClient.invalidateQueries({
-          queryKey: ['tenant-capability-availability', variables.id],
-        })
-        queryClient.invalidateQueries({
-          queryKey: ['tenant-capability-status', variables.id],
-        })
+        queryClient.invalidateQueries({ queryKey: ['node-metrics'] })
+        queryClient.invalidateQueries({ queryKey: ['node-service-metrics'] })
       }
     },
     onError: (error) => {
@@ -721,12 +716,9 @@ export const useSetNodeReportMutation = () => {
       queryClient.invalidateQueries({
         queryKey: ['user-tenant', variables.tenantId],
       })
-      queryClient.invalidateQueries({
-        queryKey: ['tenant-capability-availability', variables.tenantId],
-      })
-      queryClient.invalidateQueries({
-        queryKey: ['tenant-capability-status', variables.tenantId],
-      })
+
+      queryClient.invalidateQueries({ queryKey: ['node-metrics'] })
+      queryClient.invalidateQueries({ queryKey: ['node-service-metrics'] })
     },
     onError: (error) => {
       console.error('Set node report error:', error)
@@ -734,39 +726,75 @@ export const useSetNodeReportMutation = () => {
   })
 }
 
-export const useGetTenantCapabilityAvailability = (
-  tenantId: string,
-  params: CapabilityAvailabilityParams = {},
+export const useGetNodeMetrics = (
+  nodeName: string,
+  params: MetricsQueryParams = {},
   enabled: boolean = true,
 ) => {
   const { token } = useAuth()
-  return useQuery<CapabilityAvailabilityResponse, Error>({
-    queryKey: ['tenant-capability-availability', tenantId, params],
+  return useQuery<MetricsResponse, Error>({
+    queryKey: ['node-metrics', nodeName, params],
     queryFn: () => {
       if (!token) throw new Error('No authentication token available')
-      if (!tenantId) throw new Error('Tenant ID is required')
-      return fetchTenantCapabilityAvailability(tenantId, params, token)
+      if (!nodeName) throw new Error('Node name is required')
+      return fetchNodeMetrics(nodeName, params, token)
     },
     retry: false,
-    enabled: enabled && !!token && !!tenantId,
+    enabled: enabled && !!token && !!nodeName,
   })
 }
 
-export const useGetTenantCapabilityStatus = (
-  tenantId: string,
-  params: CapabilityStatusParams = {},
+export const useGetNodeServiceMetrics = (
+  nodeName: string,
+  serviceId: string,
+  params: MetricsQueryParams = {},
   enabled: boolean = true,
 ) => {
   const { token } = useAuth()
-  return useQuery<CapabilityStatusResponse, Error>({
-    queryKey: ['tenant-capability-status', tenantId, params],
+  return useQuery<MetricsResponse, Error>({
+    queryKey: ['node-service-metrics', nodeName, serviceId, params],
     queryFn: () => {
       if (!token) throw new Error('No authentication token available')
-      if (!tenantId) throw new Error('Tenant ID is required')
-      return fetchTenantCapabilityStatus(tenantId, params, token)
+      if (!nodeName) throw new Error('Node name is required')
+      if (!serviceId) throw new Error('Service ID is required')
+      return fetchNodeServiceMetrics(nodeName, serviceId, params, token)
     },
     retry: false,
-    enabled: enabled && !!token && !!tenantId,
+    enabled: enabled && !!token && !!nodeName && !!serviceId,
+  })
+}
+
+export const useGetPublicNodeMetrics = (
+  nodeName: string,
+  params: MetricsQueryParams = {},
+  enabled: boolean = true,
+) => {
+  return useQuery<MetricsResponse, Error>({
+    queryKey: ['public-node-metrics', nodeName, params],
+    queryFn: () => {
+      if (!nodeName) throw new Error('Node name is required')
+      return fetchPublicNodeMetrics(nodeName, params)
+    },
+    retry: false,
+    enabled: enabled && !!nodeName,
+  })
+}
+
+export const useGetPublicNodeServiceMetrics = (
+  nodeName: string,
+  serviceId: string,
+  params: MetricsQueryParams = {},
+  enabled: boolean = true,
+) => {
+  return useQuery<MetricsResponse, Error>({
+    queryKey: ['public-node-service-metrics', nodeName, serviceId, params],
+    queryFn: () => {
+      if (!nodeName) throw new Error('Node name is required')
+      if (!serviceId) throw new Error('Service ID is required')
+      return fetchPublicNodeServiceMetrics(nodeName, serviceId, params)
+    },
+    retry: false,
+    enabled: enabled && !!nodeName && !!serviceId,
   })
 }
 

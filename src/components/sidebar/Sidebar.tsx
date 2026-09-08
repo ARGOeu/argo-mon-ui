@@ -57,8 +57,8 @@ const tenantNavItems: TenantNavItem[] = [
       },
       { path: 'reports', label: 'Conf reports', icon: DocumentChartBarIcon },
       {
-        path: 'capabilities',
-        label: 'Capabilities',
+        path: 'capability',
+        label: 'Capability',
         icon: ShieldCheckIcon,
         requiredRoles: ['tenant_admin'],
       },

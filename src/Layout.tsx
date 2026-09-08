@@ -43,7 +43,7 @@ function LayoutContent() {
         onLogout={logout}
       />
 
-      <main className="flex-1 bg-white overflow-auto">
+      <main className="flex-1 bg-white overflow-auto [scrollbar-gutter:stable]">
         <div
           className={`${isActiveTenantDetailsRoute && !tenant?.error ? '' : 'container mx-2 md:mx-auto py-2 px-4 md:px-6'}`}
         >
@@ -77,7 +77,7 @@ function Layout() {
           profile={undefined}
           onLogout={() => {}}
         />
-        <main className="flex-1 bg-white overflow-auto">
+        <main className="flex-1 bg-white overflow-auto [scrollbar-gutter:stable]">
           <div className="container mx-2 md:mx-auto p-4 md:px-6">
             <LoginPrompt
               title="Authentication Required"

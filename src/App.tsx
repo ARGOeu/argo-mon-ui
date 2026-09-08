@@ -28,7 +28,7 @@ import {
   PrivateAREndpointsContainer,
   PrivateAREndpointsDailyContainer,
 } from './pages/availability-reliability'
-import TenantCapabilities from './pages/tenant-capabilities'
+
 import TenantDetails from './pages/tenant-details'
 import AssignProjects from './pages/AssignProjects'
 import CreateProject from './pages/CreateProject'
@@ -49,7 +49,7 @@ import PrivateDashboardContainer from './pages/dashboard'
 import {
   PublicTenantLayout,
   PublicDashboardContainer,
-  PublicCapabilitiesContainer,
+  PublicCapabilityContainer,
   PublicPerformanceContainer,
   PublicARContainer,
   PublicARDailyContainer,
@@ -65,6 +65,7 @@ import PrivateStatusView from './pages/status/PrivateStatusView'
 import PublicStatusView from './pages/public-tenant/PublicStatusView'
 import PrivateGroupsDashboard from './pages/dashboard/PrivateGroupDashboard'
 import PublicGroupDashboard from './pages/public-tenant/PublicGroupDashboard'
+import TenantCapability from './pages/tenant-capability'
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -124,7 +125,7 @@ function PlatformRoutes() {
           path="ar-groups/:groupName/report/:reportName/services/:serviceName/endpoints/:endpointName/:month"
           element={<PublicAREndpointsDailyContainer />}
         />
-        <Route path="capabilities" element={<PublicCapabilitiesContainer />} />
+        <Route path="capabilities" element={<PublicCapabilityContainer />} />
         <Route path="performance" element={<PublicPerformanceContainer />} />
         <Route path="*" element={<NotFound />} />
       </Route>
@@ -245,10 +246,10 @@ function PlatformRoutes() {
             }
           />
           <Route
-            path="tenants/:id/capabilities"
+            path="tenants/:id/capability"
             element={
               <AuthProtected>
-                <TenantCapabilities />
+                <TenantCapability />
               </AuthProtected>
             }
           />
@@ -480,7 +481,7 @@ function CustomDomainRoutes() {
           path="/ar-groups/:groupName/report/:reportName/services/:serviceName/endpoints/:endpointName/:month"
           element={<PublicAREndpointsDailyContainer />}
         />
-        <Route path="/capabilities" element={<PublicCapabilitiesContainer />} />
+        <Route path="/capability" element={<PublicCapabilityContainer />} />
         <Route path="/performance" element={<PublicPerformanceContainer />} />
       </Route>
       <Route path="*" element={<NotFound />} />
