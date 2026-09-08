@@ -55,9 +55,9 @@ const PublicTenantLayout = () => {
     ? `/public/tenants/${tenantName}/status`
     : '/status'
 
-  const capabilitiesPath = isPlatformDomain()
-    ? `/public/tenants/${tenantName}/capabilities`
-    : '/capabilities'
+  const capabilityPath = isPlatformDomain()
+    ? `/public/tenants/${tenantName}/capability`
+    : '/capability'
 
   const performancePath = isPlatformDomain()
     ? `/public/tenants/${tenantName}/performance`
@@ -115,11 +115,11 @@ const PublicTenantLayout = () => {
             Status
           </SidebarNavItem>
           <SidebarNavItem
-            to={capabilitiesPath}
+            to={capabilityPath}
             onClick={() => setIsMobileMenuOpen(false)}
           >
             <ShieldCheckIcon className="size-4" aria-hidden />
-            Capabilities
+            Capability
           </SidebarNavItem>
           {performanceSetting?.enabled && tenantInfo?.performance && (
             <SidebarNavItem

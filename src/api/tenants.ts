@@ -11,11 +11,8 @@ import type {
   MetricProfileResponse,
   TenantReadinessResponse,
   TopologyFeed,
-  CapabilityAvailabilityResponse,
-  CapabilityAvailabilityParams,
-  CapabilityStatusResponse,
-  CapabilityStatusParams,
 } from '@/types/tenants'
+import type { MetricsResponse, MetricsQueryParams } from '@/types/capability'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
@@ -634,34 +631,22 @@ export const notifyAms = async (
   return response.json()
 }
 
-export const fetchTenantCapabilityAvailability = async (
-  tenantId: string,
-  params: CapabilityAvailabilityParams = {},
-  token: string,
-): Promise<CapabilityAvailabilityResponse> => {
+const buildMetricsQuery = (params: MetricsQueryParams): string => {
   const query = new URLSearchParams()
-  if (params.date) {
-    query.append('date', params.date)
-  }
-  if (params.start_date) {
-    query.append('start_date', params.start_date)
-  }
-  if (params.end_date) {
-    query.append('end_date', params.end_date)
-  }
-  if (params.start_time) {
-    query.append('start_time', params.start_time)
-  }
-  if (params.end_time) {
-    query.append('end_time', params.end_time)
-  }
-  if (params.granularity) {
-    query.append('granularity', params.granularity)
-  }
+  if (params.startDate) query.append('start-date', params.startDate)
+  if (params.endDate) query.append('end-date', params.endDate)
+  if (params.granularity) query.append('granularity', params.granularity)
   const queryString = query.toString()
+  return queryString ? `?${queryString}` : ''
+}
 
+export const fetchNodeMetrics = async (
+  nodeName: string,
+  params: MetricsQueryParams = {},
+  token: string,
+): Promise<MetricsResponse> => {
   const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/capabilities/availability${queryString ? `?${queryString}` : ''}`,
+    `${BACKEND_API}/v1/nodes/${encodeURIComponent(nodeName)}/capabilities/monitoring/metrics${buildMetricsQuery(params)}`,
     {
       method: 'GET',
       headers: {
@@ -681,32 +666,63 @@ export const fetchTenantCapabilityAvailability = async (
   return response.json()
 }
 
-export const fetchTenantCapabilityStatus = async (
-  tenantId: string,
-  params: CapabilityStatusParams = {},
+export const fetchNodeServiceMetrics = async (
+  nodeName: string,
+  serviceId: string,
+  params: MetricsQueryParams = {},
   token: string,
-): Promise<CapabilityStatusResponse> => {
-  const query = new URLSearchParams()
-  if (params.start_time) {
-    query.append('start_time', params.start_time)
-  }
-  if (params.end_time) {
-    query.append('end_time', params.end_time)
-  }
-  if (params.history !== undefined) {
-    query.append('history', String(params.history))
-  }
-
-  const queryString = query.toString()
-
+): Promise<MetricsResponse> => {
   const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/capabilities/status${queryString ? `?${queryString}` : ''}`,
+    `${BACKEND_API}/v1/nodes/${encodeURIComponent(nodeName)}/capabilities/monitoring/metrics/${encodeURIComponent(serviceId)}${buildMetricsQuery(params)}`,
     {
       method: 'GET',
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchPublicNodeMetrics = async (
+  nodeName: string,
+  params: MetricsQueryParams = {},
+): Promise<MetricsResponse> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/public/nodes/${encodeURIComponent(nodeName)}/capabilities/monitoring/metrics${buildMetricsQuery(params)}`,
+    {
+      headers: { 'Content-Type': 'application/json' },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchPublicNodeServiceMetrics = async (
+  nodeName: string,
+  serviceId: string,
+  params: MetricsQueryParams = {},
+): Promise<MetricsResponse> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/public/nodes/${encodeURIComponent(nodeName)}/capabilities/monitoring/metrics/${encodeURIComponent(serviceId)}${buildMetricsQuery(params)}`,
+    {
+      headers: { 'Content-Type': 'application/json' },
     },
   )
 

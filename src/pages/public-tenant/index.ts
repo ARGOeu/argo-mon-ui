@@ -1,6 +1,6 @@
 export { default as PublicTenantLayout } from './PublicTenantLayout'
 export { default as PublicDashboardContainer } from './PublicDashboardContainer'
-export { default as PublicCapabilitiesContainer } from './PublicCapabilitiesContainer'
+export { default as PublicCapabilityContainer } from './PublicCapabilityContainer'
 export { default as PublicPerformanceContainer } from './PublicPerformanceContainer'
 export { default as PublicARContainer } from './PublicARContainer'
 export { default as PublicARDailyContainer } from './PublicARDailyContainer'
