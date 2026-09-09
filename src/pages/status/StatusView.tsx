@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Copy,
   Info,
+  Link2,
   X,
 } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
@@ -27,6 +28,7 @@ import type {
   StatusValue,
 } from '@/types/statusTimeline'
 import { stripIdSuffix } from '@/utils/cleanup'
+import type { DeepLinkFocus } from '@/hooks/useStatusDeepLink'
 import {
   buildSegments,
   buildStatusDivisions,
@@ -220,7 +222,10 @@ const SegmentTooltip = ({
   )
 }
 
-// This is the pop up panel that displays the metric details when the user clicks at a metric point
+// This is the pop up panel that displays the metric details when the user
+// clicks (or deep-links to) a metric point. Only ever attached to a
+// metric-depth row, which is never the first row on screen, so it always
+// anchors directly below its own row, right next to the marker.
 const SelectedPointPanel = ({
   point,
   rowIndex,
@@ -238,11 +243,11 @@ const SelectedPointPanel = ({
   detailsLoading?: boolean
   detailsError?: Error | null
 }) => {
-  const below = rowIndex === 0
   const tone = STATUS_STYLES[point.entry.value]
   const pct = point.pct
 
   const [copied, setCopied] = useState(false)
+  const [linkCopied, setLinkCopied] = useState(false)
 
   const copyText = [details?.summary, details?.message]
     .filter(Boolean)
@@ -260,14 +265,25 @@ const SelectedPointPanel = ({
     }
   }
 
+  const handleCopyLink = async (e: MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setLinkCopied(true)
+      setTimeout(() => setLinkCopied(false), 1500)
+    } catch {
+      console.log('clipboard error during link copy')
+    }
+  }
+
   return (
     <div
       className="pointer-events-auto absolute z-30 whitespace-nowrap rounded-md bg-neutral-900 px-2.5 py-1.5 text-[11px] leading-snug text-white shadow-lg ring-1 ring-sky-500"
       style={{
-        top: rowIndex * ROW_HEIGHT + (below ? ROW_HEIGHT - 4 : 4),
+        top: rowIndex * ROW_HEIGHT + ROW_HEIGHT - 4,
         transform: `translate(${
           pct < 12 ? '0' : pct > 88 ? '-100%' : '-50%'
-        }, ${below ? '0' : '-100%'})`,
+        }, 0)`,
         left: `${pct < 12 ? 0 : pct > 88 ? 100 : pct}%`,
       }}
     >
@@ -317,24 +333,41 @@ const SelectedPointPanel = ({
                 </p>
               )}
             </div>
-            <div className="mt-1 flex justify-end">
-              <button
-                type="button"
-                onClick={handleCopy}
-                className="flex cursor-pointer items-center gap-1 rounded-sm px-1 py-0.5 text-white/50 transition-colors hover:bg-white/20 hover:text-white"
-                aria-label={copied ? 'Copied' : 'Copy details'}
-                title={copied ? 'Copied' : 'Copy details'}
-              >
-                {copied ? (
-                  <Check className="h-3 w-3" strokeWidth={2.5} />
-                ) : (
-                  <Copy className="h-3 w-3" strokeWidth={2.5} />
-                )}
-                {copied ? 'Copied' : 'Copy'}
-              </button>
-            </div>
           </div>
         )}
+
+      <div className="mt-1 flex items-center justify-end gap-1">
+        <button
+          type="button"
+          onClick={handleCopyLink}
+          className="flex cursor-pointer items-center gap-1 rounded-sm px-1 py-0.5 text-white/50 transition-colors hover:bg-white/20 hover:text-white"
+          aria-label={linkCopied ? 'Link copied' : 'Copy link to this event'}
+          title={linkCopied ? 'Link copied' : 'Copy link to this event'}
+        >
+          {linkCopied ? (
+            <Check className="h-3 w-3" strokeWidth={2.5} />
+          ) : (
+            <Link2 className="h-3 w-3" strokeWidth={2.5} />
+          )}
+          {linkCopied ? 'Copied' : 'Copy link'}
+        </button>
+        {(details?.summary || details?.message) && (
+          <button
+            type="button"
+            onClick={handleCopy}
+            className="flex cursor-pointer items-center gap-1 rounded-sm px-1 py-0.5 text-white/50 transition-colors hover:bg-white/20 hover:text-white"
+            aria-label={copied ? 'Copied' : 'Copy details'}
+            title={copied ? 'Copied' : 'Copy details'}
+          >
+            {copied ? (
+              <Check className="h-3 w-3" strokeWidth={2.5} />
+            ) : (
+              <Copy className="h-3 w-3" strokeWidth={2.5} />
+            )}
+            {copied ? 'Copied' : 'Copy'}
+          </button>
+        )}
+      </div>
     </div>
   )
 }
@@ -627,6 +660,17 @@ export interface StatusViewProps {
   pointDetails?: StatusResultDetails
   pointDetailsLoading?: boolean
   pointDetailsError?: Error | null
+  // Deep-link target: once the matching metric's data has loaded, select,
+  // pin, and zoom to this point automatically - same effect as a click.
+  focusSelection?: DeepLinkFocus | null
+  // True once the container has fetched far enough down the deep-linked
+  // chain to know whether the target exists. Prevents the focus-matching
+  // effect below from giving up before the relevant data was even requested.
+  focusReady?: boolean
+  // Fired once the focus target has either been found and applied, or the
+  // lookup has given up (chain fully resolved, no match). Lets the
+  // container know it's safe to start syncing state back into the URL.
+  onFocusSettled?: () => void
 }
 
 const StatusView = ({
@@ -660,6 +704,9 @@ const StatusView = ({
   pointDetails,
   pointDetailsLoading,
   pointDetailsError,
+  focusSelection,
+  focusReady,
+  onFocusSettled,
 }: StatusViewProps) => {
   const [search, setSearch] = useState('')
   const [hoverPct, setHoverPct] = useState<number | null>(null)
@@ -918,6 +965,84 @@ const StatusView = ({
     }
   }
 
+  // Apply the deep-linked focus target once its data has loaded. The target
+  // includes the hierarchy so we can find the exact metric row and scroll it
+  // into view before selecting the requested point.
+  const appliedFocusRef = useRef(false)
+  const focusRowRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    if (!focusSelection || appliedFocusRef.current) return
+    if (!focusReady) return
+
+    const targetRow = filtered.find(
+      (row): row is TimelineRow & { kind: 'node' } =>
+        row.kind === 'node' &&
+        row.depth === METRIC_DEPTH &&
+        row.name === focusSelection.metric &&
+        (!focusSelection.group ||
+          row.key.startsWith(`${focusSelection.group}\u0000`)) &&
+        (!focusSelection.serviceType ||
+          row.key.includes(`\u0000${focusSelection.serviceType}\u0000`)) &&
+        (!focusSelection.endpoint ||
+          row.key.includes(`\u0000${focusSelection.endpoint}\u0000`)),
+    )
+
+    if (targetRow) {
+      const points = metricPointsByRow.get(targetRow.key) ?? []
+      const wantedT = Date.parse(focusSelection.timestamp)
+      const match =
+        points.find((p) => p.entry.timestamp === focusSelection.timestamp) ??
+        (Number.isFinite(wantedT)
+          ? points.reduce<MetricPoint | null>(
+              (closest, p) =>
+                !closest ||
+                Math.abs(p.t - wantedT) < Math.abs(closest.t - wantedT)
+                  ? p
+                  : closest,
+              null,
+            )
+          : undefined)
+
+      if (match) {
+        setSelectedPoint({ rowKey: targetRow.key, point: match })
+        setPinnedTime(match.t)
+        const pad = Math.max(MIN_ZOOM_SPAN_MS, 30 * 60 * 1000)
+        const newStart = Math.max(match.t - pad, baseStart)
+        const newEnd = Math.min(match.t + pad, baseEnd)
+        applyWindow(newStart, newEnd, newEnd - newStart, baseSpan)
+
+        appliedFocusRef.current = true
+
+        // The row is already rendered because it was found in `filtered`.
+        // Scroll only the deep-linked target; normal user interaction is not
+        // affected.
+        requestAnimationFrame(() => {
+          focusRowRef.current?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+          })
+        })
+
+        onFocusSettled?.()
+        return
+      }
+    }
+
+    // The chain has fully resolved and there is still no matching point.
+    appliedFocusRef.current = true
+    onFocusSettled?.()
+  }, [
+    focusSelection,
+    focusReady,
+    filtered,
+    metricPointsByRow,
+    baseStart,
+    baseEnd,
+    baseSpan,
+    onFocusSettled,
+  ])
+
   // Attach the mouse wheel listener for zooming
   useEffect(() => {
     const el = scrubEl
@@ -983,6 +1108,21 @@ const StatusView = ({
     selectedPoint === null
       ? -1
       : filtered.findIndex((r) => r.key === selectedPoint.rowKey)
+
+  // Always position the panel from the point's *current* pct, not the pct
+  // captured at selection time. The window can zoom/pan after selection
+  // (deep-link auto-zoom, wheel zoom, scrollbar drag), which would
+  // otherwise leave the panel anchored to a stale, pre-zoom position while
+  // the marker itself re-renders correctly. Falls back to the stored point
+  // if it's no longer present in the current window (e.g. panned away).
+  const displayedPoint = useMemo(() => {
+    if (!selectedPoint) return null
+    const livePoints = metricPointsByRow.get(selectedPoint.rowKey) ?? []
+    return (
+      livePoints.find((p) => p.key === selectedPoint.point.key) ??
+      selectedPoint.point
+    )
+  }, [selectedPoint, metricPointsByRow])
 
   const clearHover = () => {
     setHoverPct(null)
@@ -1313,6 +1453,25 @@ const StatusView = ({
                   return (
                     <div
                       key={row.key}
+                      ref={
+                        row.kind === 'node' &&
+                        row.depth === METRIC_DEPTH &&
+                        row.name === focusSelection?.metric &&
+                        (!focusSelection.group ||
+                          row.key.startsWith(
+                            `${focusSelection.group}\u0000`,
+                          )) &&
+                        (!focusSelection.serviceType ||
+                          row.key.includes(
+                            `\u0000${focusSelection.serviceType}\u0000`,
+                          )) &&
+                        (!focusSelection.endpoint ||
+                          row.key.includes(
+                            `\u0000${focusSelection.endpoint}\u0000`,
+                          ))
+                          ? focusRowRef
+                          : undefined
+                      }
                       className={`${GRID} items-center border-b border-neutral-100 ${
                         row.depth > 0 ? 'bg-neutral-50/60' : ''
                       }`}
@@ -1489,17 +1648,19 @@ const StatusView = ({
                           tz={tz}
                         />
                       )}
-                    {selectedPoint && selectedRowIndex !== -1 && (
-                      <SelectedPointPanel
-                        point={selectedPoint.point}
-                        rowIndex={selectedRowIndex}
-                        tz={tz}
-                        onClose={() => setSelectedPoint(null)}
-                        details={pointDetails}
-                        detailsLoading={pointDetailsLoading}
-                        detailsError={pointDetailsError}
-                      />
-                    )}
+                    {selectedPoint &&
+                      selectedRowIndex !== -1 &&
+                      displayedPoint && (
+                        <SelectedPointPanel
+                          point={displayedPoint}
+                          rowIndex={selectedRowIndex}
+                          tz={tz}
+                          onClose={() => setSelectedPoint(null)}
+                          details={pointDetails}
+                          detailsLoading={pointDetailsLoading}
+                          detailsError={pointDetailsError}
+                        />
+                      )}
                   </div>
                 </div>
               </div>
