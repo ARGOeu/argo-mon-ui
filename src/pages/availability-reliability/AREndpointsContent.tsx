@@ -1,11 +1,20 @@
 import { useState, useMemo, useEffect } from 'react'
+import { ArrowDownTrayIcon, TableCellsIcon } from '@heroicons/react/16/solid'
 import PageHeader from '@/components/PageHeader'
 import SearchInput from '@/components/SearchInput'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Pagination from '@/components/Pagination'
+import ActionMenu from '@/components/ActionMenu'
 import MonthlyEndpointsTable from './MonthlyEndpointsTable'
 import { isNotFoundError } from '@/utils/isNotFoundError'
+import { formatMonthLabel } from './utils/dateRanges'
+import {
+  buildCSV,
+  downloadCSV,
+  sanitizeFilename,
+  type CsvField,
+} from '@/utils/csvExport'
 import type { EndpointsARResponse } from '@/types/availabilityReliability'
 
 const pageSize = 20
@@ -92,6 +101,33 @@ const AREndpointsContent = ({
     [filteredRows, currentPage],
   )
 
+  const handleExport = () => {
+    type EndpointRow = (typeof filteredRows)[number]
+
+    const fields: CsvField<EndpointRow>[] = [
+      { label: 'Service', value: 'serviceName' },
+      { label: 'Endpoint', value: 'endpointName' },
+      { label: 'URL', value: 'url' },
+      ...months.flatMap((month): CsvField<EndpointRow>[] => [
+        {
+          label: `${formatMonthLabel(month)} Availability`,
+          value: (row: EndpointRow) =>
+            row.monthly.find((m) => m.month === month)?.availability,
+        },
+        {
+          label: `${formatMonthLabel(month)} Reliability`,
+          value: (row: EndpointRow) =>
+            row.monthly.find((m) => m.month === month)?.reliability,
+        },
+      ]),
+    ]
+
+    downloadCSV(
+      `${sanitizeFilename(tenantName)}-${sanitizeFilename(decodeURIComponent(groupName))}-AR-Endpoints-Monthly.csv`,
+      buildCSV(filteredRows, fields),
+    )
+  }
+
   return (
     <div className="page-container mb-8">
       <PageHeader
@@ -102,28 +138,40 @@ const AREndpointsContent = ({
             <strong>{tenantName ? tenantName : '...'}</strong>
           </>
         }
-        className="pb-2 mb-2"
+        className="pb-2 mb-1"
         navigateTo={{
           label: 'Back to Monthly Group Results',
           to: backTo,
         }}
       />
 
-      <div className="flex items-start justify-between gap-4 mb-1 flex-wrap">
+      <div className="flex items-start justify-between gap-x-4 mb-1 flex-wrap">
         <SearchInput
           value={search}
           onChange={setSearch}
           onClear={() => setSearch('')}
           placeholder="Search services or endpoints..."
-          className="max-w-[300px] w-full"
+          className="order-2 lg:order-none max-w-[300px] w-full"
         />
 
-        <span className="self-center text-[15px] font-medium text-body">
-          Selected report:{' '}
-          <strong className="text-muted">
-            {decodeURIComponent(reportName || '')}
-          </strong>
-        </span>
+        <div className="order-1 lg:order-none flex items-center justify-between flex-wrap gap-x-6 gap-y-2 w-full lg:w-auto mb-2 lg:mb-0">
+          <span className="text-[15px] font-medium text-body">
+            Selected report:{' '}
+            <strong className="text-muted">
+              {decodeURIComponent(reportName || '')}
+            </strong>
+          </span>
+
+          <ActionMenu
+            label="Export"
+            icon={ArrowDownTrayIcon}
+            disabled={!filteredRows.length}
+            items={[
+              { label: 'CSV', icon: TableCellsIcon, onClick: handleExport },
+            ]}
+            menuClassName="w-32"
+          />
+        </div>
       </div>
 
       {isLoading ? (
