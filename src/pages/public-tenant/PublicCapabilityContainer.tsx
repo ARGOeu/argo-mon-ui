@@ -13,7 +13,7 @@ import type {
 import PageHeader from '@/components/PageHeader'
 import type { CapabilityNavItems } from '../tenant-capability/CapabilityNav'
 import CapabilityNav from '../tenant-capability/CapabilityNav'
-import CapabilitiesContent from '../tenant-capability/CapabilityContent'
+import CapabilityContent from '../tenant-capability/CapabilityContent'
 
 const PublicCapabilityContainer = () => {
   const { tenantName } = useTenantName()
@@ -31,12 +31,12 @@ const PublicCapabilityContainer = () => {
   } = useGetPublicTenantReports(tenantName ?? '', true)
 
   const nodeReport = reports?.find((r) => r.node === true)
-  const capabilitiesEnabled = !!nodeReport
+  const capEnabled = !!nodeReport
 
   const { data: suggestionsData } = useGetPublicNodeMetrics(
     tenantName ?? '',
     {},
-    !!tenantName && capabilitiesEnabled,
+    !!tenantName && capEnabled,
   )
   const knownServices = (suggestionsData?.data ?? []).map((entry) => entry.name)
 
@@ -47,7 +47,7 @@ const PublicCapabilityContainer = () => {
   } = useGetPublicNodeMetrics(
     tenantName ?? '',
     params,
-    !!tenantName && capabilitiesEnabled && mode === 'all',
+    !!tenantName && capEnabled && mode === 'all',
   )
 
   const {
@@ -58,7 +58,7 @@ const PublicCapabilityContainer = () => {
     tenantName ?? '',
     serviceId,
     params,
-    !!tenantName && capabilitiesEnabled && mode === 'service' && !!serviceId,
+    !!tenantName && capEnabled && mode === 'service' && !!serviceId,
   )
 
   const isServiceMode = mode === 'service'
@@ -102,14 +102,14 @@ const PublicCapabilityContainer = () => {
             <CapabilityNav
               selected={selectedView}
               onSelect={setSelectedView}
-              capabilitiesEnabled={capabilitiesEnabled}
+              capEnabled={capEnabled}
               showNodeConfig={false}
             />
           </aside>
 
           <div className="min-w-0 flex-1">
             {selectedView === 'metrics' && (
-              <CapabilitiesContent
+              <CapabilityContent
                 mode={mode}
                 onModeChange={setMode}
                 knownServices={knownServices}

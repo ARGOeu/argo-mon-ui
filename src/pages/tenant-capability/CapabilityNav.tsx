@@ -133,19 +133,19 @@ const NavCard = ({ item, isSelected, onSelect }: NavCardProps) => {
 interface CapabilityNavProps {
   selected: CapabilityNavItems
   onSelect: (key: CapabilityNavItems) => void
-  capabilitiesEnabled: boolean
+  capEnabled: boolean
   showNodeConfig: boolean
 }
 
 const CapabilityNav = ({
   selected,
   onSelect,
-  capabilitiesEnabled,
+  capEnabled,
   showNodeConfig,
 }: CapabilityNavProps) => {
   return (
     <nav className="flex flex-col gap-3">
-      {capabilitiesEnabled &&
+      {capEnabled &&
         CAPABILITY_ITEMS.map((item) => (
           <NavCard
             key={item.key}
@@ -157,7 +157,7 @@ const CapabilityNav = ({
 
       {showNodeConfig && (
         <>
-          {capabilitiesEnabled && <hr className="my-1 border-slate-100" />}
+          {capEnabled && <hr className="my-1 border-slate-100" />}
           <NavCard
             item={NODE_CONFIG_ITEM}
             isSelected={selected === 'node-config'}

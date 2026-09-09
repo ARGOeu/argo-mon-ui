@@ -7,7 +7,7 @@ import { Info } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
-import PrivateCapabilitiesContainer from './PrivateCapabilityContainer'
+import PrivateCapabilityContainer from './PrivateCapabilityContainer'
 import NodeConfigPanel from './NodeConfigPanel'
 import CapabilityNav, { type CapabilityNavItems } from './CapabilityNav'
 
@@ -30,7 +30,7 @@ const TenantCapability = () => {
 
   const isNodeEnabled = !!tenant?.node
   const hasNodeReport = reports?.some((report) => !!report.node_report)
-  const capabilitiesEnabled = isNodeEnabled && hasNodeReport
+  const capEnabled = isNodeEnabled && hasNodeReport
   const hasPublicNodeReport =
     reports?.some((r) => !!r.node_report && r.public === true) ?? false
 
@@ -38,15 +38,10 @@ const TenantCapability = () => {
 
   useEffect(() => {
     if (isTenantLoading || isReportsLoading) return
-    if (!capabilitiesEnabled && canShowNodeConfig) {
+    if (!capEnabled && canShowNodeConfig) {
       setSelectedView('node-config')
     }
-  }, [
-    capabilitiesEnabled,
-    canShowNodeConfig,
-    isTenantLoading,
-    isReportsLoading,
-  ])
+  }, [capEnabled, canShowNodeConfig, isTenantLoading, isReportsLoading])
 
   return (
     <div className="page-container">
@@ -72,12 +67,12 @@ const TenantCapability = () => {
         />
       ) : (
         <div className="flex flex-col gap-6 lg:flex-row lg:gap-10">
-          {(capabilitiesEnabled || canShowNodeConfig) && (
+          {(capEnabled || canShowNodeConfig) && (
             <aside className="w-full shrink-0 lg:w-72">
               <CapabilityNav
                 selected={selectedView}
                 onSelect={setSelectedView}
-                capabilitiesEnabled={!!capabilitiesEnabled}
+                capEnabled={!!capEnabled}
                 showNodeConfig={canShowNodeConfig}
               />
             </aside>
@@ -94,7 +89,7 @@ const TenantCapability = () => {
                   hasPublicNodeReport={hasPublicNodeReport}
                 />
               )
-            ) : !capabilitiesEnabled ? (
+            ) : !capEnabled ? (
               <div className="flex flex-col items-center justify-center rounded-xl bg-surface-muted px-6 py-4 text-center">
                 <div className="mb-2 rounded-full bg-surface-strong p-2.5">
                   <Info className="size-5 text-muted" />
@@ -118,7 +113,7 @@ const TenantCapability = () => {
                 )}
               </div>
             ) : (
-              selectedView === 'metrics' && <PrivateCapabilitiesContainer />
+              selectedView === 'metrics' && <PrivateCapabilityContainer />
             )}
           </div>
         </div>

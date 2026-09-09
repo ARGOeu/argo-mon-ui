@@ -176,7 +176,7 @@ const NodeConfigPanel = ({
           <hr className="border-line my-4" />
           <div className="flex justify-end">
             <a
-              href={`/public/tenants/${encodeURIComponent(tenantName)}/capabilities`}
+              href={`/public/tenants/${encodeURIComponent(tenantName)}/capability`}
               target="_blank"
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-sm text-brand no-underline transition-colors hover:text-brand-strong hover:underline"
