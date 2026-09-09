@@ -1,12 +1,21 @@
 import { useState, useMemo, useEffect } from 'react'
+import { ArrowDownTrayIcon, TableCellsIcon } from '@heroicons/react/16/solid'
 import PageHeader from '@/components/PageHeader'
 import SearchInput from '@/components/SearchInput'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import SelectDropdown from '@/components/SelectDropdown'
 import Pagination from '@/components/Pagination'
+import ActionMenu from '@/components/ActionMenu'
 import MonthlyAvailabilityTable from './MonthlyAvailabilityTable'
 import { isNotFoundError } from '@/utils/isNotFoundError'
+import { formatMonthLabel } from './utils/dateRanges'
+import {
+  buildCSV,
+  downloadCSV,
+  sanitizeFilename,
+  type CsvField,
+} from '@/utils/csvExport'
 import type { GroupsAvailabilityReliabilityResponse } from '@/types/availabilityReliability'
 
 const pageSize = 20
@@ -88,6 +97,31 @@ const ARContent = ({
     [filteredGroups, currentPage],
   )
 
+  const handleExport = () => {
+    type GroupRow = (typeof filteredGroups)[number]
+
+    const fields: CsvField<GroupRow>[] = [
+      { label: 'Group', value: 'name' },
+      ...months.flatMap((month): CsvField<GroupRow>[] => [
+        {
+          label: `${formatMonthLabel(month)} Availability`,
+          value: (group: GroupRow) =>
+            group.monthly.find((m) => m.month === month)?.availability,
+        },
+        {
+          label: `${formatMonthLabel(month)} Reliability`,
+          value: (group: GroupRow) =>
+            group.monthly.find((m) => m.month === month)?.reliability,
+        },
+      ]),
+    ]
+
+    downloadCSV(
+      `${sanitizeFilename(tenantName)}-${sanitizeFilename(decodeURIComponent(selectedReportName))}-AR-Groups-Monthly.csv`,
+      buildCSV(filteredGroups, fields),
+    )
+  }
+
   return (
     <div className="page-container mb-8">
       <PageHeader
@@ -98,40 +132,53 @@ const ARContent = ({
             <strong>{tenantName ? tenantName : '...'}</strong>
           </>
         }
-        className="pb-2 mb-2"
+        className="pb-2 mb-1"
       />
 
-      <div className="flex items-start justify-between gap-4 mb-1 flex-wrap">
+      <div className="flex items-start justify-between gap-x-4 mb-1 flex-wrap">
         <SearchInput
           value={search}
           onChange={setSearch}
           onClear={() => setSearch('')}
           placeholder="Search groups..."
+          className="order-2 lg:order-none"
         />
 
-        {reports && reports.length > 1 && (
-          <div className="flex items-center gap-2">
-            <span className="text-[15px] font-semibold text-body">
-              Select a report:
-            </span>
-            <SelectDropdown
-              value={selectedReportName || ''}
-              onChange={onReportChange}
-              options={reports.map((report) => ({
-                value: report.name,
-                label: report.name,
-              }))}
-              className="w-[220px]"
-            />
-          </div>
-        )}
+        <div className="order-1 lg:order-none flex items-center justify-between flex-wrap gap-x-6 gap-y-2 w-full lg:w-auto mb-2 lg:mb-0">
+          {reports && reports.length > 1 && (
+            <div className="flex items-center gap-2">
+              <span className="text-[15px] font-semibold text-body">
+                Select a report:
+              </span>
+              <SelectDropdown
+                value={selectedReportName || ''}
+                onChange={onReportChange}
+                options={reports.map((report) => ({
+                  value: report.name,
+                  label: report.name,
+                }))}
+                className="w-[180px]"
+              />
+            </div>
+          )}
 
-        {reports && reports.length === 1 && (
-          <span className="self-center text-[15px] font-medium text-body">
-            Selected report:{' '}
-            <strong className="text-muted">{selectedReportName}</strong>
-          </span>
-        )}
+          {reports && reports.length === 1 && (
+            <span className="text-[15px] font-medium text-body">
+              Selected report:{' '}
+              <strong className="text-muted">{selectedReportName}</strong>
+            </span>
+          )}
+
+          <ActionMenu
+            label="Export"
+            icon={ArrowDownTrayIcon}
+            disabled={!filteredGroups.length}
+            items={[
+              { label: 'CSV', icon: TableCellsIcon, onClick: handleExport },
+            ]}
+            menuClassName="w-32"
+          />
+        </div>
       </div>
 
       {isLoading ? (

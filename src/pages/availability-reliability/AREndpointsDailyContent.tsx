@@ -1,10 +1,18 @@
 import { useMemo } from 'react'
+import { ArrowDownTrayIcon, TableCellsIcon } from '@heroicons/react/16/solid'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
+import ActionMenu from '@/components/ActionMenu'
 import DailyAvailabilityTable from './DailyAvailabilityTable'
 import { isNotFoundError } from '@/utils/isNotFoundError'
 import { formatMonthLabel } from './utils/dateRanges'
+import {
+  buildCSV,
+  downloadCSV,
+  sanitizeFilename,
+  type CsvField,
+} from '@/utils/csvExport'
 import type { EndpointsARResponse } from '@/types/availabilityReliability'
 
 const noticeContainerClass = 'text-center bg-surface-muted rounded-lg my-4'
@@ -48,6 +56,21 @@ const AREndpointsDailyContent = ({
     )
   }, [endpointData])
 
+  const handleExport = () => {
+    const fields: CsvField<(typeof rows)[number]>[] = [
+      { label: 'Timestamp', value: 'date' },
+      { label: 'Availability', value: 'availability' },
+      { label: 'Reliability', value: 'reliability' },
+      { label: 'Unknown', value: 'unknown' },
+      { label: 'Downtime', value: 'downtime' },
+    ]
+
+    downloadCSV(
+      `${sanitizeFilename(decodeURIComponent(serviceName))}-${sanitizeFilename(decodeURIComponent(endpointName))}-${month}-AR-Daily.csv`,
+      buildCSV(rows, fields),
+    )
+  }
+
   return (
     <div className="page-container">
       <PageHeader
@@ -58,12 +81,22 @@ const AREndpointsDailyContent = ({
             Endpoint <strong>{decodeURIComponent(endpointName || '')}</strong>
           </>
         }
-        className="pb-2 mb-1"
+        className="items-end pb-2 mb-1"
         navigateTo={{
           label: 'Back to Monthly Endpoints Results',
           to: backTo,
         }}
-      />
+      >
+        <ActionMenu
+          label="Export"
+          icon={ArrowDownTrayIcon}
+          disabled={!rows.length}
+          items={[
+            { label: 'CSV', icon: TableCellsIcon, onClick: handleExport },
+          ]}
+          menuClassName="w-32"
+        />
+      </PageHeader>
 
       {isLoading ? (
         <div className="loading-container">
