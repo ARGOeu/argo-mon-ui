@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 import { useGetTenantReports } from '@/hooks/useTenants'
 import {
   useGetStatusTimelineEndpoints,
@@ -16,6 +16,7 @@ import {
   type TimeZoneMode,
 } from '@/utils/statusTimeline'
 import StatusView, { type PointSelection, type StatusRow } from './StatusView'
+import { useStatusDeepLink } from '@/hooks/useStatusDeepLink'
 
 // convert date to YYYY-MM-DD string - take into account the timezone
 const toDateStr = (d: Date, tz: TimeZoneMode) => {
@@ -76,6 +77,12 @@ const PrivateStatusView = () => {
   const { tenant } = useSelectedTenant()
   const tenantName = tenant?.info?.name ?? ''
 
+  const [, setSearchParams] = useSearchParams()
+
+  // hook to handle deep link parsing and focusing on the target item
+  const deepLink = useStatusDeepLink()
+  const { resolveReport } = deepLink
+
   const [selectedReport, setSelectedReport] = useState('')
   const [range, setRange] = useState<StatusRangeId>('1d')
   const [tz, setTz] = useState<TimeZoneMode>('local')
@@ -83,7 +90,16 @@ const PrivateStatusView = () => {
   // Today date reference based on timezone mode
   const today = toDateStr(new Date(), tz)
 
-  const [anchorDate, setAnchorDate] = useState(today)
+  // Land on the day containing the deep-linked timestamp (if any) so the
+  // fetched window actually covers the event, otherwise default to today.
+  const [anchorDate, setAnchorDate] = useState(() => {
+    const ts = deepLink.focusTarget?.timestamp
+    if (!ts) return today
+    const parsed = Date.parse(ts)
+    if (Number.isNaN(parsed)) return today
+    const date = toDateStr(new Date(parsed), tz)
+    return date > today ? today : date
+  })
 
   // when the user drills down to an item and opens a path, all other items are closed
   const [path, setPath] = useState<StatusPath>({})
@@ -103,17 +119,18 @@ const PrivateStatusView = () => {
     setSelectedReport('')
   }, [tenantId])
 
+  // if deep link is present use it as a source for resolving report and the path
+  // otherwise use the default report
   useEffect(() => {
     if (!reports || reports.length === 0) return
-    if (!reports.some((r) => r.name === selectedReport)) {
-      setSelectedReport(reports[0].name)
-    }
-  }, [reports, selectedReport])
+    if (reports.some((r) => r.name === selectedReport)) return
 
-  // Everything lives under a specific report
-  useEffect(() => {
-    setPath({})
-  }, [tenantId, selectedReport])
+    const resolved = resolveReport(reports)
+    if (!resolved) return
+
+    setSelectedReport(resolved.report ?? '')
+    setPath(resolved.path)
+  }, [reports, selectedReport, resolveReport])
 
   // keep today reference
   const todayRef = useRef(today)
@@ -233,6 +250,16 @@ const PrivateStatusView = () => {
       !!path.endpoint &&
       !!pointSelection,
   )
+
+  // checks if enough data are fetched so as to make focusing on the target point possible
+  const focusReady = deepLink.getFocusReady({
+    ready,
+    path,
+    groups,
+    serviceTypes,
+    endpoints,
+    metrics,
+  })
 
   const rows = useMemo<StatusRow[]>(() => {
     const out: StatusRow[] = []
@@ -356,6 +383,32 @@ const PrivateStatusView = () => {
         : { ...prev, endpoint: name }
     })
 
+  // this activates after the deep link is settled (handled)
+  // after that the state is passed to react and each state change
+  // as the user interacts with the view updates the url
+  // so as to be possible to use it as a new deep link
+  useEffect(() => {
+    if (!ready || !deepLink.settled) return
+
+    const next = new URLSearchParams()
+    next.set('report', selectedReport)
+    if (path.group) next.set('group', path.group)
+    if (path.serviceType) next.set('serviceType', path.serviceType)
+    if (path.endpoint) next.set('endpoint', path.endpoint)
+    if (pointSelection) {
+      next.set('metric', pointSelection.metric)
+      next.set('ts', pointSelection.timestamp)
+    }
+    setSearchParams(next, { replace: true })
+  }, [
+    ready,
+    deepLink.settled,
+    selectedReport,
+    path,
+    pointSelection,
+    setSearchParams,
+  ])
+
   if (!tenantId) {
     return (
       <div className="page-container">
@@ -395,6 +448,9 @@ const PrivateStatusView = () => {
       pointDetails={pointDetails.data}
       pointDetailsLoading={pointDetails.isPending}
       pointDetailsError={pointDetails.error ?? null}
+      focusSelection={deepLink.focusTarget}
+      focusReady={focusReady}
+      onFocusSettled={deepLink.markFocusSettled}
     />
   )
 }
