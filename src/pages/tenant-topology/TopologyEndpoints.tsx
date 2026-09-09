@@ -311,7 +311,7 @@ const TopologyEndpoints = ({
               <th className={`${thBase} min-w-[140px]`}>Hostname</th>
             )}
             <th className={`${thBase} min-w-[180px]`}>URL</th>
-            <th className={`${thBase} w-[22%]`}>
+            <th className={`${thBase} w-[18%]`}>
               <SortableColumnHeader
                 isActive={sortColumn === 'group'}
                 isAscending={sortAsc}
@@ -320,6 +320,7 @@ const TopologyEndpoints = ({
                 Group
               </SortableColumnHeader>
             </th>
+            <th className={`${thBase} min-w-[120px]`}>Friendly Name</th>
             <th className={`${thBase} w-40`}>
               <SortableColumnHeader
                 isActive={sortColumn === 'tags.monitored'}
@@ -329,16 +330,13 @@ const TopologyEndpoints = ({
                 Monitored
               </SortableColumnHeader>
             </th>
-            {showActions && <th className={`${thBase} w-24`}>Actions</th>}
+            <th className={`${thBase} w-24`}>Actions</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {isLoading || isFetching ? (
             <tr>
-              <td
-                colSpan={4 + (isExternal ? 1 : 0) + (showActions ? 1 : 0)}
-                className="py-12"
-              >
+              <td colSpan={6 + (isExternal ? 1 : 0)} className="py-12">
                 <div className="flex justify-center">
                   <LoadingSpinner size="md" />
                 </div>
@@ -346,17 +344,14 @@ const TopologyEndpoints = ({
             </tr>
           ) : error ? (
             <tr>
-              <td
-                colSpan={4 + (isExternal ? 1 : 0) + (showActions ? 1 : 0)}
-                className="py-6 px-12"
-              >
+              <td colSpan={6 + (isExternal ? 1 : 0)} className="py-6 px-12">
                 <ErrorDisplay error={error} context="topology endpoints" />
               </td>
             </tr>
           ) : !endpoints?.length ? (
             <tr>
               <td
-                colSpan={4 + (isExternal ? 1 : 0) + (showActions ? 1 : 0)}
+                colSpan={6 + (isExternal ? 1 : 0)}
                 className="text-center text-sm text-subtle italic py-6 px-12"
               >
                 No topology endpoints found
@@ -365,7 +360,7 @@ const TopologyEndpoints = ({
           ) : !paginated.length ? (
             <tr>
               <td
-                colSpan={4 + (isExternal ? 1 : 0) + (showActions ? 1 : 0)}
+                colSpan={6 + (isExternal ? 1 : 0)}
                 className="text-center text-sm text-subtle italic py-6 px-12"
               >
                 No endpoints match your filters
@@ -391,6 +386,11 @@ const TopologyEndpoints = ({
                   )}
                 </td>
                 <td className={tdBase}>{endpoint.group}</td>
+                <td className={`${tdBase} break-all`}>
+                  {endpoint.tags?.info_fname || (
+                    <span className="pl-12 text-subtle">-</span>
+                  )}
+                </td>
                 <td className={tdBase}>
                   {endpoint.tags?.monitored !== undefined ? (
                     <Badge
@@ -407,35 +407,41 @@ const TopologyEndpoints = ({
                     </Badge>
                   ) : null}
                 </td>
-                {showActions && (
-                  <td className={`${tdBase} whitespace-nowrap`}>
-                    <div className="flex items-center gap-1">
-                      <IconButton
-                        icon={<Bars3Icon className="size-4 md:size-5" />}
-                        label="View"
-                        onClick={() => onView(endpoint)}
-                        className="text-muted hover:bg-surface-strong !p-1"
-                      />
-                      <IconButton
-                        icon={<PencilSquareIcon className="size-4 md:size-5" />}
-                        label="Edit"
-                        onClick={() => onEdit(endpoint)}
-                        className="text-muted hover:bg-surface-strong !p-1"
-                      />
-                      <IconButton
-                        icon={<TrashIcon className="size-4 md:size-5" />}
-                        label="Delete"
-                        onClick={() => {
-                          const indexToDelete = (endpoints ?? []).indexOf(
-                            endpoint,
-                          )
-                          handleDeleteClick(endpoint, indexToDelete)
-                        }}
-                        className="text-red-600 hover:bg-red-50 !p-1"
-                      />
-                    </div>
-                  </td>
-                )}
+                <td className={`${tdBase} whitespace-nowrap`}>
+                  <div
+                    className={`flex items-center gap-1 ${showActions ? '' : 'justify-center'}`}
+                  >
+                    <IconButton
+                      icon={<Bars3Icon className="size-4 md:size-5" />}
+                      label="View"
+                      onClick={() => onView(endpoint)}
+                      className="text-muted hover:bg-surface-strong !p-1"
+                    />
+                    {showActions && (
+                      <>
+                        <IconButton
+                          icon={
+                            <PencilSquareIcon className="size-4 md:size-5" />
+                          }
+                          label="Edit"
+                          onClick={() => onEdit(endpoint)}
+                          className="text-muted hover:bg-surface-strong !p-1"
+                        />
+                        <IconButton
+                          icon={<TrashIcon className="size-4 md:size-5" />}
+                          label="Delete"
+                          onClick={() => {
+                            const indexToDelete = (endpoints ?? []).indexOf(
+                              endpoint,
+                            )
+                            handleDeleteClick(endpoint, indexToDelete)
+                          }}
+                          className="text-red-600 hover:bg-red-50 !p-1"
+                        />
+                      </>
+                    )}
+                  </div>
+                </td>
               </tr>
             ))
           )}
