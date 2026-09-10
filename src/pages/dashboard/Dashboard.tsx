@@ -32,11 +32,15 @@ import SelectDropdown from '@/components/SelectDropdown'
 import type { SelectOption } from '@/components/SelectDropdown'
 import type { GroupResultsResponse, GroupStatusResponse } from '@/types/data'
 import type { Downtime } from '@/types/downtimes'
+import type { Incident } from '@/types/incidents'
 import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
 import { categorizeDowntimes, fmtDowntimeDailyRange } from '@/utils/downtimes'
+import { getBannerIncidents } from '@/utils/incidents'
+import { formatDateTime } from '@/utils/formatDateTime'
 import type { EndpointResultsResponse } from '@/types/results'
 import type { StatusNode } from '@/types/statusTimeline'
 import { stripIdSuffix } from '@/utils/cleanup'
+import IncidentBanner from './IncidentBanner'
 
 const WEEK_DAY_COUNT = 7
 
@@ -110,12 +114,26 @@ function DowntimePill({
   const s = DOWNTIME_TYPE_STYLES[group]
   return (
     <span
-      className={`tooltip tooltip-bottom cursor-pointer inline-flex items-center gap-1.5 rounded-full border mx-0.5 px-2.5 py-0.5 text-[12px] ${s.pillClass}`}
+      className={`tooltip tooltip-bottom cursor-pointer inline-flex items-center gap-1.5 rounded-full border mx-1 my-0.5 px-2.5 py-0.5 text-[12px] ${s.pillClass}`}
     >
       <div className="tooltip-content text-[12px]">
         <div className="font-bold mb-1">Downtime: {item.name}</div>
-        <div>start: {item.scheduled_at}</div>
-        <div>end: {item.completed_at}</div>
+        <div>
+          start:{' '}
+          {formatDateTime(item.scheduled_at, {
+            seconds: true,
+            utcSuffix: true,
+          })}
+        </div>
+        <div>
+          end:{' '}
+          {item.completed_at
+            ? formatDateTime(item.completed_at, {
+                seconds: true,
+                utcSuffix: true,
+              })
+            : '—'}
+        </div>
         <div className="font-bold mb-1 mt-2">Affected endpoints:</div>
         <ul>
           {(item.services ?? []).map((s2, i) => (
@@ -126,7 +144,9 @@ function DowntimePill({
           ))}
         </ul>
       </div>
-      <span className={s.nameClass}>{item.name}</span>
+      <span className={`${s.nameClass} truncate max-w-[18rem]`}>
+        {item.name}
+      </span>
       <span className={s.timeClass}>
         {fmtDowntimeDailyRange(item.scheduled_at, item.completed_at || '')}
       </span>
@@ -459,6 +479,9 @@ export interface DashboardProps {
   downtimesData?: Downtime[]
   downtimesLoading?: boolean
   downtimesError?: Error | null
+  incidentsData?: Incident[]
+  incidentsLoading?: boolean
+  incidentsError?: Error | null
   resultsData: GroupResultsResponse | undefined
   resultsLoading: boolean
   resultsError: Error | null
@@ -486,6 +509,9 @@ const Dashboard = ({
   downtimesData,
   downtimesLoading,
   downtimesError,
+  incidentsData,
+  incidentsLoading,
+  incidentsError,
   resultsData,
   resultsLoading,
   resultsError,
@@ -801,6 +827,11 @@ const Dashboard = ({
     [downtimesData],
   )
 
+  const bannerIncidents = useMemo(
+    () => getBannerIncidents(incidentsData),
+    [incidentsData],
+  )
+
   return (
     <div className="page-container">
       <div className="flex flex-col gap-2 mb-2">
@@ -924,6 +955,12 @@ const Dashboard = ({
               </span>
             </div>
           </div>
+          {/* Display incidents banner if any non-closed incidents exist */}
+          <IncidentBanner
+            incidents={bannerIncidents}
+            isLoading={incidentsLoading}
+            error={incidentsError}
+          />
           {/* Display downtimes banner if downtimes exist for today */}
           {!downtimesError &&
             !downtimesLoading &&
@@ -933,7 +970,9 @@ const Dashboard = ({
                 <WrenchScrewdriverIcon className="w-4 h-4" />
                 <div className="min-w-0 flex-1">
                   <span className="text-[14px] font-semibold">
-                    {`${downtimesData.length} downtimes today`}
+                    {downtimesData.length === 1
+                      ? '1 downtime today'
+                      : `${downtimesData.length} downtimes today`}
                   </span>
                   <DowntimeTypeSection group="active" items={activeDowntimes} />
                   <DowntimeTypeSection

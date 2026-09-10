@@ -3,7 +3,7 @@ import { ChevronDown, ChevronUp } from 'lucide-react'
 import { PencilSquareIcon, TrashIcon } from '@heroicons/react/16/solid'
 import Badge from '@/components/Badge'
 import IconButton from '@/components/IconButton'
-import { formatDateTimeUTC } from './utils/downtimeGrouping'
+import { formatDateTime } from '@/utils/formatDateTime'
 import {
   downtimeSeverityBadgeClass,
   downtimeClassificationBadgeClass,
@@ -63,8 +63,8 @@ const DowntimeCard = ({
           </p>
         )}
         <p className="text-xs text-muted mt-1">
-          {formatDateTimeUTC(downtime.scheduled_at)} to{' '}
-          {formatDateTimeUTC(downtime.completed_at)} (UTC)
+          {formatDateTime(downtime.scheduled_at)} to{' '}
+          {formatDateTime(downtime.completed_at, { utcSuffix: true })}
         </p>
 
         {hasServices && (

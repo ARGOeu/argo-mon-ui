@@ -27,8 +27,12 @@ import type {
 import type { StatusNode } from '@/types/statusTimeline'
 
 import type { Downtime } from '@/types/downtimes'
+import type { Incident } from '@/types/incidents'
 import { categorizeDowntimes, fmtDowntimeDailyRange } from '@/utils/downtimes'
+import { getBannerIncidents } from '@/utils/incidents'
+import { formatDateTime } from '@/utils/formatDateTime'
 import { stripIdSuffix } from '@/utils/cleanup'
+import IncidentBanner from './IncidentBanner'
 
 type ServiceStatus = 'healthy' | 'degraded' | 'critical' | 'missing'
 type FilterId = 'all' | 'problem' | 'healthy'
@@ -259,12 +263,26 @@ function DowntimePill({
 
   return (
     <span
-      className={`tooltip tooltip-bottom cursor-pointer inline-flex items-center gap-1.5 rounded-full border mx-0.5 px-2.5 py-0.5 text-[12px] ${s.pillClass}`}
+      className={`tooltip tooltip-bottom cursor-pointer inline-flex items-center gap-1.5 rounded-full border mx-1 my-0.5 px-2.5 py-0.5 text-[12px] ${s.pillClass}`}
     >
       <div className="tooltip-content text-[12px]">
         <div className="font-bold mb-1">Downtime: {item.name}</div>
-        <div>start: {item.scheduled_at}</div>
-        <div>end: {item.completed_at}</div>
+        <div>
+          start:{' '}
+          {formatDateTime(item.scheduled_at, {
+            seconds: true,
+            utcSuffix: true,
+          })}
+        </div>
+        <div>
+          end:{' '}
+          {item.completed_at
+            ? formatDateTime(item.completed_at, {
+                seconds: true,
+                utcSuffix: true,
+              })
+            : '—'}
+        </div>
 
         <div className="font-bold mb-1 mt-2">Affected endpoints:</div>
 
@@ -278,7 +296,9 @@ function DowntimePill({
         </ul>
       </div>
 
-      <span className={s.nameClass}>{item.name}</span>
+      <span className={`${s.nameClass} truncate max-w-[18rem]`}>
+        {item.name}
+      </span>
 
       <span className={s.timeClass}>
         {fmtDowntimeDailyRange(item.scheduled_at, item.completed_at || '')}
@@ -454,6 +474,10 @@ export interface GroupDashboardProps {
   downtimesLoading?: boolean
   downtimesError?: Error | null
 
+  incidentsData?: Incident[]
+  incidentsLoading?: boolean
+  incidentsError?: Error | null
+
   onBack: () => void
 }
 
@@ -477,6 +501,9 @@ const GroupDashboard = ({
   downtimesData,
   downtimesLoading,
   downtimesError,
+  incidentsData,
+  incidentsLoading,
+  incidentsError,
   onBack,
 }: GroupDashboardProps) => {
   const [filter, setFilter] = useState<FilterId>('all')
@@ -736,6 +763,15 @@ const GroupDashboard = ({
     [groupDowntimes],
   )
 
+  const bannerIncidents = useMemo(() => {
+    const target = groupName.trim().toLowerCase()
+    return getBannerIncidents(incidentsData).filter((incident) =>
+      (incident.services ?? []).some(
+        (s) => s.name.trim().toLowerCase() === target,
+      ),
+    )
+  }, [incidentsData, groupName])
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
 
@@ -867,6 +903,12 @@ const GroupDashboard = ({
               </span>
             </div>
           </div>
+
+          <IncidentBanner
+            incidents={bannerIncidents}
+            isLoading={incidentsLoading}
+            error={incidentsError}
+          />
 
           {!downtimesError &&
             !downtimesLoading &&

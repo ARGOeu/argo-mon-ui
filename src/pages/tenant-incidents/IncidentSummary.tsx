@@ -1,6 +1,6 @@
 import { ChatBubbleLeftIcon } from '@heroicons/react/16/solid'
 import Badge from '@/components/Badge'
-import { formatDateTime, roundToSecond } from './utils/incidentDate'
+import { formatDateTime, roundToSecond } from '@/utils/formatDateTime'
 import {
   incidentStatusBadgeClass,
   incidentStatusLabel,
@@ -83,7 +83,7 @@ const IncidentSummary = ({
         <div className="grid grid-cols-[1fr_auto] gap-x-12 lg:gap-x-60">
           <div className="min-w-0">
             <p className="text-sm text-foreground font-medium break-words">
-              {formatDateTime(incident.created_at)} (UTC)
+              {formatDateTime(incident.created_at, { utcSuffix: true })}
             </p>
 
             <p className="text-sm text-body line-clamp-3 mt-0.5">
@@ -114,7 +114,7 @@ const IncidentSummary = ({
                 <>
                   {' '}
                   <span className="text-subtle">·</span> Last updated on{' '}
-                  {formatDateTime(incident.updated_at as string)} (UTC)
+                  {formatDateTime(incident.updated_at, { utcSuffix: true })}
                 </>
               )}
             </p>

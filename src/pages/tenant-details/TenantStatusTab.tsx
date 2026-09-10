@@ -461,7 +461,10 @@ const TenantStatusTab = ({ tenantId }: TenantStatusTabProps) => {
                             Start Time:
                           </span>
                           <span className="text-sm text-muted break-words">
-                            {formatDateTime(job.start)}
+                            {formatDateTime(job.start, {
+                              utc: false,
+                              seconds: true,
+                            })}
                           </span>
                         </div>
                         {isSuperAdmin &&
@@ -481,7 +484,10 @@ const TenantStatusTab = ({ tenantId }: TenantStatusTabProps) => {
                           End Time:
                         </span>
                         <span className="text-sm text-muted break-words">
-                          {formatDateTime(job.end)}
+                          {formatDateTime(job.end, {
+                            utc: false,
+                            seconds: true,
+                          })}
                         </span>
                       </div>
                       {job.message && (

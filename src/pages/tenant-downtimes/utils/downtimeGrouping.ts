@@ -16,24 +16,6 @@ export const sectionLabels: Record<DowntimeTimeStatus, string> = {
   completed: 'Completed',
 }
 
-export const formatDateTimeUTC = (dateString?: string): string => {
-  if (!dateString) {
-    return 'N/A'
-  }
-  const date = new Date(dateString)
-  if (Number.isNaN(date.getTime())) {
-    return 'N/A'
-  }
-  return date.toLocaleString('en-GB', {
-    day: 'numeric',
-    month: 'short',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-    timeZone: 'UTC',
-  })
-}
-
 const getDowntimeTimeStatus = (
   downtime: Downtime,
   now: number = Date.now(),
