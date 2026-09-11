@@ -8,6 +8,7 @@ import {
 import { toast } from 'sonner'
 import SelectDropdown from '@/components/SelectDropdown'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { buildReportOptions } from '@/utils/reportVisibilityOptions'
 
 interface NodeConfigPanelProps {
   tenantId: string
@@ -39,8 +40,7 @@ const NodeConfigPanel = ({
     }
   }, [currentSavedReportId])
 
-  const reportOptions =
-    reports?.map((report) => ({ value: report.id, label: report.name })) ?? []
+  const reportOptions = buildReportOptions(reports, 'id')
   const hasReports = reports && reports.length > 0
   const isPending = setNodeMutation.isPending || setNodeReportMutation.isPending
 
@@ -70,7 +70,9 @@ const NodeConfigPanel = ({
       // reassign the default selected report when node is re-enabled
       if (newValue) {
         const reportIdToAssign =
-          currentSavedReportId || lastReportId || reportOptions[0]?.value
+          currentSavedReportId ||
+          lastReportId ||
+          reportOptions.find((option) => !option.disabled)?.value
         if (reportIdToAssign) {
           await setNodeReportMutation.mutateAsync({
             tenantId,

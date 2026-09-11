@@ -282,9 +282,11 @@ const SelectDropdown = ({
                       aria-selected={option.value === value}
                       onClick={() => handleSelect(option)}
                       className={`px-4 py-1.5 mb-px last:mb-0 rounded-md text-sm cursor-pointer transition-colors ${
-                        option.value === value || index === activeIndex
+                        option.value === value
                           ? 'bg-brand-subtle text-brand font-medium'
-                          : 'text-foreground hover:bg-surface-muted'
+                          : index === activeIndex
+                            ? 'bg-surface-strong text-foreground'
+                            : 'text-foreground hover:bg-surface-strong'
                       }`}
                     >
                       {option.label}
