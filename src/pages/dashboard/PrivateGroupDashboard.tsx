@@ -11,6 +11,7 @@ import {
   useGetStatusTimelineGroupEndpoints,
 } from '@/hooks/useStatusTimeline'
 import { useGetTenantDowntimes } from '@/hooks/useDowntimes'
+import { useGetTenantIncidents } from '@/hooks/useIncidents'
 import { useSelectedTenant } from '@/contexts/selected-tenant/useSelectedTenant'
 
 import GroupDashboard from './GroupDashboard'
@@ -138,6 +139,17 @@ const PrivateGroupDashboard = () => {
 
   const downtimes = downtimesData?.pages.flatMap((page) => page.content) ?? []
 
+  const {
+    data: incidentsData,
+    isLoading: incidentsLoading,
+    error: incidentsError,
+  } = useGetTenantIncidents(tenantId ?? '', 'private', {
+    size: 100,
+    enabled: true,
+  })
+
+  const incidents = incidentsData?.pages.flatMap((page) => page.content) ?? []
+
   const backToDashboard = () =>
     navigate(
       `/tenants/${tenantId}/dashboard` +
@@ -173,6 +185,9 @@ const PrivateGroupDashboard = () => {
       downtimesData={downtimes}
       downtimesLoading={downtimesLoading}
       downtimesError={downtimesError ?? null}
+      incidentsData={incidents}
+      incidentsLoading={incidentsLoading}
+      incidentsError={incidentsError ?? null}
       onBack={backToDashboard}
     />
   )

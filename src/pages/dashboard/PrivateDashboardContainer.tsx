@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useGetTenantReports } from '@/hooks/useTenants'
 import { useGetResultsGroups, useGetStatusGroups } from '@/hooks/useData'
 import { useGetTenantDowntimes } from '@/hooks/useDowntimes'
+import { useGetTenantIncidents } from '@/hooks/useIncidents'
 import { useSelectedTenant } from '@/contexts/selected-tenant/useSelectedTenant'
 import Dashboard from './Dashboard'
 import { useGetResultsEndpoints } from '@/hooks/results'
@@ -112,6 +113,17 @@ const PrivateDashboardContainer = () => {
   const downtimes = downtimesData?.pages.flatMap((page) => page.content) ?? []
 
   const {
+    data: incidentsData,
+    isLoading: incidentsLoading,
+    error: incidentsError,
+  } = useGetTenantIncidents(tenantId ?? '', 'private', {
+    size: 100,
+    enabled: true,
+  })
+
+  const incidents = incidentsData?.pages.flatMap((page) => page.content) ?? []
+
+  const {
     data: statusData,
     isLoading: statusLoading,
     error: statusError,
@@ -148,6 +160,9 @@ const PrivateDashboardContainer = () => {
       downtimesData={downtimes}
       downtimesLoading={downtimesLoading}
       downtimesError={downtimesError}
+      incidentsData={incidents}
+      incidentsLoading={incidentsLoading}
+      incidentsError={incidentsError}
       reportsLoading={reportsLoading}
       reportsError={reportsError ?? null}
       resultsData={resultsData}

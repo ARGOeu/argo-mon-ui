@@ -15,6 +15,7 @@ import {
   updateIncidentStatus,
   updateIncidentStatusDescription,
 } from '@/api/incidents'
+import type { AccessMode } from '@/types/common'
 import type {
   Incident,
   IncidentActivity,
@@ -28,7 +29,8 @@ import type {
 } from '@/types/incidents'
 
 export const useGetTenantIncidents = (
-  tenantId: string,
+  tenantIdentifier: string,
+  mode: AccessMode,
   options: {
     size?: number
     date?: string
@@ -40,19 +42,20 @@ export const useGetTenantIncidents = (
   const { token } = useAuth()
 
   return useInfiniteQuery<IncidentsResponse, Error>({
-    queryKey: ['incidents', tenantId, size, date, search],
+    queryKey: ['incidents', tenantIdentifier, mode, size, date, search],
     queryFn: ({ pageParam = 1 }) => {
-      if (!token) {
+      if (mode === 'private' && !token) {
         throw new Error('No authentication token available')
       }
-      if (!tenantId) {
-        throw new Error('Tenant ID is required')
+      if (!tenantIdentifier) {
+        throw new Error('Tenant identifier is required')
       }
       return fetchIncidents(
-        tenantId,
-        token,
+        tenantIdentifier,
+        token || '',
         pageParam as number,
         size,
+        mode,
         date,
         search,
       )
@@ -65,7 +68,7 @@ export const useGetTenantIncidents = (
       return undefined
     },
     retry: false,
-    enabled: enabled && !!token && !!tenantId,
+    enabled: enabled && !!tenantIdentifier,
   })
 }
 

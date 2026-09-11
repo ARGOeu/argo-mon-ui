@@ -34,7 +34,7 @@ const TenantIncidents = () => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useGetTenantIncidents(tenantId ?? '', {
+  } = useGetTenantIncidents(tenantId ?? '', 'private', {
     size: pageSize,
     search: searchQuery || undefined,
   })

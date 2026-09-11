@@ -6,7 +6,7 @@ import Badge from '@/components/Badge'
 import ClampedText from '@/components/ClampedText'
 import Button from '@/components/Button'
 import IconButton from '@/components/IconButton'
-import { formatDateTimeWithSeconds } from './utils/incidentDate'
+import { formatDateTime } from '@/utils/formatDateTime'
 import {
   incidentStatusBadgeClass,
   incidentStatusLabel,
@@ -131,8 +131,13 @@ const IncidentHistoryItem = ({
       )}
 
       <p className="text-[13px] text-subtle break-words max-w-md">
-        Updated {formatDateTimeWithSeconds(activity.created_at)} (UTC) by{' '}
-        {activity.changed_by}
+        Updated{' '}
+        {formatDateTime(activity.created_at, {
+          weekday: true,
+          seconds: true,
+          utcSuffix: true,
+        })}{' '}
+        by {activity.changed_by}
       </p>
     </li>
   )

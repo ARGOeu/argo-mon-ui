@@ -6,7 +6,7 @@ import Badge from '@/components/Badge'
 import Button from '@/components/Button'
 import ClampedText from '@/components/ClampedText'
 import IconButton from '@/components/IconButton'
-import { formatDateTimeWithWeekday, roundToSecond } from './utils/incidentDate'
+import { formatDateTime, roundToSecond } from '@/utils/formatDateTime'
 import {
   incidentStatusBadgeClass,
   incidentStatusLabel,
@@ -90,7 +90,11 @@ const IncidentHeader = ({
       </div>
 
       <p className="text-sm text-muted mt-1">
-        Created {formatDateTimeWithWeekday(incident.created_at)} (UTC)
+        Created{' '}
+        {formatDateTime(incident.created_at, {
+          weekday: true,
+          utcSuffix: true,
+        })}
       </p>
 
       {isEditing ? (
@@ -159,7 +163,10 @@ const IncidentHeader = ({
           <>
             {' '}
             <span className="text-subtle">·</span> Last updated on{' '}
-            {formatDateTimeWithWeekday(incident.updated_at as string)} (UTC)
+            {formatDateTime(incident.updated_at, {
+              weekday: true,
+              utcSuffix: true,
+            })}
           </>
         )}
       </p>

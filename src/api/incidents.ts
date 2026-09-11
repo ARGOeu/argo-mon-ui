@@ -1,3 +1,4 @@
+import type { AccessMode } from '@/types/common'
 import type {
   Incident,
   IncidentActivity,
@@ -13,10 +14,11 @@ import type {
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
 export const fetchIncidents = async (
-  tenantId: string,
+  tenantIdentifier: string,
   token: string,
   page: number = 1,
   size: number = 10,
+  mode: AccessMode,
   date?: string,
   search?: string,
 ): Promise<IncidentsResponse> => {
@@ -30,16 +32,18 @@ export const fetchIncidents = async (
     params.set('search', search)
   }
 
-  const response = await fetch(
-    `${BACKEND_API}/v1/tenants/${tenantId}/incidents?${params.toString()}`,
-    {
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
+  const url =
+    mode === 'public'
+      ? `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}/incidents?${params.toString()}`
+      : `${BACKEND_API}/v1/tenants/${tenantIdentifier}/incidents?${params.toString()}`
+
+  const response = await fetch(url, {
+    method: 'GET',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${token}`,
     },
-  )
+  })
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}))

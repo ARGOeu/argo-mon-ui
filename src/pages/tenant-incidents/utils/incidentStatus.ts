@@ -1,14 +1,8 @@
 import type { SelectOption } from '@/components/SelectDropdown'
 import type { IncidentStatus } from '@/types/incidents'
+import { incidentStatusLabel } from '@/utils/incidents'
 
-export const incidentStatusLabel: Record<IncidentStatus, string> = {
-  NEW: 'New',
-  ASSIGNED: 'Assigned',
-  IN_PROGRESS: 'In Progress',
-  PENDING: 'Pending',
-  RESOLVED: 'Resolved',
-  CLOSED: 'Closed',
-}
+export { incidentStatusLabel }
 
 export const incidentStatusOptions: SelectOption[] = (
   Object.keys(incidentStatusLabel) as IncidentStatus[]

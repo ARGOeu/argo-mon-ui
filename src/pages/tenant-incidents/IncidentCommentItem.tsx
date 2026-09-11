@@ -1,5 +1,5 @@
 import ClampedText from '@/components/ClampedText'
-import { formatDateTimeWithSeconds } from './utils/incidentDate'
+import { formatDateTime } from '@/utils/formatDateTime'
 import type { IncidentComment } from '@/types/incidents'
 
 interface IncidentCommentItemProps {
@@ -15,8 +15,12 @@ const IncidentCommentItem = ({ comment }: IncidentCommentItemProps) => (
     />
 
     <p className="text-[13px] text-subtle break-words max-w-md mt-1">
-      {formatDateTimeWithSeconds(comment.created_at)} (UTC) by{' '}
-      {comment.created_by}
+      {formatDateTime(comment.created_at, {
+        weekday: true,
+        seconds: true,
+        utcSuffix: true,
+      })}{' '}
+      by {comment.created_by}
     </p>
   </li>
 )

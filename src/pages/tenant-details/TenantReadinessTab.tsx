@@ -260,7 +260,10 @@ const TenantReadinessTab = ({ tenantId }: TenantReadinessTabProps) => {
                   Last Check:
                 </span>
                 <span className="text-sm text-foreground font-medium">
-                  {formatDateTime(readiness.last_check)}
+                  {formatDateTime(readiness.last_check, {
+                    utc: false,
+                    seconds: true,
+                  })}
                 </span>
               </div>
             </div>
