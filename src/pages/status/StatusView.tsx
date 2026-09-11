@@ -21,13 +21,13 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import SearchInput from '@/components/SearchInput'
 import SelectDropdown from '@/components/SelectDropdown'
-import type { SelectOption } from '@/components/SelectDropdown'
 import type {
   StatusEntry,
   StatusResultDetails,
   StatusValue,
 } from '@/types/statusTimeline'
 import { stripIdSuffix } from '@/utils/cleanup'
+import { buildReportOptions } from '@/utils/reportVisibilityOptions'
 import type { DeepLinkFocus } from '@/hooks/useStatusDeepLink'
 import {
   buildSegments,
@@ -78,11 +78,6 @@ export type StatusRow =
       state: 'loading' | 'error' | 'empty'
       message?: string
     }
-
-const buildReportOptions = (
-  reports: Array<{ name: string; public?: boolean }> | undefined,
-): SelectOption[] =>
-  (reports ?? []).map((r) => ({ value: r.name, label: r.name }))
 
 const tickLabelStyle = (pct: number) => {
   if (pct < 3) return { left: 0, transform: 'none' }

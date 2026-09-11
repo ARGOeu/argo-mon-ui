@@ -29,7 +29,6 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import SearchInput from '@/components/SearchInput'
 import SelectDropdown from '@/components/SelectDropdown'
-import type { SelectOption } from '@/components/SelectDropdown'
 import type { GroupResultsResponse, GroupStatusResponse } from '@/types/data'
 import type { Downtime } from '@/types/downtimes'
 import type { Incident } from '@/types/incidents'
@@ -37,37 +36,13 @@ import { WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
 import { categorizeDowntimes, fmtDowntimeDailyRange } from '@/utils/downtimes'
 import { getBannerIncidents } from '@/utils/incidents'
 import { formatDateTime } from '@/utils/formatDateTime'
+import { buildReportOptions } from '@/utils/reportVisibilityOptions'
 import type { EndpointResultsResponse } from '@/types/results'
 import type { StatusNode } from '@/types/statusTimeline'
 import { stripIdSuffix } from '@/utils/cleanup'
 import IncidentBanner from './IncidentBanner'
 
 const WEEK_DAY_COUNT = 7
-
-const buildReportOptions = (
-  reports: Array<{ name: string; public?: boolean }> | undefined,
-): SelectOption[] => {
-  if (!reports) return []
-  const hasVisibility = reports.some((r) => r.public !== undefined)
-  if (!hasVisibility)
-    return reports.map((r) => ({ value: r.name, label: r.name }))
-
-  const options: SelectOption[] = []
-  const privateReports = reports.filter((r) => r.public !== true)
-  const publicReports = reports.filter((r) => r.public === true)
-
-  if (privateReports.length > 0) {
-    options.push({ value: 'group_private', label: 'Private', disabled: true })
-    privateReports.forEach((r) =>
-      options.push({ value: r.name, label: r.name }),
-    )
-  }
-  if (publicReports.length > 0) {
-    options.push({ value: 'group_public', label: 'Public', disabled: true })
-    publicReports.forEach((r) => options.push({ value: r.name, label: r.name }))
-  }
-  return options
-}
 
 // List styles for each downtime type section
 const DOWNTIME_TYPE_STYLES: Record<

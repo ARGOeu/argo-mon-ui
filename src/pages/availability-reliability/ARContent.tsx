@@ -9,6 +9,7 @@ import Pagination from '@/components/Pagination'
 import ActionMenu from '@/components/ActionMenu'
 import MonthlyAvailabilityTable from './MonthlyAvailabilityTable'
 import { isNotFoundError } from '@/utils/isNotFoundError'
+import { buildReportOptions } from '@/utils/reportVisibilityOptions'
 import { formatMonthLabel } from './utils/dateRanges'
 import {
   buildCSV,
@@ -24,7 +25,7 @@ const noticeTextClass = 'text-sm text-subtle italic py-6 px-12'
 
 export interface ARContentProps {
   tenantName: string
-  reports: Array<{ name: string }> | undefined
+  reports: Array<{ name: string; public?: boolean }> | undefined
   selectedReportName: string
   onReportChange: (reportName: string) => void
   groupsData: GroupsAvailabilityReliabilityResponse | undefined
@@ -153,10 +154,7 @@ const ARContent = ({
               <SelectDropdown
                 value={selectedReportName || ''}
                 onChange={onReportChange}
-                options={reports.map((report) => ({
-                  value: report.name,
-                  label: report.name,
-                }))}
+                options={buildReportOptions(reports)}
                 className="w-[180px]"
               />
             </div>
