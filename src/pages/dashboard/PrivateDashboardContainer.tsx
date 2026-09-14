@@ -4,6 +4,7 @@ import { useGetTenantReports } from '@/hooks/useTenants'
 import { useGetResultsGroups, useGetStatusGroups } from '@/hooks/useData'
 import { useGetTenantDowntimes } from '@/hooks/useDowntimes'
 import { useGetTenantIncidents } from '@/hooks/useIncidents'
+import { useCanManageIncidents } from '@/hooks/useCanManageIncidents'
 import { useSelectedTenant } from '@/contexts/selected-tenant/useSelectedTenant'
 import Dashboard from './Dashboard'
 import { useGetResultsEndpoints } from '@/hooks/results'
@@ -16,6 +17,7 @@ const PrivateDashboardContainer = () => {
   const navigate = useNavigate()
   const { tenant } = useSelectedTenant()
   const tenantName = tenant?.info?.name ?? ''
+  const { canManage } = useCanManageIncidents()
 
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedReport = searchParams.get('report') ?? ''
@@ -163,6 +165,7 @@ const PrivateDashboardContainer = () => {
       incidentsData={incidents}
       incidentsLoading={incidentsLoading}
       incidentsError={incidentsError}
+      canManageIncidents={canManage}
       reportsLoading={reportsLoading}
       reportsError={reportsError ?? null}
       resultsData={resultsData}

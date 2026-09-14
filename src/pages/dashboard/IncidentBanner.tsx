@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { Link } from 'react-router-dom'
 import { Server } from 'lucide-react'
 import { ExclamationTriangleIcon } from '@heroicons/react/24/outline'
 import { formatDateTime, formatRelativeTime } from '@/utils/formatDateTime'
@@ -16,15 +17,19 @@ const isBannerStatus = (status: string): status is BannerIncidentStatus =>
 const IncidentPill = ({
   incident,
   status,
+  tenantId,
+  canManage,
 }: {
   incident: Incident
   status: BannerIncidentStatus
+  tenantId?: string
+  canManage?: boolean
 }) => {
   const s = bannerIncidentStatusStyles[status]
-  return (
-    <span
-      className={`tooltip tooltip-bottom cursor-pointer inline-flex items-center gap-2 rounded-full border mx-1 my-0.5 px-2.5 py-0.5 text-[12px] ${s.pillClass}`}
-    >
+  const baseClassName = `tooltip tooltip-bottom cursor-pointer inline-flex items-center gap-2 rounded-full border mx-1 my-0.5 px-2.5 py-0.5 text-[12px] ${s.pillClass}`
+
+  const content = (
+    <>
       <div className="tooltip-content text-[12px]">
         <div className="font-bold mb-1">Incident: {incident.title}</div>
         <div>
@@ -66,16 +71,33 @@ const IncidentPill = ({
       <span className={s.timeClass}>
         {formatRelativeTime(incident.updated_at, incident.created_at)}
       </span>
-    </span>
+    </>
   )
+
+  if (tenantId && canManage) {
+    return (
+      <Link
+        to={`/tenants/${tenantId}/incidents/${incident.id}`}
+        className={`${baseClassName} transition hover:brightness-95`}
+      >
+        {content}
+      </Link>
+    )
+  }
+
+  return <span className={baseClassName}>{content}</span>
 }
 
 const IncidentStatusSection = ({
   status,
   items,
+  tenantId,
+  canManage,
 }: {
   status: BannerIncidentStatus
   items: Incident[]
+  tenantId?: string
+  canManage?: boolean
 }) => {
   if (items.length === 0) {
     return null
@@ -88,7 +110,13 @@ const IncidentStatusSection = ({
         {incidentStatusLabel[status]}:
       </span>
       {items.map((incident) => (
-        <IncidentPill key={incident.id} incident={incident} status={status} />
+        <IncidentPill
+          key={incident.id}
+          incident={incident}
+          status={status}
+          tenantId={tenantId}
+          canManage={canManage}
+        />
       ))}
     </>
   )
@@ -98,12 +126,16 @@ interface IncidentBannerProps {
   incidents: Incident[]
   isLoading?: boolean
   error?: Error | null
+  tenantId?: string
+  canManage?: boolean
 }
 
 const IncidentBanner = ({
   incidents,
   isLoading,
   error,
+  tenantId,
+  canManage,
 }: IncidentBannerProps) => {
   const incidentsByStatus = useMemo(() => {
     const groups = Object.fromEntries(
@@ -140,6 +172,8 @@ const IncidentBanner = ({
             key={status}
             status={status}
             items={incidentsByStatus[status]}
+            tenantId={tenantId}
+            canManage={canManage}
           />
         ))}
       </div>

@@ -447,6 +447,7 @@ const MiniBars = ({ daily, dates }: { daily: number[]; dates: string[] }) => (
 
 export interface GroupDashboardProps {
   tenantName: string
+  tenantId?: string
   selectedReport: string
   groupName: string
 
@@ -477,12 +478,14 @@ export interface GroupDashboardProps {
   incidentsData?: Incident[]
   incidentsLoading?: boolean
   incidentsError?: Error | null
+  canManageIncidents?: boolean
 
   onBack: () => void
 }
 
 const GroupDashboard = ({
   tenantName,
+  tenantId,
   selectedReport,
   groupName,
   detailsData,
@@ -504,6 +507,7 @@ const GroupDashboard = ({
   incidentsData,
   incidentsLoading,
   incidentsError,
+  canManageIncidents,
   onBack,
 }: GroupDashboardProps) => {
   const [filter, setFilter] = useState<FilterId>('all')
@@ -908,6 +912,8 @@ const GroupDashboard = ({
             incidents={bannerIncidents}
             isLoading={incidentsLoading}
             error={incidentsError}
+            tenantId={tenantId}
+            canManage={canManageIncidents}
           />
 
           {!downtimesError &&

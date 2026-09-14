@@ -457,6 +457,7 @@ export interface DashboardProps {
   incidentsData?: Incident[]
   incidentsLoading?: boolean
   incidentsError?: Error | null
+  canManageIncidents?: boolean
   resultsData: GroupResultsResponse | undefined
   resultsLoading: boolean
   resultsError: Error | null
@@ -487,6 +488,7 @@ const Dashboard = ({
   incidentsData,
   incidentsLoading,
   incidentsError,
+  canManageIncidents,
   resultsData,
   resultsLoading,
   resultsError,
@@ -935,6 +937,8 @@ const Dashboard = ({
             incidents={bannerIncidents}
             isLoading={incidentsLoading}
             error={incidentsError}
+            tenantId={tenantId}
+            canManage={canManageIncidents}
           />
           {/* Display downtimes banner if downtimes exist for today */}
           {!downtimesError &&

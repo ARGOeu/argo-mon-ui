@@ -212,7 +212,7 @@ const CreateTenant = () => {
                 navigate(
                   returnToPanel
                     ? '/administration#tenants'
-                    : `/tenants/${tenantId}/details`,
+                    : `/tenants/${tenantId}/summary`,
                 ),
               2000,
             )
@@ -235,7 +235,7 @@ const CreateTenant = () => {
               () =>
                 navigate(
                   createdTenant.id
-                    ? `/tenants/${createdTenant.id}/details`
+                    ? `/tenants/${createdTenant.id}/summary`
                     : `/administration#tenants`,
                 ),
               2000,
@@ -279,7 +279,7 @@ const CreateTenant = () => {
                   : 'Back to Tenants',
               to:
                 isEditMode && !returnToPanel
-                  ? `/tenants/${tenantId}/details`
+                  ? `/tenants/${tenantId}/summary`
                   : '/administration#tenants',
             }}
           />
