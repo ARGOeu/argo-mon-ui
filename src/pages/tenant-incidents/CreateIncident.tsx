@@ -9,7 +9,7 @@ import ErrorDisplay from '@/components/ErrorDisplay'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import PageHeader from '@/components/PageHeader'
 import SearchInput from '@/components/SearchInput'
-import { useCanManageIncidents } from './useCanManageIncidents'
+import { useCanManageIncidents } from '@/hooks/useCanManageIncidents'
 import type { IncidentRequest } from '@/types/incidents'
 
 const sectionClass =

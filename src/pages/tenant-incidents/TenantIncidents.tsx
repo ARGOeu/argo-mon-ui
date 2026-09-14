@@ -8,7 +8,7 @@ import LoadingSpinner from '@/components/LoadingSpinner'
 import PageHeader from '@/components/PageHeader'
 import SearchInput from '@/components/SearchInput'
 import IncidentCard from './IncidentCard'
-import { useCanManageIncidents } from './useCanManageIncidents'
+import { useCanManageIncidents } from '@/hooks/useCanManageIncidents'
 
 const pageSize = 10
 

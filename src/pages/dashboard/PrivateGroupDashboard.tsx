@@ -12,6 +12,7 @@ import {
 } from '@/hooks/useStatusTimeline'
 import { useGetTenantDowntimes } from '@/hooks/useDowntimes'
 import { useGetTenantIncidents } from '@/hooks/useIncidents'
+import { useCanManageIncidents } from '@/hooks/useCanManageIncidents'
 import { useSelectedTenant } from '@/contexts/selected-tenant/useSelectedTenant'
 
 import GroupDashboard from './GroupDashboard'
@@ -27,6 +28,7 @@ const PrivateGroupDashboard = () => {
   const navigate = useNavigate()
   const { tenant } = useSelectedTenant()
   const tenantName = tenant?.info?.name ?? ''
+  const { canManage } = useCanManageIncidents()
 
   const [searchParams, setSearchParams] = useSearchParams()
 
@@ -167,6 +169,7 @@ const PrivateGroupDashboard = () => {
   return (
     <GroupDashboard
       tenantName={tenantName}
+      tenantId={tenantId}
       selectedReport={selectedReport}
       groupName={groupName}
       detailsData={detailsData}
@@ -188,6 +191,7 @@ const PrivateGroupDashboard = () => {
       incidentsData={incidents}
       incidentsLoading={incidentsLoading}
       incidentsError={incidentsError ?? null}
+      canManageIncidents={canManage}
       onBack={backToDashboard}
     />
   )

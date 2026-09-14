@@ -8,7 +8,7 @@ import IncidentComments from './IncidentComments'
 import IncidentHeader from './IncidentHeader'
 import IncidentHistory from './IncidentHistory'
 import IncidentStatusForm from './IncidentStatusForm'
-import { useCanManageIncidents } from './useCanManageIncidents'
+import { useCanManageIncidents } from '@/hooks/useCanManageIncidents'
 
 const IncidentDetail = () => {
   const { id: tenantId, incidentId } = useParams<{
