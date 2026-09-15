@@ -26,10 +26,11 @@ const SelectedTenantProvider = ({ children }: SelectedTenantProviderProps) => {
 
   const {
     data: tenantsData,
-    isLoading: isTenantLoading,
+    isLoading: isFirstPageLoading,
     error: tenantError,
     fetchNextPage,
     hasNextPage,
+    isFetchingNextPage,
   } = useGetAllTenants(authenticated)
 
   useEffect(() => {
@@ -37,6 +38,10 @@ const SelectedTenantProvider = ({ children }: SelectedTenantProviderProps) => {
       fetchNextPage()
     }
   }, [tenantsData, hasNextPage, fetchNextPage])
+
+  // Keep loading until all pages are loaded, so a tenant on a later page is never mistaken for missing
+  const isTenantLoading =
+    !tenantError && (isFirstPageLoading || isFetchingNextPage || hasNextPage)
 
   const tenants = useMemo(
     () => tenantsData?.pages.flatMap((page) => page.content) ?? [],
@@ -70,12 +75,12 @@ const SelectedTenantProvider = ({ children }: SelectedTenantProviderProps) => {
 
   // Validate stored ID on load, fall back to first tenant if missing or invalid
   useEffect(() => {
-    if (!storageKey || tenants.length === 0) return
+    if (!storageKey || tenants.length === 0 || isTenantLoading) return
     setLastActiveTenantId((current) => {
       if (current && tenants.some((t) => t.id === current)) return current
       return tenants[0]?.id ?? null
     })
-  }, [tenants, storageKey])
+  }, [tenants, storageKey, isTenantLoading])
 
   const effectiveTenantId = activeTenantId ?? lastActiveTenantId ?? null
 
