@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { useOutletContext, useSearchParams } from 'react-router-dom'
 import { useGetPublicTenantReports } from '@/hooks/useTenants'
 import {
   useGetStatusTimelineEndpoints,
@@ -20,6 +20,7 @@ import StatusView, {
 } from '../status/StatusView'
 import { useTenantName } from '@/hooks/useTenantName'
 import { useStatusDeepLink } from '@/hooks/useStatusDeepLink'
+import type { PublicTenantOutletContext } from './PublicTenantLayout'
 
 // convert date to YYYY-MM-DD string - take into account the timezone
 const toDateStr = (d: Date, tz: TimeZoneMode) => {
@@ -80,6 +81,9 @@ const PublicStatusView = () => {
 
   const [, setSearchParams] = useSearchParams()
 
+  const { lastSelectedReport, setLastSelectedReport } =
+    useOutletContext<PublicTenantOutletContext>()
+
   // hook to handle deep link parsing and focusing on the target item
   const deepLink = useStatusDeepLink()
   const { resolveReport } = deepLink
@@ -116,16 +120,31 @@ const PublicStatusView = () => {
     error: reportsError,
   } = useGetPublicTenantReports(tenantName ?? '')
 
-  useEffect(() => {
-    if (!reports || reports.length === 0) return
-    if (reports.some((r) => r.name === selectedReport)) return
+  // Moves the last-selected report to the front, so it's used as the default when there's no report in the URL.
+  // This reordered list is only used to pick that fallback report, it's never shown, so the dropdown keeps its normal order.
+  const reportsForFallback = useMemo(() => {
+    if (!reports) return reports
+    const fallbackReport = reports.find((r) => r.name === lastSelectedReport)
+    if (!fallbackReport) return reports
+    return [fallbackReport, ...reports.filter((r) => r !== fallbackReport)]
+  }, [reports, lastSelectedReport])
 
-    const resolved = resolveReport(reports)
+  useEffect(() => {
+    if (!reportsForFallback || reportsForFallback.length === 0) return
+    if (reportsForFallback.some((r) => r.name === selectedReport)) return
+
+    const resolved = resolveReport(reportsForFallback)
     if (!resolved) return
 
     setSelectedReport(resolved.report ?? '')
     setPath(resolved.path)
-  }, [reports, selectedReport, resolveReport])
+  }, [reportsForFallback, selectedReport, resolveReport])
+
+  useEffect(() => {
+    if (selectedReport) {
+      setLastSelectedReport(selectedReport)
+    }
+  }, [selectedReport, setLastSelectedReport])
 
   // keep today reference
   const todayRef = useRef(today)

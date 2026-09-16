@@ -1,10 +1,11 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useGetEndpointsAR } from '@/hooks/useAvailabilityReliability'
 import { useTenantName } from '@/hooks/useTenantName'
-import { useParams, useNavigate } from 'react-router-dom'
+import { useOutletContext, useParams, useNavigate } from 'react-router-dom'
 import AREndpointsContent from '@/pages/availability-reliability/AREndpointsContent'
 import { getLastThreeMonthsRange } from '@/pages/availability-reliability/utils/dateRanges'
 import { isPlatformDomain } from '@/utils/domains'
+import type { PublicTenantOutletContext } from './PublicTenantLayout'
 
 const PublicAREndpointsContainer = () => {
   const { tenantName } = useTenantName()
@@ -13,6 +14,14 @@ const PublicAREndpointsContainer = () => {
     reportName: string
   }>()
   const navigate = useNavigate()
+  const { setLastSelectedReport } =
+    useOutletContext<PublicTenantOutletContext>()
+
+  useEffect(() => {
+    if (reportName) {
+      setLastSelectedReport(reportName)
+    }
+  }, [reportName, setLastSelectedReport])
 
   const basePath = isPlatformDomain()
     ? `/public/tenants/${tenantName ?? ''}/ar-groups`

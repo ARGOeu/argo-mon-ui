@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo } from 'react'
-import { useLocation, useNavigate } from 'react-router-dom'
+import { useMemo } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useGetPublicTenantReports } from '@/hooks/useTenants'
 import { useGetResultsGroups, useGetStatusGroups } from '@/hooks/useData'
 import { useTenantName } from '@/hooks/useTenantName'
@@ -8,13 +8,14 @@ import { useGetResultsEndpoints } from '@/hooks/results'
 import { useGetTenantDowntimes } from '@/hooks/useDowntimes'
 import { useGetTenantIncidents } from '@/hooks/useIncidents'
 import { useGetStatusTimelineAllEndpoints } from '@/hooks/useStatusTimeline'
+import { useSelectedPublicReport } from './hooks/useSelectedPublicReport'
 
 const toUtcDate = (d: Date) => d.toISOString().split('T')[0]
 
 const PublicDashboardContainer = () => {
   const { tenantName } = useTenantName()
-  const { hash, pathname, search } = useLocation()
   const navigate = useNavigate()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const {
     data: reports,
@@ -22,27 +23,15 @@ const PublicDashboardContainer = () => {
     error: reportsError,
   } = useGetPublicTenantReports(tenantName ?? '')
 
-  const hashReport = hash ? decodeURIComponent(hash.slice(1)) : ''
+  const setReportParam = (report: string) => {
+    setSearchParams({ report }, { replace: true })
+  }
 
-  const selectedReport = reports?.some((r) => r.name === hashReport)
-    ? hashReport
-    : ''
-
-  const setSelectedReport = useCallback(
-    (name: string) => {
-      navigate(`${pathname}${search}#${encodeURIComponent(name)}`, {
-        replace: true,
-      })
-    },
-    [navigate, pathname, search],
+  const selectedReport = useSelectedPublicReport(
+    reports,
+    searchParams.get('report'),
+    setReportParam,
   )
-
-  useEffect(() => {
-    if (!reports || reports.length === 0) return
-    if (reports.some((r) => r.name === hashReport)) return
-
-    setSelectedReport(reports[0].name)
-  }, [reports, hashReport, setSelectedReport])
 
   const today = toUtcDate(new Date())
 
@@ -137,14 +126,14 @@ const PublicDashboardContainer = () => {
   )
 
   const openGroup = (groupName: string, endpointName?: string) => {
-    const query = endpointName
-      ? `?endpoint=${encodeURIComponent(endpointName)}`
-      : ''
+    const params = new URLSearchParams()
+    if (endpointName) params.set('endpoint', endpointName)
+    if (selectedReport) params.set('report', selectedReport)
+    const query = params.toString() ? `?${params.toString()}` : ''
 
     navigate(
       `/public/tenants/${encodeURIComponent(tenantName ?? '')}` +
-        `/dashboard/groups/${encodeURIComponent(groupName)}${query}` +
-        `#${encodeURIComponent(selectedReport)}`,
+        `/dashboard/groups/${encodeURIComponent(groupName)}${query}`,
     )
   }
 
@@ -173,7 +162,7 @@ const PublicDashboardContainer = () => {
       endpointStatusLoading={endpointStatusLoading}
       endpointStatusError={endpointStatusError ?? null}
       selectedReport={selectedReport}
-      onReportChange={setSelectedReport}
+      onReportChange={setReportParam}
       onGroupSelect={(name) => openGroup(name)}
       onEndpointSelect={(group, endpoint) => openGroup(group, endpoint)}
     />

@@ -1066,7 +1066,7 @@ const GroupDashboard = ({
                     key={t.id}
                     type="button"
                     onClick={() => setFilter(t.id)}
-                    className={`-mb-px border-b-2 px-2.5 py-1.5 text-xs transition-colors ${
+                    className={`-mb-px border-b-2 px-2.5 py-1.5 text-xs transition-colors cursor-pointer ${
                       filter === t.id
                         ? 'border-neutral-900 text-neutral-900'
                         : 'border-transparent text-neutral-500 hover:text-neutral-900'

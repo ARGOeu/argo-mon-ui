@@ -1,10 +1,11 @@
-import { useMemo } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useGetEndpointAR } from '@/hooks/useAvailabilityReliability'
 import { useTenantName } from '@/hooks/useTenantName'
-import { useParams } from 'react-router-dom'
+import { useOutletContext, useParams } from 'react-router-dom'
 import AREndpointsDailyContent from '@/pages/availability-reliability/AREndpointsDailyContent'
 import { getMonthRange } from '@/pages/availability-reliability/utils/dateRanges'
 import { isPlatformDomain } from '@/utils/domains'
+import type { PublicTenantOutletContext } from './PublicTenantLayout'
 
 const PublicAREndpointsDailyContainer = () => {
   const { tenantName } = useTenantName()
@@ -16,6 +17,14 @@ const PublicAREndpointsDailyContainer = () => {
       endpointName: string
       month: string
     }>()
+  const { setLastSelectedReport } =
+    useOutletContext<PublicTenantOutletContext>()
+
+  useEffect(() => {
+    if (reportName) {
+      setLastSelectedReport(reportName)
+    }
+  }, [reportName, setLastSelectedReport])
 
   const { startTime, endTime } = useMemo(
     () => (month ? getMonthRange(month) : { startTime: '', endTime: '' }),

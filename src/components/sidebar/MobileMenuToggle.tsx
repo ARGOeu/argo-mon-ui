@@ -15,7 +15,7 @@ export default function MobileMenuToggle({
     <>
       <button
         onClick={onOpen}
-        className={`md:hidden sticky w-10 h-10 top-6 left-3 z-50 p-2 bg-white rounded-lg shadow-lg border border-line hover:bg-surface-muted transition-colors cursor-pointer${isOpen ? ' invisible pointer-events-none' : ''}`}
+        className={`md:hidden sticky w-10 h-10 top-6 left-2 z-50 p-2 bg-white rounded-lg shadow-lg border border-line hover:bg-surface-muted transition-colors cursor-pointer${isOpen ? ' invisible pointer-events-none' : ''}`}
         aria-label="Open menu"
       >
         <Bars3Icon className="size-6 text-body" />
