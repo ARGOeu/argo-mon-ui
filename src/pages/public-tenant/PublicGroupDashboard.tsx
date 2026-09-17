@@ -1,10 +1,5 @@
-import { useCallback, useEffect, useMemo } from 'react'
-import {
-  useLocation,
-  useNavigate,
-  useParams,
-  useSearchParams,
-} from 'react-router-dom'
+import { useCallback, useMemo } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useGetPublicTenantReports } from '@/hooks/useTenants'
 import {
   useGetResultsGroupDetails,
@@ -18,6 +13,7 @@ import { useGetTenantDowntimes } from '@/hooks/useDowntimes'
 import { useGetTenantIncidents } from '@/hooks/useIncidents'
 import { useTenantName } from '@/hooks/useTenantName'
 import GroupDashboard from '@/pages/dashboard/GroupDashboard'
+import { useSelectedPublicReport } from './hooks/useSelectedPublicReport'
 
 const toUtcDate = (d: Date) => d.toISOString().split('T')[0]
 
@@ -27,35 +23,32 @@ const PublicGroupDashboard = () => {
     groupName: string
   }>()
 
-  const { hash, pathname, search } = useLocation()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const focusEndpoint = searchParams.get('endpoint') ?? undefined
 
   const { data: reports } = useGetPublicTenantReports(tenantName ?? '')
 
-  const hashReport = hash ? decodeURIComponent(hash.slice(1)) : ''
-
-  const selectedReport = reports?.some((r) => r.name === hashReport)
-    ? hashReport
-    : ''
-
-  const setSelectedReport = useCallback(
-    (name: string) => {
-      navigate(`${pathname}${search}#${encodeURIComponent(name)}`, {
-        replace: true,
-      })
+  const setReportParam = useCallback(
+    (report: string) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev)
+          next.set('report', report)
+          return next
+        },
+        { replace: true },
+      )
     },
-    [navigate, pathname, search],
+    [setSearchParams],
   )
 
-  useEffect(() => {
-    if (!reports || reports.length === 0) return
-    if (reports.some((r) => r.name === hashReport)) return
-
-    setSelectedReport(reports[0].name)
-  }, [reports, hashReport, setSelectedReport])
+  const selectedReport = useSelectedPublicReport(
+    reports,
+    searchParams.get('report'),
+    setReportParam,
+  )
 
   const today = toUtcDate(new Date())
 
@@ -177,7 +170,7 @@ const PublicGroupDashboard = () => {
   const backToDashboard = () =>
     navigate(
       `/public/tenants/${encodeURIComponent(tenantName ?? '')}/dashboard` +
-        (selectedReport ? `#${encodeURIComponent(selectedReport)}` : ''),
+        (selectedReport ? `?report=${encodeURIComponent(selectedReport)}` : ''),
     )
 
   return (

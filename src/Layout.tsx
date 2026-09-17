@@ -45,7 +45,7 @@ function LayoutContent() {
 
       <main className="flex-1 bg-white overflow-auto [scrollbar-gutter:stable]">
         <div
-          className={`${isActiveTenantDetailsRoute && !tenant?.error ? '' : 'container mx-2 md:mx-auto py-2 px-4 md:px-6'}`}
+          className={`${isActiveTenantDetailsRoute && !tenant?.error ? '' : 'container md:mx-auto py-2 px-4 md:px-6'}`}
         >
           {isTenantScopedRoute && tenant?.error ? (
             <div className="py-6 px-16 md:px-24">
@@ -78,7 +78,7 @@ function Layout() {
           onLogout={() => {}}
         />
         <main className="flex-1 bg-white overflow-auto [scrollbar-gutter:stable]">
-          <div className="container mx-2 md:mx-auto p-4 md:px-6">
+          <div className="container md:mx-auto p-4 md:px-6">
             <LoginPrompt
               title="Authentication Required"
               description="Please login to access the status pages management"

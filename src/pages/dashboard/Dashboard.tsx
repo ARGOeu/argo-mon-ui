@@ -435,7 +435,7 @@ const PublicDashboardLink = ({
   className,
 }: PublicDashboardLinkProps) => (
   <a
-    href={`/public/tenants/${encodeURIComponent(tenantName)}/dashboard#${encodeURIComponent(selectedReport)}`}
+    href={`/public/tenants/${encodeURIComponent(tenantName)}/dashboard?report=${encodeURIComponent(selectedReport)}`}
     target="_blank"
     rel="noopener noreferrer"
     className={`self-start inline-flex items-center gap-0.5 text-sm text-brand no-underline transition-colors hover:text-brand-strong hover:underline ${className ?? ''}`}
@@ -1079,7 +1079,7 @@ const Dashboard = ({
                     key={t.id}
                     type="button"
                     onClick={() => setFilter(t.id)}
-                    className={`-mb-px border-b-2 px-2.5 py-1.5 text-xs transition-colors ${
+                    className={`-mb-px border-b-2 px-2.5 py-1.5 text-xs transition-colors cursor-pointer ${
                       filter === t.id
                         ? 'border-neutral-900 text-neutral-900'
                         : 'border-transparent text-neutral-500 hover:text-neutral-900'

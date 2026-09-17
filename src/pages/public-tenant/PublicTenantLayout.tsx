@@ -5,7 +5,7 @@ import {
   useGetPublicTenantReports,
   useGetPublicTenantInfo,
 } from '@/hooks/useTenants'
-import { Outlet } from 'react-router-dom'
+import { Outlet, useLocation } from 'react-router-dom'
 import {
   CircleStackIcon,
   ShieldCheckIcon,
@@ -20,9 +20,27 @@ import NotFound from '@/pages/NotFound'
 import { isPlatformDomain } from '@/utils/domains'
 import { Bars3Icon } from '@heroicons/react/24/outline'
 
+export interface PublicTenantOutletContext {
+  lastSelectedReport: string | null
+  setLastSelectedReport: (report: string) => void
+}
+
+const getReportFromLocation = (search: string, pathname: string) => {
+  const queryReport = new URLSearchParams(search).get('report')
+  if (queryReport) {
+    return queryReport
+  }
+  const pathMatch = pathname.match(/\/report\/([^/]+)/)
+  return pathMatch ? decodeURIComponent(pathMatch[1]) : null
+}
+
 const PublicTenantLayout = () => {
   const { tenantName, loading: tenantLoading } = useTenantName()
+  const location = useLocation()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [lastSelectedReport, setLastSelectedReport] = useState<string | null>(
+    () => getReportFromLocation(location.search, location.pathname),
+  )
   const { data: performanceSetting } = useGetPerformanceSettings()
   const { isLoading: reportsLoading, error: reportsError } =
     useGetPublicTenantReports(tenantName ?? '', undefined, !!tenantName)
@@ -43,17 +61,20 @@ const PublicTenantLayout = () => {
     return <NotFound />
   }
 
+  const dashboardReportQuery = lastSelectedReport
+    ? `?report=${encodeURIComponent(lastSelectedReport)}`
+    : ''
   const dashboardPath = isPlatformDomain()
-    ? `/public/tenants/${tenantName}/dashboard`
-    : '/dashboard'
+    ? `/public/tenants/${tenantName}/dashboard${dashboardReportQuery}`
+    : `/dashboard${dashboardReportQuery}`
 
   const availabilityReliabilityPath = isPlatformDomain()
     ? `/public/tenants/${tenantName}/ar-groups`
     : '/ar-groups'
 
   const statusPath = isPlatformDomain()
-    ? `/public/tenants/${tenantName}/status`
-    : '/status'
+    ? `/public/tenants/${tenantName}/status${dashboardReportQuery}`
+    : `/status${dashboardReportQuery}`
 
   const capabilityPath = isPlatformDomain()
     ? `/public/tenants/${tenantName}/capability`
@@ -134,8 +155,15 @@ const PublicTenantLayout = () => {
       </aside>
 
       <main className="flex-1 bg-white overflow-auto">
-        <div className="container mx-2 md:mx-auto py-2 px-4 md:px-6">
-          <Outlet />
+        <div className="container md:mx-auto py-2 px-4 md:px-6">
+          <Outlet
+            context={
+              {
+                lastSelectedReport,
+                setLastSelectedReport,
+              } satisfies PublicTenantOutletContext
+            }
+          />
         </div>
       </main>
     </div>
