@@ -55,8 +55,6 @@ type SeverityFilter = ProblemSeverity | 'all'
 const problemKey = (p: LatestMetricData) =>
   `${p.endpoint_group}|${p.service}|${p.endpoint}|${p.metric}|${p.timestamp}`
 
-// Plain left-click navigates in place -> close the drawer.
-// Cmd/Ctrl/Shift/middle-click opens a new tab -> keep the drawer open.
 const isPlainLeftClick = (e: MouseEvent) =>
   e.button === 0 && !e.metaKey && !e.ctrlKey && !e.shiftKey && !e.altKey
 
@@ -66,11 +64,8 @@ export interface LatestProblemsDrawerProps {
   problems: LatestMetricData[] | undefined
   isLoading?: boolean
   error?: Error | null
-  /** react-query dataUpdatedAt (ms) */
-  updatedAt?: number
   reportName?: string
   onEndpointSelect?: (groupName: string, endpointName: string) => void
-  /** Builds the status-timeline deep link for a check. When omitted, metric names are plain text. */
   getMetricHref?: (check: LatestMetricData) => string
 }
 
@@ -93,7 +88,7 @@ const LatestProblemsDrawer = ({
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [now, setNow] = useState(() => Date.now())
 
-  // Keep relative times fresh while the drawer is open
+  // refresh data
   useEffect(() => {
     if (!open) return
     const tick = () => setNow(Date.now())
@@ -105,7 +100,7 @@ const LatestProblemsDrawer = ({
     }
   }, [open])
 
-  // Esc to close + move focus into the drawer when it opens
+  // use escape to close the drawer
   useEffect(() => {
     if (!open) return
     const raf = requestAnimationFrame(() => closeRef.current?.focus())

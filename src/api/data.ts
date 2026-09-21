@@ -220,13 +220,15 @@ export interface LatestMetricDataParams {
   filter?: string
   limit?: number
   strict?: boolean
+  group?: string
 }
 
+// build url based on public/private and all/per group
 const buildLatestMetricDataUrl = (
   tenantIdentifier: string,
   report: string,
   mode: AccessMode,
-  { filter = 'all', limit = 500, strict = true }: LatestMetricDataParams,
+  { filter = 'all', limit = 500, strict = true, group }: LatestMetricDataParams,
 ) => {
   const base =
     mode === 'private'
@@ -239,9 +241,12 @@ const buildLatestMetricDataUrl = (
     strict: String(strict),
   })
 
+  // if per group add group name to the path
+  const groupSegment = group ? `/${encodeURIComponent(group)}` : ''
+
   return (
     `${base}/report/${encodeURIComponent(report)}` +
-    `/groups/latest-data?${params.toString()}`
+    `/groups${groupSegment}/latest-data?${params.toString()}`
   )
 }
 

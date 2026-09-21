@@ -1411,7 +1411,6 @@ const Dashboard = ({
           problems={latestProblems.data}
           isLoading={latestProblems.isLoading}
           error={latestProblems.error}
-          updatedAt={latestProblems.updatedAt}
           reportName={selectedReport}
           onEndpointSelect={
             onEndpointSelect ? handleProblemEndpointSelect : undefined

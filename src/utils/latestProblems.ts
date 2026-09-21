@@ -5,7 +5,7 @@ import type {
 
 export type ProblemSeverity = 'critical' | 'warning' | 'unknown' | 'missing'
 
-// order by severity
+// ordered list per severity
 export const PROBLEM_SEVERITIES: ProblemSeverity[] = [
   'critical',
   'warning',
@@ -13,7 +13,7 @@ export const PROBLEM_SEVERITIES: ProblemSeverity[] = [
   'missing',
 ]
 
-// map the severity of each problem
+// severity map
 export const getProblemSeverity = (status: string): ProblemSeverity | null => {
   switch (status?.toUpperCase()) {
     case 'CRITICAL':
@@ -39,7 +39,7 @@ const severityRank = (status: string) => {
   return s === null ? PROBLEM_SEVERITIES.length : PROBLEM_SEVERITIES.indexOf(s)
 }
 
-// sort problems by most recent
+// get problematic statuses
 export const selectLatestProblems = (
   response: LatestMetricDataResponse,
 ): LatestMetricData[] =>
@@ -63,7 +63,7 @@ export const formatRelativeTime = (iso: string, now: number): string => {
   return `${Math.floor(hours / 24)}d ago`
 }
 
-// create deep link towards status timeline view
+// create navigation link towards status view timeline displaying the metric details
 export const buildStatusTimelineHref = (
   basePath: string,
   report: string,
