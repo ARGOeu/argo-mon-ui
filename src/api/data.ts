@@ -5,6 +5,7 @@ import type {
   GroupResultsResponse,
   GroupStatusResponse,
 } from '@/types/data'
+import type { LatestMetricDataResponse } from '@/types/latestProblems'
 
 const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 
@@ -214,3 +215,70 @@ export const fetchResultsGroupEndpoints = async (
     mode,
     token,
   )
+
+export interface LatestMetricDataParams {
+  filter?: string
+  limit?: number
+  strict?: boolean
+}
+
+const buildLatestMetricDataUrl = (
+  tenantIdentifier: string,
+  report: string,
+  mode: AccessMode,
+  { filter = 'all', limit = 500, strict = true }: LatestMetricDataParams,
+) => {
+  const base =
+    mode === 'private'
+      ? `${BACKEND_API}/v1/tenants/${encodeURIComponent(tenantIdentifier)}`
+      : `${BACKEND_API}/v1/public/tenants/${encodeURIComponent(tenantIdentifier)}`
+
+  const params = new URLSearchParams({
+    filter,
+    limit: String(limit),
+    strict: String(strict),
+  })
+
+  return (
+    `${base}/report/${encodeURIComponent(report)}` +
+    `/groups/latest-data?${params.toString()}`
+  )
+}
+
+export const fetchLatestMetricData = async (
+  tenantIdentifier: string,
+  report: string,
+  mode: AccessMode,
+  token: string | undefined,
+  params: LatestMetricDataParams = {},
+): Promise<LatestMetricDataResponse> => {
+  if (mode === 'private' && !token) {
+    throw new Error('Access token is required for private mode requests')
+  }
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (mode === 'private') {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const response = await fetch(
+    buildLatestMetricDataUrl(tenantIdentifier, report, mode, params),
+    { headers },
+  )
+
+  if (response.status === 404) {
+    return {
+      status: { message: 'Latest data not found', code: '404' },
+      data: { metric_data: [] },
+    }
+  }
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
