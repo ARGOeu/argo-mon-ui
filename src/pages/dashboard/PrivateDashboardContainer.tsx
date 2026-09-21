@@ -109,10 +109,10 @@ const PrivateDashboardContainer = () => {
     reportReady,
   )
 
-  // in private dashboard we use report id instead of report name
   const selectedReportId =
     reports?.find((r) => r.name === selectedReport)?.id ?? ''
 
+  // get latest problem data for private view using report id and tenant id
   const {
     data: latestProblemsData,
     isLoading: latestProblemsLoading,

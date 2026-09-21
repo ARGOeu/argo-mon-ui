@@ -187,9 +187,11 @@ export const useGetResultsGroupEndpoints = (
 
 interface UseGetLatestProblemsOptions extends LatestMetricDataParams {
   enabled?: boolean
+  // refetching latest data
   refetchInterval?: number | false
 }
 
+// hook to get the latest problems per report for all groups or per report for specific group
 export const useGetLatestProblems = (
   tenantIdentifier: string,
   mode: AccessMode,
@@ -198,6 +200,7 @@ export const useGetLatestProblems = (
     filter = 'all',
     limit = 500,
     strict = true,
+    group,
     enabled = true,
     refetchInterval = 60_000,
   }: UseGetLatestProblemsOptions = {},
@@ -210,6 +213,7 @@ export const useGetLatestProblems = (
       mode,
       tenantIdentifier,
       report,
+      group ?? null,
       filter,
       limit,
       strict,
@@ -224,7 +228,7 @@ export const useGetLatestProblems = (
         report,
         mode,
         mode === 'private' ? token : undefined,
-        { filter, limit, strict },
+        { filter, limit, strict, group },
       )
     },
     select: selectLatestProblems,

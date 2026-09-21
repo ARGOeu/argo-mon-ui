@@ -82,7 +82,7 @@ const PublicDashboardContainer = () => {
     !!selectedReport,
   )
 
-  // tenant is referenced by tenant name in public
+  // get latest problem data for public view using tenant name and public report name
   const {
     data: latestProblemsData,
     isLoading: latestProblemsLoading,
@@ -92,7 +92,7 @@ const PublicDashboardContainer = () => {
     enabled: !!selectedReport,
   })
 
-  // use public route
+  // create public route
   const getMetricStatusHref = useCallback(
     (check: LatestMetricData) =>
       buildStatusTimelineHref(

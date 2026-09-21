@@ -2,6 +2,7 @@ import { useCallback, useMemo } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useGetPublicTenantReports } from '@/hooks/useTenants'
 import {
+  useGetLatestProblems,
   useGetResultsGroupDetails,
   useGetResultsGroupEndpoints,
 } from '@/hooks/useData'
@@ -12,6 +13,8 @@ import {
 import { useGetTenantDowntimes } from '@/hooks/useDowntimes'
 import { useGetTenantIncidents } from '@/hooks/useIncidents'
 import { useTenantName } from '@/hooks/useTenantName'
+import type { LatestMetricData } from '@/types/latestProblems'
+import { buildStatusTimelineHref } from '@/utils/latestProblems'
 import GroupDashboard from '@/pages/dashboard/GroupDashboard'
 import { useSelectedPublicReport } from './hooks/useSelectedPublicReport'
 
@@ -110,9 +113,6 @@ const PublicGroupDashboard = () => {
     enabled,
   )
 
-  /*
-   * Actual group status from the status backend.
-   */
   const {
     data: statusData,
     isLoading: statusLoading,
@@ -127,9 +127,6 @@ const PublicGroupDashboard = () => {
     enabled,
   )
 
-  /*
-   * Actual status timelines for every endpoint in the group.
-   */
   const {
     data: statusEndpointsData,
     isLoading: statusEndpointsLoading,
@@ -142,6 +139,43 @@ const PublicGroupDashboard = () => {
     statusStartTime,
     statusEndTime,
     enabled,
+  )
+
+  // get latest problem data for public view using tenant name and public report name
+  const {
+    data: latestProblemsData,
+    isLoading: latestProblemsLoading,
+    error: latestProblemsError,
+    dataUpdatedAt: latestProblemsUpdatedAt,
+  } = useGetLatestProblems(tenantName ?? '', 'public', selectedReport ?? '', {
+    group: groupName,
+    enabled,
+  })
+
+  // create status nav link using public route
+  const getMetricStatusHref = useCallback(
+    (check: LatestMetricData) =>
+      buildStatusTimelineHref(
+        `/public/tenants/${encodeURIComponent(tenantName ?? '')}/status`,
+        selectedReport ?? '',
+        check,
+      ),
+    [tenantName, selectedReport],
+  )
+
+  // Focus an endpoint row on this page via ?endpoint=
+  const focusEndpointOnPage = useCallback(
+    (endpointName: string) => {
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev)
+          next.set('endpoint', endpointName)
+          return next
+        },
+        { replace: true },
+      )
+    },
+    [setSearchParams],
   )
 
   const {
@@ -197,6 +231,14 @@ const PublicGroupDashboard = () => {
       incidentsData={incidents}
       incidentsLoading={incidentsLoading}
       incidentsError={incidentsError ?? null}
+      latestProblems={{
+        data: latestProblemsData,
+        isLoading: latestProblemsLoading,
+        error: latestProblemsError ?? null,
+        updatedAt: latestProblemsUpdatedAt || undefined,
+        getMetricHref: getMetricStatusHref,
+      }}
+      onEndpointFocus={focusEndpointOnPage}
       onBack={backToDashboard}
     />
   )
