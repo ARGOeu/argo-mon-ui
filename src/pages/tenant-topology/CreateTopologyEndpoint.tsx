@@ -33,6 +33,15 @@ const labelClass = 'text-sm font-medium text-body mb-1'
 
 const today = new Date().toISOString().split('T')[0]
 
+const isSameEndpoint = (
+  a: EndpointTopologyItem,
+  b: EndpointTopologyItem,
+): boolean =>
+  a.hostname === b.hostname &&
+  a.service === b.service &&
+  a.group === b.group &&
+  (a.tags?.info_URL ?? a.hostname) === (b.tags?.info_URL ?? b.hostname)
+
 interface FormData {
   service: string
   url: string
@@ -233,6 +242,26 @@ const CreateTopologyEndpoint = ({
       hasError = true
     }
 
+    const shouldCheckDuplicate =
+      !isEditMode ||
+      trimmedUrl !== editingEndpoint.tags?.info_URL ||
+      formData.service !== editingEndpoint.service ||
+      formData.group !== editingEndpoint.group
+
+    const isDuplicate =
+      shouldCheckDuplicate &&
+      (latestEndpoints ?? []).some(
+        (e) =>
+          e.tags?.info_URL === trimmedUrl &&
+          e.service === formData.service &&
+          e.group === formData.group,
+      )
+
+    if (isDuplicate) {
+      newErrors.url = `This URL already exists for service type "${formData.service}" in group "${formData.group}"`
+      hasError = true
+    }
+
     if (
       formData.metadata.some(
         (label) => label.key.trim().toLowerCase() === 'labels',
@@ -256,15 +285,9 @@ const CreateTopologyEndpoint = ({
 
     const extractedHostname = new URL(trimmedUrl).hostname
 
-    const existingEndpoint = latestEndpoints?.find(
-      (e) =>
-        (e.tags?.hostname ?? e.hostname) === extractedHostname &&
-        e.service === formData.service,
-    )
-
     const resolvedInfoId = isEditMode
       ? (editingEndpoint.tags?.info_ID ?? crypto.randomUUID())
-      : (existingEndpoint?.tags?.info_ID ?? crypto.randomUUID())
+      : crypto.randomUUID()
 
     const rootHostname = `${extractedHostname}_${resolvedInfoId}`
 
@@ -294,9 +317,7 @@ const CreateTopologyEndpoint = ({
 
     const payload = isEditMode
       ? (latestEndpoints ?? []).map((e) =>
-          (e.tags?.info_URL ?? e.hostname) ===
-            (editingEndpoint.tags?.info_URL ?? editingEndpoint.hostname) &&
-          e.service === editingEndpoint.service
+          isSameEndpoint(e, editingEndpoint)
             ? {
                 ...editingEndpoint,
                 ...updatedFields,
