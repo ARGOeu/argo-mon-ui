@@ -4,7 +4,6 @@ This project is a React and TypeScript application built with Vite. It relies on
 
 - argo-mon-api
 - argo-web-api
-- argo-mon-ui
 
 ## Local Environment Setup
 
@@ -54,7 +53,7 @@ Then issue:
 mvn clean && mvn quarkus:dev
 ```
 
-### Step 3: Run the status-ui React app
+### Step 3: Run the argo-mon-ui React app
 
 Depedencies:
 
@@ -64,8 +63,7 @@ To begin issue:
 
 ```
 git clone https://github.com/argoeu/argo-mon-ui -b devel
-cd status-ui
-Copy .env.example to .env and use it as is, or modify it to suit your needs.
+cd argo-mon-ui
 npm install
 npm run dev
 ```
