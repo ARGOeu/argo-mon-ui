@@ -21,6 +21,8 @@ export const STATUS_RANGE_DAYS = {
   '1d': 1,
   '3d': 3,
   '7d': 7,
+  '15d': 15,
+  '31d': 31,
 } as const
 
 export type StatusRangeId = keyof typeof STATUS_RANGE_DAYS
