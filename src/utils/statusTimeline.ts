@@ -13,7 +13,12 @@ export const STATUS_STYLES: Record<
     label: 'Downtime',
   },
   UNKNOWN: { bar: 'bg-neutral-400', dot: 'bg-neutral-400', label: 'Unknown' },
-  MISSING: { bar: 'bg-neutral-200', dot: 'bg-neutral-200', label: 'No data' },
+  MISSING: { bar: 'bg-neutral-300', dot: 'bg-neutral-300', label: 'Missing' },
+  NO_DATA: {
+    bar: 'bg-neutral-50 bg-[repeating-linear-gradient(45deg,transparent,transparent_3px,rgba(0,0,0,.1)_3px,rgba(0,0,0,.1)_6px)]',
+    dot: 'border border-neutral-300 bg-neutral-50',
+    label: 'No data',
+  },
 }
 
 // Predifined periods to view status timelines
@@ -73,7 +78,7 @@ export const buildSegments = (
     .sort((a, b) => a.t - b.t)
 
   if (points.length === 0) {
-    return [toSegment({ start: windowStart, end, value: 'MISSING' }, 0)]
+    return [toSegment({ start: windowStart, end, value: 'NO_DATA' }, 0)]
   }
 
   // merge identical values
@@ -90,7 +95,7 @@ export const buildSegments = (
     raw.push({
       start: windowStart,
       end: Math.min(merged[0].t, end),
-      value: 'MISSING',
+      value: 'NO_DATA',
     })
   }
   merged.forEach((p, i) => {

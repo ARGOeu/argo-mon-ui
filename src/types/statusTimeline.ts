@@ -17,6 +17,7 @@ export type StatusValue =
   | 'DOWNTIME'
   | 'UNKNOWN'
   | 'MISSING'
+  | 'NO_DATA'
 
 export interface StatusEntry {
   timestamp: string

@@ -52,6 +52,7 @@ const LEGEND_ORDER: StatusValue[] = [
   'DOWNTIME',
   'UNKNOWN',
   'MISSING',
+  'NO_DATA',
 ]
 
 const LEVEL_LABEL = ['Group', 'Service type', 'Endpoint', 'Metric']
@@ -110,6 +111,7 @@ const SEVERITY: Record<StatusValue, number> = {
   UNKNOWN: 2,
   OK: 1,
   MISSING: 0,
+  NO_DATA: 0,
 }
 
 // A single raw observation at the Metric level, with its own position on the axis
@@ -774,27 +776,43 @@ const StatusView = ({
   )
 
   const rows = useMemo<TimelineRow[]>(() => {
-    return statusRows.map((row) => {
-      if (row.kind !== 'node') return row
+    const out: TimelineRow[] = []
+    let hiddenDepth: number | null = null
+
+    for (const row of statusRows) {
+      if (hiddenDepth !== null && row.depth > hiddenDepth) continue
+      hiddenDepth = null
+
+      if (row.kind !== 'node') {
+        out.push(row)
+        continue
+      }
+
+      const hasDataInWindow = row.statuses.some((entry) => {
+        const t = Date.parse(entry.timestamp)
+        return t >= baseStart && t <= baseEnd
+      })
+      if (!hasDataInWindow) {
+        hiddenDepth = row.depth
+        continue
+      }
+
       const segments = buildSegments(
         row.statuses,
         windowStart,
         windowEnd,
         dataEnd,
       )
-      return {
+      out.push({
         ...row,
         label: row.depth === 2 ? stripIdSuffix(row.name) : row.name,
         segments,
         current: segments[segments.length - 1],
-      }
-    })
-  }, [statusRows, windowStart, windowEnd, dataEnd])
+      })
+    }
 
-  const hasVisibleStatusData = rows.some(
-    (row) =>
-      row.kind === 'node' && row.segments.some((s) => s.value !== 'MISSING'),
-  )
+    return out
+  }, [statusRows, baseStart, baseEnd, windowStart, windowEnd, dataEnd])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
@@ -1129,11 +1147,7 @@ const StatusView = ({
   const errorContext = reportsError ? 'tenant reports' : 'status timeline'
   const hasMultipleReports = (reports?.length ?? 0) > 1
 
-  const noData =
-    !zoom &&
-    !isLoading &&
-    !error &&
-    (rows.length === 0 || !hasVisibleStatusData)
+  const noData = !zoom && !isLoading && !error && rows.length === 0
 
   return (
     <div className="page-container">
@@ -1506,7 +1520,7 @@ const StatusView = ({
                               />
                               <span
                                 className={`h-2 w-2 flex-shrink-0 rounded-full ${
-                                  STATUS_STYLES[row.current?.value ?? 'MISSING']
+                                  STATUS_STYLES[row.current?.value ?? 'NO_DATA']
                                     .dot
                                 }`}
                               />
@@ -1528,7 +1542,7 @@ const StatusView = ({
                               <span className="w-[14px] flex-shrink-0" />
                               <span
                                 className={`h-2 w-2 flex-shrink-0 rounded-full ${
-                                  STATUS_STYLES[row.current?.value ?? 'MISSING']
+                                  STATUS_STYLES[row.current?.value ?? 'NO_DATA']
                                     .dot
                                 }`}
                               />
