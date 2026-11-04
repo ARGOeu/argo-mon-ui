@@ -3,6 +3,10 @@ export const canViewDowntimes = (
   roleInSelectedTenant: string | null,
 ): boolean => isSuperAdmin || roleInSelectedTenant === 'tenant_admin'
 
+export const areDowntimesAvailable = (
+  topologyFeedType: string | null,
+): boolean => topologyFeedType !== 'external'
+
 export const canManageDowntimes = (
   topologyFeedType: string | null,
   isSuperAdmin: boolean,
@@ -11,5 +15,5 @@ export const canManageDowntimes = (
   if (!canViewDowntimes(isSuperAdmin, roleInSelectedTenant)) {
     return false
   }
-  return !!topologyFeedType && topologyFeedType !== 'external'
+  return !!topologyFeedType && areDowntimesAvailable(topologyFeedType)
 }
