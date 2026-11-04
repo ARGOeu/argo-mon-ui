@@ -34,6 +34,8 @@ const MonthlyEndpointsTable = ({
     )
   }
 
+  const lastMonth = months.at(-1)
+
   return (
     <div className="bg-white border border-line rounded-lg shadow-sm">
       <div className="overflow-x-auto">
@@ -105,7 +107,7 @@ const MonthlyEndpointsTable = ({
                           onDrillDown(row.serviceName, row.endpointName, month)
                         }
                         data-tip={`View daily breakdown for ${formatMonthLabel(month)}`}
-                        className={`tooltip group grid ${valueColumns} gap-2 items-center justify-center mx-auto rounded-md border border-transparent px-2 py-1 cursor-pointer bg-transparent transition-all hover:border-line-strong hover:bg-surface-muted`}
+                        className={`tooltip ${month === lastMonth ? 'tooltip-left' : ''} group grid ${valueColumns} gap-2 items-center justify-center mx-auto rounded-md border border-transparent px-2 py-1 cursor-pointer bg-transparent transition-all hover:border-line-strong hover:bg-surface-muted`}
                       >
                         <span
                           className={`${badgeClass} ${availabilityTone(monthly.availability)}`}

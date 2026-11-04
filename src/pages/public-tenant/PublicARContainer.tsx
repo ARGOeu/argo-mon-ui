@@ -4,7 +4,7 @@ import { useGetPublicTenantReports } from '@/hooks/useTenants'
 import { useTenantName } from '@/hooks/useTenantName'
 import { useParams, useNavigate } from 'react-router-dom'
 import ARContent from '@/pages/availability-reliability/ARContent'
-import { getLastThreeMonthsRange } from '@/pages/availability-reliability/utils/dateRanges'
+import { getRecentMonthsRange } from '@/pages/availability-reliability/utils/dateRanges'
 import { isPlatformDomain } from '@/utils/domains'
 import { useSelectedPublicReport } from './hooks/useSelectedPublicReport'
 
@@ -31,7 +31,7 @@ const PublicARContainer = () => {
     handleReportChange,
   )
 
-  const { startTime, endTime } = useMemo(() => getLastThreeMonthsRange(), [])
+  const { startTime, endTime } = useMemo(() => getRecentMonthsRange(), [])
 
   const {
     data: groupsData,

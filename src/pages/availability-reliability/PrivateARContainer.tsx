@@ -4,7 +4,7 @@ import { useGetTenantReports } from '@/hooks/useTenants'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
 import { useParams, useNavigate } from 'react-router-dom'
 import ARContent from './ARContent'
-import { getLastThreeMonthsRange } from './utils/dateRanges'
+import { getRecentMonthsRange } from './utils/dateRanges'
 
 const PrivateARContainer = () => {
   const { id, reportName } = useParams<{ id: string; reportName?: string }>()
@@ -25,7 +25,7 @@ const PrivateARContainer = () => {
     }
   }, [reportName, reports, tenantId, navigate])
 
-  const { startTime, endTime } = useMemo(() => getLastThreeMonthsRange(), [])
+  const { startTime, endTime } = useMemo(() => getRecentMonthsRange(), [])
 
   const {
     data: groupsData,

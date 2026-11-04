@@ -3,7 +3,7 @@ import { useGetEndpointsAR } from '@/hooks/useAvailabilityReliability'
 import { useTenantName } from '@/hooks/useTenantName'
 import { useOutletContext, useParams, useNavigate } from 'react-router-dom'
 import AREndpointsContent from '@/pages/availability-reliability/AREndpointsContent'
-import { getLastThreeMonthsRange } from '@/pages/availability-reliability/utils/dateRanges'
+import { getRecentMonthsRange } from '@/pages/availability-reliability/utils/dateRanges'
 import { isPlatformDomain } from '@/utils/domains'
 import type { PublicTenantOutletContext } from './PublicTenantLayout'
 
@@ -27,7 +27,7 @@ const PublicAREndpointsContainer = () => {
     ? `/public/tenants/${tenantName ?? ''}/ar-groups`
     : '/ar-groups'
 
-  const { startTime, endTime } = useMemo(() => getLastThreeMonthsRange(), [])
+  const { startTime, endTime } = useMemo(() => getRecentMonthsRange(), [])
 
   const {
     data: endpointsData,
