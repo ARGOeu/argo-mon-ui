@@ -18,10 +18,20 @@ import {
   type CsvField,
 } from '@/utils/csvExport'
 import type { GroupsAvailabilityReliabilityResponse } from '@/types/availabilityReliability'
+import type { SortDirection } from './MonthlyAvailabilityTable'
 
 const pageSize = 20
 const noticeContainerClass = 'text-center bg-surface-muted rounded-lg my-4'
 const noticeTextClass = 'text-sm text-subtle italic py-6 px-12'
+
+const nextSortDirection = (
+  current: SortDirection | null,
+): SortDirection | null => {
+  if (!current) {
+    return 'asc'
+  }
+  return current === 'asc' ? 'desc' : null
+}
 
 export interface ARContentProps {
   tenantName: string
@@ -48,6 +58,7 @@ const ARContent = ({
 }: ARContentProps) => {
   const [search, setSearch] = useState('')
   const [currentPage, setCurrentPage] = useState(1)
+  const [sortDirection, setSortDirection] = useState<SortDirection | null>(null)
 
   const groups = useMemo(() => {
     if (!groupsData) {
@@ -75,6 +86,16 @@ const ARContent = ({
     [groups, search],
   )
 
+  const sortedGroups = useMemo(() => {
+    if (!sortDirection) {
+      return filteredGroups
+    }
+    const direction = sortDirection === 'asc' ? 1 : -1
+    return [...filteredGroups].sort(
+      (a, b) => direction * a.name.localeCompare(b.name),
+    )
+  }, [filteredGroups, sortDirection])
+
   useEffect(() => {
     setCurrentPage(1)
   }, [search, selectedReportName])
@@ -88,15 +109,18 @@ const ARContent = ({
 
   const paginatedGroups = useMemo(
     () =>
-      filteredGroups.slice(
-        (currentPage - 1) * pageSize,
-        currentPage * pageSize,
-      ),
-    [filteredGroups, currentPage],
+      sortedGroups.slice((currentPage - 1) * pageSize, currentPage * pageSize),
+    [sortedGroups, currentPage],
   )
 
+  const handleSortChange = () => {
+    const newSortDirection = nextSortDirection(sortDirection)
+    setSortDirection(newSortDirection)
+    setCurrentPage(1)
+  }
+
   const handleExport = () => {
-    type GroupRow = (typeof filteredGroups)[number]
+    type GroupRow = (typeof sortedGroups)[number]
 
     const fields: CsvField<GroupRow>[] = [
       { label: 'Group', value: 'name' },
@@ -116,7 +140,7 @@ const ARContent = ({
 
     downloadCSV(
       `${sanitizeFilename(tenantName)}-${sanitizeFilename(decodeURIComponent(selectedReportName))}-AR-Groups-Monthly.csv`,
-      buildCSV(filteredGroups, fields),
+      buildCSV(sortedGroups, fields),
     )
   }
 
@@ -196,6 +220,8 @@ const ARContent = ({
           <MonthlyAvailabilityTable
             groups={paginatedGroups}
             months={months}
+            sortDirection={sortDirection}
+            onSortChange={handleSortChange}
             onDrillDown={onDrillDown}
             onViewEndpoints={onViewEndpoints}
           />

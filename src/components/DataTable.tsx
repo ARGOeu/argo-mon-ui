@@ -14,6 +14,7 @@ interface SortableColumnHeaderProps {
   isActive: boolean
   isAscending: boolean
   onClick: () => void
+  className?: string
 }
 
 export const SortableColumnHeader = ({
@@ -21,8 +22,9 @@ export const SortableColumnHeader = ({
   isActive,
   isAscending,
   onClick,
+  className,
 }: SortableColumnHeaderProps) => (
-  <button className={sortButtonClass} onClick={onClick}>
+  <button className={`${sortButtonClass} ${className ?? ''}`} onClick={onClick}>
     <span>{children}</span>
     {isActive ? (
       isAscending ? (
