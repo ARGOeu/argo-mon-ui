@@ -3,7 +3,7 @@ import { useGetEndpointsAR } from '@/hooks/useAvailabilityReliability'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
 import { useParams, useNavigate } from 'react-router-dom'
 import AREndpointsContent from './AREndpointsContent'
-import { getLastThreeMonthsRange } from './utils/dateRanges'
+import { getRecentMonthsRange } from './utils/dateRanges'
 
 const PrivateAREndpointsContainer = () => {
   const { id, groupName, reportName } = useParams<{
@@ -15,7 +15,7 @@ const PrivateAREndpointsContainer = () => {
   const navigate = useNavigate()
   const { tenant: tenantData } = useSelectedTenant()
 
-  const { startTime, endTime } = useMemo(() => getLastThreeMonthsRange(), [])
+  const { startTime, endTime } = useMemo(() => getRecentMonthsRange(), [])
 
   const {
     data: endpointsData,

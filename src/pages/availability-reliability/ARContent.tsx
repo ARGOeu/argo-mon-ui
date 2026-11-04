@@ -10,7 +10,7 @@ import ActionMenu from '@/components/ActionMenu'
 import MonthlyAvailabilityTable from './MonthlyAvailabilityTable'
 import { isNotFoundError } from '@/utils/isNotFoundError'
 import { buildReportOptions } from '@/utils/reportVisibilityOptions'
-import { formatMonthLabel } from './utils/dateRanges'
+import { formatMonthLabel, getMonthsWithData } from './utils/dateRanges'
 import {
   buildCSV,
   downloadCSV,
@@ -65,10 +65,7 @@ const ARContent = ({
     )
   }, [groupsData])
 
-  const months = useMemo(
-    () => groups[0]?.monthly.map((m) => m.month) ?? [],
-    [groups],
-  )
+  const months = useMemo(() => getMonthsWithData(groups), [groups])
 
   const filteredGroups = useMemo(
     () =>

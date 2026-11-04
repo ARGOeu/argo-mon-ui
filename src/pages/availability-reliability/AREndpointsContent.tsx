@@ -8,7 +8,7 @@ import Pagination from '@/components/Pagination'
 import ActionMenu from '@/components/ActionMenu'
 import MonthlyEndpointsTable from './MonthlyEndpointsTable'
 import { isNotFoundError } from '@/utils/isNotFoundError'
-import { formatMonthLabel } from './utils/dateRanges'
+import { formatMonthLabel, getMonthsWithData } from './utils/dateRanges'
 import {
   buildCSV,
   downloadCSV,
@@ -69,10 +69,7 @@ const AREndpointsContent = ({
     )
   }, [endpointsData])
 
-  const months = useMemo(
-    () => rows[0]?.monthly.map((m) => m.month) ?? [],
-    [rows],
-  )
+  const months = useMemo(() => getMonthsWithData(rows), [rows])
 
   const filteredRows = useMemo(
     () =>
