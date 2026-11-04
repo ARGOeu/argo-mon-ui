@@ -1,4 +1,5 @@
 import { ArrowUpRightIcon } from '@heroicons/react/16/solid'
+import { SortableColumnHeader } from '@/components/DataTable'
 import { availabilityTone } from './utils/availabilityBadge'
 import { formatMonthLabel } from './utils/dateRanges'
 import type { GroupAvailabilityReliability } from '@/types/availabilityReliability'
@@ -9,9 +10,13 @@ const badgeClass =
   'inline-flex items-center justify-self-center rounded-lg px-2.5 py-1 text-xs font-semibold'
 const valueColumns = 'grid-cols-[3.5rem_3.5rem_0.25rem]'
 
+export type SortDirection = 'asc' | 'desc'
+
 interface MonthlyAvailabilityTableProps {
   groups: GroupAvailabilityReliability[]
   months: string[]
+  sortDirection: SortDirection | null
+  onSortChange: () => void
   onDrillDown: (groupName: string, month: string) => void
   onViewEndpoints: (groupName: string) => void
 }
@@ -19,6 +24,8 @@ interface MonthlyAvailabilityTableProps {
 const MonthlyAvailabilityTable = ({
   groups,
   months,
+  sortDirection,
+  onSortChange,
   onDrillDown,
   onViewEndpoints,
 }: MonthlyAvailabilityTableProps) => {
@@ -29,7 +36,14 @@ const MonthlyAvailabilityTable = ({
           <thead>
             <tr>
               <th rowSpan={2} className={`${thBase} text-left pb-2`}>
-                Group
+                <SortableColumnHeader
+                  isActive={sortDirection !== null}
+                  isAscending={sortDirection === 'asc'}
+                  onClick={onSortChange}
+                  className="text-xs uppercase text-muted"
+                >
+                  Group
+                </SortableColumnHeader>
               </th>
               {months.map((month) => (
                 <th key={month} className={`${thBase} text-center`}>
