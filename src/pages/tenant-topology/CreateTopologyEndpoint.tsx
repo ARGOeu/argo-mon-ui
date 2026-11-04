@@ -454,6 +454,7 @@ const CreateTopologyEndpoint = ({
                   })) ?? []
                 }
                 placeholder="Select a service type..."
+                searchable
               />
             )}
             {errors.service && (
