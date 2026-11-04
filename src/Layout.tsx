@@ -10,8 +10,14 @@ import MobileMenuToggle from '@/components/sidebar/MobileMenuToggle'
 
 function LayoutContent() {
   const { authenticated, isSuperAdmin, profile, logout } = useAuth()
-  const { effectiveTenantId, tenants, roleInSelectedTenant, tenant } =
-    useSelectedTenant()
+  const {
+    effectiveTenantId,
+    tenants,
+    roleInSelectedTenant,
+    tenant,
+    topologyFeedType,
+    isTopologyFeedLoading,
+  } = useSelectedTenant()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { pathname } = useLocation()
   const tenantScopeMatch = useMatch('/tenants/:tenantKey/*')
@@ -39,6 +45,8 @@ function LayoutContent() {
         userTenants={tenants}
         effectiveTenantId={effectiveTenantId}
         roleInSelectedTenant={roleInSelectedTenant}
+        topologyFeedType={topologyFeedType}
+        isTopologyFeedLoading={isTopologyFeedLoading}
         profile={profile}
         onLogout={logout}
       />
@@ -74,6 +82,8 @@ function Layout() {
           userTenants={[]}
           effectiveTenantId={null}
           roleInSelectedTenant={null}
+          topologyFeedType={null}
+          isTopologyFeedLoading={false}
           profile={undefined}
           onLogout={() => {}}
         />

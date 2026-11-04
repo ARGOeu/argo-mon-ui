@@ -29,6 +29,7 @@ import SidebarFooter from './SidebarFooter'
 import type { Tenant } from '@/types/tenants'
 import type { AuthContextType } from '@/auth/context'
 import { Bars3Icon } from '@heroicons/react/24/outline'
+import { areDowntimesAvailable } from '@/pages/tenant-downtimes/utils/downtimePermissions'
 
 interface TenantNavItem {
   path: string
@@ -114,6 +115,8 @@ interface SidebarProps {
   userTenants: Tenant[]
   effectiveTenantId: string | null
   roleInSelectedTenant: string | null
+  topologyFeedType: string | null
+  isTopologyFeedLoading: boolean
   profile: AuthContextType['profile']
   onLogout: () => void
 }
@@ -134,6 +137,8 @@ function Sidebar({
   userTenants,
   effectiveTenantId,
   roleInSelectedTenant,
+  topologyFeedType,
+  isTopologyFeedLoading,
   profile,
   onLogout,
 }: SidebarProps) {
@@ -149,6 +154,12 @@ function Sidebar({
     if (
       item.path === 'performance' &&
       (!performanceSetting?.enabled || !selectedTenant?.performance)
+    ) {
+      return false
+    }
+    if (
+      item.path === 'downtimes' &&
+      (isTopologyFeedLoading || !areDowntimesAvailable(topologyFeedType))
     ) {
       return false
     }

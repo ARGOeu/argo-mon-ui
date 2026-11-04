@@ -12,6 +12,7 @@ import PageHeader from '@/components/PageHeader'
 import DowntimesList from './DowntimesList'
 import { useCanManageDowntimes } from './useCanManageDowntimes'
 import { getTodayDateString } from './utils/downtimeDateRanges'
+import { areDowntimesAvailable } from './utils/downtimePermissions'
 import type { DowntimeTab } from './utils/downtimeGrouping'
 import type { Downtime } from '@/types/downtimes'
 
@@ -23,8 +24,14 @@ const TenantDowntimes = () => {
   const [completedDateFilter, setCompletedDateFilter] = useState('')
   const [activeTab, setActiveTab] = useState<DowntimeTab>('active-upcoming')
 
-  const { tenant: tenantData } = useSelectedTenant()
+  const { tenant: tenantData, topologyFeedType } = useSelectedTenant()
   const { canManage } = useCanManageDowntimes()
+
+  useEffect(() => {
+    if (tenantId && !areDowntimesAvailable(topologyFeedType)) {
+      navigate(`/tenants/${tenantId}/dashboard`, { replace: true })
+    }
+  }, [tenantId, topologyFeedType, navigate])
 
   const today = useMemo(() => getTodayDateString(), [])
 
