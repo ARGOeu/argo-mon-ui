@@ -17,37 +17,29 @@ import {
   getValidContactEmails,
   isValidEmail,
 } from './utils/topologyValidation'
+import { replaceEndpoint, splitEndpoint } from './utils/topologyEndpointGroups'
 import NotificationsSection from './NotificationsSection'
 import GroupSelector from './GroupSelector'
 import LabelsInput from './LabelsInput'
 import KeyValueInput from './KeyValueInput'
 import type { Label } from './KeyValueInput'
 import type { Contact } from './NotificationsSection'
-import type { EndpointTopologyItem } from '@/types/topology'
+import type { EndpointWithGroups } from '@/types/topology'
 
 const sectionClass =
   'grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-2 lg:gap-8 mb-6 animate-fade-in'
 const sectionContentClass =
-  'bg-surface-muted border border-line rounded-lg px-5 py-3 flex flex-col gap-2'
+  'min-w-0 bg-surface-muted border border-line rounded-lg px-5 py-3 flex flex-col gap-2'
 const labelClass = 'text-sm font-medium text-body mb-1'
 
 const today = new Date().toISOString().split('T')[0]
-
-const isSameEndpoint = (
-  a: EndpointTopologyItem,
-  b: EndpointTopologyItem,
-): boolean =>
-  a.hostname === b.hostname &&
-  a.service === b.service &&
-  a.group === b.group &&
-  (a.tags?.info_URL ?? a.hostname) === (b.tags?.info_URL ?? b.hostname)
 
 interface FormData {
   service: string
   url: string
   friendlyName: string
   tags: string[]
-  group: string
+  groups: string[]
   monitored: boolean
   metadata: Label[]
   notificationsEnabled: boolean
@@ -63,7 +55,7 @@ interface FormErrors {
 
 interface CreateTopologyEndpointProps {
   tenantId?: string
-  editingEndpoint?: EndpointTopologyItem
+  editingEndpoint?: EndpointWithGroups
   onClose?: () => void
 }
 
@@ -106,7 +98,7 @@ const CreateTopologyEndpoint = ({
               .map((t) => t.trim())
               .filter(Boolean)
           : [],
-        group: editingEndpoint.group,
+        groups: editingEndpoint.groups,
         monitored: editingEndpoint.tags?.monitored === '1',
         metadata: Object.entries(editingEndpoint.tags ?? {})
           .filter(
@@ -133,7 +125,7 @@ const CreateTopologyEndpoint = ({
       url: '',
       friendlyName: '',
       tags: [],
-      group: '',
+      groups: [],
       monitored: true,
       metadata: [],
       notificationsEnabled: false,
@@ -237,28 +229,34 @@ const CreateTopologyEndpoint = ({
       }
     }
 
-    if (!formData.group) {
-      newErrors.group = 'Group is required'
+    if (formData.groups.length === 0) {
+      newErrors.group = 'At least one group is required'
       hasError = true
     }
 
-    const shouldCheckDuplicate =
+    const shouldCheckAllGroups =
       !isEditMode ||
       trimmedUrl !== editingEndpoint.tags?.info_URL ||
-      formData.service !== editingEndpoint.service ||
-      formData.group !== editingEndpoint.group
+      formData.service !== editingEndpoint.service
 
-    const isDuplicate =
-      shouldCheckDuplicate &&
+    // Check only the added groups, unless the URL or service changed
+    const groupsToCheck = shouldCheckAllGroups
+      ? formData.groups
+      : formData.groups.filter(
+          (group) => !editingEndpoint?.groups.includes(group),
+        )
+
+    const duplicateGroups = groupsToCheck.filter((group) =>
       (latestEndpoints ?? []).some(
         (e) =>
           e.tags?.info_URL === trimmedUrl &&
           e.service === formData.service &&
-          e.group === formData.group,
-      )
+          e.group === group,
+      ),
+    )
 
-    if (isDuplicate) {
-      newErrors.url = `This URL already exists for service type "${formData.service}" in group "${formData.group}"`
+    if (duplicateGroups.length > 0) {
+      newErrors.url = `This URL already exists for service type "${formData.service}" in ${duplicateGroups.length > 1 ? 'groups' : 'group'} ${duplicateGroups.map((group) => `"${group}"`).join(', ')}`
       hasError = true
     }
 
@@ -286,7 +284,7 @@ const CreateTopologyEndpoint = ({
     const extractedHostname = new URL(trimmedUrl).hostname
 
     const resolvedInfoId = isEditMode
-      ? (editingEndpoint.tags?.info_ID ?? crypto.randomUUID())
+      ? editingEndpoint.tags?.info_ID || crypto.randomUUID()
       : crypto.randomUUID()
 
     const rootHostname = `${extractedHostname}_${resolvedInfoId}`
@@ -315,26 +313,16 @@ const CreateTopologyEndpoint = ({
       },
     }
 
+    const updatedEndpoint: EndpointWithGroups = {
+      ...(isEditMode ? editingEndpoint : { type: 'SERVICEGROUPS' }),
+      date: today,
+      ...updatedFields,
+      groups: formData.groups,
+    }
+
     const payload = isEditMode
-      ? (latestEndpoints ?? []).map((e) =>
-          isSameEndpoint(e, editingEndpoint)
-            ? {
-                ...editingEndpoint,
-                ...updatedFields,
-                group: formData.group,
-                date: today,
-              }
-            : e,
-        )
-      : [
-          ...(latestEndpoints ?? []),
-          {
-            date: today,
-            group: formData.group,
-            type: 'SERVICEGROUPS',
-            ...updatedFields,
-          },
-        ]
+      ? replaceEndpoint(latestEndpoints ?? [], editingEndpoint, updatedEndpoint)
+      : [...(latestEndpoints ?? []), ...splitEndpoint(updatedEndpoint)]
 
     createMutation.mutate(
       { tenantId, data: payload },
@@ -523,20 +511,22 @@ const CreateTopologyEndpoint = ({
         </div>
       </div>
 
-      {/* Group */}
+      {/* Groups */}
       <div className={sectionClass}>
         <div>
-          <p className="section-title">Group</p>
-          <p className="section-description">Assign this endpoint to a group</p>
+          <p className="section-title">Groups</p>
+          <p className="section-description">
+            Assign this endpoint to one or more groups
+          </p>
         </div>
         <div className={sectionContentClass}>
           <GroupSelector
             tenantId={tenantId}
             tenantName={tenantData?.info.name ?? ''}
-            value={formData.group}
-            onChange={(value) => {
-              setFormData((prev) => ({ ...prev, group: value }))
-              if (value) setErrors((prev) => ({ ...prev, group: '' }))
+            value={formData.groups}
+            onChange={(groups) => {
+              setFormData((prev) => ({ ...prev, groups }))
+              if (groups.length) setErrors((prev) => ({ ...prev, group: '' }))
             }}
             error={errors.group}
             onGroupSaving={setIsGroupSaving}

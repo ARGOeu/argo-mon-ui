@@ -14,6 +14,11 @@ import { useSelectedTenant } from '@/contexts/selected-tenant'
 import Button from '@/components/Button'
 import { getLatestTopologyDate } from './utils/topologyDateHelpers'
 import { sortByField } from './utils/topologySortHelpers'
+import {
+  mergeEntries,
+  removeEndpoint,
+  splitEndpoint,
+} from './utils/topologyEndpointGroups'
 import { useTopologyListState } from './hooks/useTopologyListState'
 import IconButton from '@/components/IconButton'
 import ConfirmDialog from '@/components/ConfirmDialog'
@@ -34,9 +39,9 @@ import {
   sanitizeFilename,
   type CsvField,
 } from '@/utils/csvExport'
-import type { EndpointTopologyItem } from '@/types/topology'
+import type { EndpointTopologyItem, EndpointWithGroups } from '@/types/topology'
 
-type SortColumn = 'service' | 'group' | 'tags.monitored'
+type SortColumn = 'service' | 'groups.0' | 'tags.monitored'
 
 const pageSize = 15
 
@@ -48,8 +53,8 @@ const toBooleanFlag = (value: string | undefined): boolean | undefined => {
 
 interface TopologyEndpointsProps {
   tenantId: string
-  onEdit: (endpoint: EndpointTopologyItem) => void
-  onView: (endpoint: EndpointTopologyItem) => void
+  onEdit: (endpoint: EndpointWithGroups) => void
+  onView: (endpoint: EndpointWithGroups) => void
 }
 
 const TopologyEndpoints = ({
@@ -62,10 +67,8 @@ const TopologyEndpoints = ({
     'all' | 'monitored' | 'not_monitored'
   >('all')
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [endpointToDelete, setEndpointToDelete] = useState<{
-    endpoint: EndpointTopologyItem
-    index: number
-  } | null>(null)
+  const [endpointToDelete, setEndpointToDelete] =
+    useState<EndpointWithGroups | null>(null)
 
   const { data: latestEndpoints } = useGetTopologyEndpoints(tenantId, '')
   const latestDate = getLatestTopologyDate(latestEndpoints)
@@ -101,21 +104,15 @@ const TopologyEndpoints = ({
 
   const deleteMutation = useCreateTopologyEndpointMutation()
 
-  const handleDeleteClick = (endpoint: EndpointTopologyItem, index: number) => {
-    setEndpointToDelete({ endpoint, index })
+  const handleDeleteClick = (endpoint: EndpointWithGroups) => {
+    setEndpointToDelete(endpoint)
     setDeleteDialogOpen(true)
   }
 
   const handleDeleteConfirm = () => {
     if (!endpointToDelete) return
 
-    const updatedEndpoints = (endpoints ?? []).filter(
-      (endpoint, index) =>
-        !(
-          index === endpointToDelete.index &&
-          endpoint.hostname === endpointToDelete.endpoint.hostname
-        ),
-    )
+    const updatedEndpoints = removeEndpoint(endpoints ?? [], endpointToDelete)
 
     deleteMutation.mutate(
       { tenantId, data: updatedEndpoints },
@@ -144,8 +141,9 @@ const TopologyEndpoints = ({
       'production',
       'scope',
     ])
+    const entries = sorted.flatMap(splitEndpoint)
     const extraTagKeys = Array.from(
-      new Set(sorted.flatMap((endpoint) => Object.keys(endpoint.tags ?? {}))),
+      new Set(entries.flatMap((entry) => Object.keys(entry.tags ?? {}))),
     )
       .filter((key) => !knownTagKeys.has(key))
       .sort()
@@ -197,11 +195,11 @@ const TopologyEndpoints = ({
 
     downloadCSV(
       `${sanitizeFilename(tenantName)}${datePart ? `-${datePart}` : ''}-Topology-Endpoints.csv`,
-      buildCSV(sorted, fields),
+      buildCSV(entries, fields),
     )
   }
 
-  const filtered = (endpoints ?? []).filter((e) => {
+  const filtered = mergeEntries(endpoints ?? []).filter((e) => {
     if (monitoredFilter === 'monitored' && e.tags?.monitored !== '1') {
       return false
     }
@@ -214,7 +212,7 @@ const TopologyEndpoints = ({
       e.tags?.monitored === '1' ? 'monitored' : 'not monitored'
     return (
       e.service.toLowerCase().includes(q) ||
-      e.group.toLowerCase().includes(q) ||
+      e.groups.some((group) => group.toLowerCase().includes(q)) ||
       (e.tags?.info_URL ?? '').toLowerCase().includes(q) ||
       monitoredLabel.includes(q)
     )
@@ -313,11 +311,11 @@ const TopologyEndpoints = ({
             <th className={`${thBase} min-w-[180px]`}>URL</th>
             <th className={`${thBase} w-[18%]`}>
               <SortableColumnHeader
-                isActive={sortColumn === 'group'}
+                isActive={sortColumn === 'groups.0'}
                 isAscending={sortAsc}
-                onClick={() => handleSortChange('group')}
+                onClick={() => handleSortChange('groups.0')}
               >
-                Group
+                Groups
               </SortableColumnHeader>
             </th>
             <th className={`${thBase} min-w-[120px]`}>Friendly Name</th>
@@ -367,9 +365,9 @@ const TopologyEndpoints = ({
               </td>
             </tr>
           ) : (
-            paginated.map((endpoint) => (
+            paginated.map((endpoint, index) => (
               <tr
-                key={`${endpoint.tags?.info_URL ?? endpoint.hostname}_${endpoint.service}_${endpoint.group}`}
+                key={index}
                 className="hover:bg-surface-muted transition-colors"
               >
                 <td className={tdBase}>{endpoint.service}</td>
@@ -385,7 +383,7 @@ const TopologyEndpoints = ({
                     <span className="pl-2 text-subtle">-</span>
                   )}
                 </td>
-                <td className={tdBase}>{endpoint.group}</td>
+                <td className={tdBase}>{endpoint.groups.join(', ')}</td>
                 <td className={`${tdBase} break-all`}>
                   {endpoint.tags?.info_fname || (
                     <span className="pl-12 text-subtle">-</span>
@@ -430,12 +428,7 @@ const TopologyEndpoints = ({
                         <IconButton
                           icon={<TrashIcon className="size-4 md:size-5" />}
                           label="Delete"
-                          onClick={() => {
-                            const indexToDelete = (endpoints ?? []).indexOf(
-                              endpoint,
-                            )
-                            handleDeleteClick(endpoint, indexToDelete)
-                          }}
+                          onClick={() => handleDeleteClick(endpoint)}
                           className="text-red-600 hover:bg-red-50 !p-1"
                         />
                       </>
@@ -464,11 +457,17 @@ const TopologyEndpoints = ({
           <>
             Are you sure you want to delete the endpoint with URL{' '}
             <strong>
-              {endpointToDelete?.endpoint.tags?.info_URL ??
-                endpointToDelete?.endpoint.hostname}
+              {endpointToDelete?.tags?.info_URL ?? endpointToDelete?.hostname}
             </strong>{' '}
             ?
             <br />
+            {endpointToDelete && endpointToDelete.groups.length > 1 && (
+              <>
+                It will be removed from all of its groups:{' '}
+                <strong>{endpointToDelete.groups.join(', ')}</strong>.
+                <br />
+              </>
+            )}
             <span className="text-amber-600 font-medium">
               This action cannot be undone.
             </span>

@@ -3,7 +3,7 @@ import { ArrowRightIcon } from '@heroicons/react/16/solid'
 import { Check, Copy } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import Badge from '@/components/Badge'
-import type { EndpointTopologyItem } from '@/types/topology'
+import type { EndpointWithGroups } from '@/types/topology'
 
 const reservedTagKeys = new Set([
   'monitored',
@@ -16,7 +16,7 @@ const reservedTagKeys = new Set([
 
 interface ViewTopologyEndpointProps {
   tenantId: string
-  endpoint: EndpointTopologyItem
+  endpoint: EndpointWithGroups
   onClose: () => void
 }
 
@@ -154,8 +154,8 @@ const ViewTopologyEndpoint = ({
           </p>
 
           <p className="text-sm text-muted mt-1">
-            <span className="font-semibold text-body">Group:</span>{' '}
-            {endpoint.group}
+            <span className="font-semibold text-body">Groups:</span>{' '}
+            {endpoint.groups.join(', ')}
           </p>
 
           {metaItems.length > 0 && (
