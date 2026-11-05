@@ -15,6 +15,10 @@ export type EndpointTopologyItem = {
   notifications?: TopologyNotifications
 }
 
+export type EndpointWithGroups = Omit<EndpointTopologyItem, 'group'> & {
+  groups: string[]
+}
+
 export type GroupTopologyItem = {
   date: string
   group: string

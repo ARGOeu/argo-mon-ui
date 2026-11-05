@@ -1,15 +1,15 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useGetTopologyGroups } from '@/hooks/useTopology'
 import { ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/16/solid'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import SelectDropdown from '@/components/SelectDropdown'
+import MultiSelectDropdown from '@/components/MultiSelectDropdown'
 import GroupCreationPanel from './GroupCreationPanel'
 
 interface GroupSelectorProps {
   tenantId: string
   tenantName: string
-  value: string
-  onChange: (value: string) => void
+  value: string[]
+  onChange: (value: string[]) => void
   error?: string
   onGroupSaving?: (busy: boolean) => void
 }
@@ -26,19 +26,22 @@ const GroupSelector = ({
     useGetTopologyGroups(tenantId)
   const [showCreateGroup, setShowCreateGroup] = useState(false)
 
+  const valueRef = useRef(value)
+  valueRef.current = value
+
   const handleToggleCreateGroup = () => {
     setShowCreateGroup((prev) => !prev)
   }
 
   const handleCreateGroupSuccess = (subgroup: string) => {
-    onChange(subgroup)
+    onChange([...valueRef.current, subgroup])
     setShowCreateGroup(false)
   }
 
   return (
     <div className="flex flex-col">
       <label className="text-sm font-medium text-body mb-1">
-        Group <span className="required">*</span>
+        Groups <span className="required">*</span>
       </label>
 
       {isLoadingGroups ? (
@@ -47,14 +50,14 @@ const GroupSelector = ({
           Loading groups...
         </div>
       ) : (
-        <SelectDropdown
+        <MultiSelectDropdown
           value={value}
           onChange={onChange}
           options={(groups ?? []).map((g) => ({
             value: g.subgroup,
             label: g.subgroup,
           }))}
-          placeholder={groups?.length ? 'Select a group...' : 'No groups yet'}
+          placeholder={groups?.length ? 'Select groups...' : 'No groups yet'}
           disabled={!groups?.length}
           searchable
         />
@@ -65,7 +68,7 @@ const GroupSelector = ({
       <button
         type="button"
         onClick={handleToggleCreateGroup}
-        className="flex items-center gap-1 text-sm text-brand hover:text-brand-strong transition-colors w-fit cursor-pointer mt-2"
+        className="flex items-center gap-1 text-sm text-brand hover:text-brand-strong transition-colors w-fit cursor-pointer mt-3"
       >
         {showCreateGroup ? (
           <>

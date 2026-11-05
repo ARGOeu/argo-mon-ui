@@ -51,6 +51,14 @@ const GroupCreationPanel = ({
     contactErrors: [''],
   })
 
+  const trimmedSubgroup = groupForm.subgroup.trim()
+  const duplicateError =
+    trimmedSubgroup &&
+    (groups ?? []).some((g) => g.subgroup.trim() === trimmedSubgroup)
+      ? `Group "${trimmedSubgroup}" already exists`
+      : ''
+  const subgroupError = groupForm.subgroupError || duplicateError
+
   const resetForm = () => {
     setGroupForm({
       subgroup: '',
@@ -83,11 +91,15 @@ const GroupCreationPanel = ({
   }
 
   const handleCreateGroupSubmit = () => {
-    if (!groupForm.subgroup.trim()) {
+    if (!trimmedSubgroup) {
       setGroupForm((prev) => ({
         ...prev,
         subgroupError: 'Group is required',
       }))
+      return
+    }
+
+    if (duplicateError) {
       return
     }
 
@@ -116,7 +128,7 @@ const GroupCreationPanel = ({
         date: today,
         group: tenantName,
         type: 'PROJECT',
-        subgroup: groupForm.subgroup.trim(),
+        subgroup: trimmedSubgroup,
         notifications,
       },
     ]
@@ -128,7 +140,7 @@ const GroupCreationPanel = ({
       {
         onSuccess: () => {
           toast.success('Group created successfully!')
-          onSuccess(groupForm.subgroup.trim())
+          onSuccess(trimmedSubgroup)
           resetForm()
           onGroupSaving?.(false)
         },
@@ -159,15 +171,13 @@ const GroupCreationPanel = ({
           }}
           placeholder="Enter group name"
           className={
-            groupForm.subgroupError
+            subgroupError
               ? '!border-red-500 focus:!border-red-500 focus:!ring-red-500/10'
               : ''
           }
         />
-        {groupForm.subgroupError && (
-          <span className="text-xs text-red-500 mt-1">
-            {groupForm.subgroupError}
-          </span>
+        {subgroupError && (
+          <span className="text-xs text-red-500 mt-1">{subgroupError}</span>
         )}
       </div>
 
@@ -262,7 +272,7 @@ const GroupCreationPanel = ({
           variant="primary"
           size="sm"
           onClick={handleCreateGroupSubmit}
-          disabled={groupsMutation.isPending}
+          disabled={groupsMutation.isPending || !groups}
         >
           {groupsMutation.isPending ? (
             <>
