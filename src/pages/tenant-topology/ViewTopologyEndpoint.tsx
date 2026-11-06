@@ -12,6 +12,8 @@ const reservedTagKeys = new Set([
   'info_URL',
   'info_fname',
   'hostname',
+  'last_updated_userid',
+  'last_updated_username',
 ])
 
 interface ViewTopologyEndpointProps {
@@ -42,6 +44,8 @@ const ViewTopologyEndpoint = ({
   const isMonitored = endpoint.tags?.monitored === '1'
   const friendlyName = endpoint.tags?.info_fname
   const endpointId = endpoint.tags?.info_ID
+  const lastUpdatedUserId = endpoint.tags?.last_updated_userid
+  const lastUpdatedUsername = endpoint.tags?.last_updated_username
   const metaItems = [
     endpointId && {
       label: 'Endpoint ID',
@@ -159,10 +163,10 @@ const ViewTopologyEndpoint = ({
           </p>
 
           {metaItems.length > 0 && (
-            <p className="text-xs text-subtle mt-2 flex flex-wrap items-center gap-x-1.5">
+            <p className="text-xs text-subtle mt-2 flex flex-col gap-y-2 md:flex-row md:flex-wrap md:items-center md:gap-y-0 md:gap-x-1.5">
               {metaItems.map((item, index) => (
                 <span key={item.label} className="flex items-center gap-x-1">
-                  {index > 0 && <span>·</span>}
+                  {index > 0 && <span className="hidden md:inline">·</span>}
                   <span>
                     {item.label}:{' '}
                     <span
@@ -204,6 +208,32 @@ const ViewTopologyEndpoint = ({
                   )}
                 </span>
               ))}
+            </p>
+          )}
+
+          {(lastUpdatedUsername || lastUpdatedUserId) && (
+            <p className="text-xs text-subtle mt-2 flex flex-col gap-y-2 md:flex-row md:flex-wrap md:items-center md:gap-y-0 md:gap-x-1.5">
+              {lastUpdatedUsername && (
+                <span>
+                  Last Updated By:{' '}
+                  <span className="text-body font-medium">
+                    {lastUpdatedUsername}
+                  </span>
+                </span>
+              )}
+              {lastUpdatedUserId && (
+                <span className="flex items-start gap-x-1">
+                  {lastUpdatedUsername && (
+                    <span className="hidden md:inline">·</span>
+                  )}
+                  <span>
+                    Last Updated User ID:{' '}
+                    <span className="font-mono text-body break-all">
+                      {lastUpdatedUserId}
+                    </span>
+                  </span>
+                </span>
+              )}
             </p>
           )}
         </div>

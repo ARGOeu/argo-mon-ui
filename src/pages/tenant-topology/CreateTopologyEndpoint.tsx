@@ -6,6 +6,7 @@ import {
   useCreateTopologyEndpointMutation,
 } from '@/hooks/useTopology'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
+import { useAuth } from '@/auth/useAuth'
 import { toast } from 'sonner'
 import PageHeader from '@/components/PageHeader'
 import Button from '@/components/Button'
@@ -24,7 +25,7 @@ import LabelsInput from './LabelsInput'
 import KeyValueInput from './KeyValueInput'
 import type { Label } from './KeyValueInput'
 import type { Contact } from './NotificationsSection'
-import type { EndpointWithGroups } from '@/types/topology'
+import type { EndpointWithGroups, TopologyTags } from '@/types/topology'
 
 const sectionClass =
   'grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-2 lg:gap-8 mb-6 animate-fade-in'
@@ -33,6 +34,13 @@ const sectionContentClass =
 const labelClass = 'text-sm font-medium text-body mb-1'
 
 const today = new Date().toISOString().split('T')[0]
+
+const lastUpdatedKeys = ['last_updated_userid', 'last_updated_username']
+
+const getLastUpdatedTags = (tags: TopologyTags = {}): TopologyTags =>
+  Object.fromEntries(
+    Object.entries(tags).filter(([key]) => lastUpdatedKeys.includes(key)),
+  )
 
 interface FormData {
   service: string
@@ -71,6 +79,7 @@ const CreateTopologyEndpoint = ({
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const { tenant: tenantData } = useSelectedTenant()
+  const { profile } = useAuth()
 
   const { data: latestEndpoints, isLoading: isLoadingLatest } =
     useGetTopologyEndpoints(tenantId, '')
@@ -108,7 +117,9 @@ const CreateTopologyEndpoint = ({
               key !== 'info_ID' &&
               key !== 'info_URL' &&
               key !== 'info_fname' &&
-              key !== 'hostname',
+              key !== 'hostname' &&
+              key !== 'last_updated_userid' &&
+              key !== 'last_updated_username',
           )
           .map(([key, value]) => ({ id: crypto.randomUUID(), key, value })),
         notificationsEnabled: editingEndpoint.notifications?.enabled ?? false,
@@ -289,6 +300,16 @@ const CreateTopologyEndpoint = ({
 
     const rootHostname = `${extractedHostname}_${resolvedInfoId}`
 
+    // Without a profile id, keep the last updated tags the endpoint already has
+    const lastUpdatedTags = profile?.id
+      ? {
+          last_updated_userid: profile.id,
+          last_updated_username:
+            profile.uid ||
+            [profile.name, profile.surname].filter(Boolean).join(' '),
+        }
+      : getLastUpdatedTags(editingEndpoint?.tags)
+
     const updatedFields = {
       service: formData.service,
       hostname: rootHostname,
@@ -306,6 +327,7 @@ const CreateTopologyEndpoint = ({
             .map((label) => [label.key.trim(), label.value.trim()]),
         ),
         info_ID: resolvedInfoId,
+        ...lastUpdatedTags,
       },
       notifications: {
         enabled: formData.notificationsEnabled,
@@ -615,6 +637,14 @@ const CreateTopologyEndpoint = ({
               {
                 key: 'hostname',
                 message: '"hostname" cannot be used as a key',
+              },
+              {
+                key: 'last_updated_userid',
+                message: '"last_updated_userid" cannot be used as a key',
+              },
+              {
+                key: 'last_updated_username',
+                message: '"last_updated_username" cannot be used as a key',
               },
             ]}
           />
