@@ -26,6 +26,8 @@ const GroupSelector = ({
     useGetTopologyGroups(tenantId)
   const [showCreateGroup, setShowCreateGroup] = useState(false)
 
+  const groupNames = Array.from(new Set(groups?.map((g) => g.subgroup)))
+
   const valueRef = useRef(value)
   valueRef.current = value
 
@@ -53,10 +55,7 @@ const GroupSelector = ({
         <MultiSelectDropdown
           value={value}
           onChange={onChange}
-          options={(groups ?? []).map((g) => ({
-            value: g.subgroup,
-            label: g.subgroup,
-          }))}
+          options={groupNames.map((name) => ({ value: name, label: name }))}
           placeholder={groups?.length ? 'Select groups...' : 'No groups yet'}
           disabled={!groups?.length}
           searchable
