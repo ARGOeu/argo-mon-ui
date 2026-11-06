@@ -34,6 +34,7 @@ export const AuthProvider: React.FC<React.PropsWithChildren> = ({
         email: profileData.email,
         name: profileData.name,
         surname: profileData.surname,
+        uid: profileData.uid,
         groups: profileData.groups || [],
         roles: roles,
       }

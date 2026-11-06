@@ -10,6 +10,7 @@ export interface UserProfile {
   email: string
   name: string
   surname: string
+  uid: string
   roles: string[]
   groups?: UserGroup[] | null
 }

@@ -11,6 +11,7 @@ export type AuthContextType = {
     email?: string
     name?: string
     surname?: string
+    uid: string
     roles: string[]
     groups: Array<{
       name: string

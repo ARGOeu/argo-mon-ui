@@ -137,6 +137,8 @@ const TopologyEndpoints = ({
       'hostname',
       'info_ID',
       'info_URL',
+      'last_updated_userid',
+      'last_updated_username',
       'monitored',
       'production',
       'scope',
