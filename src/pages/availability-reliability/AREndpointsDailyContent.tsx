@@ -111,7 +111,7 @@ const AREndpointsDailyContent = ({
       ) : error ? (
         <ErrorDisplay error={error} context="daily endpoint results" />
       ) : (
-        <DailyAvailabilityTable rows={rows} />
+        <DailyAvailabilityTable rows={rows} showUnknownAndDowntime />
       )}
     </div>
   )

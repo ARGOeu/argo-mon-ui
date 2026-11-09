@@ -1,5 +1,5 @@
 import { availabilityTone, downtimeTone } from './utils/availabilityBadge'
-import type { GroupDailyResult } from '@/types/availabilityReliability'
+import type { DailyResultRow } from '@/types/availabilityReliability'
 
 const thBase =
   'px-4 py-3 text-xs font-semibold text-muted uppercase tracking-wider whitespace-nowrap'
@@ -8,28 +8,48 @@ const badgeClass =
 const tdBase = 'px-4 py-2 text-center'
 
 interface DailyAvailabilityTableProps {
-  rows: GroupDailyResult[]
+  rows: DailyResultRow[]
+  showUnknownAndDowntime: boolean
 }
 
-const DailyAvailabilityTable = ({ rows }: DailyAvailabilityTableProps) => {
+const DailyAvailabilityTable = ({
+  rows,
+  showUnknownAndDowntime,
+}: DailyAvailabilityTableProps) => {
+  const columnWidth = showUnknownAndDowntime ? 'w-1/5' : 'w-1/3'
+
   return (
     <div className="bg-white border border-line rounded-lg shadow-sm overflow-hidden mb-8">
       <div className="overflow-x-auto">
         <table className="w-full table-fixed border-collapse">
           <thead>
             <tr className="border-b border-line">
-              <th className={`${thBase} w-1/5 text-left`}>Timestamp</th>
-              <th className={`${thBase} w-1/5 text-center`}>Availability</th>
-              <th className={`${thBase} w-1/5 text-center`}>Reliability</th>
-              <th className={`${thBase} w-1/5 text-center`}>Unknown</th>
-              <th className={`${thBase} w-1/5 text-center`}>Downtime</th>
+              <th className={`${thBase} ${columnWidth} text-left`}>
+                Timestamp
+              </th>
+              <th className={`${thBase} ${columnWidth} text-center`}>
+                Availability
+              </th>
+              <th className={`${thBase} ${columnWidth} text-center`}>
+                Reliability
+              </th>
+              {showUnknownAndDowntime && (
+                <>
+                  <th className={`${thBase} ${columnWidth} text-center`}>
+                    Unknown
+                  </th>
+                  <th className={`${thBase} ${columnWidth} text-center`}>
+                    Downtime
+                  </th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
             {rows.length === 0 ? (
               <tr>
                 <td
-                  colSpan={5}
+                  colSpan={showUnknownAndDowntime ? 5 : 3}
                   className="text-center text-subtle italic py-8 px-4 text-sm"
                 >
                   No daily results found
@@ -55,20 +75,24 @@ const DailyAvailabilityTable = ({ rows }: DailyAvailabilityTableProps) => {
                       {row.reliability}
                     </span>
                   </td>
-                  <td className={tdBase}>
-                    <span
-                      className={`${badgeClass} ${downtimeTone(row.unknown)}`}
-                    >
-                      {row.unknown}
-                    </span>
-                  </td>
-                  <td className={tdBase}>
-                    <span
-                      className={`${badgeClass} ${downtimeTone(row.downtime)}`}
-                    >
-                      {row.downtime}
-                    </span>
-                  </td>
+                  {showUnknownAndDowntime && (
+                    <>
+                      <td className={tdBase}>
+                        <span
+                          className={`${badgeClass} ${downtimeTone(row.unknown ?? 0)}`}
+                        >
+                          {row.unknown}
+                        </span>
+                      </td>
+                      <td className={tdBase}>
+                        <span
+                          className={`${badgeClass} ${downtimeTone(row.downtime ?? 0)}`}
+                        >
+                          {row.downtime}
+                        </span>
+                      </td>
+                    </>
+                  )}
                 </tr>
               ))
             )}

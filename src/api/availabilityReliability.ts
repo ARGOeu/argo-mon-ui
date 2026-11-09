@@ -1,6 +1,7 @@
 import type { AccessMode } from '@/types/common'
 import type {
   GroupsAvailabilityReliabilityResponse,
+  SupergroupsArResponse,
   EndpointsARResponse,
   ResultGranularity,
 } from '@/types/availabilityReliability'
@@ -73,6 +74,87 @@ export const fetchGroupAvailabilityReliability = async (
 
   const response = await fetch(
     `${base}/results/${encodeURIComponent(reportName)}/groups/${encodeURIComponent(groupName)}?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
+    { headers },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    const error = new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    ) as Error & { status?: number }
+    error.status = response.status
+    throw error
+  }
+
+  return response.json()
+}
+
+export const fetchSupergroupsAvailabilityReliability = async (
+  tenantIdentifier: string,
+  reportName: string,
+  granularity: ResultGranularity,
+  startTime: string,
+  endTime: string,
+  mode: AccessMode,
+  token: string | undefined,
+): Promise<SupergroupsArResponse> => {
+  if (mode === 'private' && !token) {
+    throw new Error('Access token is required for private mode requests')
+  }
+
+  const base =
+    mode === 'private'
+      ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}`
+      : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}`
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (mode === 'private') {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const response = await fetch(
+    `${base}/results/${encodeURIComponent(reportName)}/supergroups?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
+    { headers },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    const error = new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    ) as Error & { status?: number }
+    error.status = response.status
+    throw error
+  }
+
+  return response.json()
+}
+
+export const fetchSupergroupAvailabilityReliability = async (
+  tenantIdentifier: string,
+  reportName: string,
+  supergroupName: string,
+  granularity: ResultGranularity,
+  startTime: string,
+  endTime: string,
+  mode: AccessMode,
+  token: string | undefined,
+): Promise<SupergroupsArResponse> => {
+  if (mode === 'private' && !token) {
+    throw new Error('Access token is required for private mode requests')
+  }
+
+  const base =
+    mode === 'private'
+      ? `${BACKEND_API}/v1/tenants/${tenantIdentifier}`
+      : `${BACKEND_API}/v1/public/tenants/${tenantIdentifier}`
+
+  const headers: Record<string, string> = { 'Content-Type': 'application/json' }
+  if (mode === 'private') {
+    headers['Authorization'] = `Bearer ${token}`
+  }
+
+  const response = await fetch(
+    `${base}/results/${encodeURIComponent(reportName)}/supergroups/${encodeURIComponent(supergroupName)}?granularity=${granularity}&start-time=${encodeURIComponent(startTime)}&end-time=${encodeURIComponent(endTime)}`,
     { headers },
   )
 

@@ -84,9 +84,17 @@ export type Tenant = {
   status?: TenantStatus
   node?: boolean
   performance?: boolean
+  display_supergroup_results: boolean
   public_downtime?: boolean
   ['group-status']?: 'UNKNOWN' | 'NOT_FOUND' | 'EXISTS'
   error?: string
+}
+
+// The update request has no supergroup results flag, only its own endpoint changes it
+export type TenantUpdateRequest = Omit<Tenant, 'display_supergroup_results'>
+
+export type TenantSupergroupResultsRequest = {
+  display_supergroup_results: boolean
 }
 
 export type TenantList = {
@@ -141,7 +149,11 @@ export type ReportListItem = {
 
 export type PublicReportItem = { id: string; name: string; node?: boolean }
 
-export type PublicTenantInfo = { logo: string; performance?: boolean }
+export type PublicTenantInfo = {
+  logo: string
+  performance?: boolean
+  display_supergroup_results: boolean
+}
 
 export type ReportProfile = {
   id: string

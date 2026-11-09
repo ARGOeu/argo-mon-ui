@@ -4,6 +4,7 @@ import { useTenantName } from '@/hooks/useTenantName'
 import { useOutletContext, useParams } from 'react-router-dom'
 import ARDailyContent from '@/pages/availability-reliability/ARDailyContent'
 import { getMonthRange } from '@/pages/availability-reliability/utils/dateRanges'
+import { toGroupDailyRows } from '@/pages/availability-reliability/utils/dailyRows'
 import { isPlatformDomain } from '@/utils/domains'
 import type { PublicTenantOutletContext } from './PublicTenantLayout'
 
@@ -47,11 +48,14 @@ const PublicARDailyContainer = () => {
     ? `/public/tenants/${tenantName ?? ''}/ar-groups/report/${encodeURIComponent(reportName || '')}`
     : `/ar-groups/report/${encodeURIComponent(reportName || '')}`
 
+  const rows = useMemo(() => toGroupDailyRows(rawData), [rawData])
+
   return (
     <ARDailyContent
-      groupName={groupName || ''}
+      entityLabel="Group"
+      name={groupName || ''}
       month={month || ''}
-      rawData={rawData}
+      rows={rows}
       isLoading={isLoading}
       error={error}
       backTo={backTo}

@@ -4,5 +4,6 @@ export { default as PublicCapabilityContainer } from './PublicCapabilityContaine
 export { default as PublicPerformanceContainer } from './PublicPerformanceContainer'
 export { default as PublicARContainer } from './PublicARContainer'
 export { default as PublicARDailyContainer } from './PublicARDailyContainer'
+export { default as PublicARSupergroupDailyContainer } from './PublicARSupergroupDailyContainer'
 export { default as PublicAREndpointsContainer } from './PublicAREndpointsContainer'
 export { default as PublicAREndpointsDailyContainer } from './PublicAREndpointsDailyContainer'

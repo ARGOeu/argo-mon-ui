@@ -12,6 +12,7 @@ import {
   fetchUserTenants,
   fetchUserTenantById,
   fetchUpdateUserTenant,
+  updateTenantSupergroupResults,
   fetchUserTenantProjects,
   fetchUserTenantStatus,
   fetchUserContactTypes,
@@ -45,6 +46,8 @@ import type {
   Tenant,
   TenantList,
   TenantProjectAssignment,
+  TenantSupergroupResultsRequest,
+  TenantUpdateRequest,
   Member,
   PaginatedMembersResponse,
   ReportListItem,
@@ -183,7 +186,7 @@ export const useUpdateUserTenantMutation = () => {
   const queryClient = useQueryClient()
   const { token } = useAuth()
 
-  return useMutation<Tenant, Error, { id: string; data: Tenant }>({
+  return useMutation<Tenant, Error, { id: string; data: TenantUpdateRequest }>({
     mutationFn: ({ id, data }) => {
       if (!token) {
         throw new Error('No authentication token available')
@@ -196,6 +199,34 @@ export const useUpdateUserTenantMutation = () => {
     },
     onError: (error) => {
       console.error('User tenant update error:', error)
+    },
+  })
+}
+
+export const useUpdateSupergroupResultsMutation = () => {
+  const queryClient = useQueryClient()
+  const { token } = useAuth()
+
+  return useMutation<
+    Tenant,
+    Error,
+    { id: string; data: TenantSupergroupResultsRequest }
+  >({
+    mutationFn: ({ id, data }) => {
+      if (!token) {
+        throw new Error('No authentication token available')
+      }
+      if (!id) {
+        throw new Error('Tenant ID is required')
+      }
+      return updateTenantSupergroupResults(id, data, token)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-tenants'] })
+      queryClient.invalidateQueries({ queryKey: ['user-tenant'] })
+    },
+    onError: (error) => {
+      console.error('Tenant supergroup results update error:', error)
     },
   })
 }

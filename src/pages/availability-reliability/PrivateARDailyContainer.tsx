@@ -3,6 +3,7 @@ import { useGetGroupAR } from '@/hooks/useAvailabilityReliability'
 import { useParams } from 'react-router-dom'
 import ARDailyContent from './ARDailyContent'
 import { getMonthRange } from './utils/dateRanges'
+import { toGroupDailyRows } from './utils/dailyRows'
 
 const PrivateARDailyContainer = () => {
   const { id, groupName, reportName, month } = useParams<{
@@ -33,11 +34,14 @@ const PrivateARDailyContainer = () => {
     !!month,
   )
 
+  const rows = useMemo(() => toGroupDailyRows(rawData), [rawData])
+
   return (
     <ARDailyContent
-      groupName={groupName || ''}
+      entityLabel="Group"
+      name={groupName || ''}
       month={month || ''}
-      rawData={rawData}
+      rows={rows}
       isLoading={isLoading}
       error={error}
       backTo={`/tenants/${tenantId}/ar-groups/report/${encodeURIComponent(reportName || '')}`}

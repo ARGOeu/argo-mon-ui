@@ -36,8 +36,11 @@ interface InfrastructureMetadataProps {
   tenantId?: string
   performance: boolean
   publicDowntime: boolean
+  showSupergroupResults: boolean
+  displaySupergroupResults: boolean
   onPerformanceChange: (value: boolean) => void
   onPublicDowntimeChange: (value: boolean) => void
+  onSupergroupResultsChange: (value: boolean) => void
 }
 
 const InfrastructureMetadata = ({
@@ -48,8 +51,11 @@ const InfrastructureMetadata = ({
   tenantId,
   performance,
   publicDowntime,
+  showSupergroupResults,
+  displaySupergroupResults,
   onPublicDowntimeChange,
   onPerformanceChange,
+  onSupergroupResultsChange,
 }: InfrastructureMetadataProps) => {
   const [errors, setErrors] = useState(() => ({
     uiUrl: '',
@@ -363,12 +369,45 @@ const InfrastructureMetadata = ({
                 className="toggle toggle-sm toggle-brand"
                 checked={publicDowntime}
                 onChange={(e) => onPublicDowntimeChange(e.target.checked)}
-                aria-label="Enable or disable performance data"
+                aria-label="Enable or disable public downtimes"
               />
             </div>
           </div>
         </div>
       </div>
+
+      {showSupergroupResults && (
+        <div className={sectionClass}>
+          <div className="pt-2 pl-2">
+            <h2 className="section-title">Supergroup Results</h2>
+            <p className="section-description">
+              Availability and reliability results of supergroups
+            </p>
+          </div>
+
+          <div className={`${sectionContentClass} self-start`}>
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex-1">
+                <span className="text-sm text-muted">
+                  Enable or disable supergroup results for this tenant
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <span className="text-sm font-medium text-body">
+                  {displaySupergroupResults ? 'Enabled' : 'Disabled'}
+                </span>
+                <input
+                  type="checkbox"
+                  className="toggle toggle-sm toggle-brand"
+                  checked={displaySupergroupResults}
+                  onChange={(e) => onSupergroupResultsChange(e.target.checked)}
+                  aria-label="Enable or disable supergroup results"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }
