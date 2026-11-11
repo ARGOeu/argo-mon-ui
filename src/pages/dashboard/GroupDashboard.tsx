@@ -51,6 +51,7 @@ type DowntimeGroup = 'active' | 'upcoming' | 'completed'
 interface EndpointRow {
   key: string
   name: string
+  fname?: string
   service: string
   status: ServiceStatus
   daily: number[]
@@ -628,6 +629,7 @@ const GroupDashboard = ({
       (st.endpoints ?? []).map((ep) => ({
         key: `${st.name}|${ep.name}`,
         name: ep.name,
+        fname: ep.info?.fname?.trim() || undefined,
         service: st.name,
         status: 'missing',
         daily: seriesFrom(ep.results),
@@ -861,7 +863,10 @@ const GroupDashboard = ({
 
       if (!q) return true
 
-      return ep.name.toLowerCase().includes(q)
+      return (
+        ep.name.toLowerCase().includes(q) ||
+        (ep.fname ?? '').toLowerCase().includes(q)
+      )
     })
   }, [filter, search, endpoints, healthByKey])
 
@@ -1287,12 +1292,26 @@ const GroupDashboard = ({
                             className={`h-2 w-2 flex-shrink-0 rounded-full ${epSt.dot}`}
                           />
 
-                          <span
-                            className="truncate text-neutral-700"
-                            title={`${ep.name} (${ep.service})`}
-                          >
-                            {stripIdSuffix(ep.name)}
-                          </span>
+                          {ep.fname ? (
+                            <span
+                              className="flex min-w-0 flex-col leading-tight"
+                              title={`${ep.fname} — ${ep.name} (${ep.service})`}
+                            >
+                              <span className="truncate text-[14px] font-medium text-neutral-800">
+                                {ep.fname}
+                              </span>
+                              <span className="truncate text-[11px] text-neutral-400">
+                                {stripIdSuffix(ep.name)}
+                              </span>
+                            </span>
+                          ) : (
+                            <span
+                              className="truncate text-neutral-700"
+                              title={`${ep.name} (${ep.service})`}
+                            >
+                              {stripIdSuffix(ep.name)}
+                            </span>
+                          )}
                         </div>
                       </td>
 
