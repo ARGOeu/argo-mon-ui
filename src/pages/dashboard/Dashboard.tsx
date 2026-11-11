@@ -164,6 +164,7 @@ interface EndpointSource {
   key: string
   name: string
   service: string
+  fname?: string
   byDate: Map<string, number>
 }
 
@@ -172,6 +173,7 @@ interface EndpointRow {
   name: string
   service: string
   status: ServiceStatus
+  fname?: string
   daily: number[]
 }
 
@@ -611,6 +613,7 @@ const Dashboard = ({
             key: `${group.name}|${st.name}|${ep.name}`,
             name: ep.name,
             service: st.name,
+            fname: ep.info?.fname?.trim() || undefined,
             byDate,
           })
         })
@@ -683,6 +686,7 @@ const Dashboard = ({
           return {
             key: ep.key,
             name: ep.name,
+            fname: ep.fname,
             service: ep.service,
             status: endpointStatusesByName.get(ep.name) ?? 'missing',
             daily: epDaily,
@@ -732,8 +736,10 @@ const Dashboard = ({
       .map((s) => {
         if (!q) return s
         if (s.name.toLowerCase().includes(q)) return s
-        const matches = s.endpoints.filter((e) =>
-          e.name.toLowerCase().includes(q),
+        const matches = s.endpoints.filter(
+          (e) =>
+            e.name.toLowerCase().includes(q) ||
+            (e.fname ?? '').toLowerCase().includes(q),
         )
         return matches.length > 0 ? { ...s, endpoints: matches } : null
       })
@@ -1339,6 +1345,16 @@ const Dashboard = ({
                             ep.daily.filter(Number.isFinite),
                           )
                           const epSt = STATUS_STYLES[ep.status]
+                          const stackedLabel = ep.fname ? (
+                            <span className="flex min-w-0 flex-col text-left leading-tight">
+                              <span className="truncate text-[14px] font-medium text-neutral-800">
+                                {ep.fname}
+                              </span>
+                              <span className="truncate text-[11px] text-neutral-400">
+                                {stripIdSuffix(ep.name)} · {ep.service}
+                              </span>
+                            </span>
+                          ) : null
                           return (
                             <tr key={ep.key} className="bg-neutral-50/50">
                               <td className="border-b border-neutral-100 py-2.5 pl-8 pr-1.5">
@@ -1350,28 +1366,58 @@ const Dashboard = ({
                                   <span
                                     className={`h-2 w-2 flex-shrink-0 rounded-full ${epSt.dot}`}
                                   />
-                                  {onEndpointSelect ? (
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        onEndpointSelect(service.name, ep.name)
-                                      }
-                                      title={`Open ${ep.name} (${ep.service}) in ${service.name}`}
-                                      className="min-w-0 truncate rounded text-left text-neutral-700 transition-colors hover:text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 cursor-pointer"
-                                    >
-                                      {stripIdSuffix(ep.name)}
-                                    </button>
+                                  {stackedLabel ? (
+                                    onEndpointSelect ? (
+                                      <button
+                                        type="button"
+                                        onClick={() =>
+                                          onEndpointSelect(
+                                            service.name,
+                                            ep.name,
+                                          )
+                                        }
+                                        title={`Open ${ep.fname} — ${ep.name} (${ep.service}) in ${service.name}`}
+                                        className="min-w-0 rounded transition-colors hover:text-brand focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 cursor-pointer"
+                                      >
+                                        {stackedLabel}
+                                      </button>
+                                    ) : (
+                                      <span
+                                        className="min-w-0"
+                                        title={`${ep.fname} — ${ep.name} (${ep.service})`}
+                                      >
+                                        {stackedLabel}
+                                      </span>
+                                    )
                                   ) : (
-                                    <span
-                                      className="truncate text-neutral-700"
-                                      title={`${ep.name} (${ep.service})`}
-                                    >
-                                      {stripIdSuffix(ep.name)}
-                                    </span>
+                                    <>
+                                      {onEndpointSelect ? (
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            onEndpointSelect(
+                                              service.name,
+                                              ep.name,
+                                            )
+                                          }
+                                          title={`Open ${ep.name} (${ep.service}) in ${service.name}`}
+                                          className="min-w-0 truncate rounded text-left text-neutral-700 transition-colors hover:text-brand hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40 cursor-pointer"
+                                        >
+                                          {stripIdSuffix(ep.name)}
+                                        </button>
+                                      ) : (
+                                        <span
+                                          className="truncate text-neutral-700"
+                                          title={`${ep.name} (${ep.service})`}
+                                        >
+                                          {stripIdSuffix(ep.name)}
+                                        </span>
+                                      )}
+                                      <span className="flex-shrink-0 text-[11px] text-neutral-400">
+                                        {ep.service}
+                                      </span>
+                                    </>
                                   )}
-                                  <span className="flex-shrink-0 text-[11px] text-neutral-400">
-                                    {ep.service}
-                                  </span>
                                 </div>
                               </td>
                               <td className="border-b border-neutral-100 px-1.5 py-2.5">
