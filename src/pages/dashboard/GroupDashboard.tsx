@@ -1301,16 +1301,21 @@ const GroupDashboard = ({
                                 {ep.fname}
                               </span>
                               <span className="truncate text-[11px] text-neutral-400">
-                                {stripIdSuffix(ep.name)}
+                                {stripIdSuffix(ep.name)} · {ep.service}
                               </span>
                             </span>
                           ) : (
-                            <span
-                              className="truncate text-neutral-700"
-                              title={`${ep.name} (${ep.service})`}
-                            >
-                              {stripIdSuffix(ep.name)}
-                            </span>
+                            <>
+                              <span
+                                className="truncate text-neutral-700"
+                                title={`${ep.name} (${ep.service})`}
+                              >
+                                {stripIdSuffix(ep.name)}
+                              </span>
+                              <span className="flex-shrink-0 text-[11px] text-neutral-400">
+                                {ep.service}
+                              </span>
+                            </>
                           )}
                         </div>
                       </td>
