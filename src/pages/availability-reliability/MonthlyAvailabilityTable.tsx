@@ -84,8 +84,8 @@ const MonthlyAvailabilityTable = ({
                 </td>
               </tr>
             ) : (
-              rows.map((row) => (
-                <tr key={row.name}>
+              rows.map((row, index) => (
+                <tr key={`${row.name}-${index}`}>
                   <td className="px-4 py-3 text-sm font-medium">
                     <button
                       type="button"

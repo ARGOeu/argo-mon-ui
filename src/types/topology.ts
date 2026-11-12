@@ -28,6 +28,9 @@ export type GroupTopologyItem = {
   notifications?: TopologyNotifications
 }
 
+// The public topology group endpoint has no notifications and its tags have only the scope
+export type PublicGroupTopologyItem = Omit<GroupTopologyItem, 'notifications'>
+
 export type ServiceType = {
   name: string
   title: string

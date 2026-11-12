@@ -151,7 +151,7 @@ const AREndpointsContent = ({
           className="order-2 lg:order-none max-w-[300px] w-full"
         />
 
-        <div className="order-1 lg:order-none flex items-center justify-between flex-wrap gap-x-6 gap-y-2 w-full lg:w-auto mb-2 lg:mb-0">
+        <div className="order-1 lg:order-none flex items-center justify-between flex-wrap gap-x-4 gap-y-2 w-full lg:w-auto mb-2 lg:mb-0">
           <span className="text-[15px] font-medium text-body">
             Selected report:{' '}
             <strong className="text-muted">

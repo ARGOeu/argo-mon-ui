@@ -1,6 +1,7 @@
 import type {
   EndpointTopologyItem,
   GroupTopologyItem,
+  PublicGroupTopologyItem,
   ServiceType,
   CreateTopologyEndpointResponse,
 } from '@/types/topology'
@@ -72,6 +73,52 @@ export const fetchTopologyGroups = async (
         'Content-Type': 'application/json',
         Authorization: `Bearer ${token}`,
       },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchTopologyGroupsByReport = async (
+  tenantId: string,
+  reportId: string,
+  token: string,
+): Promise<GroupTopologyItem[]> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/tenants/${tenantId}/topology/groups/by-report/${encodeURIComponent(reportId)}`,
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
+  }
+
+  return response.json()
+}
+
+export const fetchPublicTopologyGroupsByReport = async (
+  tenantName: string,
+  reportName: string,
+): Promise<PublicGroupTopologyItem[]> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/public/tenants/${tenantName}/topology/groups/by-report/${encodeURIComponent(reportName)}`,
+    {
+      headers: { 'Content-Type': 'application/json' },
     },
   )
 
