@@ -13,21 +13,27 @@ const valueColumns = 'grid-cols-[3.5rem_3.5rem_0.25rem]'
 export type SortDirection = 'asc' | 'desc'
 
 interface MonthlyAvailabilityTableProps {
-  groups: GroupAvailabilityReliability[]
+  rows: GroupAvailabilityReliability[]
   months: string[]
+  entityLabel: string
+  emptyMessage: string
+  nameTooltip: string
   sortDirection: SortDirection | null
   onSortChange: () => void
-  onDrillDown: (groupName: string, month: string) => void
-  onViewEndpoints: (groupName: string) => void
+  onNameClick: (name: string) => void
+  onDrillDown: (name: string, month: string) => void
 }
 
 const MonthlyAvailabilityTable = ({
-  groups,
+  rows,
   months,
+  entityLabel,
+  emptyMessage,
+  nameTooltip,
   sortDirection,
   onSortChange,
+  onNameClick,
   onDrillDown,
-  onViewEndpoints,
 }: MonthlyAvailabilityTableProps) => {
   const lastMonth = months.at(-1)
 
@@ -44,7 +50,7 @@ const MonthlyAvailabilityTable = ({
                   onClick={onSortChange}
                   className="text-xs uppercase text-muted"
                 >
-                  Group
+                  {entityLabel}
                 </SortableColumnHeader>
               </th>
               {months.map((month) => (
@@ -68,31 +74,31 @@ const MonthlyAvailabilityTable = ({
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {groups.length === 0 ? (
+            {rows.length === 0 ? (
               <tr>
                 <td
                   colSpan={1 + months.length}
                   className="text-center text-subtle italic py-8 px-4 text-sm"
                 >
-                  No groups found
+                  {emptyMessage}
                 </td>
               </tr>
             ) : (
-              groups.map((group) => (
-                <tr key={group.name}>
+              rows.map((row) => (
+                <tr key={row.name}>
                   <td className="px-4 py-3 text-sm font-medium">
                     <button
                       type="button"
-                      onClick={() => onViewEndpoints(group.name)}
-                      data-tip="View endpoint results for this group"
-                      title={group.name}
+                      onClick={() => onNameClick(row.name)}
+                      data-tip={nameTooltip}
+                      title={row.name}
                       className="tooltip tooltip-right block max-w-[240px] truncate cursor-pointer text-body hover:text-brand hover:underline"
                     >
-                      {group.name}
+                      {row.name}
                     </button>
                   </td>
                   {months.map((month) => {
-                    const monthly = group.monthly.find((m) => m.month === month)
+                    const monthly = row.monthly.find((m) => m.month === month)
                     if (!monthly) {
                       return <td key={month} className="px-4 py-3" />
                     }
@@ -100,7 +106,7 @@ const MonthlyAvailabilityTable = ({
                       <td key={month} className="px-2 py-1">
                         <button
                           type="button"
-                          onClick={() => onDrillDown(group.name, month)}
+                          onClick={() => onDrillDown(row.name, month)}
                           data-tip={`View daily breakdown for ${formatMonthLabel(month)}`}
                           className={`tooltip ${month === lastMonth ? 'tooltip-left' : ''} group grid ${valueColumns} gap-2 items-center justify-center mx-auto rounded-md border border-transparent px-2 py-1 cursor-pointer bg-transparent transition-all hover:border-line-strong hover:bg-surface-muted`}
                         >

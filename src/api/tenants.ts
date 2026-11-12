@@ -3,6 +3,8 @@ import type {
   Job,
   Tenant,
   TenantList,
+  TenantSupergroupResultsRequest,
+  TenantUpdateRequest,
   PaginatedMembersResponse,
   ReportListItem,
   PublicReportItem,
@@ -137,7 +139,7 @@ export const fetchUserTenantById = async (
 
 export const fetchUpdateUserTenant = async (
   id: string,
-  data: Tenant,
+  data: TenantUpdateRequest,
   token: string,
 ): Promise<Tenant> => {
   const response = await fetch(`${BACKEND_API}/v1/tenants/${id}`, {
@@ -156,6 +158,33 @@ export const fetchUpdateUserTenant = async (
     ) as Error & { errors?: string[] }
     error.errors = errorData.errors || []
     throw error
+  }
+
+  return response.json()
+}
+
+export const updateTenantSupergroupResults = async (
+  id: string,
+  data: TenantSupergroupResultsRequest,
+  token: string,
+): Promise<Tenant> => {
+  const response = await fetch(
+    `${BACKEND_API}/v1/admin/tenants/${id}/display-supergroup-results`,
+    {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(data),
+    },
+  )
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}))
+    throw new Error(
+      errorData.message || `HTTP error! status: ${response.status}`,
+    )
   }
 
   return response.json()

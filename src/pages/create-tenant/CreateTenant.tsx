@@ -3,8 +3,10 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import {
   useCreateTenantMutation,
   useGetUserTenantById,
+  useUpdateSupergroupResultsMutation,
   useUpdateUserTenantMutation,
 } from '@/hooks/useTenants'
+import { useAuth } from '@/auth/useAuth'
 import type { Metadata } from '@/types/tenants'
 import { toast } from 'sonner'
 import ErrorDisplay from '@/components/ErrorDisplay'
@@ -21,6 +23,7 @@ const BACKEND_API = import.meta.env.VITE_BACKEND_URI
 const CreateTenant = () => {
   const { id: tenantId } = useParams<{ id?: string }>()
   const isEditMode = Boolean(tenantId)
+  const { isSuperAdmin } = useAuth()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const returnToPanel = searchParams.get('returnTo') === 'panel'
@@ -40,6 +43,8 @@ const CreateTenant = () => {
   })
   const [performance, setPerformance] = useState(false)
   const [publicDowntime, setPublicDowntime] = useState(false)
+  const [displaySupergroupResults, setDisplaySupergroupResults] =
+    useState(false)
   const [imageUrl, setImageUrl] = useState('')
   const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<'info' | 'contact' | 'metadata'>(
@@ -61,12 +66,25 @@ const CreateTenant = () => {
 
   const createMutation = useCreateTenantMutation()
   const updateMutation = useUpdateUserTenantMutation()
+  const supergroupResultsMutation = useUpdateSupergroupResultsMutation()
+  const isSaving =
+    createMutation.isPending ||
+    updateMutation.isPending ||
+    supergroupResultsMutation.isPending
 
   const {
     data: tenantData,
     isLoading: isTenantLoading,
     error: tenantError,
   } = useGetUserTenantById(tenantId || '')
+
+  const serverSupergroupResults = tenantData?.display_supergroup_results
+
+  useEffect(() => {
+    if (isEditMode && serverSupergroupResults !== undefined) {
+      setDisplaySupergroupResults(serverSupergroupResults)
+    }
+  }, [isEditMode, serverSupergroupResults])
 
   useEffect(() => {
     if (isEditMode && tenantData) {
@@ -193,6 +211,22 @@ const CreateTenant = () => {
     }
 
     if (isEditMode && tenantId) {
+      const handleUpdated = () => {
+        toast.success('Tenant updated successfully!')
+        navigateTimerRef.current = setTimeout(
+          () =>
+            navigate(
+              returnToPanel
+                ? '/administration#tenants'
+                : `/tenants/${tenantId}/summary`,
+            ),
+          2000,
+        )
+      }
+
+      const isSupergroupResultsChanged =
+        isSuperAdmin && displaySupergroupResults !== serverSupergroupResults
+
       updateMutation.mutate(
         {
           id: tenantId,
@@ -206,15 +240,24 @@ const CreateTenant = () => {
         },
         {
           onSuccess: () => {
-            toast.success('Tenant updated successfully!')
-            navigateTimerRef.current = setTimeout(
-              () =>
-                navigate(
-                  returnToPanel
-                    ? '/administration#tenants'
-                    : `/tenants/${tenantId}/summary`,
-                ),
-              2000,
+            if (!isSupergroupResultsChanged) {
+              handleUpdated()
+              return
+            }
+
+            supergroupResultsMutation.mutate(
+              {
+                id: tenantId,
+                data: { display_supergroup_results: displaySupergroupResults },
+              },
+              {
+                onSuccess: handleUpdated,
+                onError: (error) => {
+                  toast.error(
+                    `Tenant updated, but failed to change the supergroup results setting: ${error.message}`,
+                  )
+                },
+              },
             )
           },
           onError,
@@ -227,6 +270,8 @@ const CreateTenant = () => {
           contacts: contactsData,
           metadata: metadataObj,
           performance,
+          public_downtime: publicDowntime,
+          display_supergroup_results: displaySupergroupResults,
         },
         {
           onSuccess: (createdTenant) => {
@@ -297,8 +342,7 @@ const CreateTenant = () => {
               size="md"
               onClick={handleSubmit}
               disabled={
-                createMutation.isPending ||
-                updateMutation.isPending ||
+                isSaving ||
                 !!errors.name ||
                 !!errors.email ||
                 !!errors.website ||
@@ -315,11 +359,7 @@ const CreateTenant = () => {
                 hasMetadataValidationError
               }
             >
-              {createMutation.isPending || updateMutation.isPending
-                ? 'Saving...'
-                : isEditMode
-                  ? 'Update'
-                  : 'Create'}
+              {isSaving ? 'Saving...' : isEditMode ? 'Update' : 'Create'}
             </Button>
           </div>
 
@@ -382,6 +422,9 @@ const CreateTenant = () => {
                 onPublicDowntimeChange={setPublicDowntime}
                 performance={performance}
                 onPerformanceChange={setPerformance}
+                showSupergroupResults={isSuperAdmin}
+                displaySupergroupResults={displaySupergroupResults}
+                onSupergroupResultsChange={setDisplaySupergroupResults}
               />
             </div>
           </form>

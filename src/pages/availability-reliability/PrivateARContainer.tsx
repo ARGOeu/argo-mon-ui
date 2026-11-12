@@ -1,7 +1,9 @@
 import { useMemo, useEffect } from 'react'
-import { useGetGroupsAR } from '@/hooks/useAvailabilityReliability'
-import { useGetTenantReports } from '@/hooks/useTenants'
-import { useSelectedTenant } from '@/contexts/selected-tenant'
+import {
+  useGetGroupsAR,
+  useGetSupergroupsAR,
+} from '@/hooks/useAvailabilityReliability'
+import { useGetTenantReports, useGetUserTenantById } from '@/hooks/useTenants'
 import { useParams, useNavigate } from 'react-router-dom'
 import ARContent from './ARContent'
 import { getRecentMonthsRange } from './utils/dateRanges'
@@ -10,7 +12,10 @@ const PrivateARContainer = () => {
   const { id, reportName } = useParams<{ id: string; reportName?: string }>()
   const tenantId = id || ''
   const navigate = useNavigate()
-  const { tenant: tenantData } = useSelectedTenant()
+  const { data: tenantData, isLoading: isTenantLoading } =
+    useGetUserTenantById(tenantId)
+
+  const displaySupergroups = !!tenantData?.display_supergroup_results
 
   const { data: reports } = useGetTenantReports(tenantId)
 
@@ -41,6 +46,20 @@ const PrivateARContainer = () => {
     !!selectedReportName,
   )
 
+  const {
+    data: supergroupsData,
+    isLoading: isSupergroupsLoading,
+    error: supergroupsError,
+  } = useGetSupergroupsAR(
+    tenantId,
+    selectedReportName || '',
+    'monthly',
+    startTime,
+    endTime,
+    'private',
+    !!selectedReportName && displaySupergroups,
+  )
+
   const handleReportChange = (report: string) => {
     navigate(
       `/tenants/${tenantId}/ar-groups/report/${encodeURIComponent(report)}`,
@@ -62,6 +81,12 @@ const PrivateARContainer = () => {
     )
   }
 
+  const handleSupergroupDrillDown = (supergroupName: string, month: string) => {
+    navigate(
+      `/tenants/${tenantId}/ar-groups/supergroups/${encodeURIComponent(supergroupName)}/report/${encodeURIComponent(selectedReportName || '')}/${month}`,
+    )
+  }
+
   return (
     <ARContent
       tenantName={tenantData?.info.name ?? ''}
@@ -69,10 +94,20 @@ const PrivateARContainer = () => {
       selectedReportName={selectedReportName || ''}
       onReportChange={handleReportChange}
       groupsData={groupsData}
-      isLoading={isLoading}
+      isLoading={isLoading || isTenantLoading}
       error={error}
       onDrillDown={handleDrillDown}
       onViewEndpoints={handleViewEndpoints}
+      supergroups={
+        displaySupergroups
+          ? {
+              data: supergroupsData,
+              isLoading: isSupergroupsLoading,
+              error: supergroupsError,
+              onDrillDown: handleSupergroupDrillDown,
+            }
+          : undefined
+      }
     />
   )
 }

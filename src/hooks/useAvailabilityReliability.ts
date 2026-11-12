@@ -3,12 +3,15 @@ import { useAuth } from '@/auth/useAuth'
 import {
   fetchGroupsAvailabilityReliability,
   fetchGroupAvailabilityReliability,
+  fetchSupergroupsAvailabilityReliability,
+  fetchSupergroupAvailabilityReliability,
   fetchEndpointsAvailabilityReliability,
   fetchEndpointAvailabilityReliability,
 } from '@/api/availabilityReliability'
 import type { AccessMode } from '@/types/common'
 import type {
   GroupsAvailabilityReliabilityResponse,
+  SupergroupsArResponse,
   EndpointsARResponse,
   ResultGranularity,
 } from '@/types/availabilityReliability'
@@ -119,6 +122,117 @@ export const useGetGroupAR = (
       !!tenantIdentifier &&
       !!reportName &&
       !!groupName &&
+      !!startTime &&
+      !!endTime,
+  })
+}
+
+export const useGetSupergroupsAR = (
+  tenantIdentifier: string,
+  reportName: string,
+  granularity: ResultGranularity,
+  startTime: string,
+  endTime: string,
+  mode: AccessMode,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<SupergroupsArResponse, Error>({
+    queryKey: [
+      'availability-reliability-supergroups',
+      mode,
+      tenantIdentifier,
+      reportName,
+      granularity,
+      startTime,
+      endTime,
+    ],
+    queryFn: () => {
+      if (mode === 'private' && !token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantIdentifier) {
+        throw new Error('Tenant identifier is required')
+      }
+      if (!reportName) {
+        throw new Error('Report name is required')
+      }
+      return fetchSupergroupsAvailabilityReliability(
+        tenantIdentifier,
+        reportName,
+        granularity,
+        startTime,
+        endTime,
+        mode,
+        mode === 'private' ? token : undefined,
+      )
+    },
+    retry: false,
+    enabled:
+      enabled &&
+      (mode === 'private' ? !!token : true) &&
+      !!tenantIdentifier &&
+      !!reportName &&
+      !!startTime &&
+      !!endTime,
+  })
+}
+
+export const useGetSupergroupAR = (
+  tenantIdentifier: string,
+  reportName: string,
+  supergroupName: string,
+  granularity: ResultGranularity,
+  startTime: string,
+  endTime: string,
+  mode: AccessMode,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<SupergroupsArResponse, Error>({
+    queryKey: [
+      'availability-reliability-supergroup-daily',
+      mode,
+      tenantIdentifier,
+      reportName,
+      supergroupName,
+      granularity,
+      startTime,
+      endTime,
+    ],
+    queryFn: () => {
+      if (mode === 'private' && !token) {
+        throw new Error('No authentication token available')
+      }
+      if (!tenantIdentifier) {
+        throw new Error('Tenant identifier is required')
+      }
+      if (!reportName) {
+        throw new Error('Report name is required')
+      }
+      if (!supergroupName) {
+        throw new Error('Supergroup name is required')
+      }
+      return fetchSupergroupAvailabilityReliability(
+        tenantIdentifier,
+        reportName,
+        supergroupName,
+        granularity,
+        startTime,
+        endTime,
+        mode,
+        mode === 'private' ? token : undefined,
+      )
+    },
+    retry: false,
+    enabled:
+      enabled &&
+      (mode === 'private' ? !!token : true) &&
+      !!tenantIdentifier &&
+      !!reportName &&
+      !!supergroupName &&
       !!startTime &&
       !!endTime,
   })

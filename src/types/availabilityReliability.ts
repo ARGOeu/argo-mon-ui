@@ -19,6 +19,15 @@ export type GroupDailyResult = {
   downtime: number
 }
 
+export type SupergroupDailyResult = {
+  date: string
+  availability: number
+  reliability: number
+}
+
+export type DailyResultRow = SupergroupDailyResult &
+  Partial<Pick<GroupDailyResult, 'unknown' | 'downtime'>>
+
 export type GroupResult = {
   timestamp: string
   availability: string
@@ -42,6 +51,22 @@ export type GroupData = {
 
 export type GroupsAvailabilityReliabilityResponse = {
   results: GroupData[]
+}
+
+export type SupergroupResult = {
+  timestamp: string
+  availability: string
+  reliability: string
+}
+
+export type SupergroupData = {
+  name: string
+  type: string
+  results: SupergroupResult[]
+}
+
+export type SupergroupsArResponse = {
+  results: SupergroupData[]
 }
 
 export type EndpointItem = {

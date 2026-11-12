@@ -25,6 +25,7 @@ import TenantReports from './pages/tenant-reports'
 import {
   PrivateARContainer,
   PrivateARDailyContainer,
+  PrivateARSupergroupDailyContainer,
   PrivateAREndpointsContainer,
   PrivateAREndpointsDailyContainer,
 } from './pages/availability-reliability'
@@ -53,6 +54,7 @@ import {
   PublicPerformanceContainer,
   PublicARContainer,
   PublicARDailyContainer,
+  PublicARSupergroupDailyContainer,
   PublicAREndpointsContainer,
   PublicAREndpointsDailyContainer,
 } from './pages/public-tenant'
@@ -116,6 +118,10 @@ function PlatformRoutes() {
         <Route
           path="ar-groups/:groupName/report/:reportName/:month"
           element={<PublicARDailyContainer />}
+        />
+        <Route
+          path="ar-groups/supergroups/:supergroupName/report/:reportName/:month"
+          element={<PublicARSupergroupDailyContainer />}
         />
         <Route
           path="ar-groups/:groupName/report/:reportName/endpoints"
@@ -226,6 +232,14 @@ function PlatformRoutes() {
             element={
               <AuthProtected>
                 <PrivateARDailyContainer />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/ar-groups/supergroups/:supergroupName/report/:reportName/:month"
+            element={
+              <AuthProtected>
+                <PrivateARSupergroupDailyContainer />
               </AuthProtected>
             }
           />
@@ -472,6 +486,10 @@ function CustomDomainRoutes() {
         <Route
           path="/ar-groups/:groupName/report/:reportName/:month"
           element={<PublicARDailyContainer />}
+        />
+        <Route
+          path="/ar-groups/supergroups/:supergroupName/report/:reportName/:month"
+          element={<PublicARSupergroupDailyContainer />}
         />
         <Route
           path="/ar-groups/:groupName/report/:reportName/endpoints"

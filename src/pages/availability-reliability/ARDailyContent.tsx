@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { ArrowDownTrayIcon, TableCellsIcon } from '@heroicons/react/16/solid'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -13,56 +12,48 @@ import {
   sanitizeFilename,
   type CsvField,
 } from '@/utils/csvExport'
-import type { GroupsAvailabilityReliabilityResponse } from '@/types/availabilityReliability'
+import type { DailyResultRow } from '@/types/availabilityReliability'
 
 const noticeContainerClass = 'text-center bg-surface-muted rounded-lg my-4'
 const noticeTextClass = 'text-sm text-subtle italic py-6 px-12'
 
 export interface ARDailyContentProps {
-  groupName: string
+  entityLabel: 'Group' | 'Supergroup'
+  name: string
   month: string
-  rawData: GroupsAvailabilityReliabilityResponse | undefined
+  rows: DailyResultRow[]
   isLoading: boolean
   error: Error | null
   backTo: string
 }
 
 const ARDailyContent = ({
-  groupName,
+  entityLabel,
+  name,
   month,
-  rawData,
+  rows,
   isLoading,
   error,
   backTo,
 }: ARDailyContentProps) => {
-  const rows = useMemo(() => {
-    if (!rawData) {
-      return []
-    }
-    return rawData.results.flatMap((projectGroup) =>
-      projectGroup.groups.flatMap((group) =>
-        group.results.map((result) => ({
-          date: result.timestamp,
-          availability: parseFloat(result.availability),
-          reliability: parseFloat(result.reliability),
-          unknown: parseFloat(result.unknown),
-          downtime: parseFloat(result.downtime),
-        })),
-      ),
-    )
-  }, [rawData])
+  // Supergroup results have no unknown or downtime values
+  const showUnknownAndDowntime = entityLabel === 'Group'
 
   const handleExport = () => {
-    const fields: CsvField<(typeof rows)[number]>[] = [
+    const fields: CsvField<DailyResultRow>[] = [
       { label: 'Timestamp', value: 'date' },
       { label: 'Availability', value: 'availability' },
       { label: 'Reliability', value: 'reliability' },
-      { label: 'Unknown', value: 'unknown' },
-      { label: 'Downtime', value: 'downtime' },
+      ...(showUnknownAndDowntime
+        ? [
+            { label: 'Unknown', value: 'unknown' },
+            { label: 'Downtime', value: 'downtime' },
+          ]
+        : []),
     ]
 
     downloadCSV(
-      `${sanitizeFilename(decodeURIComponent(groupName))}-${month}-AR-Daily.csv`,
+      `${sanitizeFilename(decodeURIComponent(name))}-${month}-AR-Daily.csv`,
       buildCSV(rows, fields),
     )
   }
@@ -70,11 +61,11 @@ const ARDailyContent = ({
   return (
     <div className="page-container">
       <PageHeader
-        title={`${decodeURIComponent(groupName || '')} - ${month ? formatMonthLabel(month, 'long') : ''}`}
+        title={`${decodeURIComponent(name || '')} - ${month ? formatMonthLabel(month, 'long') : ''}`}
         subtitle="Daily availability and reliability breakdown"
         className="items-end pb-2 mb-1"
         navigateTo={{
-          label: 'Back to Monthly Group Results',
+          label: `Back to Monthly ${entityLabel} Results`,
           to: backTo,
         }}
       >
@@ -96,13 +87,16 @@ const ARDailyContent = ({
       ) : isNotFoundError(error) ? (
         <div className={noticeContainerClass}>
           <p className={noticeTextClass}>
-            This group has no data for the selected date
+            This {entityLabel.toLowerCase()} has no data for the selected date
           </p>
         </div>
       ) : error ? (
         <ErrorDisplay error={error} context="daily results" />
       ) : (
-        <DailyAvailabilityTable rows={rows} />
+        <DailyAvailabilityTable
+          rows={rows}
+          showUnknownAndDowntime={showUnknownAndDowntime}
+        />
       )}
     </div>
   )

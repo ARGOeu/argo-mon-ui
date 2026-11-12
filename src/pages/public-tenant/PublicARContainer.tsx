@@ -1,6 +1,12 @@
 import { useMemo } from 'react'
-import { useGetGroupsAR } from '@/hooks/useAvailabilityReliability'
-import { useGetPublicTenantReports } from '@/hooks/useTenants'
+import {
+  useGetGroupsAR,
+  useGetSupergroupsAR,
+} from '@/hooks/useAvailabilityReliability'
+import {
+  useGetPublicTenantInfo,
+  useGetPublicTenantReports,
+} from '@/hooks/useTenants'
 import { useTenantName } from '@/hooks/useTenantName'
 import { useParams, useNavigate } from 'react-router-dom'
 import ARContent from '@/pages/availability-reliability/ARContent'
@@ -18,6 +24,10 @@ const PublicARContainer = () => {
     : '/ar-groups'
 
   const { data: reports } = useGetPublicTenantReports(tenantName ?? '')
+  const { data: tenantInfo, isLoading: isTenantInfoLoading } =
+    useGetPublicTenantInfo(tenantName ?? '')
+
+  const displaySupergroups = !!tenantInfo?.display_supergroup_results
 
   const handleReportChange = (report: string) => {
     navigate(`${basePath}/report/${encodeURIComponent(report)}`, {
@@ -47,6 +57,20 @@ const PublicARContainer = () => {
     !!selectedReportName,
   )
 
+  const {
+    data: supergroupsData,
+    isLoading: isSupergroupsLoading,
+    error: supergroupsError,
+  } = useGetSupergroupsAR(
+    tenantName ?? '',
+    selectedReportName,
+    'monthly',
+    startTime,
+    endTime,
+    'public',
+    !!selectedReportName && displaySupergroups,
+  )
+
   const handleDrillDown = (groupName: string, month: string) => {
     navigate(
       `${basePath}/${encodeURIComponent(groupName)}/report/${encodeURIComponent(selectedReportName)}/${month}`,
@@ -59,6 +83,12 @@ const PublicARContainer = () => {
     )
   }
 
+  const handleSupergroupDrillDown = (supergroupName: string, month: string) => {
+    navigate(
+      `${basePath}/supergroups/${encodeURIComponent(supergroupName)}/report/${encodeURIComponent(selectedReportName)}/${month}`,
+    )
+  }
+
   return (
     <ARContent
       tenantName={tenantName ?? ''}
@@ -66,10 +96,20 @@ const PublicARContainer = () => {
       selectedReportName={selectedReportName}
       onReportChange={handleReportChange}
       groupsData={groupsData}
-      isLoading={isLoading}
+      isLoading={isLoading || isTenantInfoLoading}
       error={error}
       onDrillDown={handleDrillDown}
       onViewEndpoints={handleViewEndpoints}
+      supergroups={
+        displaySupergroups
+          ? {
+              data: supergroupsData,
+              isLoading: isSupergroupsLoading,
+              error: supergroupsError,
+              onDrillDown: handleSupergroupDrillDown,
+            }
+          : undefined
+      }
     />
   )
 }
