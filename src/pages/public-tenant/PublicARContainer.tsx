@@ -3,6 +3,7 @@ import {
   useGetGroupsAR,
   useGetSupergroupsAR,
 } from '@/hooks/useAvailabilityReliability'
+import { useGetPublicTopologyGroupsByReport } from '@/hooks/useTopology'
 import {
   useGetPublicTenantInfo,
   useGetPublicTenantReports,
@@ -71,6 +72,13 @@ const PublicARContainer = () => {
     !!selectedReportName && displaySupergroups,
   )
 
+  const { data: topologyGroups, isLoading: isTopologyLoading } =
+    useGetPublicTopologyGroupsByReport(
+      tenantName ?? '',
+      selectedReportName,
+      displaySupergroups,
+    )
+
   const handleDrillDown = (groupName: string, month: string) => {
     navigate(
       `${basePath}/${encodeURIComponent(groupName)}/report/${encodeURIComponent(selectedReportName)}/${month}`,
@@ -107,6 +115,7 @@ const PublicARContainer = () => {
               isLoading: isSupergroupsLoading,
               error: supergroupsError,
               onDrillDown: handleSupergroupDrillDown,
+              topology: { data: topologyGroups, isLoading: isTopologyLoading },
             }
           : undefined
       }

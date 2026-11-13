@@ -4,6 +4,7 @@ import {
   useGetSupergroupsAR,
 } from '@/hooks/useAvailabilityReliability'
 import { useGetTenantReports, useGetUserTenantById } from '@/hooks/useTenants'
+import { useGetTopologyGroupsByReport } from '@/hooks/useTopology'
 import { useParams, useNavigate } from 'react-router-dom'
 import ARContent from './ARContent'
 import { getRecentMonthsRange } from './utils/dateRanges'
@@ -17,9 +18,12 @@ const PrivateARContainer = () => {
 
   const displaySupergroups = !!tenantData?.display_supergroup_results
 
-  const { data: reports } = useGetTenantReports(tenantId)
+  const { data: reports, isLoading: isReportsLoading } =
+    useGetTenantReports(tenantId)
 
   const selectedReportName = reportName
+  const selectedReportId =
+    reports?.find((report) => report.name === selectedReportName)?.id ?? ''
 
   useEffect(() => {
     if (!reportName && reports?.[0]?.name) {
@@ -59,6 +63,9 @@ const PrivateARContainer = () => {
     'private',
     !!selectedReportName && displaySupergroups,
   )
+
+  const { data: topologyGroups, isLoading: isTopologyLoading } =
+    useGetTopologyGroupsByReport(tenantId, selectedReportId, displaySupergroups)
 
   const handleReportChange = (report: string) => {
     navigate(
@@ -105,6 +112,10 @@ const PrivateARContainer = () => {
               isLoading: isSupergroupsLoading,
               error: supergroupsError,
               onDrillDown: handleSupergroupDrillDown,
+              topology: {
+                data: topologyGroups,
+                isLoading: isReportsLoading || isTopologyLoading,
+              },
             }
           : undefined
       }

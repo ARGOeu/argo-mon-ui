@@ -6,10 +6,13 @@ import {
   fetchTopologyGroups,
   fetchCreateTopologyGroups,
   fetchTopologyServiceTypes,
+  fetchTopologyGroupsByReport,
+  fetchPublicTopologyGroupsByReport,
 } from '@/api/topology'
 import type {
   EndpointTopologyItem,
   GroupTopologyItem,
+  PublicGroupTopologyItem,
   ServiceType,
   CreateTopologyEndpointResponse,
 } from '@/types/topology'
@@ -69,6 +72,43 @@ export const useGetTopologyGroups = (
     retry: false,
     refetchOnMount: 'always',
     enabled: enabled && !!token && !!tenantId,
+  })
+}
+
+export const useGetTopologyGroupsByReport = (
+  tenantId: string,
+  reportId: string,
+  enabled: boolean = true,
+) => {
+  const { token } = useAuth()
+
+  return useQuery<GroupTopologyItem[], Error>({
+    queryKey: ['topology-groups', tenantId, 'by-report', reportId],
+    queryFn: () => {
+      if (!token) throw new Error('No authentication token available')
+      if (!tenantId) throw new Error('Tenant ID is required')
+      if (!reportId) throw new Error('Report ID is required')
+      return fetchTopologyGroupsByReport(tenantId, reportId, token)
+    },
+    retry: false,
+    enabled: enabled && !!token && !!tenantId && !!reportId,
+  })
+}
+
+export const useGetPublicTopologyGroupsByReport = (
+  tenantName: string,
+  reportName: string,
+  enabled: boolean = true,
+) => {
+  return useQuery<PublicGroupTopologyItem[], Error>({
+    queryKey: ['public-topology-groups', tenantName, 'by-report', reportName],
+    queryFn: () => {
+      if (!tenantName) throw new Error('Tenant name is required')
+      if (!reportName) throw new Error('Report name is required')
+      return fetchPublicTopologyGroupsByReport(tenantName, reportName)
+    },
+    retry: false,
+    enabled: enabled && !!tenantName && !!reportName,
   })
 }
 
