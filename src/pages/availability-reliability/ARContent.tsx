@@ -20,10 +20,14 @@ import { isNotFoundError } from '@/utils/isNotFoundError'
 import { buildReportOptions } from '@/utils/reportVisibilityOptions'
 import { formatMonthLabel, getMonthsWithData } from './utils/dateRanges'
 import {
+  getFilterOptions,
+  getFilterParams,
+  getFilterValue,
   getGroupRows,
   getSupergroupTopology,
   getSupergroupTypes,
-  getTopologySupergroupNames,
+  scopeParam,
+  supergroupParam,
 } from './utils/supergroupFilter'
 import {
   buildCSV,
@@ -41,10 +45,9 @@ import type { SortDirection } from './MonthlyAvailabilityTable'
 
 const pageSize = 20
 
-// URL search params that keep the active tab and the supergroup filter in the URL
+// URL search param that keeps the active tab in the URL
 const tabParam = 'tab'
 const supergroupsTabValue = 'supergroups'
-const supergroupParam = 'supergroup'
 const groupsTabValue = 'groups'
 
 type ArTabId = typeof groupsTabValue | typeof supergroupsTabValue
@@ -124,8 +127,13 @@ const ARContent = ({
     : groupsTabValue
   const search = searches[activeTabId]
   const sortDirection = sortDirections[activeTabId]
+  const hasGroupFilters = !!supergroups && !isSupergroupsTab
+  const scopeFilter = hasGroupFilters ? searchParams.get(scopeParam) : null
+
+  // If the URL has both filters, only the scope is used
   const supergroupFilter =
-    supergroups && !isSupergroupsTab ? searchParams.get(supergroupParam) : null
+    hasGroupFilters && !scopeFilter ? searchParams.get(supergroupParam) : null
+  const filterName = scopeFilter || supergroupFilter
   const supergroupsData = supergroups?.data
 
   const topology = supergroups?.topology
@@ -146,8 +154,14 @@ const ARContent = ({
   )
 
   const groupRows = useMemo(
-    () => getGroupRows(groupsData, supergroupFilter, supergroupTopology),
-    [groupsData, supergroupFilter, supergroupTopology],
+    () =>
+      getGroupRows(
+        groupsData,
+        supergroupTopology,
+        supergroupFilter,
+        scopeFilter,
+      ),
+    [groupsData, supergroupTopology, supergroupFilter, scopeFilter],
   )
 
   const supergroupRows = useMemo<GroupAvailabilityReliability[]>(() => {
@@ -169,7 +183,7 @@ const ARContent = ({
   const isResultsLoading =
     isLoading ||
     !!supergroupsView?.isLoading ||
-    (!!supergroupFilter && !!topology?.isLoading)
+    (!!filterName && !!topology?.isLoading)
 
   const resultsError = supergroupsView ? supergroupsView.error : error
 
@@ -183,15 +197,9 @@ const ARContent = ({
   const showTabs = !!supergroups && !isLoading
   const showSupergroupDropdown =
     showTabs && hasSupergroupDropdown && !isSupergroupsTab
-  const supergroupOptions = useMemo(
-    () => [
-      { value: '', label: 'All entries' },
-      ...getTopologySupergroupNames(supergroupTopology ?? []).map((name) => ({
-        value: name,
-        label: name,
-      })),
-    ],
-    [supergroupTopology],
+  const filterOptions = useMemo(
+    () => getFilterOptions(supergroupTopology ?? [], supergroupTypes),
+    [supergroupTopology, supergroupTypes],
   )
 
   const months = useMemo(() => getMonthsWithData(rows), [rows])
@@ -216,7 +224,13 @@ const ARContent = ({
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [search, selectedReportName, isSupergroupsTab, supergroupFilter])
+  }, [
+    search,
+    selectedReportName,
+    isSupergroupsTab,
+    supergroupFilter,
+    scopeFilter,
+  ])
 
   const totalElements = filteredRows.length
   const totalPages = Math.max(1, Math.ceil(totalElements / pageSize))
@@ -255,13 +269,8 @@ const ARContent = ({
     setSearchParams({ [supergroupParam]: supergroupName })
   }
 
-  const handleSupergroupFilterChange = (supergroupName: string) => {
-    setSearchParams(
-      supergroupName ? { [supergroupParam]: supergroupName } : {},
-      {
-        replace: true,
-      },
-    )
+  const handleFilterChange = (value: string) => {
+    setSearchParams(getFilterParams(value), { replace: true })
   }
 
   const handleExport = () => {
@@ -295,6 +304,7 @@ const ARContent = ({
     const reportName = decodeURIComponent(selectedReportName)
     const filterNote =
       [
+        scopeFilter ? `Groups in scope ${scopeFilter}` : '',
         supergroupFilter ? `Groups of ${supergroupFilter}` : '',
         search ? `Search: "${search}"` : '',
       ]
@@ -357,12 +367,13 @@ const ARContent = ({
 
           {showSupergroupDropdown && (
             <SelectDropdown
-              value={supergroupFilter ?? ''}
-              onChange={handleSupergroupFilterChange}
-              options={supergroupOptions}
+              value={getFilterValue(supergroupFilter, scopeFilter)}
+              onChange={handleFilterChange}
+              options={filterOptions}
               placeholder="Filter entries"
               disabled={!topologyGroups}
               searchable
+              listClassName="max-h-80"
               className="w-full sm:w-48 mb-2 ml-auto xl:ml-0"
             />
           )}
@@ -409,14 +420,16 @@ const ARContent = ({
         </div>
       </div>
 
-      {supergroupFilter && (
+      {filterName && (
         <div className="flex items-center gap-2 mb-3 text-sm text-body">
-          <span>Showing groups of</span>
+          <span>
+            {scopeFilter ? 'Showing groups in scope' : 'Showing groups of'}
+          </span>
           <Badge size="lg" className="bg-brand-muted text-brand-strong gap-1.5">
-            {supergroupFilter}
+            {filterName}
             <button
               type="button"
-              onClick={() => handleSupergroupFilterChange('')}
+              onClick={() => handleFilterChange('')}
               aria-label="Show all groups"
               className="flex items-center cursor-pointer rounded-full hover:text-brand"
             >
@@ -458,8 +471,8 @@ const ARContent = ({
             emptyMessage={
               supergroupsView
                 ? 'No supergroups found'
-                : supergroupFilter
-                  ? `No groups found for ${supergroupFilter}`
+                : filterName
+                  ? `No groups found for ${filterName}`
                   : 'No groups found'
             }
             nameTooltip={
