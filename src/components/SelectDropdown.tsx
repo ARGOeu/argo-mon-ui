@@ -27,6 +27,34 @@ interface SelectDropdownProps {
   disabled?: boolean
   searchable?: boolean
   className?: string
+  listClassName?: string
+}
+
+const isSectionTitle = (option: SelectOption): boolean => !!option.disabled
+
+const labelContains = (option: SelectOption, query: string): boolean =>
+  option.label.toLowerCase().includes(query.toLowerCase())
+
+const filterOptions = (
+  options: SelectOption[],
+  query: string,
+): SelectOption[] => {
+  const result: SelectOption[] = []
+  let pendingTitle: SelectOption | null = null
+
+  for (const option of options) {
+    if (isSectionTitle(option)) {
+      pendingTitle = option
+    } else if (labelContains(option, query)) {
+      if (pendingTitle) {
+        result.push(pendingTitle)
+        pendingTitle = null
+      }
+      result.push(option)
+    }
+  }
+
+  return result
 }
 
 const SelectDropdown = ({
@@ -37,6 +65,7 @@ const SelectDropdown = ({
   disabled = false,
   searchable = false,
   className,
+  listClassName = 'max-h-60',
 }: SelectDropdownProps) => {
   const [isOpen, setIsOpen] = useState(false)
   const [activeIndex, setActiveIndex] = useState(-1)
@@ -53,11 +82,7 @@ const SelectDropdown = ({
   const listboxId = useId()
 
   const filteredOptions =
-    searchable && searchQuery
-      ? options.filter((option) =>
-          option.label.toLowerCase().includes(searchQuery.toLowerCase()),
-        )
-      : options
+    searchable && searchQuery ? filterOptions(options, searchQuery) : options
 
   const activeIndexRef = useRef(activeIndex)
   activeIndexRef.current = activeIndex
@@ -135,6 +160,11 @@ const SelectDropdown = ({
     if (!containerRef.current) return
     setActiveIndex(filteredOptions.findIndex((o) => o.value === value))
     setIsOpen(true)
+  }
+
+  const handleSearchChange = (query: string) => {
+    setSearchQuery(query)
+    setActiveIndex(-1)
   }
 
   const handleSelect = (option: SelectOption) => {
@@ -248,7 +278,7 @@ const SelectDropdown = ({
                   ref={searchInputRef}
                   type="text"
                   value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onChange={(e) => handleSearchChange(e.target.value)}
                   onKeyDown={handleKeyDown}
                   placeholder="Search..."
                   className="flex-1 text-sm border-0 outline-none ring-0 focus:ring-0 bg-transparent p-0 placeholder:text-subtle"
@@ -257,7 +287,7 @@ const SelectDropdown = ({
             )}
             <ul
               id={listboxId}
-              className="max-h-60 overflow-y-auto"
+              className={`${listClassName} overflow-y-auto`}
               role="listbox"
             >
               {filteredOptions.length === 0 ? (
