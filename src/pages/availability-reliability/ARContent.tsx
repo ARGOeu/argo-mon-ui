@@ -4,6 +4,7 @@ import {
   ArrowDownTrayIcon,
   TableCellsIcon,
   XMarkIcon,
+  DocumentTextIcon,
 } from '@heroicons/react/16/solid'
 import PageHeader from '@/components/PageHeader'
 import SearchInput from '@/components/SearchInput'
@@ -289,6 +290,30 @@ const ARContent = ({
     )
   }
 
+  const handleExportPdf = async () => {
+    const entity = supergroupsView ? 'Supergroup' : 'Group'
+    const reportName = decodeURIComponent(selectedReportName)
+    const filterNote =
+      [
+        supergroupFilter ? `Groups of ${supergroupFilter}` : '',
+        search ? `Search: "${search}"` : '',
+      ]
+        .filter(Boolean)
+        .join(' · ') || undefined
+
+    const { exportGroupArPdf } = await import('./utils/exportGroupArPDf')
+    await exportGroupArPdf({
+      rows: sortedRows,
+      months: months.slice(-3),
+      entity,
+      tenantName,
+      reportName,
+      filterNote,
+      logoUrl: '/ARGO_LOGO_COLOR_ENG_TITLE.png',
+      filename: `${sanitizeFilename(tenantName)}-${sanitizeFilename(reportName)}-AR-${entity}s-Monthly.pdf`,
+    })
+  }
+
   return (
     <div className="page-container mb-8">
       <PageHeader
@@ -373,6 +398,11 @@ const ARContent = ({
             disabled={!filteredRows.length}
             items={[
               { label: 'CSV', icon: TableCellsIcon, onClick: handleExport },
+              {
+                label: 'PDF',
+                icon: DocumentTextIcon,
+                onClick: handleExportPdf,
+              },
             ]}
             menuClassName="w-32"
           />
