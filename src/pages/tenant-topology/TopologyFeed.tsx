@@ -1,14 +1,15 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useId } from 'react'
 import {
   useGetTopologyFeedQuery,
   useUpdateTopologyFeedMutation,
 } from '@/hooks/useTenants'
 import type { TopologyFeed as TopologyFeedPayload } from '@/types/tenants'
 import { toast } from 'sonner'
-import SelectDropdown from '@/components/SelectDropdown'
-import Button from '@/components/Button'
 import LoadingSpinner from '@/components/LoadingSpinner'
-import { TOPOLOGY_FEED_TYPE_OPTIONS } from '@/utils/topologyFeedTypes'
+import { TOPOLOGY_FEED_TYPE_LABELS } from '@/utils/topologyFeedTypes'
+import TopologyFeedSavePanel from './TopologyFeedSavePanel'
+import TopologyFeedTypeCard from './TopologyFeedTypeCard'
+import { TOPOLOGY_FEED_TYPE_INFO } from './topologyFeedTypeInfo'
 
 type TopologyFeedFormState = {
   type: string
@@ -17,8 +18,6 @@ type TopologyFeedFormState = {
   feed_service_endpoints: string
   feed_service_endpoints_extensions: string
 }
-
-const NONE_OPTION = { value: '', label: 'None' }
 
 const emptyForm: TopologyFeedFormState = {
   type: '',
@@ -52,11 +51,72 @@ const buildFeedPayload = (feed: TopologyFeedFormState): TopologyFeedPayload => {
   return { type: feed.type }
 }
 
+type TopologyFeedField = keyof Omit<TopologyFeedFormState, 'type'>
+
+const requiredFields: Record<string, TopologyFeedField[]> = {
+  CSV: ['feed_url'],
+  'desy-marketplace': ['feed_url'],
+  'eosc-service-catalog': [
+    'feed_service_groups',
+    'feed_service_endpoints',
+    'feed_service_endpoints_extensions',
+  ],
+}
+
+const urlRegex = /^https?:\/\/\S+$/
+const urlErrorMessage =
+  'Please enter a valid URL (must start with http:// or https://)'
+
+const isFeedValid = (feed: TopologyFeedFormState): boolean =>
+  (requiredFields[feed.type] ?? []).every((field) => urlRegex.test(feed[field]))
+
 const sectionClass =
-  'grid grid-cols-1 lg:grid-cols-[360px_1fr] gap-2 lg:gap-8 mb-6 animate-fade-in'
+  'grid grid-cols-1 gap-3 xl:grid-cols-[minmax(0,1fr)_300px] 2xl:grid-cols-[minmax(0,1fr)_360px] xl:gap-8 mb-4 animate-fade-in'
 const sectionContentClass =
-  'bg-surface-muted border border-line rounded-lg px-5 py-3 flex flex-col gap-2'
-const labelClass = 'text-sm font-medium text-body mb-1'
+  'bg-surface-muted border border-line rounded-lg px-3 py-2.5 flex flex-col gap-2 mb-8'
+const labelClass = 'text-sm font-medium text-body mb-0.5'
+const invalidInputClass =
+  'border-red-500 focus:!border-red-500 focus:!ring-red-500/10'
+
+interface FeedUrlFieldProps {
+  label: string
+  placeholder: string
+  value: string
+  onChange: (value: string) => void
+}
+
+const FeedUrlField = ({
+  label,
+  placeholder,
+  value,
+  onChange,
+}: FeedUrlFieldProps) => {
+  const id = useId()
+  const hasError = value !== '' && !urlRegex.test(value)
+
+  return (
+    <div className="flex flex-col">
+      <label htmlFor={id} className={labelClass}>
+        {label}{' '}
+        <span className="required" aria-hidden="true">
+          *
+        </span>
+      </label>
+      <input
+        id={id}
+        type="url"
+        required
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+        className={hasError ? invalidInputClass : ''}
+      />
+      {hasError && (
+        <span className="text-red-400 text-sm mt-1">{urlErrorMessage}</span>
+      )}
+    </div>
+  )
+}
 
 interface TopologyFeedProps {
   tenantId: string
@@ -72,6 +132,8 @@ const TopologyFeed = ({ tenantId }: TopologyFeedProps) => {
     !!tenantId,
   )
   const updateMutation = useUpdateTopologyFeedMutation()
+  const typeLabelId = useId()
+  const typeDescriptionId = useId()
 
   useEffect(() => {
     const loaded: TopologyFeedFormState = feedData
@@ -100,11 +162,54 @@ const TopologyFeed = ({ tenantId }: TopologyFeedProps) => {
     })
   }
 
-  const handleFieldChange = (
-    field: keyof Omit<TopologyFeedFormState, 'type'>,
-    value: string,
-  ) => {
+  const handleFieldChange = (field: TopologyFeedField, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const renderTypeFields = (type: string) => {
+    if (type === 'CSV' || type === 'desy-marketplace') {
+      return (
+        <FeedUrlField
+          label="URL"
+          placeholder="Enter feed URL"
+          value={form.feed_url}
+          onChange={(value) => handleFieldChange('feed_url', value)}
+        />
+      )
+    }
+
+    if (type === 'eosc-service-catalog') {
+      return (
+        <div className="flex flex-col gap-2">
+          <FeedUrlField
+            label="Service Groups URL"
+            placeholder="Enter service groups URL"
+            value={form.feed_service_groups}
+            onChange={(value) =>
+              handleFieldChange('feed_service_groups', value)
+            }
+          />
+          <FeedUrlField
+            label="Service Endpoints URL"
+            placeholder="Enter service endpoints URL"
+            value={form.feed_service_endpoints}
+            onChange={(value) =>
+              handleFieldChange('feed_service_endpoints', value)
+            }
+          />
+          <FeedUrlField
+            label="Service Endpoint Extensions URL"
+            placeholder="Enter service endpoint extensions URL"
+            value={form.feed_service_endpoints_extensions}
+            onChange={(value) =>
+              handleFieldChange('feed_service_endpoints_extensions', value)
+            }
+          />
+        </div>
+      )
+    }
+
+    return null
   }
 
   const handleSubmit = () => {
@@ -125,115 +230,60 @@ const TopologyFeed = ({ tenantId }: TopologyFeedProps) => {
 
   return (
     <div>
-      <div className="flex justify-end mb-3">
-        <Button
-          variant="primary"
-          size="md"
-          onClick={handleSubmit}
-          disabled={
-            updateMutation.isPending || isLoading || !form.type || !isDirty
-          }
-        >
-          {updateMutation.isPending ? (
-            <>
-              <LoadingSpinner size="xs" />
-              Saving...
-            </>
-          ) : (
-            'Save'
-          )}
-        </Button>
-      </div>
-
       {isLoading ? (
         <div className="loading-container">
           <LoadingSpinner size="md" />
         </div>
       ) : (
         <div className={sectionClass}>
-          <div>
-            <p className="section-title">Topology Feed</p>
-            <p className="section-description">
-              Feed configuration for topology data
-            </p>
-          </div>
           <div className={sectionContentClass}>
-            <div className="flex flex-col">
-              <label className={labelClass}>
-                Type <span className="required">*</span>
-              </label>
-              <SelectDropdown
-                value={form.type}
-                onChange={handleTypeChange}
-                options={
-                  originalForm.type
-                    ? TOPOLOGY_FEED_TYPE_OPTIONS
-                    : [NONE_OPTION, ...TOPOLOGY_FEED_TYPE_OPTIONS]
-                }
-                placeholder="Select feed type"
-              />
+            <div>
+              <p
+                id={typeLabelId}
+                className="text-base font-medium text-body mb-1"
+              >
+                Select topology feed type
+              </p>
+              <p id={typeDescriptionId} className="text-sm text-muted mb-1">
+                Choose the data source that the monitoring service uses for your
+                topology
+              </p>
             </div>
-
-            {(form.type === 'CSV' || form.type === 'desy-marketplace') && (
-              <div className="flex flex-col">
-                <label className={labelClass}>URL</label>
-                <input
-                  type="url"
-                  value={form.feed_url}
-                  onChange={(e) =>
-                    handleFieldChange('feed_url', e.target.value)
-                  }
-                  placeholder="Enter feed URL"
-                />
-              </div>
-            )}
-
-            {form.type === 'eosc-service-catalog' && (
-              <>
-                <div className="flex flex-col">
-                  <label className={labelClass}>Service Groups URL</label>
-                  <input
-                    type="url"
-                    value={form.feed_service_groups}
-                    onChange={(e) =>
-                      handleFieldChange('feed_service_groups', e.target.value)
-                    }
-                    placeholder="Enter service groups feed URL"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className={labelClass}>Service Endpoints URL</label>
-                  <input
-                    type="url"
-                    value={form.feed_service_endpoints}
-                    onChange={(e) =>
-                      handleFieldChange(
-                        'feed_service_endpoints',
-                        e.target.value,
-                      )
-                    }
-                    placeholder="Enter service endpoints feed URL"
-                  />
-                </div>
-                <div className="flex flex-col">
-                  <label className={labelClass}>
-                    Service Endpoint Extensions URL
-                  </label>
-                  <input
-                    type="url"
-                    value={form.feed_service_endpoints_extensions}
-                    onChange={(e) =>
-                      handleFieldChange(
-                        'feed_service_endpoints_extensions',
-                        e.target.value,
-                      )
-                    }
-                    placeholder="Enter service endpoint extensions feed URL"
-                  />
-                </div>
-              </>
-            )}
+            <div
+              role="radiogroup"
+              aria-labelledby={typeLabelId}
+              aria-describedby={typeDescriptionId}
+              className="flex flex-col gap-3"
+            >
+              {Object.entries(TOPOLOGY_FEED_TYPE_INFO).map(([type, info]) => (
+                <TopologyFeedTypeCard
+                  key={type}
+                  name={typeLabelId}
+                  value={type}
+                  title={TOPOLOGY_FEED_TYPE_LABELS[type] ?? type}
+                  info={info}
+                  isSelected={form.type === type}
+                  onSelect={handleTypeChange}
+                >
+                  {renderTypeFields(type)}
+                </TopologyFeedTypeCard>
+              ))}
+            </div>
           </div>
+
+          <TopologyFeedSavePanel
+            savedType={originalForm.type}
+            selectedType={form.type}
+            isDirty={isDirty}
+            isSaving={updateMutation.isPending}
+            isSaveDisabled={
+              updateMutation.isPending ||
+              !form.type ||
+              !isDirty ||
+              !isFeedValid(form)
+            }
+            onSave={handleSubmit}
+          />
         </div>
       )}
     </div>
