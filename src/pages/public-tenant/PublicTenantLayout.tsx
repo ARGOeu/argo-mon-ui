@@ -11,6 +11,7 @@ import {
   ShieldCheckIcon,
   ChartBarIcon,
   TableCellsIcon,
+  SignalIcon,
 } from '@heroicons/react/16/solid'
 import MobileMenuToggle from '@/components/sidebar/MobileMenuToggle'
 import SidebarHeader from '@/components/sidebar/SidebarHeader'
@@ -76,6 +77,10 @@ const PublicTenantLayout = () => {
     ? `/public/tenants/${tenantName}/status${dashboardReportQuery}`
     : `/status${dashboardReportQuery}`
 
+  const metricsPath = isPlatformDomain()
+    ? `/public/tenants/${tenantName}/metrics${dashboardReportQuery}`
+    : `/metrics${dashboardReportQuery}`
+
   const capabilityPath = isPlatformDomain()
     ? `/public/tenants/${tenantName}/capability`
     : '/capability'
@@ -134,6 +139,13 @@ const PublicTenantLayout = () => {
           >
             <Bars3Icon className="size-4" aria-hidden />
             Status
+          </SidebarNavItem>
+          <SidebarNavItem
+            to={metricsPath}
+            onClick={() => setIsMobileMenuOpen(false)}
+          >
+            <SignalIcon className="size-4" aria-hidden />
+            Metrics
           </SidebarNavItem>
           <SidebarNavItem
             to={capabilityPath}

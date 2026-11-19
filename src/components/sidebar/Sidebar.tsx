@@ -18,6 +18,7 @@ import {
   WrenchScrewdriverIcon,
   ExclamationTriangleIcon,
   DocumentTextIcon,
+  SignalIcon,
 } from '@heroicons/react/16/solid'
 import { ChartNetwork, Medal } from 'lucide-react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -80,6 +81,11 @@ const tenantNavItems: TenantNavItem[] = [
     path: 'status',
     label: 'Status',
     icon: Bars3Icon,
+  },
+  {
+    path: 'metrics',
+    label: 'Metrics',
+    icon: SignalIcon,
   },
   {
     path: 'topology',

@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
 import { ArrowRightIcon } from '@heroicons/react/16/solid'
-import { Check, Copy } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
 import Badge from '@/components/Badge'
+import CopyButton from '@/components/CopyButton'
 import type { EndpointWithGroups } from '@/types/topology'
 
 const reservedTagKeys = new Set([
@@ -27,17 +26,6 @@ const ViewTopologyEndpoint = ({
   endpoint,
   onClose,
 }: ViewTopologyEndpointProps) => {
-  const [copiedField, setCopiedField] = useState<string | null>(null)
-  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (copyTimerRef.current) {
-        clearTimeout(copyTimerRef.current)
-      }
-    }
-  }, [])
-
   const infoUrl = endpoint.tags?.info_URL
   const hostname = endpoint.tags?.hostname
   const url = infoUrl ?? hostname ?? endpoint.hostname
@@ -89,18 +77,6 @@ const ViewTopologyEndpoint = ({
   const notificationsEnabled =
     !!endpoint.notifications?.enabled && contacts.length > 0
 
-  const handleCopy = (field: string, value: string) => {
-    if (!value) {
-      return
-    }
-    void navigator.clipboard?.writeText(value)
-    setCopiedField(field)
-    if (copyTimerRef.current) {
-      clearTimeout(copyTimerRef.current)
-    }
-    copyTimerRef.current = setTimeout(() => setCopiedField(null), 1500)
-  }
-
   return (
     <div className="page-container">
       <PageHeader
@@ -121,23 +97,7 @@ const ViewTopologyEndpoint = ({
                 <h2 className="font-mono text-base font-medium text-foreground break-all">
                   {url}
                 </h2>
-                <button
-                  type="button"
-                  onClick={() => handleCopy('url', url)}
-                  className={`flex-shrink-0 rounded p-1 transition-colors ${
-                    copiedField === 'url'
-                      ? 'bg-emerald-100 text-emerald-700'
-                      : 'text-subtle hover:bg-surface-strong hover:text-body'
-                  }`}
-                  aria-label={copiedField === 'url' ? 'Copied' : 'Copy URL'}
-                  title={copiedField === 'url' ? 'Copied!' : 'Copy URL'}
-                >
-                  {copiedField === 'url' ? (
-                    <Check className="h-4 w-4" strokeWidth={2.5} />
-                  ) : (
-                    <Copy className="h-4 w-4" strokeWidth={2} />
-                  )}
-                </button>
+                <CopyButton value={url} label="Copy URL" size="md" />
               </div>
             )}
             <Badge
@@ -180,31 +140,11 @@ const ViewTopologyEndpoint = ({
                     </span>
                   </span>
                   {item.copyable && (
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(item.label, item.value)}
-                      className={`flex-shrink-0 rounded p-0.5 transition-colors ${
-                        copiedField === item.label
-                          ? 'bg-emerald-100 text-emerald-700'
-                          : 'text-subtle hover:bg-surface-strong hover:text-body'
-                      }`}
-                      aria-label={
-                        copiedField === item.label
-                          ? 'Copied'
-                          : `Copy ${item.label}`
-                      }
-                      title={
-                        copiedField === item.label
-                          ? 'Copied!'
-                          : `Copy ${item.label}`
-                      }
-                    >
-                      {copiedField === item.label ? (
-                        <Check className="h-3 w-3" strokeWidth={2.5} />
-                      ) : (
-                        <Copy className="h-3 w-3" strokeWidth={2} />
-                      )}
-                    </button>
+                    <CopyButton
+                      value={item.value}
+                      label={`Copy ${item.label}`}
+                      size="xs"
+                    />
                   )}
                 </span>
               ))}

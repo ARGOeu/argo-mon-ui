@@ -1,11 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
-import {
-  Check,
-  CopyIcon,
-  Lock,
-  Play,
-  SquareArrowOutUpRight,
-} from 'lucide-react'
+import { useState } from 'react'
+import { Lock, Play, SquareArrowOutUpRight } from 'lucide-react'
+import CopyButton from '@/components/CopyButton'
 
 interface CapabilityEndpointProps {
   label: string
@@ -23,24 +18,6 @@ const CapabilityEndpoint = ({
   apiAccess = '',
 }: CapabilityEndpointProps) => {
   const [copied, setCopied] = useState(false)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    }
-  }, [])
-
-  const copyToClipboard = async (): Promise<void> => {
-    if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    try {
-      await navigator.clipboard.writeText(url)
-      setCopied(true)
-      timeoutRef.current = setTimeout(() => setCopied(false), 300)
-    } catch (err) {
-      console.error('Failed to copy:', err)
-    }
-  }
 
   return (
     <div className="group relative">
@@ -61,16 +38,13 @@ const CapabilityEndpoint = ({
             {url}
           </code>
           {isApi ? (
-            <button
-              onClick={copyToClipboard}
-              className="ml-2 p-1 text-slate-400 hover:text-blue-500 transition-colors focus:outline-none hover:cursor-pointer"
-            >
-              {copied ? (
-                <Check size={14} className="text-emerald-400" />
-              ) : (
-                <CopyIcon size={14} />
-              )}
-            </button>
+            <CopyButton
+              value={url}
+              label={`Copy ${label}`}
+              dark
+              onCopiedChange={setCopied}
+              className="ml-2"
+            />
           ) : (
             <a
               target="_blank"

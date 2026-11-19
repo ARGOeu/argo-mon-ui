@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { BarChart3, Check, Copy, ExternalLink, ShieldCheck } from 'lucide-react'
+import { BarChart3, ExternalLink, ShieldCheck } from 'lucide-react'
+import CopyButton from '@/components/CopyButton'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import type {
@@ -50,18 +51,11 @@ const CapabilityContent = ({
   endpointPath,
 }: CapabilityContentProps) => {
   const [requestFormat, setRequestFormat] = useState<'url' | 'curl'>('url')
-  const [copied, setCopied] = useState(false)
 
   const queryString = buildQueryString(params)
   const fullUrl = `${BASE_URL}${endpointPath}${queryString}`
   const curlCommand = `curl "${fullUrl}"`
   const requestText = requestFormat === 'url' ? fullUrl : curlCommand
-
-  const handleCopy = () => {
-    navigator.clipboard?.writeText(requestText)
-    setCopied(true)
-    setTimeout(() => setCopied(false), 1500)
-  }
 
   const updateParam = (key: keyof MetricsQueryParams, value: string) => {
     const next: Record<string, string> = { ...params }
@@ -103,7 +97,7 @@ const CapabilityContent = ({
             href={'https://argoeu.github.io/argo-monitoring/docs/monfed/'}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex font-semibold items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-700"
           >
             Guide
             <ExternalLink className="size-3" />
@@ -114,7 +108,7 @@ const CapabilityContent = ({
             }
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex  font-semibold items-center gap-1 text-xs font-medium text-slate-500 hover:text-slate-700"
+            className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-700"
           >
             Specification
             <ExternalLink className="size-3" />
@@ -183,17 +177,13 @@ const CapabilityContent = ({
           <pre className="whitespace-pre-wrap break-all pr-8">
             {requestText}
           </pre>
-          <button
-            onClick={handleCopy}
-            className="absolute right-2 top-2 rounded-md p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
-            aria-label="Copy request"
-          >
-            {copied ? (
-              <Check className="size-4" />
-            ) : (
-              <Copy className="size-4" />
-            )}
-          </button>
+          <CopyButton
+            value={requestText}
+            label="Copy request"
+            dark
+            size="md"
+            className="absolute right-2 top-2"
+          />
         </div>
 
         <p className="mt-1.5 flex items-center gap-1.5 text-xs text-slate-400">

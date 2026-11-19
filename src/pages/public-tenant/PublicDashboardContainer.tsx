@@ -2,7 +2,7 @@ import { useCallback, useMemo } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useGetPublicTenantReports } from '@/hooks/useTenants'
 import {
-  useGetLatestProblems,
+  useGetLatestMetricData,
   useGetResultsGroups,
   useGetStatusGroups,
 } from '@/hooks/useData'
@@ -13,7 +13,10 @@ import { useGetTenantDowntimes } from '@/hooks/useDowntimes'
 import { useGetTenantIncidents } from '@/hooks/useIncidents'
 import { useGetStatusTimelineAllEndpoints } from '@/hooks/useStatusTimeline'
 import type { LatestMetricData } from '@/types/latestProblems'
-import { buildStatusTimelineHref } from '@/utils/latestProblems'
+import {
+  buildStatusTimelineHref,
+  selectLatestProblems,
+} from '@/utils/latestProblems'
 import { useSelectedPublicReport } from './hooks/useSelectedPublicReport'
 
 const toUtcDate = (d: Date) => d.toISOString().split('T')[0]
@@ -84,13 +87,18 @@ const PublicDashboardContainer = () => {
 
   // get latest problem data for public view using tenant name and public report name
   const {
-    data: latestProblemsData,
+    data: latestMetricData,
     isLoading: latestProblemsLoading,
     error: latestProblemsError,
     dataUpdatedAt: latestProblemsUpdatedAt,
-  } = useGetLatestProblems(tenantName ?? '', 'public', selectedReport ?? '', {
+  } = useGetLatestMetricData(tenantName ?? '', 'public', selectedReport ?? '', {
     enabled: !!selectedReport,
   })
+
+  const latestProblemsData = useMemo(
+    () => latestMetricData && selectLatestProblems(latestMetricData),
+    [latestMetricData],
+  )
 
   // create public route
   const getMetricStatusHref = useCallback(

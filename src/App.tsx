@@ -47,9 +47,11 @@ import {
   CreateTopologyGroup,
 } from './pages/tenant-topology'
 import PrivateDashboardContainer from './pages/dashboard'
+import PrivateMetricsContainer from './pages/tenant-metrics'
 import {
   PublicTenantLayout,
   PublicDashboardContainer,
+  PublicMetricsContainer,
   PublicCapabilityContainer,
   PublicPerformanceContainer,
   PublicARContainer,
@@ -110,6 +112,7 @@ function PlatformRoutes() {
           element={<PublicGroupDashboard />}
         />
         <Route path="status" element={<PublicStatusView />} />
+        <Route path="metrics" element={<PublicMetricsContainer />} />
         <Route path="ar-groups" element={<PublicARContainer />} />
         <Route
           path="ar-groups/report/:reportName"
@@ -200,6 +203,14 @@ function PlatformRoutes() {
             element={
               <AuthProtected>
                 <PrivateStatusView />
+              </AuthProtected>
+            }
+          />
+          <Route
+            path="tenants/:id/metrics"
+            element={
+              <AuthProtected>
+                <PrivateMetricsContainer />
               </AuthProtected>
             }
           />
@@ -478,6 +489,7 @@ function CustomDomainRoutes() {
           }
         />
         <Route path="/dashboard" element={<PublicDashboardContainer />} />
+        <Route path="/metrics" element={<PublicMetricsContainer />} />
         <Route path="/ar-groups" element={<PublicARContainer />} />
         <Route
           path="/ar-groups/report/:reportName"

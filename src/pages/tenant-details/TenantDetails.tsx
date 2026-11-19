@@ -1,11 +1,12 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useLocation } from 'react-router-dom'
 import { useAuth } from '@/auth/useAuth'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import Button from '@/components/Button'
-import { ArrowUpRightFromSquare, Check, Copy } from 'lucide-react'
+import CopyButton from '@/components/CopyButton'
+import { ArrowUpRightFromSquare } from 'lucide-react'
 import Tabs from '@/components/Tabs'
 import Badge from '@/components/Badge'
 import TenantInfoTab from './TenantInfoTab'
@@ -27,8 +28,6 @@ const TenantDetails = () => {
   )
   const [logoError, setLogoError] = useState(false)
   const [logoLoaded, setLogoLoaded] = useState(false)
-  const [copied, setCopied] = useState(false)
-  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
     const hash = location?.hash
@@ -56,12 +55,6 @@ const TenantDetails = () => {
     setLogoError(false)
     setLogoLoaded(false)
   }, [tenantData?.info?.image])
-
-  useEffect(() => {
-    return () => {
-      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
-    }
-  }, [])
 
   if (isTenantLoading)
     return (
@@ -122,30 +115,11 @@ const TenantDetails = () => {
             </div>
             <span className="flex items-center gap-1 font-mono text-xs text-subtle mt-1">
               {tenantData.id}
-              <button
-                type="button"
-                onClick={() => {
-                  void navigator.clipboard?.writeText(tenantData.id ?? '')
-                  setCopied(true)
-                  copyTimerRef.current = setTimeout(
-                    () => setCopied(false),
-                    1500,
-                  )
-                }}
-                className={`flex-shrink-0 rounded p-0.5 transition-colors ${
-                  copied
-                    ? 'bg-emerald-100 text-emerald-700'
-                    : 'text-subtle hover:bg-surface-strong hover:text-body'
-                }`}
-                aria-label={copied ? 'Copied' : 'Copy tenant ID'}
-                title={copied ? 'Copied!' : 'Copy tenant ID'}
-              >
-                {copied ? (
-                  <Check className="h-3 w-3" strokeWidth={2.5} />
-                ) : (
-                  <Copy className="h-3 w-3" strokeWidth={2} />
-                )}
-              </button>
+              <CopyButton
+                value={tenantData.id ?? ''}
+                label="Copy tenant ID"
+                size="xs"
+              />
             </span>
           </div>
 

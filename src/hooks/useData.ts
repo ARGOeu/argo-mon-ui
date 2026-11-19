@@ -18,7 +18,6 @@ import type {
   LatestMetricData,
   LatestMetricDataResponse,
 } from '@/types/latestProblems'
-import { selectLatestProblems } from '@/utils/latestProblems'
 import { useQuery } from '@tanstack/react-query'
 
 export const useGetResultsGroups = (
@@ -185,14 +184,18 @@ export const useGetResultsGroupEndpoints = (
   })
 }
 
-interface UseGetLatestProblemsOptions extends LatestMetricDataParams {
+const selectMetricData = (
+  response: LatestMetricDataResponse,
+): LatestMetricData[] => response?.data?.metric_data ?? []
+
+interface UseGetLatestMetricDataOptions extends LatestMetricDataParams {
   enabled?: boolean
   // refetching latest data
   refetchInterval?: number | false
 }
 
-// hook to get the latest problems per report for all groups or per report for specific group
-export const useGetLatestProblems = (
+// hook to get the latest results (all statuses) per report for all groups or per report for specific group
+export const useGetLatestMetricData = (
   tenantIdentifier: string,
   mode: AccessMode,
   report: string,
@@ -203,13 +206,13 @@ export const useGetLatestProblems = (
     group,
     enabled = true,
     refetchInterval = 60_000,
-  }: UseGetLatestProblemsOptions = {},
+  }: UseGetLatestMetricDataOptions = {},
 ) => {
   const { token } = useAuth()
 
   return useQuery<LatestMetricDataResponse, Error, LatestMetricData[]>({
     queryKey: [
-      'latest-problems',
+      'latest-metric-data',
       mode,
       tenantIdentifier,
       report,
@@ -231,7 +234,7 @@ export const useGetLatestProblems = (
         { filter, limit, strict, group },
       )
     },
-    select: selectLatestProblems,
+    select: selectMetricData,
     retry: false,
     refetchOnMount: 'always',
     refetchInterval,

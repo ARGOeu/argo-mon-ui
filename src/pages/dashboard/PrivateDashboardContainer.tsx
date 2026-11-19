@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo } from 'react'
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useGetTenantReports } from '@/hooks/useTenants'
 import {
-  useGetLatestProblems,
+  useGetLatestMetricData,
   useGetResultsGroups,
   useGetStatusGroups,
 } from '@/hooks/useData'
@@ -11,7 +11,10 @@ import { useGetTenantIncidents } from '@/hooks/useIncidents'
 import { useCanManageIncidents } from '@/hooks/useCanManageIncidents'
 import { useSelectedTenant } from '@/contexts/selected-tenant/useSelectedTenant'
 import type { LatestMetricData } from '@/types/latestProblems'
-import { buildStatusTimelineHref } from '@/utils/latestProblems'
+import {
+  buildStatusTimelineHref,
+  selectLatestProblems,
+} from '@/utils/latestProblems'
 import Dashboard from './Dashboard'
 import { useGetResultsEndpoints } from '@/hooks/results'
 import { useGetStatusTimelineAllEndpoints } from '@/hooks/useStatusTimeline'
@@ -114,13 +117,18 @@ const PrivateDashboardContainer = () => {
 
   // get latest problem data for private view using report id and tenant id
   const {
-    data: latestProblemsData,
+    data: latestMetricData,
     isLoading: latestProblemsLoading,
     error: latestProblemsError,
     dataUpdatedAt: latestProblemsUpdatedAt,
-  } = useGetLatestProblems(tenantId ?? '', 'private', selectedReportId, {
+  } = useGetLatestMetricData(tenantId ?? '', 'private', selectedReportId, {
     enabled: reportReady && !!selectedReportId,
   })
+
+  const latestProblemsData = useMemo(
+    () => latestMetricData && selectLatestProblems(latestMetricData),
+    [latestMetricData],
+  )
 
   // Deep link to the status timeline for a single metric (uses report NAME)
   const getMetricStatusHref = useCallback(

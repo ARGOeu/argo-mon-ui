@@ -15,40 +15,11 @@ import { stripIdSuffix } from '@/utils/cleanup'
 import { formatDateTime } from '@/utils/formatDateTime'
 import {
   PROBLEM_SEVERITIES,
+  SEVERITY_STYLES,
   formatRelativeTime,
   getProblemSeverity,
   type ProblemSeverity,
 } from '@/utils/latestProblems'
-
-const SEVERITY_STYLES: Record<
-  ProblemSeverity,
-  { label: string; pill: string; dot: string; accent: string }
-> = {
-  critical: {
-    label: 'Critical',
-    pill: 'bg-red-50 text-red-700 ring-red-600/20',
-    dot: 'bg-red-500',
-    accent: 'border-l-red-500',
-  },
-  warning: {
-    label: 'Warning',
-    pill: 'bg-amber-50 text-amber-800 ring-amber-600/20',
-    dot: 'bg-amber-500',
-    accent: 'border-l-amber-500',
-  },
-  unknown: {
-    label: 'Unknown',
-    pill: 'bg-neutral-100 text-neutral-600 ring-neutral-500/20',
-    dot: 'bg-neutral-400',
-    accent: 'border-l-neutral-400',
-  },
-  missing: {
-    label: 'Missing',
-    pill: 'bg-gray-50 text-gray-600 ring-gray-500/20',
-    dot: 'bg-gray-400',
-    accent: 'border-l-gray-400',
-  },
-}
 
 type SeverityFilter = ProblemSeverity | 'all'
 

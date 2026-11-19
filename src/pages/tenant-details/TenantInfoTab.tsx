@@ -1,11 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect } from 'react'
 import {
   ArrowUpRightFromSquare,
   Layers,
   ChartNetwork,
-  Check,
   ClipboardList,
-  Copy,
   Globe,
   Mail,
   Mails,
@@ -16,6 +14,7 @@ import {
   useGetTopologyFeedQuery,
 } from '@/hooks/useTenants'
 import { useSelectedTenant } from '@/contexts/selected-tenant'
+import CopyButton from '@/components/CopyButton'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import { TOPOLOGY_FEED_TYPE_LABELS } from '@/utils/topologyFeedTypes'
@@ -55,9 +54,6 @@ interface TenantInfoTabProps {
 }
 
 const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
-  const [copiedEmail, setCopiedEmail] = useState<string | null>(null)
-  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
   const {
     tenant: tenantData,
     isTenantLoading,
@@ -79,19 +75,6 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
       fetchNextProjectsPage()
     }
   }, [projectsData, hasNextProjectsPage, fetchNextProjectsPage])
-
-  useEffect(() => {
-    return () => {
-      if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
-    }
-  }, [])
-
-  const handleCopyEmail = (email: string) => {
-    if (copyTimerRef.current) clearTimeout(copyTimerRef.current)
-    void navigator.clipboard?.writeText(email)
-    setCopiedEmail(email)
-    copyTimerRef.current = setTimeout(() => setCopiedEmail(null), 1500)
-  }
 
   if (isTenantLoading)
     return (
@@ -384,27 +367,11 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
             <p className="text-xs text-muted m-0 flex items-center gap-1.5">
               <Mail className="size-3 flex-shrink-0" />
               <span className="break-all">{tenantData.info.email}</span>
-              <button
-                type="button"
-                onClick={() => handleCopyEmail(tenantData.info.email)}
-                className={`flex-shrink-0 rounded p-0.5 transition-colors ${copiedEmail === tenantData.info.email ? 'bg-emerald-100 text-emerald-700' : 'text-subtle hover:bg-surface-strong hover:text-body'}`}
-                aria-label={
-                  copiedEmail === tenantData.info.email
-                    ? 'Copied'
-                    : 'Copy email'
-                }
-                title={
-                  copiedEmail === tenantData.info.email
-                    ? 'Copied!'
-                    : 'Copy email'
-                }
-              >
-                {copiedEmail === tenantData.info.email ? (
-                  <Check className="size-3" strokeWidth={2.5} />
-                ) : (
-                  <Copy className="size-3" strokeWidth={2} />
-                )}
-              </button>
+              <CopyButton
+                value={tenantData.info.email}
+                label="Copy email"
+                size="xs"
+              />
             </p>
           ) : (
             <p className="text-xs text-subtle italic m-0">Not provided</p>
@@ -432,23 +399,11 @@ const TenantInfoTab = ({ tenantId }: TenantInfoTabProps) => {
                   <p className="text-xs text-muted m-0 flex items-center gap-1.5">
                     <Mail className="size-3 flex-shrink-0" />
                     <span className="break-all">{contact.email}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyEmail(contact.email)}
-                      className={`flex-shrink-0 rounded p-0.5 transition-colors ${copiedEmail === contact.email ? 'bg-emerald-100 text-emerald-700' : 'text-subtle hover:bg-surface-strong hover:text-body'}`}
-                      aria-label={
-                        copiedEmail === contact.email ? 'Copied' : 'Copy email'
-                      }
-                      title={
-                        copiedEmail === contact.email ? 'Copied!' : 'Copy email'
-                      }
-                    >
-                      {copiedEmail === contact.email ? (
-                        <Check className="size-3" strokeWidth={2.5} />
-                      ) : (
-                        <Copy className="size-3" strokeWidth={2} />
-                      )}
-                    </button>
+                    <CopyButton
+                      value={contact.email}
+                      label="Copy email"
+                      size="xs"
+                    />
                   </p>
                 </div>
               ))}
