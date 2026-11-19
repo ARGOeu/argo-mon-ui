@@ -1,24 +1,14 @@
-import {
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-  useEffect,
-  Fragment,
-  type ReactNode,
-} from 'react'
+import { useCallback, useMemo, useState, Fragment, type ReactNode } from 'react'
 import {
   Activity,
   AlertOctagon,
   AlertTriangle,
   ArrowUpRightFromSquare,
-  Check,
   CheckCircle2,
   ChevronDown,
   ChevronRight,
   ChevronsDownUp,
   ChevronsUpDown,
-  Copy,
   HardDriveIcon,
   Info,
   Server,
@@ -26,6 +16,7 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
+import CopyButton from '@/components/CopyButton'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import SearchInput from '@/components/SearchInput'
@@ -554,10 +545,8 @@ const Dashboard = ({
 }: DashboardProps) => {
   const [filter, setFilter] = useState<FilterId>('all')
   const [search, setSearch] = useState('')
-  const [copied, setCopied] = useState(false)
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   const [problemsOpen, setProblemsOpen] = useState(false)
-  const copyTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const openProblems = useCallback(() => setProblemsOpen(true), [])
   const closeProblems = useCallback(() => setProblemsOpen(false), [])
@@ -569,21 +558,6 @@ const Dashboard = ({
     },
     [onEndpointSelect],
   )
-
-  useEffect(() => {
-    return () => {
-      if (copyTimerRef.current) {
-        clearTimeout(copyTimerRef.current)
-      }
-    }
-  }, [])
-
-  const handleCopyTenantId = () => {
-    if (!tenantId) return
-    void navigator.clipboard?.writeText(tenantId)
-    setCopied(true)
-    copyTimerRef.current = setTimeout(() => setCopied(false), 1500)
-  }
 
   const toggleGroup = (name: string) =>
     setCollapsedGroups((prev) => {
@@ -896,23 +870,11 @@ const Dashboard = ({
                   {tenantId && (
                     <span className="inline-flex items-center gap-1 font-mono text-xs text-subtle">
                       <span title={tenantId}>{tenantId}</span>
-                      <button
-                        type="button"
-                        onClick={handleCopyTenantId}
-                        className={`flex-shrink-0 rounded p-0.5 transition-colors ${
-                          copied
-                            ? 'bg-emerald-100 text-emerald-700'
-                            : 'text-subtle hover:bg-surface-strong hover:text-body'
-                        }`}
-                        aria-label={copied ? 'Copied' : 'Copy tenant ID'}
-                        title={copied ? 'Copied!' : 'Copy tenant ID'}
-                      >
-                        {copied ? (
-                          <Check className="h-3 w-3" strokeWidth={2.5} />
-                        ) : (
-                          <Copy className="h-3 w-3" strokeWidth={2} />
-                        )}
-                      </button>
+                      <CopyButton
+                        value={tenantId}
+                        label="Copy tenant ID"
+                        size="xs"
+                      />
                     </span>
                   )}
                 </span>

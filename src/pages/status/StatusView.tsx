@@ -8,15 +8,14 @@ import {
 } from 'react'
 import {
   CalendarDays,
-  Check,
   ChevronLeft,
   ChevronRight,
-  Copy,
   Info,
   Link2,
   X,
 } from 'lucide-react'
 import PageHeader from '@/components/PageHeader'
+import CopyButton from '@/components/CopyButton'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import SearchInput from '@/components/SearchInput'
@@ -243,35 +242,9 @@ const SelectedPointPanel = ({
   const tone = STATUS_STYLES[point.entry.value]
   const pct = point.pct
 
-  const [copied, setCopied] = useState(false)
-  const [linkCopied, setLinkCopied] = useState(false)
-
   const copyText = [details?.summary, details?.message]
     .filter(Boolean)
     .join('\n')
-
-  const handleCopy = async (e: MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation()
-    if (!copyText) return
-    try {
-      await navigator.clipboard.writeText(copyText)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    } catch {
-      console.log('clipboard error during copy')
-    }
-  }
-
-  const handleCopyLink = async (e: MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation()
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-      setLinkCopied(true)
-      setTimeout(() => setLinkCopied(false), 1500)
-    } catch {
-      console.log('clipboard error during link copy')
-    }
-  }
 
   return (
     <div
@@ -334,35 +307,28 @@ const SelectedPointPanel = ({
         )}
 
       <div className="mt-1 flex items-center justify-end gap-1">
-        <button
-          type="button"
-          onClick={handleCopyLink}
-          className="flex cursor-pointer items-center gap-1 rounded-sm px-1 py-0.5 text-white/50 transition-colors hover:bg-white/20 hover:text-white"
-          aria-label={linkCopied ? 'Link copied' : 'Copy link to this event'}
-          title={linkCopied ? 'Link copied' : 'Copy link to this event'}
+        <CopyButton
+          value={() => window.location.href}
+          label="Copy link to this event"
+          copiedLabel="Link copied"
+          overlay
+          size="xs"
+          icon={Link2}
+          stopPropagation
         >
-          {linkCopied ? (
-            <Check className="h-3 w-3" strokeWidth={2.5} />
-          ) : (
-            <Link2 className="h-3 w-3" strokeWidth={2.5} />
-          )}
-          {linkCopied ? 'Copied' : 'Copy link'}
-        </button>
-        {(details?.summary || details?.message) && (
-          <button
-            type="button"
-            onClick={handleCopy}
-            className="flex cursor-pointer items-center gap-1 rounded-sm px-1 py-0.5 text-white/50 transition-colors hover:bg-white/20 hover:text-white"
-            aria-label={copied ? 'Copied' : 'Copy details'}
-            title={copied ? 'Copied' : 'Copy details'}
+          Copy link
+        </CopyButton>
+        {copyText && (
+          <CopyButton
+            value={copyText}
+            label="Copy details"
+            copiedLabel="Copied"
+            overlay
+            size="xs"
+            stopPropagation
           >
-            {copied ? (
-              <Check className="h-3 w-3" strokeWidth={2.5} />
-            ) : (
-              <Copy className="h-3 w-3" strokeWidth={2.5} />
-            )}
-            {copied ? 'Copied' : 'Copy'}
-          </button>
+            Copy
+          </CopyButton>
         )}
       </div>
     </div>

@@ -3,7 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import { useGetTenantReports } from '@/hooks/useTenants'
 import {
-  useGetLatestProblems,
+  useGetLatestMetricData,
   useGetResultsGroupDetails,
   useGetResultsGroupEndpoints,
 } from '@/hooks/useData'
@@ -16,7 +16,10 @@ import { useGetTenantIncidents } from '@/hooks/useIncidents'
 import { useCanManageIncidents } from '@/hooks/useCanManageIncidents'
 import { useSelectedTenant } from '@/contexts/selected-tenant/useSelectedTenant'
 import type { LatestMetricData } from '@/types/latestProblems'
-import { buildStatusTimelineHref } from '@/utils/latestProblems'
+import {
+  buildStatusTimelineHref,
+  selectLatestProblems,
+} from '@/utils/latestProblems'
 
 import GroupDashboard from './GroupDashboard'
 
@@ -137,14 +140,19 @@ const PrivateGroupDashboard = () => {
 
   // get latest problem data per group for private view using report id and group name
   const {
-    data: latestProblemsData,
+    data: latestMetricData,
     isLoading: latestProblemsLoading,
     error: latestProblemsError,
     dataUpdatedAt: latestProblemsUpdatedAt,
-  } = useGetLatestProblems(tenantId ?? '', 'private', selectedReportId, {
+  } = useGetLatestMetricData(tenantId ?? '', 'private', selectedReportId, {
     group: groupName,
     enabled: enabled && !!selectedReportId,
   })
+
+  const latestProblemsData = useMemo(
+    () => latestMetricData && selectLatestProblems(latestMetricData),
+    [latestMetricData],
+  )
 
   const getMetricStatusHref = useCallback(
     (check: LatestMetricData) =>
