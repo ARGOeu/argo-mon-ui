@@ -13,6 +13,7 @@ import Button from '@/components/Button'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import SelectDropdown from '@/components/SelectDropdown'
+import { isNotFoundError } from '@/utils/isNotFoundError'
 import {
   getContactValidationErrors,
   getValidContactEmails,
@@ -81,8 +82,12 @@ const CreateTopologyEndpoint = ({
   const { tenant: tenantData } = useSelectedTenant()
   const { profile } = useAuth()
 
-  const { data: latestEndpoints, isLoading: isLoadingLatest } =
+  const { data: latestEndpoints, error: latestEndpointsError } =
     useGetTopologyEndpoints(tenantId, '')
+
+  const hasNoExistingEndpoints = isNotFoundError(latestEndpointsError)
+  const canSaveEndpoint =
+    latestEndpoints !== undefined || hasNoExistingEndpoints
 
   const {
     data: serviceTypes,
@@ -398,13 +403,22 @@ const CreateTopologyEndpoint = ({
         }}
       />
 
+      {latestEndpointsError && !canSaveEndpoint && (
+        <div className="mb-3">
+          <ErrorDisplay
+            error={`The endpoint cannot be saved at the moment. ${latestEndpointsError.message}`}
+            context="existing endpoints"
+          />
+        </div>
+      )}
+
       <div className="flex justify-end items-center mb-4">
         <Button
           variant="primary"
           size="md"
           onClick={handleSubmit}
           disabled={
-            createMutation.isPending || isLoadingLatest || isGroupSaving
+            createMutation.isPending || !canSaveEndpoint || isGroupSaving
           }
         >
           {createMutation.isPending ? (
