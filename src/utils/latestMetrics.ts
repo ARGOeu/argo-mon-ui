@@ -33,6 +33,11 @@ export const getMetricStatus = (status: string): MetricStatus =>
 export const isProblemStatus = (status: MetricStatus): boolean =>
   status === 'critical' || status === 'warning'
 
+export const getMetricNames = (metrics: LatestMetricData[]): string[] =>
+  [...new Set(metrics.map((metric) => metric.metric))].sort((a, b) =>
+    a.localeCompare(b),
+  )
+
 // Turns the probe output into readable text:
 // removes the wrapping quotes, replaces "\n" with line break
 // and turns an empty output ('') into an empty string.
