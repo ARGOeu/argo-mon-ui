@@ -2,7 +2,6 @@ import { useId, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { ArrowUpRight, ChevronDown, ChevronRight, Clock } from 'lucide-react'
 import Badge from '@/components/Badge'
-import CopyButton from '@/components/CopyButton'
 import { stripIdSuffix } from '@/utils/cleanup'
 import { formatDateTime } from '@/utils/formatDateTime'
 import {
@@ -14,7 +13,7 @@ import {
 import { formatRelativeTime } from '@/utils/latestProblems'
 import type { LatestMetricData } from '@/types/latestProblems'
 
-const MESSAGE_TEXT_CLASSES: Record<MetricStatus, string> = {
+const SUMMARY_TEXT_CLASSES: Record<MetricStatus, string> = {
   critical: 'text-red-700',
   warning: 'text-amber-700',
   unknown: 'text-body',
@@ -39,7 +38,9 @@ const MetricResultCard = ({
   const status = getMetricStatus(metric.status)
   const style = METRIC_STATUS_STYLES[status]
   const output = cleanMetricOutput(metric.message)
-  const hasOutput = output !== '' && output !== metric.summary
+  // The summary is the first line of the output, the message follows it
+  const hasMessage = output !== '' && output !== metric.summary
+  const hasOutput = !!metric.summary || hasMessage
 
   return (
     <li
@@ -89,17 +90,6 @@ const MetricResultCard = ({
         </Link>
       </p>
 
-      {metric.summary && (
-        <div className="mt-2 flex items-start gap-2 rounded-md border border-line bg-surface-muted py-1.5 pl-3 pr-1.5">
-          <p
-            className={`min-w-0 flex-1 break-words py-0.5 font-mono text-xs leading-5 ${MESSAGE_TEXT_CLASSES[status]}`}
-          >
-            {metric.summary}
-          </p>
-          <CopyButton value={metric.summary} label="Copy message" />
-        </div>
-      )}
-
       {hasOutput && (
         <>
           <button
@@ -117,12 +107,26 @@ const MetricResultCard = ({
             {showOutput ? 'Hide output' : 'Show output'}
           </button>
           {showOutput && (
-            <pre
+            <div
               id={outputId}
-              className="mt-1 max-h-56 overflow-auto whitespace-pre-wrap break-words rounded-md bg-surface-muted p-2 font-mono text-xs leading-relaxed text-body"
+              className="mt-1 max-h-56 overflow-auto rounded-md bg-surface-muted p-2"
             >
-              {output}
-            </pre>
+              {metric.summary && (
+                <p
+                  className={`break-words font-mono text-xs leading-relaxed ${SUMMARY_TEXT_CLASSES[status]}`}
+                >
+                  {metric.summary}
+                </p>
+              )}
+              {metric.summary && hasMessage && (
+                <hr className="my-2 border-line-strong" />
+              )}
+              {hasMessage && (
+                <pre className="whitespace-pre-wrap break-words font-mono text-xs leading-relaxed text-body">
+                  {output}
+                </pre>
+              )}
+            </div>
           )}
         </>
       )}
