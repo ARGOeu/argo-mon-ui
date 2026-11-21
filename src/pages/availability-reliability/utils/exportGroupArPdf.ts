@@ -7,19 +7,51 @@ import type { GroupAvailabilityReliability } from '@/types/availabilityReliabili
 const brandColor: [number, number, number] = [37, 99, 235]
 const headerHeight = 24
 const maxLogoWidth = 40 // mm
-const maxLogoHeight = 12 // mm
+const maxLogoHeight = 14 // mm
+const logoGap = 6
+const logoCenterY = 14.5
+const logoPixelWidth = 600
 
-const fetchPngDataUrl = async (url: string): Promise<string> => {
-  const response = await fetch(url)
-  if (!response.ok) {
-    throw new Error(`Failed to load logo (${response.status})`)
-  }
-  const bytes = new Uint8Array(await response.arrayBuffer())
-  let binary = ''
-  bytes.forEach((byte) => {
-    binary += String.fromCharCode(byte)
+interface LoadedLogo {
+  dataUrl: string
+  width: number
+  height: number
+}
+
+const loadLogo = (url: string): Promise<LoadedLogo | undefined> =>
+  new Promise((resolve) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous'
+    img.onload = () => {
+      try {
+        const ratio =
+          img.naturalWidth > 0 && img.naturalHeight > 0
+            ? img.naturalHeight / img.naturalWidth
+            : 0.3
+        const width = logoPixelWidth
+        const height = Math.max(1, Math.round(width * ratio))
+        const canvas = document.createElement('canvas')
+        canvas.width = width
+        canvas.height = height
+        const context = canvas.getContext('2d')
+        if (!context) {
+          resolve(undefined)
+          return
+        }
+        context.drawImage(img, 0, 0, width, height)
+        resolve({ dataUrl: canvas.toDataURL('image/png'), width, height })
+      } catch {
+        resolve(undefined)
+      }
+    }
+    img.onerror = () => resolve(undefined)
+    img.src = url
   })
-  return `data:image/png;base64,${btoa(binary)}`
+
+const fitLogo = (logo: LoadedLogo) => {
+  const ratio = logo.height / logo.width
+  const width = Math.min(maxLogoWidth, maxLogoHeight / ratio)
+  return { width, height: width * ratio }
 }
 
 const goodThreshold = 99.9
@@ -49,6 +81,7 @@ export interface ExportGroupArPdfParams {
   filename: string
   filterNote?: string
   logoUrl?: string
+  tenantLogoUrl?: string
 }
 
 export async function exportGroupArPdf({
@@ -61,18 +94,18 @@ export async function exportGroupArPdf({
   filename,
   filterNote,
   logoUrl,
+  tenantLogoUrl,
 }: ExportGroupArPdfParams): Promise<void> {
-  const doc = new jsPDF({ orientation: 'landscape', format: 'a4' })
+  const doc = new jsPDF({
+    orientation: 'landscape',
+    format: 'a4',
+    compress: true,
+  })
 
-  let logoDataUrl: string | undefined
-  if (logoUrl) {
-    try {
-      logoDataUrl = await fetchPngDataUrl(logoUrl)
-    } catch {
-      logoDataUrl = undefined
-    }
-  }
-  const logoSize = logoDataUrl ? doc.getImageProperties(logoDataUrl) : undefined
+  const [productLogo, tenantLogo] = await Promise.all([
+    logoUrl ? loadLogo(logoUrl) : undefined,
+    tenantLogoUrl ? loadLogo(tenantLogoUrl) : undefined,
+  ])
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
   const margin = 10
@@ -126,6 +159,8 @@ export async function exportGroupArPdf({
 
   const totalPages = doc.getNumberOfPages()
   const generated = new Date().toLocaleString()
+  const tenantSize = tenantLogo ? fitLogo(tenantLogo) : undefined
+  const textX = margin + (tenantSize ? tenantSize.width + logoGap : 0)
 
   for (let page = 1; page <= totalPages; page++) {
     doc.setPage(page)
@@ -136,27 +171,35 @@ export async function exportGroupArPdf({
     doc.setTextColor(17, 24, 39)
     doc.setFont('helvetica', 'bold')
     doc.setFontSize(14)
-    doc.text(title, margin, 12)
+    doc.text(title, textX, 12)
 
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(9)
     doc.setTextColor(107, 114, 128)
-    doc.text(`Tenant: ${tenantName}   Report: ${reportName}`, margin, 17.5)
+    doc.text(`Tenant: ${tenantName}   Report: ${reportName}`, textX, 17.5)
     if (filterNote) {
-      doc.text(filterNote, margin, 22)
+      doc.text(filterNote, textX, 22)
     }
 
-    if (logoDataUrl && logoSize) {
-      const ratio = logoSize.height / logoSize.width
-      const drawWidth = Math.min(maxLogoWidth, maxLogoHeight / ratio)
-      const drawHeight = drawWidth * ratio
+    if (tenantLogo && tenantSize) {
       doc.addImage(
-        logoDataUrl,
+        tenantLogo.dataUrl,
         'PNG',
-        pageWidth - margin - drawWidth,
-        6,
-        drawWidth,
-        drawHeight,
+        margin,
+        logoCenterY - tenantSize.height / 2,
+        tenantSize.width,
+        tenantSize.height,
+      )
+    }
+    if (productLogo) {
+      const size = fitLogo(productLogo)
+      doc.addImage(
+        productLogo.dataUrl,
+        'PNG',
+        pageWidth - margin - size.width,
+        logoCenterY - size.height / 2,
+        size.width,
+        size.height,
       )
     }
 
