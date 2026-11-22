@@ -1,5 +1,9 @@
 import { useState, useMemo, useEffect } from 'react'
-import { ArrowDownTrayIcon, TableCellsIcon } from '@heroicons/react/16/solid'
+import {
+  ArrowDownTrayIcon,
+  DocumentTextIcon,
+  TableCellsIcon,
+} from '@heroicons/react/16/solid'
 import PageHeader from '@/components/PageHeader'
 import SearchInput from '@/components/SearchInput'
 import LoadingSpinner from '@/components/LoadingSpinner'
@@ -23,6 +27,7 @@ const noticeTextClass = 'text-sm text-subtle italic py-6 px-12'
 
 export interface AREndpointsContentProps {
   tenantName: string
+  tenantLogoUrl?: string
   groupName: string
   reportName: string
   endpointsData: EndpointsARResponse | undefined
@@ -38,6 +43,7 @@ export interface AREndpointsContentProps {
 
 const AREndpointsContent = ({
   tenantName,
+  tenantLogoUrl,
   groupName,
   reportName,
   endpointsData,
@@ -98,6 +104,8 @@ const AREndpointsContent = ({
     [filteredRows, currentPage],
   )
 
+  const pdfMonthCount = 3
+
   const handleExport = () => {
     type EndpointRow = (typeof filteredRows)[number]
 
@@ -123,6 +131,23 @@ const AREndpointsContent = ({
       `${sanitizeFilename(tenantName)}-${sanitizeFilename(decodeURIComponent(groupName))}-AR-Endpoints-Monthly.csv`,
       buildCSV(filteredRows, fields),
     )
+  }
+
+  const handleExportPdf = async () => {
+    const decodedGroupName = decodeURIComponent(groupName || '')
+    const decodedReportName = decodeURIComponent(reportName || '')
+
+    const { exportEndpointArPdf } = await import('./utils/exportArPdf')
+    await exportEndpointArPdf({
+      rows: filteredRows,
+      months: months.slice(-pdfMonthCount),
+      groupName: decodedGroupName,
+      tenantName,
+      reportName: decodedReportName,
+      filterNote: search ? `Search: "${search}"` : undefined,
+      tenantLogoUrl,
+      filename: `${sanitizeFilename(tenantName)}-${sanitizeFilename(decodedGroupName)}-AR-Endpoints-Monthly.pdf`,
+    })
   }
 
   return (
@@ -165,6 +190,11 @@ const AREndpointsContent = ({
             disabled={!filteredRows.length}
             items={[
               { label: 'CSV', icon: TableCellsIcon, onClick: handleExport },
+              {
+                label: 'PDF',
+                icon: DocumentTextIcon,
+                onClick: handleExportPdf,
+              },
             ]}
             menuClassName="w-32"
           />
