@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 import { Layers, TriangleAlert } from 'lucide-react'
 import ErrorDisplay from '@/components/ErrorDisplay'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import MultiSelectDropdown from '@/components/MultiSelectDropdown'
 import PageHeader from '@/components/PageHeader'
 import SearchInput from '@/components/SearchInput'
 import SelectDropdown from '@/components/SelectDropdown'
@@ -11,6 +12,7 @@ import {
   METRIC_STATUSES,
   METRIC_STATUS_STYLES,
   countMetricsByStatus,
+  getMetricNames,
   getMetricStatus,
   isProblemStatus,
   sortLatestMetrics,
@@ -94,6 +96,8 @@ interface TenantMetricsProps {
   reportsError: Error | null
   selectedReport: string
   onReportChange: (name: string) => void
+  selectedMetrics: string[]
+  onMetricsChange: (metrics: string[]) => void
   getStatusHref: (metric: LatestMetricData) => string
   metrics: LatestMetricData[] | undefined
   metricsLoading: boolean
@@ -107,6 +111,8 @@ const TenantMetrics = ({
   reportsError,
   selectedReport,
   onReportChange,
+  selectedMetrics,
+  onMetricsChange,
   getStatusHref,
   metrics,
   metricsLoading,
@@ -122,13 +128,29 @@ const TenantMetrics = ({
     return () => clearInterval(id)
   }, [])
 
-  const allMetrics = useMemo(() => sortLatestMetrics(metrics ?? []), [metrics])
-  const total = allMetrics.length
-  const counts = countMetricsByStatus(allMetrics)
+  const loadedMetrics = useMemo(
+    () => sortLatestMetrics(metrics ?? []),
+    [metrics],
+  )
+  const metricNames = useMemo(
+    () => getMetricNames(loadedMetrics),
+    [loadedMetrics],
+  )
+
+  const activeMetrics = selectedMetrics.filter((name) =>
+    metricNames.includes(name),
+  )
+
+  const scopedMetrics = activeMetrics.length
+    ? loadedMetrics.filter((metric) => activeMetrics.includes(metric.metric))
+    : loadedMetrics
+
+  const total = scopedMetrics.length
+  const counts = countMetricsByStatus(scopedMetrics)
   const problemCount = counts.critical + counts.warning
 
   const query = search.trim().toLowerCase()
-  const filtered = allMetrics.filter(
+  const filtered = scopedMetrics.filter(
     (metric) =>
       matchesFilter(metric, filter) && (!query || matchesSearch(metric, query)),
   )
@@ -160,7 +182,7 @@ const TenantMetrics = ({
   const renderEmptyState = () => {
     if (total === 0) {
       return (
-        <p className="py-10 text-center text-sm text-muted">
+        <p className="py-8 text-center text-sm text-muted">
           No metric results for this report yet
         </p>
       )
@@ -171,7 +193,9 @@ const TenantMetrics = ({
         <div className="flex flex-col items-center gap-1 py-8 text-center">
           <p className="text-sm text-foreground">No problems found</p>
           <p className="text-xs text-muted">
-            No metric has a critical or warning result
+            {activeMetrics.length
+              ? 'No selected metric has a critical or warning result'
+              : 'No metric has a critical or warning result'}
           </p>
         </div>
       )
@@ -259,45 +283,64 @@ const TenantMetrics = ({
             </SummaryTile>
           </div>
 
-          <div className="mb-1.5 rounded-lg border border-line bg-white p-3">
-            <div className="flex flex-col xl:flex-row xl:items-center xl:gap-8">
-              <SearchInput
-                value={search}
-                onChange={setSearch}
-                onClear={() => setSearch('')}
-                placeholder="Search metric, endpoint or group"
-                maxWidth="max-w-md"
-                className="mb-4 xl:mb-0 xl:w-96 xl:shrink-0"
-              />
-              <div
-                className="flex flex-wrap gap-1.5"
-                role="group"
-                aria-label="Filter by status"
-              >
-                {chips.map((chip) => (
-                  <button
-                    key={chip.id}
-                    type="button"
-                    onClick={() => setFilter(chip.id)}
-                    aria-pressed={filter === chip.id}
-                    className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
-                      filter === chip.id
-                        ? 'border-foreground bg-foreground text-white'
-                        : 'border-line-strong bg-white text-body hover:border-muted'
-                    }`}
-                  >
-                    {chip.label}
-                    <span
-                      className={
-                        filter === chip.id ? 'text-subtle' : 'text-muted'
-                      }
-                    >
-                      {chip.count}
-                    </span>
-                  </button>
-                ))}
+          <div className="mb-1.5 grid items-start gap-y-3 rounded-lg border border-line bg-white p-3 xl:grid-cols-[auto_minmax(0,1fr)] xl:gap-x-8 min-[108rem]:grid-cols-[auto_minmax(0,1fr)_auto]">
+            <div
+              className="flex flex-col gap-1.5 sm:flex-row sm:items-start sm:gap-3"
+              role="group"
+              aria-label="Filter by metric"
+            >
+              <span className="whitespace-nowrap text-sm font-medium text-body sm:py-1.5">
+                Metrics:
+              </span>
+              <div className="w-full sm:w-92">
+                <MultiSelectDropdown
+                  value={activeMetrics}
+                  onChange={onMetricsChange}
+                  options={metricNames.map((name) => ({
+                    value: name,
+                    label: name,
+                  }))}
+                  placeholder="All metrics"
+                  searchable
+                />
               </div>
             </div>
+            <div
+              className="flex flex-wrap gap-1.5 xl:row-span-2 min-[108rem]:row-span-1"
+              role="group"
+              aria-label="Filter by status"
+            >
+              {chips.map((chip) => (
+                <button
+                  key={chip.id}
+                  type="button"
+                  onClick={() => setFilter(chip.id)}
+                  aria-pressed={filter === chip.id}
+                  className={`inline-flex cursor-pointer items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
+                    filter === chip.id
+                      ? 'border-foreground bg-foreground text-white'
+                      : 'border-line-strong bg-white text-body hover:border-muted'
+                  }`}
+                >
+                  {chip.label}
+                  <span
+                    className={
+                      filter === chip.id ? 'text-subtle' : 'text-muted'
+                    }
+                  >
+                    {chip.count}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              onClear={() => setSearch('')}
+              placeholder="Search metric, endpoint or group"
+              maxWidth="max-w-md"
+              className="!mb-0 sm:w-96 min-[108rem]:w-84"
+            />
           </div>
 
           <div className="mb-4 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-sm text-muted">

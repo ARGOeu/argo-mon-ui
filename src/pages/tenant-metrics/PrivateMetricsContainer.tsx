@@ -5,11 +5,13 @@ import { useGetLatestMetricData } from '@/hooks/useData'
 import { useSelectedTenant } from '@/contexts/selected-tenant/useSelectedTenant'
 import { buildStatusTimelineHref } from '@/utils/latestProblems'
 import TenantMetrics from './TenantMetrics'
+import { useMetricParam } from './hooks/useMetricParam'
 
 const PrivateMetricsContainer = () => {
   const { id: tenantId } = useParams<{ id: string }>()
   const { tenant } = useSelectedTenant()
   const [searchParams, setSearchParams] = useSearchParams()
+  const [selectedMetrics, setSelectedMetrics] = useMetricParam()
 
   const {
     data: reports,
@@ -56,6 +58,8 @@ const PrivateMetricsContainer = () => {
       onReportChange={(name) =>
         setSearchParams({ report: name }, { replace: true })
       }
+      selectedMetrics={selectedMetrics}
+      onMetricsChange={setSelectedMetrics}
       getStatusHref={(check) =>
         buildStatusTimelineHref(
           `/tenants/${tenantId}/status`,
