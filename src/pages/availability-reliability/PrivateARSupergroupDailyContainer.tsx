@@ -21,7 +21,8 @@ const PrivateARSupergroupDailyContainer = () => {
     [month],
   )
 
-  const { data: tenantData } = useGetUserTenantById(tenantId)
+  const { data: tenantData, isLoading: isTenantDataLoading } =
+    useGetUserTenantById(tenantId)
 
   const {
     data: rawData,
@@ -49,7 +50,7 @@ const PrivateARSupergroupDailyContainer = () => {
       name={supergroupName || ''}
       month={month || ''}
       rows={rows}
-      isLoading={isLoading}
+      isLoading={isLoading || isTenantDataLoading}
       error={error}
       backTo={`/tenants/${tenantId}/ar-groups/report/${encodeURIComponent(reportName || '')}${supergroupsTabSearch}`}
     />
