@@ -23,6 +23,19 @@ import {
 
 type SeverityFilter = ProblemSeverity | 'all'
 
+// List pre-applied filters here to focus on specific checks
+export interface ProblemsFocus {
+  severity: ProblemSeverity
+  group: string
+  endpoint?: string
+  key: number
+}
+
+interface ProblemsScope {
+  group: string
+  endpoint?: string
+}
+
 const problemKey = (p: LatestMetricData) =>
   `${p.endpoint_group}|${p.service}|${p.endpoint}|${p.metric}|${p.timestamp}`
 
@@ -36,6 +49,8 @@ export interface LatestProblemsDrawerProps {
   isLoading?: boolean
   error?: Error | null
   reportName?: string
+  // focus field holds the preapplied filters. When set the drawer opens with these filters applied
+  focus?: ProblemsFocus
   onEndpointSelect?: (groupName: string, endpointName: string) => void
   getMetricHref?: (check: LatestMetricData) => string
 }
@@ -47,6 +62,7 @@ const LatestProblemsDrawer = ({
   isLoading,
   error,
   reportName,
+  focus,
   onEndpointSelect,
   getMetricHref,
 }: LatestProblemsDrawerProps) => {
@@ -56,6 +72,7 @@ const LatestProblemsDrawer = ({
 
   const [severity, setSeverity] = useState<SeverityFilter>('all')
   const [search, setSearch] = useState('')
+  const [scope, setScope] = useState<ProblemsScope | null>(null)
   const [expanded, setExpanded] = useState<Set<string>>(new Set())
   const [now, setNow] = useState(() => Date.now())
 
@@ -71,6 +88,20 @@ const LatestProblemsDrawer = ({
     }
   }, [open])
 
+  // apply the requested filters if they exist
+  useEffect(() => {
+    if (!open) return
+    setSearch('')
+    if (focus) {
+      setSeverity(focus.severity)
+      setScope({ group: focus.group, endpoint: focus.endpoint })
+    } else {
+      setSeverity('all')
+      setScope(null)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, focus?.key])
+
   // use escape to close the drawer
   useEffect(() => {
     if (!open) return
@@ -85,6 +116,17 @@ const LatestProblemsDrawer = ({
     }
   }, [open, onClose])
 
+  // scope issues by group/endpoint if requested
+  const scoped = useMemo(
+    () =>
+      (problems ?? []).filter((p) => {
+        if (!scope) return true
+        if (p.endpoint_group !== scope.group) return false
+        return !scope.endpoint || stripIdSuffix(p.endpoint) === scope.endpoint
+      }),
+    [problems, scope],
+  )
+
   const counts = useMemo(() => {
     const c: Record<ProblemSeverity, number> = {
       critical: 0,
@@ -92,16 +134,16 @@ const LatestProblemsDrawer = ({
       unknown: 0,
       missing: 0,
     }
-    problems?.forEach((p) => {
+    scoped.forEach((p) => {
       const s = getProblemSeverity(p.status)
       if (s) c[s]++
     })
     return c
-  }, [problems])
+  }, [scoped])
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase()
-    return (problems ?? []).filter((p) => {
+    return scoped.filter((p) => {
       if (severity !== 'all' && getProblemSeverity(p.status) !== severity) {
         return false
       }
@@ -110,7 +152,7 @@ const LatestProblemsDrawer = ({
         .filter(Boolean)
         .some((v) => v.toLowerCase().includes(q))
     })
-  }, [problems, severity, search])
+  }, [scoped, severity, search])
 
   const total = problems?.length ?? 0
 
@@ -128,13 +170,16 @@ const LatestProblemsDrawer = ({
     count: number
     dot?: string
   }[] = [
-    { id: 'all', label: 'All', count: total },
-    ...PROBLEM_SEVERITIES.filter((s) => counts[s] > 0).map((s) => ({
-      id: s,
-      label: SEVERITY_STYLES[s].label,
-      count: counts[s],
-      dot: SEVERITY_STYLES[s].dot,
-    })),
+    { id: 'all', label: 'All', count: scoped.length },
+    // Keep the selected severity's chip visible even when its count is 0
+    ...PROBLEM_SEVERITIES.filter((s) => counts[s] > 0 || s === severity).map(
+      (s) => ({
+        id: s,
+        label: SEVERITY_STYLES[s].label,
+        count: counts[s],
+        dot: SEVERITY_STYLES[s].dot,
+      }),
+    ),
   ]
 
   const renderBody = () => {
@@ -387,6 +432,24 @@ const LatestProblemsDrawer = ({
                 maxWidth="max-w-full"
                 className="mb-0"
               />
+              {scope && (
+                <div className="flex items-center gap-1.5 text-[12px] text-neutral-600">
+                  <span>Showing checks for</span>
+                  <button
+                    type="button"
+                    onClick={() => setScope(null)}
+                    title="Clear this filter"
+                    className="inline-flex max-w-full cursor-pointer items-center gap-1 rounded-full bg-neutral-100 px-2 py-0.5 font-medium text-neutral-800 transition-colors hover:bg-neutral-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40"
+                  >
+                    <span className="truncate">
+                      {scope.endpoint
+                        ? `${scope.endpoint} · ${scope.group}`
+                        : scope.group}
+                    </span>
+                    <X className="h-3 w-3 flex-shrink-0" strokeWidth={2} />
+                  </button>
+                </div>
+              )}
               <div
                 className="flex flex-wrap gap-1"
                 role="group"
