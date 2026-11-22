@@ -3,6 +3,7 @@ import { useGetEndpointAR } from '@/hooks/useAvailabilityReliability'
 import { useParams } from 'react-router-dom'
 import AREndpointsDailyContent from './AREndpointsDailyContent'
 import { getMonthRange } from './utils/dateRanges'
+import { useGetUserTenantById } from '@/hooks/useTenants'
 
 const PrivateAREndpointsDailyContainer = () => {
   const { id, groupName, reportName, serviceName, endpointName, month } =
@@ -20,6 +21,9 @@ const PrivateAREndpointsDailyContainer = () => {
     () => (month ? getMonthRange(month) : { startTime: '', endTime: '' }),
     [month],
   )
+
+  const { data: tenantData, isLoading: isTenantDataLoading } =
+    useGetUserTenantById(tenantId)
 
   const {
     data: endpointData,
@@ -39,11 +43,14 @@ const PrivateAREndpointsDailyContainer = () => {
 
   return (
     <AREndpointsDailyContent
+      tenantName={tenantData?.info.name ?? ''}
+      tenantLogoUrl={tenantData?.info.image || undefined}
+      reportName={reportName || ''}
       serviceName={serviceName || ''}
       endpointName={endpointName || ''}
       month={month || ''}
       endpointData={endpointData}
-      isLoading={isLoading}
+      isLoading={isLoading || isTenantDataLoading}
       error={error}
       backTo={`/tenants/${tenantId}/ar-groups/${encodeURIComponent(groupName || '')}/report/${encodeURIComponent(reportName || '')}/endpoints`}
     />

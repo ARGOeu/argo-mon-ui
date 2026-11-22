@@ -15,7 +15,8 @@ const PrivateARDailyContainer = () => {
   }>()
   const tenantId = id || ''
 
-  const { data: tenantData } = useGetUserTenantById(tenantId)
+  const { data: tenantData, isLoading: isTenantDataLoading } =
+    useGetUserTenantById(tenantId)
 
   const { startTime, endTime } = useMemo(
     () => (month ? getMonthRange(month) : { startTime: '', endTime: '' }),
@@ -48,7 +49,7 @@ const PrivateARDailyContainer = () => {
       name={groupName || ''}
       month={month || ''}
       rows={rows}
-      isLoading={isLoading}
+      isLoading={isLoading || isTenantDataLoading}
       error={error}
       backTo={`/tenants/${tenantId}/ar-groups/report/${encodeURIComponent(reportName || '')}`}
     />

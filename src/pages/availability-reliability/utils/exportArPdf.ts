@@ -97,6 +97,20 @@ const applyTone = (data: CellHookData, tone: Tone) => {
   data.cell.styles.fontStyle = 'bold'
 }
 
+const clipText = (doc: jsPDF, text: string, maxWidth: number) => {
+  if (doc.getTextWidth(text) <= maxWidth) {
+    return text
+  }
+  let length = text.length
+  while (
+    length > 1 &&
+    doc.getTextWidth(`${text.slice(0, length)}...`) > maxWidth
+  ) {
+    length -= 1
+  }
+  return `${text.slice(0, length)}...`
+}
+
 interface RenderArPdfParams {
   title: string
   tenantName: string
@@ -136,7 +150,30 @@ async function renderArPdf({
   const totalPages = doc.getNumberOfPages()
   const generated = new Date().toLocaleString()
   const tenantSize = tenantLogo ? fitLogo(tenantLogo) : undefined
+  const productSize = productLogo ? fitLogo(productLogo) : undefined
   const textX = margin + (tenantSize ? tenantSize.width + logoGap : 0)
+  const maxTitleWidth =
+    pageWidth - margin - (productSize ? productSize.width + logoGap : 0) - textX
+
+  doc.setFont('helvetica', 'bold')
+  let titleFontSize = 14
+  doc.setFontSize(titleFontSize)
+  while (titleFontSize > 9 && doc.getTextWidth(title) > maxTitleWidth) {
+    titleFontSize -= 0.5
+    doc.setFontSize(titleFontSize)
+  }
+  const titleText = clipText(doc, title, maxTitleWidth)
+
+  doc.setFont('helvetica', 'normal')
+  doc.setFontSize(9)
+  const infoText = clipText(
+    doc,
+    `Tenant: ${tenantName}   Report: ${reportName}`,
+    maxTitleWidth,
+  )
+  const noteText = filterNote
+    ? clipText(doc, filterNote, maxTitleWidth)
+    : undefined
 
   for (let page = 1; page <= totalPages; page++) {
     doc.setPage(page)
@@ -146,15 +183,15 @@ async function renderArPdf({
 
     doc.setTextColor(17, 24, 39)
     doc.setFont('helvetica', 'bold')
-    doc.setFontSize(14)
-    doc.text(title, textX, 12)
+    doc.setFontSize(titleFontSize)
+    doc.text(titleText, textX, 12)
 
     doc.setFont('helvetica', 'normal')
     doc.setFontSize(9)
     doc.setTextColor(107, 114, 128)
-    doc.text(`Tenant: ${tenantName}   Report: ${reportName}`, textX, 17.5)
-    if (filterNote) {
-      doc.text(filterNote, textX, 22)
+    doc.text(infoText, textX, 17.5)
+    if (noteText) {
+      doc.text(noteText, textX, 22)
     }
 
     if (tenantLogo && tenantSize) {
@@ -167,15 +204,14 @@ async function renderArPdf({
         tenantSize.height,
       )
     }
-    if (productLogo) {
-      const size = fitLogo(productLogo)
+    if (productLogo && productSize) {
       doc.addImage(
         productLogo.dataUrl,
         'PNG',
-        pageWidth - margin - size.width,
-        logoCenterY - size.height / 2,
-        size.width,
-        size.height,
+        pageWidth - margin - productSize.width,
+        logoCenterY - productSize.height / 2,
+        productSize.width,
+        productSize.height,
       )
     }
 
@@ -360,18 +396,19 @@ export interface ExportDailyArPdfParams {
   tenantLogoUrl?: string
 }
 
-export const exportDailyArPdf = ({
-  rows,
-  entityLabel,
-  name,
-  month,
-  ...rest
-}: ExportDailyArPdfParams): Promise<void> => {
-  const showUnknownAndDowntime = entityLabel === 'Group'
+interface ExportDailyTablePdfParams
+  extends Omit<RenderArPdfParams, 'addTable'> {
+  rows: DailyArRow[]
+  showUnknownAndDowntime: boolean
+}
 
-  return renderArPdf({
-    ...rest,
-    title: `Daily Availability & Reliability for ${entityLabel.toLowerCase()} ${name} - ${formatMonthLabel(month, 'long')}`,
+const exportDailyTablePdf = ({
+  rows,
+  showUnknownAndDowntime,
+  ...page
+}: ExportDailyTablePdfParams): Promise<void> =>
+  renderArPdf({
+    ...page,
     addTable: (doc) =>
       autoTable(doc, {
         ...baseTableOptions,
@@ -415,4 +452,44 @@ export const exportDailyArPdf = ({
         },
       }),
   })
+
+export const exportDailyArPdf = ({
+  rows,
+  entityLabel,
+  name,
+  month,
+  ...rest
+}: ExportDailyArPdfParams): Promise<void> =>
+  exportDailyTablePdf({
+    ...rest,
+    rows,
+    showUnknownAndDowntime: entityLabel === 'Group',
+    title: `Daily Availability & Reliability for ${entityLabel.toLowerCase()} ${name} - ${formatMonthLabel(month, 'long')}`,
+  })
+
+export interface ExportEndpointDailyArPdfParams {
+  rows: DailyArRow[]
+  serviceName: string
+  endpointName: string
+  month: string
+  tenantName: string
+  reportName: string
+  filename: string
+  logoUrl?: string
+  tenantLogoUrl?: string
 }
+
+export const exportEndpointDailyArPdf = ({
+  rows,
+  serviceName,
+  endpointName,
+  month,
+  ...rest
+}: ExportEndpointDailyArPdfParams): Promise<void> =>
+  exportDailyTablePdf({
+    ...rest,
+    rows,
+    showUnknownAndDowntime: true,
+    title: `Daily Availability & Reliability - ${formatMonthLabel(month, 'long')}`,
+    filterNote: `Service: ${serviceName}   Endpoint: ${endpointName}`,
+  })

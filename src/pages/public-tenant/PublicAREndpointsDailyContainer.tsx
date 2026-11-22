@@ -6,6 +6,7 @@ import AREndpointsDailyContent from '@/pages/availability-reliability/AREndpoint
 import { getMonthRange } from '@/pages/availability-reliability/utils/dateRanges'
 import { isPlatformDomain } from '@/utils/domains'
 import type { PublicTenantOutletContext } from './PublicTenantLayout'
+import { useGetPublicTenantInfo } from '@/hooks/useTenants'
 
 const PublicAREndpointsDailyContainer = () => {
   const { tenantName } = useTenantName()
@@ -31,6 +32,9 @@ const PublicAREndpointsDailyContainer = () => {
     [month],
   )
 
+  const { data: tenantInfo, isLoading: isTenantInfoLoading } =
+    useGetPublicTenantInfo(tenantName ?? '')
+
   const {
     data: endpointData,
     isLoading,
@@ -53,11 +57,14 @@ const PublicAREndpointsDailyContainer = () => {
 
   return (
     <AREndpointsDailyContent
+      tenantName={tenantName ?? ''}
+      tenantLogoUrl={tenantInfo?.logo || undefined}
+      reportName={reportName || ''}
       serviceName={serviceName || ''}
       endpointName={endpointName || ''}
       month={month || ''}
       endpointData={endpointData}
-      isLoading={isLoading}
+      isLoading={isLoading || isTenantInfoLoading}
       error={error}
       backTo={backTo}
     />
