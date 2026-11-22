@@ -8,9 +8,13 @@ import { getMonthRange } from '@/pages/availability-reliability/utils/dateRanges
 import { toSupergroupDailyRows } from '@/pages/availability-reliability/utils/dailyRows'
 import { isPlatformDomain } from '@/utils/domains'
 import type { PublicTenantOutletContext } from './PublicTenantLayout'
+import { useGetPublicTenantInfo } from '@/hooks/useTenants'
 
 const PublicARSupergroupDailyContainer = () => {
   const { tenantName } = useTenantName()
+  const { data: tenantInfo, isLoading: isTenantInfoLoading } =
+    useGetPublicTenantInfo(tenantName ?? '')
+
   const { supergroupName, reportName, month } = useParams<{
     supergroupName: string
     reportName: string
@@ -54,10 +58,13 @@ const PublicARSupergroupDailyContainer = () => {
   return (
     <ARDailyContent
       entityLabel="Supergroup"
+      tenantName={tenantName ?? ''}
+      tenantLogoUrl={tenantInfo?.logo || undefined}
+      reportName={reportName || ''}
       name={supergroupName || ''}
       month={month || ''}
       rows={rows}
-      isLoading={isLoading}
+      isLoading={isLoading || isTenantInfoLoading}
       error={error}
       backTo={backTo}
     />

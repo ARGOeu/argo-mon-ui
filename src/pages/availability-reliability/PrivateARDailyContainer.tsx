@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom'
 import ARDailyContent from './ARDailyContent'
 import { getMonthRange } from './utils/dateRanges'
 import { toGroupDailyRows } from './utils/dailyRows'
+import { useGetUserTenantById } from '@/hooks/useTenants'
 
 const PrivateARDailyContainer = () => {
   const { id, groupName, reportName, month } = useParams<{
@@ -13,6 +14,8 @@ const PrivateARDailyContainer = () => {
     month: string
   }>()
   const tenantId = id || ''
+
+  const { data: tenantData } = useGetUserTenantById(tenantId)
 
   const { startTime, endTime } = useMemo(
     () => (month ? getMonthRange(month) : { startTime: '', endTime: '' }),
@@ -39,6 +42,9 @@ const PrivateARDailyContainer = () => {
   return (
     <ARDailyContent
       entityLabel="Group"
+      tenantName={tenantData?.info.name ?? ''}
+      tenantLogoUrl={tenantData?.info.image || undefined}
+      reportName={reportName || ''}
       name={groupName || ''}
       month={month || ''}
       rows={rows}

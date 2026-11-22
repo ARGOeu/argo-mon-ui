@@ -7,9 +7,14 @@ import { getMonthRange } from '@/pages/availability-reliability/utils/dateRanges
 import { toGroupDailyRows } from '@/pages/availability-reliability/utils/dailyRows'
 import { isPlatformDomain } from '@/utils/domains'
 import type { PublicTenantOutletContext } from './PublicTenantLayout'
+import { useGetPublicTenantInfo } from '@/hooks/useTenants'
 
 const PublicARDailyContainer = () => {
   const { tenantName } = useTenantName()
+
+  const { data: tenantInfo, isLoading: isTenantInfoLoading } =
+    useGetPublicTenantInfo(tenantName ?? '')
+
   const { groupName, reportName, month } = useParams<{
     groupName: string
     reportName: string
@@ -53,10 +58,13 @@ const PublicARDailyContainer = () => {
   return (
     <ARDailyContent
       entityLabel="Group"
+      tenantName={tenantName ?? ''}
+      tenantLogoUrl={tenantInfo?.logo || undefined}
+      reportName={reportName || ''}
       name={groupName || ''}
       month={month || ''}
       rows={rows}
-      isLoading={isLoading}
+      isLoading={isLoading || isTenantInfoLoading}
       error={error}
       backTo={backTo}
     />

@@ -45,6 +45,7 @@ const PrivateAREndpointsContainer = () => {
   return (
     <AREndpointsContent
       tenantName={tenantData?.info.name ?? ''}
+      tenantLogoUrl={tenantData?.info.image || undefined}
       groupName={groupName || ''}
       reportName={reportName || ''}
       endpointsData={endpointsData}

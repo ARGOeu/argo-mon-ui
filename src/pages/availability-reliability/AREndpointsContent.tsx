@@ -143,9 +143,9 @@ const AREndpointsContent = ({
       months: months.slice(-pdfMonthCount),
       groupName: decodedGroupName,
       tenantName,
+      tenantLogoUrl,
       reportName: decodedReportName,
       filterNote: search ? `Search: "${search}"` : undefined,
-      tenantLogoUrl,
       filename: `${sanitizeFilename(tenantName)}-${sanitizeFilename(decodedGroupName)}-AR-Endpoints-Monthly.pdf`,
     })
   }
