@@ -1,4 +1,8 @@
-import { ArrowDownTrayIcon, TableCellsIcon } from '@heroicons/react/16/solid'
+import {
+  ArrowDownTrayIcon,
+  DocumentTextIcon,
+  TableCellsIcon,
+} from '@heroicons/react/16/solid'
 import PageHeader from '@/components/PageHeader'
 import LoadingSpinner from '@/components/LoadingSpinner'
 import ErrorDisplay from '@/components/ErrorDisplay'
@@ -19,6 +23,9 @@ const noticeTextClass = 'text-sm text-subtle italic py-6 px-12'
 
 export interface ARDailyContentProps {
   entityLabel: 'Group' | 'Supergroup'
+  tenantName: string
+  tenantLogoUrl?: string
+  reportName: string
   name: string
   month: string
   rows: DailyResultRow[]
@@ -29,6 +36,9 @@ export interface ARDailyContentProps {
 
 const ARDailyContent = ({
   entityLabel,
+  tenantName,
+  tenantLogoUrl,
+  reportName,
   name,
   month,
   rows,
@@ -58,6 +68,22 @@ const ARDailyContent = ({
     )
   }
 
+  const handleExportPdf = async () => {
+    const decodedName = decodeURIComponent(name)
+
+    const { exportDailyArPdf } = await import('./utils/exportArPdf')
+    await exportDailyArPdf({
+      rows,
+      entityLabel,
+      name: decodedName,
+      month,
+      tenantName,
+      reportName: decodeURIComponent(reportName),
+      tenantLogoUrl,
+      filename: `${sanitizeFilename(decodedName)}-${month}-AR-Daily.pdf`,
+    })
+  }
+
   return (
     <div className="page-container">
       <PageHeader
@@ -75,6 +101,7 @@ const ARDailyContent = ({
           disabled={!rows.length}
           items={[
             { label: 'CSV', icon: TableCellsIcon, onClick: handleExport },
+            { label: 'PDF', icon: DocumentTextIcon, onClick: handleExportPdf },
           ]}
           menuClassName="w-32"
         />

@@ -5,6 +5,7 @@ import ARDailyContent from './ARDailyContent'
 import { supergroupsTabSearch } from './ARContent'
 import { getMonthRange } from './utils/dateRanges'
 import { toSupergroupDailyRows } from './utils/dailyRows'
+import { useGetUserTenantById } from '@/hooks/useTenants'
 
 const PrivateARSupergroupDailyContainer = () => {
   const { id, supergroupName, reportName, month } = useParams<{
@@ -19,6 +20,8 @@ const PrivateARSupergroupDailyContainer = () => {
     () => (month ? getMonthRange(month) : { startTime: '', endTime: '' }),
     [month],
   )
+
+  const { data: tenantData } = useGetUserTenantById(tenantId)
 
   const {
     data: rawData,
@@ -40,6 +43,9 @@ const PrivateARSupergroupDailyContainer = () => {
   return (
     <ARDailyContent
       entityLabel="Supergroup"
+      tenantName={tenantData?.info.name ?? ''}
+      tenantLogoUrl={tenantData?.info.image || undefined}
+      reportName={reportName || ''}
       name={supergroupName || ''}
       month={month || ''}
       rows={rows}
