@@ -42,9 +42,12 @@ import { getBannerIncidents } from '@/utils/incidents'
 import { formatDateTime } from '@/utils/formatDateTime'
 import { stripIdSuffix } from '@/utils/cleanup'
 import IncidentBanner from './IncidentBanner'
-import LatestProblemsDrawer from './LatestProblemsDrawer'
+import type { ProblemSeverity } from '@/utils/latestProblems'
+import LatestProblemsDrawer, {
+  type ProblemsFocus,
+} from './LatestProblemsDrawer'
 
-type ServiceStatus = 'healthy' | 'degraded' | 'critical' | 'missing'
+type ServiceStatus = 'healthy' | 'warning' | 'critical' | 'missing'
 type FilterId = 'all' | 'problem' | 'healthy'
 type DowntimeGroup = 'active' | 'upcoming' | 'completed'
 
@@ -69,7 +72,7 @@ const mapStatusValue = (value: string): ServiceStatus => {
   const v = value?.toUpperCase()
 
   if (v === 'CRITICAL' || v === 'DOWN') return 'critical'
-  if (v === 'WARNING' || v === 'DEGRADED') return 'degraded'
+  if (v === 'WARNING' || v === 'DEGRADED') return 'warning'
   if (!v || v === 'UNKNOWN' || v === 'MISSING') return 'missing'
 
   return 'healthy'
@@ -165,7 +168,7 @@ const STATUS_STYLES: Record<
     text: 'text-emerald-700',
     label: 'Healthy',
   },
-  degraded: {
+  warning: {
     dot: 'bg-amber-500',
     pill: 'bg-amber-50 text-amber-800 ring-amber-600/20',
     text: 'text-amber-700',
@@ -183,6 +186,39 @@ const STATUS_STYLES: Record<
     text: 'text-gray-600',
     label: 'Missing',
   },
+}
+
+// list of problematic statuses that should be clickable
+const CLICKABLE_STATUSES: Partial<Record<ServiceStatus, ProblemSeverity>> = {
+  critical: 'critical',
+  warning: 'warning',
+}
+
+interface StatusButtonProps {
+  status: ServiceStatus
+  // when on click is set the status badge is rendered as a button
+  onClick?: () => void
+  title?: string
+}
+
+const StatusButton = ({ status, onClick, title }: StatusButtonProps) => {
+  const st = STATUS_STYLES[status]
+  const base = `inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${st.pill}`
+
+  if (!onClick) return <span className={base}>{st.label}</span>
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      title={title}
+      aria-haspopup="dialog"
+      className={`${base} cursor-pointer gap-1 transition-shadow hover:ring-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand/40`}
+    >
+      {st.label}
+      <Info className="h-3 w-3" strokeWidth={2.5} aria-hidden="true" />
+    </button>
+  )
 }
 
 const BANNER_STYLES: Record<
@@ -204,7 +240,7 @@ const BANNER_STYLES: Record<
     detail: 'text-emerald-800/80',
     meta: 'text-emerald-800/60',
   },
-  degraded: {
+  warning: {
     bg: 'bg-amber-50',
     border: 'border-amber-700',
     icon: AlertTriangle,
@@ -572,7 +608,17 @@ const GroupDashboard = ({
 
   const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({})
 
-  const openProblems = useCallback(() => setProblemsOpen(true), [])
+  // filters to show specfiic issues on the open drawer when a user clicks on a problematic status badge
+  const [problemsFocus, setProblemsFocus] = useState<ProblemsFocus>()
+
+  const openProblems = useCallback(() => {
+    setProblemsFocus(undefined)
+    setProblemsOpen(true)
+  }, [])
+  const openProblemsFor = useCallback((focus: Omit<ProblemsFocus, 'key'>) => {
+    setProblemsFocus({ ...focus, key: Date.now() })
+    setProblemsOpen(true)
+  }, [])
   const closeProblems = useCallback(() => setProblemsOpen(false), [])
 
   const handleProblemEndpointSelect = useCallback(
@@ -722,7 +768,7 @@ const GroupDashboard = ({
   const counts = useMemo<Record<ServiceStatus, number>>(() => {
     const c = {
       healthy: 0,
-      degraded: 0,
+      warning: 0,
       critical: 0,
       missing: 0,
     }
@@ -752,7 +798,7 @@ const GroupDashboard = ({
   const overall = useMemo(() => {
     const crit = health.filter((s) => s.status === 'critical')
 
-    const deg = health.filter((s) => s.status === 'degraded')
+    const deg = health.filter((s) => s.status === 'warning')
 
     const missing = health.filter((s) => s.status === 'missing')
 
@@ -781,11 +827,11 @@ const GroupDashboard = ({
         .join(', ')
 
       return {
-        state: 'degraded' as ServiceStatus,
+        state: 'warning' as ServiceStatus,
         headline:
           deg.length === 1
-            ? '1 endpoint is degraded'
-            : `${deg.length} endpoints are degraded`,
+            ? '1 endpoint has warnings'
+            : `${deg.length} endpoints have warnings`,
         detail: `${names}${
           deg.length > 2 ? ` +${deg.length - 2} more` : ''
         } below full availability`,
@@ -904,6 +950,20 @@ const GroupDashboard = ({
   const failingChecksCount = latestProblems?.data?.length ?? 0
   const showFailingChecksLink =
     Boolean(latestProblems) && !latestProblems?.error && failingChecksCount > 0
+
+  // Status click handler for status buttons that represent problematic statues
+  const statusClickHandler = (status: ServiceStatus, endpointName: string) => {
+    const severity = CLICKABLE_STATUSES[status]
+    if (!severity || !latestProblems || latestProblems.error || !group) {
+      return undefined
+    }
+    return () =>
+      openProblemsFor({
+        severity,
+        group: group.name,
+        endpoint: stripIdSuffix(endpointName),
+      })
+  }
 
   return (
     <div className="page-container">
@@ -1061,7 +1121,7 @@ const GroupDashboard = ({
 
               <span className="text-[11px] font-normal text-neutral-500">
                 <span className="text-emerald-600">{counts.healthy}</span>·
-                <span className="text-amber-600">{counts.degraded}</span>·
+                <span className="text-amber-600">{counts.warning}</span>·
                 <span className="text-red-600">{counts.critical}</span>·
                 <span className="text-gray-500">{counts.missing}</span>
               </span>
@@ -1266,8 +1326,8 @@ const GroupDashboard = ({
                 {filtered.map((ep) => {
                   const epAvg = avgValid(ep.daily)
 
-                  const epSt =
-                    STATUS_STYLES[healthByKey.get(ep.key) ?? 'missing']
+                  const epStatus = healthByKey.get(ep.key) ?? 'missing'
+                  const epSt = STATUS_STYLES[epStatus]
 
                   return (
                     <tr
@@ -1321,11 +1381,11 @@ const GroupDashboard = ({
                       </td>
 
                       <td className="border-b border-neutral-100 px-1.5 py-2.5">
-                        <span
-                          className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ring-1 ring-inset ${epSt.pill}`}
-                        >
-                          {epSt.label}
-                        </span>
+                        <StatusButton
+                          status={epStatus}
+                          onClick={statusClickHandler(epStatus, ep.name)}
+                          title={`Show ${epSt.label.toLowerCase()} checks for ${stripIdSuffix(ep.name)}`}
+                        />
                       </td>
 
                       <td className="border-b border-neutral-100 px-1.5 py-2.5 tabular-nums text-neutral-700">
@@ -1352,6 +1412,7 @@ const GroupDashboard = ({
           isLoading={latestProblems.isLoading}
           error={latestProblems.error}
           reportName={selectedReport}
+          focus={problemsFocus}
           onEndpointSelect={
             onEndpointFocus ? handleProblemEndpointSelect : undefined
           }
