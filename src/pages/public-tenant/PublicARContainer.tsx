@@ -17,6 +17,7 @@ import { useSelectedPublicReport } from './hooks/useSelectedPublicReport'
 
 const PublicARContainer = () => {
   const { tenantName } = useTenantName()
+
   const { reportName } = useParams<{ reportName?: string }>()
   const navigate = useNavigate()
 
@@ -100,6 +101,7 @@ const PublicARContainer = () => {
   return (
     <ARContent
       tenantName={tenantName ?? ''}
+      tenantLogoUrl={tenantInfo?.logo || undefined}
       reports={reports}
       selectedReportName={selectedReportName}
       onReportChange={handleReportChange}

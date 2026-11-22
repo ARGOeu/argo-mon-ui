@@ -313,7 +313,7 @@ const ARContent = ({
         .filter(Boolean)
         .join(' · ') || undefined
 
-    const { exportGroupArPdf } = await import('./utils/exportGroupArPdf')
+    const { exportGroupArPdf } = await import('./utils/exportArPdf')
     await exportGroupArPdf({
       rows: sortedRows,
       months: months.slice(-3),

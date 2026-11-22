@@ -11,6 +11,7 @@ const maxLogoHeight = 14 // mm
 const logoGap = 6
 const logoCenterY = 14.5
 const logoPixelWidth = 600
+const defaultLogoUrl = '/ARGO_LOGO_COLOR_ENG_TITLE.png'
 
 interface LoadedLogo {
   dataUrl: string
@@ -54,8 +55,8 @@ const fitLogo = (logo: LoadedLogo) => {
   return { width, height: width * ratio }
 }
 
-const goodThreshold = 99.9
-const warnThreshold = 99
+const goodThreshold = 99.5
+const warnThreshold = 95
 
 type Tone = 'good' | 'warn' | 'bad'
 
@@ -66,16 +67,32 @@ const toneStyles: Record<
   Tone,
   { fill: [number, number, number]; text: [number, number, number] }
 > = {
-  good: { fill: [220, 252, 231], text: [22, 101, 52] },
-  warn: { fill: [254, 249, 195], text: [133, 77, 14] },
-  bad: { fill: [254, 226, 226], text: [153, 27, 27] },
+  good: { fill: [236, 253, 245], text: [5, 150, 105] },
+  warn: { fill: [255, 251, 235], text: [217, 119, 6] },
+  bad: { fill: [254, 242, 242], text: [220, 38, 38] },
 }
 
-export interface ExportGroupArPdfParams {
-  rows: GroupAvailabilityReliability[]
+export interface ArPdfMonthlyValue {
+  month: string
+  availability: number
+  reliability: number
+}
+
+export interface ArPdfRow {
+  labels: string[]
+  monthly: ArPdfMonthlyValue[]
+}
+
+export interface ArPdfLabelColumn {
+  header: string
+  width: number
+}
+
+export interface ExportArTablePdfParams {
+  rows: ArPdfRow[]
   months: string[]
-  title?: string
-  entity: string
+  labelColumns: ArPdfLabelColumn[]
+  title: string
   tenantName: string
   reportName: string
   filename: string
@@ -84,18 +101,18 @@ export interface ExportGroupArPdfParams {
   tenantLogoUrl?: string
 }
 
-export async function exportGroupArPdf({
+async function exportArTablePdf({
   rows,
   months,
-  title = 'Availability & Reliability',
-  entity,
+  labelColumns,
+  title,
   tenantName,
   reportName,
   filename,
   filterNote,
-  logoUrl,
+  logoUrl = defaultLogoUrl,
   tenantLogoUrl,
-}: ExportGroupArPdfParams): Promise<void> {
+}: ExportArTablePdfParams): Promise<void> {
   const doc = new jsPDF({
     orientation: 'landscape',
     format: 'a4',
@@ -109,6 +126,7 @@ export async function exportGroupArPdf({
   const pageWidth = doc.internal.pageSize.getWidth()
   const pageHeight = doc.internal.pageSize.getHeight()
   const margin = 10
+  const labelCount = labelColumns.length
 
   // create the table
   autoTable(doc, {
@@ -116,7 +134,10 @@ export async function exportGroupArPdf({
     margin: { top: headerHeight + 4, left: margin, right: margin, bottom: 12 },
     head: [
       [
-        { content: entity, rowSpan: 2 },
+        ...labelColumns.map((column) => ({
+          content: column.header,
+          rowSpan: 2,
+        })),
         ...months.map((month) => ({
           content: formatMonthLabel(month),
           colSpan: 2,
@@ -125,7 +146,7 @@ export async function exportGroupArPdf({
       months.flatMap(() => ['Av', 'Re']),
     ],
     body: rows.map((row) => [
-      row.name,
+      ...row.labels,
       ...months.flatMap((month) => {
         const monthly = row.monthly.find((m) => m.month === month)
         return [monthly?.availability ?? '', monthly?.reliability ?? '']
@@ -140,11 +161,16 @@ export async function exportGroupArPdf({
     },
     alternateRowStyles: { fillColor: [249, 250, 251] },
     headStyles: { fillColor: brandColor, textColor: 255, fontStyle: 'bold' },
-    columnStyles: { 0: { cellWidth: 55, halign: 'left' } },
+    columnStyles: Object.fromEntries(
+      labelColumns.map((column, index) => [
+        index,
+        { cellWidth: column.width, halign: 'left' as const },
+      ]),
+    ),
     horizontalPageBreak: true,
-    horizontalPageBreakRepeat: 0,
+    horizontalPageBreakRepeat: labelColumns.map((_, index) => index),
     didParseCell: (data: CellHookData) => {
-      if (data.column.index === 0) {
+      if (data.column.index < labelCount) {
         return
       }
       data.cell.styles.halign = 'center'
@@ -217,3 +243,65 @@ export async function exportGroupArPdf({
 
   doc.save(filename)
 }
+
+export interface ExportGroupArPdfParams {
+  rows: GroupAvailabilityReliability[]
+  months: string[]
+  title?: string
+  entity: string
+  tenantName: string
+  reportName: string
+  filename: string
+  filterNote?: string
+  logoUrl?: string
+  tenantLogoUrl?: string
+}
+
+export const exportGroupArPdf = ({
+  rows,
+  entity,
+  title = 'Availability & Reliability',
+  ...rest
+}: ExportGroupArPdfParams): Promise<void> =>
+  exportArTablePdf({
+    ...rest,
+    title,
+    labelColumns: [{ header: entity, width: 55 }],
+    rows: rows.map((row) => ({ labels: [row.name], monthly: row.monthly })),
+  })
+
+export interface EndpointArRow {
+  serviceName: string
+  endpointName: string
+  monthly: ArPdfMonthlyValue[]
+}
+
+export interface ExportEndpointArPdfParams {
+  rows: EndpointArRow[]
+  months: string[]
+  groupName: string
+  tenantName: string
+  reportName: string
+  filename: string
+  filterNote?: string
+  logoUrl?: string
+  tenantLogoUrl?: string
+}
+
+export const exportEndpointArPdf = ({
+  rows,
+  groupName,
+  ...rest
+}: ExportEndpointArPdfParams): Promise<void> =>
+  exportArTablePdf({
+    ...rest,
+    title: `Availability & Reliability for group ${groupName}`,
+    labelColumns: [
+      { header: 'Endpoint', width: 55 },
+      { header: 'Service', width: 35 },
+    ],
+    rows: rows.map((row) => ({
+      labels: [row.endpointName, row.serviceName],
+      monthly: row.monthly,
+    })),
+  })

@@ -6,9 +6,12 @@ import AREndpointsContent from '@/pages/availability-reliability/AREndpointsCont
 import { getRecentMonthsRange } from '@/pages/availability-reliability/utils/dateRanges'
 import { isPlatformDomain } from '@/utils/domains'
 import type { PublicTenantOutletContext } from './PublicTenantLayout'
+import { useGetPublicTenantInfo } from '@/hooks/useTenants'
 
 const PublicAREndpointsContainer = () => {
   const { tenantName } = useTenantName()
+  const { data: tenantInfo, isLoading: isTenantInfoLoading } =
+    useGetPublicTenantInfo(tenantName ?? '')
   const { groupName, reportName } = useParams<{
     groupName: string
     reportName: string
@@ -57,10 +60,11 @@ const PublicAREndpointsContainer = () => {
   return (
     <AREndpointsContent
       tenantName={tenantName ?? ''}
+      tenantLogoUrl={tenantInfo?.logo || undefined}
       groupName={groupName || ''}
       reportName={reportName || ''}
       endpointsData={endpointsData}
-      isLoading={isLoading}
+      isLoading={isLoading || isTenantInfoLoading}
       error={error}
       onDrillDown={handleDrillDown}
       backTo={`${basePath}/report/${encodeURIComponent(reportName || '')}`}
