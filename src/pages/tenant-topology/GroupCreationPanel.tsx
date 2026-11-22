@@ -6,8 +6,10 @@ import {
   useGetTopologyGroups,
 } from '@/hooks/useTopology'
 import Button from '@/components/Button'
+import ErrorDisplay from '@/components/ErrorDisplay'
 import IconButton from '@/components/IconButton'
 import LoadingSpinner from '@/components/LoadingSpinner'
+import { isNotFoundError } from '@/utils/isNotFoundError'
 import {
   getContactValidationErrors,
   getValidContactEmails,
@@ -40,8 +42,11 @@ const GroupCreationPanel = ({
   onCancel,
   onGroupSaving,
 }: GroupCreationPanelProps) => {
-  const { data: groups } = useGetTopologyGroups(tenantId)
+  const { data: groups, error: groupsError } = useGetTopologyGroups(tenantId)
   const groupsMutation = useCreateTopologyGroupsMutation()
+
+  const hasNoExistingGroups = isNotFoundError(groupsError)
+  const canCreateGroup = groups !== undefined || hasNoExistingGroups
 
   const [groupForm, setGroupForm] = useState<GroupCreationState>({
     subgroup: '',
@@ -267,12 +272,16 @@ const GroupCreationPanel = ({
         )}
       </div>
 
+      {groupsError && !canCreateGroup && (
+        <ErrorDisplay error={groupsError} context="existing groups" />
+      )}
+
       <div className="flex items-center gap-3">
         <Button
           variant="primary"
           size="sm"
           onClick={handleCreateGroupSubmit}
-          disabled={groupsMutation.isPending || !groups}
+          disabled={groupsMutation.isPending || !canCreateGroup}
         >
           {groupsMutation.isPending ? (
             <>
