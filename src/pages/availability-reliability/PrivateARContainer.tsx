@@ -97,6 +97,7 @@ const PrivateARContainer = () => {
   return (
     <ARContent
       tenantName={tenantData?.info.name ?? ''}
+      tenantLogoUrl={tenantData?.info.image || undefined}
       reports={reports}
       selectedReportName={selectedReportName || ''}
       onReportChange={handleReportChange}

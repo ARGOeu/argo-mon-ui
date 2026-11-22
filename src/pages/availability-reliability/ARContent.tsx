@@ -83,6 +83,7 @@ export interface ARSupergroupsProps {
 
 export interface ARContentProps {
   tenantName: string
+  tenantLogoUrl?: string
   reports: Array<{ name: string; public?: boolean }> | undefined
   selectedReportName: string
   onReportChange: (reportName: string) => void
@@ -96,6 +97,7 @@ export interface ARContentProps {
 
 const ARContent = ({
   tenantName,
+  tenantLogoUrl,
   reports,
   selectedReportName,
   onReportChange,
@@ -320,6 +322,7 @@ const ARContent = ({
       reportName,
       filterNote,
       logoUrl: '/ARGO_LOGO_COLOR_ENG_TITLE.png',
+      tenantLogoUrl,
       filename: `${sanitizeFilename(tenantName)}-${sanitizeFilename(reportName)}-AR-${entity}s-Monthly.pdf`,
     })
   }
