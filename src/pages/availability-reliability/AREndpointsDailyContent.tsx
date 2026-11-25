@@ -10,6 +10,7 @@ import ErrorDisplay from '@/components/ErrorDisplay'
 import ActionMenu from '@/components/ActionMenu'
 import DailyAvailabilityTable from './DailyAvailabilityTable'
 import { isNotFoundError } from '@/utils/isNotFoundError'
+import { stripIdSuffix } from '@/utils/cleanup'
 import { formatMonthLabel } from './utils/dateRanges'
 import {
   buildCSV,
@@ -66,6 +67,20 @@ const AREndpointsDailyContent = ({
     )
   }, [endpointData])
 
+  const fname = useMemo(
+    () =>
+      endpointData?.results
+        ?.flatMap((g) => g['service-types'])
+        .flatMap((st) => st.endpoints)[0]
+        ?.info?.fname?.trim() || undefined,
+    [endpointData],
+  )
+
+  const decodedService = decodeURIComponent(serviceName || '')
+  const decodedEndpoint = decodeURIComponent(endpointName || '')
+  const cleanedEndpoint = stripIdSuffix(decodedEndpoint)
+  const endpointLabel = fname ?? cleanedEndpoint
+
   const handleExport = () => {
     const fields: CsvField<(typeof rows)[number]>[] = [
       { label: 'Timestamp', value: 'date' },
@@ -76,20 +91,17 @@ const AREndpointsDailyContent = ({
     ]
 
     downloadCSV(
-      `${sanitizeFilename(decodeURIComponent(serviceName))}-${sanitizeFilename(decodeURIComponent(endpointName))}-${month}-AR-Daily.csv`,
+      `${sanitizeFilename(decodedService)}-${sanitizeFilename(decodedEndpoint)}-${month}-AR-Daily.csv`,
       buildCSV(rows, fields),
     )
   }
 
   const handleExportPdf = async () => {
-    const decodedService = decodeURIComponent(serviceName)
-    const decodedEndpoint = decodeURIComponent(endpointName)
-
     const { exportEndpointDailyArPdf } = await import('./utils/exportArPdf')
     await exportEndpointDailyArPdf({
       rows,
       serviceName: decodedService,
-      endpointName: decodedEndpoint,
+      endpointName: endpointLabel,
       month,
       tenantName,
       reportName: decodeURIComponent(reportName),
@@ -101,11 +113,12 @@ const AREndpointsDailyContent = ({
   return (
     <div className="page-container">
       <PageHeader
-        title={`${decodeURIComponent(serviceName || '')} - ${month ? formatMonthLabel(month, 'long') : ''}`}
+        title={`${decodedService} - ${month ? formatMonthLabel(month, 'long') : ''}`}
         subtitle={
           <>
-            Service <strong>{decodeURIComponent(serviceName || '')}</strong>,
-            Endpoint <strong>{decodeURIComponent(endpointName || '')}</strong>
+            Service <strong>{decodedService}</strong>, Endpoint{' '}
+            <strong>{endpointLabel}</strong>
+            {fname && <span className="text-subtle"> ({cleanedEndpoint})</span>}
           </>
         }
         className="items-end pb-2 mb-1"

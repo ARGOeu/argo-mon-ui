@@ -12,6 +12,7 @@ import Pagination from '@/components/Pagination'
 import ActionMenu from '@/components/ActionMenu'
 import MonthlyEndpointsTable from './MonthlyEndpointsTable'
 import { isNotFoundError } from '@/utils/isNotFoundError'
+import { stripIdSuffix } from '@/utils/cleanup'
 import { formatMonthLabel, getMonthsWithData } from './utils/dateRanges'
 import {
   buildCSV,
@@ -61,31 +62,39 @@ const AREndpointsContent = ({
     }
     return endpointsData.results.flatMap((group) =>
       group['service-types'].flatMap((serviceType) =>
-        serviceType.endpoints.map((endpoint) => ({
-          serviceName: serviceType.name,
-          endpointName: endpoint.name,
-          url: endpoint.info?.URL,
-          monthly: endpoint.results.map((result) => ({
-            month: result.timestamp,
-            availability: parseFloat(result.availability),
-            reliability: parseFloat(result.reliability),
-          })),
-        })),
+        serviceType.endpoints.map((endpoint) => {
+          const fname = endpoint.info?.fname?.trim() || undefined
+          return {
+            serviceName: serviceType.name,
+            endpointName: endpoint.name,
+            fname,
+            displayName: fname ?? stripIdSuffix(endpoint.name),
+            url: endpoint.info?.URL,
+            monthly: endpoint.results.map((result) => ({
+              month: result.timestamp,
+              availability: parseFloat(result.availability),
+              reliability: parseFloat(result.reliability),
+            })),
+          }
+        }),
       ),
     )
   }, [endpointsData])
 
   const months = useMemo(() => getMonthsWithData(rows), [rows])
 
-  const filteredRows = useMemo(
-    () =>
-      rows.filter(
-        (row) =>
-          row.serviceName.toLowerCase().includes(search.toLowerCase()) ||
-          row.endpointName.toLowerCase().includes(search.toLowerCase()),
-      ),
-    [rows, search],
-  )
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase()
+    if (!q) return rows
+    return rows.filter((row) =>
+      [
+        row.serviceName,
+        row.endpointName,
+        stripIdSuffix(row.endpointName),
+        row.fname ?? '',
+      ].some((v) => v.toLowerCase().includes(q)),
+    )
+  }, [rows, search])
 
   useEffect(() => {
     setCurrentPage(1)
@@ -111,7 +120,7 @@ const AREndpointsContent = ({
 
     const fields: CsvField<EndpointRow>[] = [
       { label: 'Service', value: 'serviceName' },
-      { label: 'Endpoint', value: 'endpointName' },
+      { label: 'Endpoint', value: 'displayName' },
       { label: 'URL', value: 'url' },
       ...months.flatMap((month): CsvField<EndpointRow>[] => [
         {
