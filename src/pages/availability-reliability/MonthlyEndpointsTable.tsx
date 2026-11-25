@@ -8,6 +8,8 @@ const thBase =
 const badgeClass =
   'inline-flex items-center justify-self-center rounded-lg px-2.5 py-1 text-xs font-semibold'
 const valueColumns = 'grid-cols-[3.5rem_3.5rem_0.25rem]'
+const truncateClass =
+  'block max-w-[200px] truncate sm:max-w-[280px] md:max-w-[360px] lg:max-w-[420px] xl:max-w-[500px] lg:overflow-visible lg:whitespace-normal'
 
 interface MonthlyEndpointsTableProps {
   rows: EndpointMonthlyRow[]
@@ -75,20 +77,20 @@ const MonthlyEndpointsTable = ({
                       target="_blank"
                       rel="noopener noreferrer"
                       title={row.url}
-                      className="block max-w-[200px] truncate font-medium text-brand hover:underline sm:max-w-[280px] md:max-w-[360px] lg:max-w-[420px] xl:max-w-[500px] lg:overflow-visible lg:whitespace-normal"
+                      className={`${truncateClass} font-medium text-brand hover:underline`}
                     >
-                      {row.url}
+                      {row.fname ?? row.url}
                     </a>
                   ) : (
                     <span
-                      className="block max-w-[200px] truncate font-medium text-body sm:max-w-[280px] md:max-w-[360px] lg:max-w-[420px] xl:max-w-[500px] lg:overflow-visible lg:whitespace-normal"
+                      className={`${truncateClass} font-medium text-body`}
                       title={row.endpointName}
                     >
-                      {row.endpointName}
+                      {row.displayName}
                     </span>
                   )}
                   <span
-                    className="block max-w-[200px] truncate text-xs text-muted sm:max-w-[280px] md:max-w-[360px] lg:max-w-[420px] xl:max-w-[500px] lg:overflow-visible lg:whitespace-normal mt-1"
+                    className={`${truncateClass} text-xs text-muted mt-1`}
                     title={row.serviceName}
                   >
                     {row.serviceName}

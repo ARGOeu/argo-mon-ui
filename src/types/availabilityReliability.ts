@@ -95,6 +95,8 @@ export type EndpointsARResponse = {
 export type EndpointMonthlyRow = {
   serviceName: string
   endpointName: string
+  fname?: string
+  displayName: string
   url?: string
   monthly: GroupMonthlyResult[]
 }

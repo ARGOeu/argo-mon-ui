@@ -343,6 +343,7 @@ export const exportGroupArPdf = ({
 export interface EndpointArRow {
   serviceName: string
   endpointName: string
+  displayName: string
   monthly: ArPdfMonthlyValue[]
 }
 
@@ -371,7 +372,7 @@ export const exportEndpointArPdf = ({
       { header: 'Service', width: 35 },
     ],
     rows: rows.map((row) => ({
-      labels: [row.endpointName, row.serviceName],
+      labels: [row.displayName, row.serviceName],
       monthly: row.monthly,
     })),
   })
