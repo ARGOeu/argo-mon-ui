@@ -7,6 +7,7 @@ const SUFFIXES: readonly RegExp[] = [
   /_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i,
   /_service-[0-9A-Za-z]+$/,
   /_EB\d+$/,
+  /_[A-Za-z0-9-]+_\d+$/,
 ]
 
 export const stripIdSuffix = (name: string): string =>
